@@ -1,0 +1,41 @@
+module dhcp;
+
+# DHCP message types
+public type MessageType = unit {
+    type: uint8;
+};
+
+# DHCP options
+public type Option = unit {
+    code: uint8;
+    length: uint8;
+    value: bytes &size=self.length;
+};
+
+# DHCP header fields
+public type DhcpHeader = unit {
+    op: uint8;  # 1 = BOOTREQUEST, 2 = BOOTREPLY
+    htype: uint8;  # Hardware address type
+    hlen: uint8;  # Hardware address length
+    hops: uint8;  # Client sets to zero, optionally used by relay agents
+    xid: uint32;  # Transaction ID
+    secs: uint16;  # Seconds elapsed since client began address acquisition
+    flags: bitfield(16) {
+        broadcast: 0;
+        reserved: 1..15;
+    };
+    ciaddr: uint32;  # Client IP address
+    yiaddr: uint32;  # 'Your' IP address
+    siaddr: uint32;  # Next server IP address
+    giaddr: uint32;  # Relay agent IP address
+    chaddr: bytes &size=16;  # Client hardware address
+    sname: bytes &size=64;  # Server host name
+    file: bytes &size=128;  # Boot file name
+};
+
+# DHCP message structure
+public type DhcpMessage = unit {
+    header: DhcpHeader;
+    magic_cookie: bytes &size=4;  # Must be 99, 130, 83, 99
+    options: Option[] &eod;
+};

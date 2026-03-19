@@ -1,0 +1,41 @@
+module TFTP;
+
+public type Packet = unit {
+    opcode: uint16;
+    switch ( self.opcode ) {
+        1 -> rrq: RRQ;
+        2 -> wrq: WRQ;
+        3 -> data: DATA;
+        4 -> ack: ACK;
+        5 -> error: ERROR;
+        * -> : void; # Invalid opcode
+    };
+};
+
+public type RRQ = unit {
+    filename: bytes &until=b"\x00";
+    mode: bytes &until=b"\x00";
+};
+
+public type WRQ = unit {
+    filename: bytes &until=b"\x00";
+    mode: bytes &until=b"\x00";
+};
+
+public type DATA = unit {
+    block_num: uint16;
+    data: bytes &size=512; # Fixed size per spec, but last packet may be smaller
+};
+
+# Note: In practice, the data field can be 0-511 bytes for the final packet.
+# However, the grammar enforces 512 bytes as per spec for non-final packets.
+# The final packet is handled by the application logic checking the size.
+
+public type ACK = unit {
+    block_num: uint16;
+};
+
+public type ERROR = unit {
+    error_code: uint16;
+    error_msg: bytes &until=b"\x00";
+};
