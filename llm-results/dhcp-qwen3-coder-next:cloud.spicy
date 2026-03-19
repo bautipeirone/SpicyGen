@@ -1,0 +1,118 @@
+module DHCP;
+
+# DHCP message format based on RFC 2131
+
+type DhcpOp = uint8;
+const DHCPDISCOVER: uint8 = 1;
+const DHCPOFFER: uint8 = 2;
+const DHCPREQUEST: uint8 = 3;
+const DHCPDECLINE: uint8 = 4;
+const DHCPACK: uint8 = 5;
+const DHCPNAK: uint8 = 6;
+const DHCPRELEASE: uint8 = 7;
+const DHCPINFORM: uint8 = 8;
+
+type HardwareType = uint8;
+
+public type DhcpMessage = unit {
+    op: DhcpOp &size=1;
+    htype: HardwareType &size=1;
+    hlen: uint8 &size=1;
+    hops: uint8 &size=1;
+    xid: uint32 &size=4;
+    secs: uint16 &size=2;
+    flags: bitfield(16) {
+        broadcast: 0;
+        reserved: 1..15;
+    };
+    ciaddr: uint32 &size=4;
+    yiaddr: uint32 &size=4;
+    siaddr: uint32 &size=4;
+    giaddr: uint32 &size=4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64;
+    file: bytes &size=128;
+    options: DhcpOptions &eod;
+};
+
+type DhcpOptions = unit {
+    magic_cookie: bytes &size=4 = b"\x63\x82\x53\x63";
+    options: DhcpOption[];
+};
+
+type DhcpOption = unit {
+    switch (self) {
+        # DHCP Message Type option (code 53)
+        code: uint8 &size=1;
+        length: uint8 &size=1 &requires=(self.length == 1);
+        message_type: uint8 &size=1 &requires=($$ >= 1 && $$ <= 8);
+    } when (self.code == 53);
+
+    # Parameter Request List option (code 55)
+    code: uint8 &size=1;
+    length: uint8 &size=1;
+    params: uint8[self.length];
+
+    # Client Identifier option (code 61)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length > 0);
+    identifier: bytes &size=self.length;
+
+    # Server Identifier option (code 54)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length == 4);
+    server_id: uint32 &size=4;
+
+    # Requested IP Address option (code 50)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length == 4);
+    requested_ip: uint32 &size=4;
+
+    # IP Address Lease Time option (code 51)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length == 4);
+    lease_time: uint32 &size=4;
+
+    # Maximum DHCP Message Size option (code 57)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length == 2);
+    max_size: uint16 &size=2;
+
+    # Vendor Class Identifier option (code 60)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length > 0);
+    vendor_class: bytes &size=self.length;
+
+    # Message option (code 56)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length > 0);
+    message: bytes &size=self.length;
+
+    # Option Overload option (code 52)
+    code: uint8 &size=1;
+    length: uint8 &size=1 &requires=(self.length == 1);
+    overload: uint8 &size=1;
+
+    # End option (code 255)
+    end: uint8 &size=1 = 255;
+
+    # Pad option (code 0)
+    pad: void &size=1 when (self.code == 0);
+
+    # Unknown option
+    code: uint8 &size=1;
+    length: uint8 &size=1;
+    value: bytes &size=self.length;
+};
+
+# Helper to parse sequence of options until end marker
+type DhcpOption[] = unit {
+    switch (self) {
+        # End option marks the end of options
+        end: void &size=1 when (self.code == 255);
+        # Pad option
+        pad: void &size=1 when (self.code == 0);
+        # Other options
+        option: DhcpOption;
+    };
+};

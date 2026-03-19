@@ -1,0 +1,152 @@
+module dhcp;
+
+# --------------------------------------------------------------------
+#  DHCP message format (BOOTP‐compatible)
+# -------------------------------------------------------------------- */
+public type DHCPMessage = unit {
+    # 1 byte: BOOTREQUEST (1) or BOOTREPLY (2)                         */
+    op: uint8   &requires=($$ == 1 || $$ == 2);
+
+    # 1 byte: hardware type (e.g., 1 = Ethernet)                      */
+    htype: uint8;
+
+    # 1 byte: hardware address length (e.g., 6 for Ethernet)          */
+    hlen: uint8;
+
+    # 1 byte: relay‑agent hop count (set to 0 by client)               */
+    hops: uint8;
+
+    # 4 bytes: transaction identifier, chosen by the client            */
+    xid: uint32;
+
+    # 2 bytes: seconds elapsed since the client began address acquisition */
+    secs: uint16;
+
+    # 2 bytes: flags – see RFC 2131 §2.2 (bit 0 = broadcast flag)    */
+    flags: bitfield(16) {
+        broadcast: 0;          # bit‑0 = BROADCAST (B) flag                */
+        mbz: 1..15;           # bits 1‑15 MUST‑BE‑ZERO (MBZ)               */
+    };
+
+    # 4 bytes: client IP address (ciaddr) – filled only in BOUND/RENEW/REBIND */
+    ciaddr: uint32;
+
+    # 4 bytes: “your” (client) IP address (yiaddr) – set by server   */
+    yiaddr: uint32;
+
+    # 4 bytes: server IP address (siaddr) – next server in bootstrap  */
+    siaddr: uint32;
+
+    # 4 bytes: relay agent IP address (giaddr) – set by BOOTP relay    */
+    giaddr: uint32;
+
+    # 16 bytes: client hardware address (chaddr) – padded with zeroes */
+    chaddr: bytes &size=16;
+
+    # 64 bytes: optional server host name (sname) – null‑terminated string */
+    sname: bytes &size=64;
+
+    # 128 bytes: optional boot file name (file) – null‑terminated string */
+    filename: bytes &size=128;
+
+    # ----------------------------------------------------------------
+    #  Options field
+    #  The first four octets are the DHCP “magic cookie” (99,130,83,99).
+    #  Afterwards a series of variable‑length options follow, terminated
+    #  by an END option (code 255).  An OPTION OVERLOAD option (code 52)
+    #  may indicate that additional options appear in the *file* and/or
+    #  *sname* fields – those are handled by the parser automatically.
+    # ---------------------------------------------------------------- */
+    options: DHCPOptionVector;
+};
+
+# --------------------------------------------------------------------
+#  DHCP option (generic)
+# -------------------------------------------------------------------- */
+type DHCPOption = unit {
+    code: uint8;                     # option tag                                    */
+    # The Length field is present for all options except the
+    #   PAD (0) and END (255) options. */
+    switch (self.code) {
+        0  ->   : void;                   # PAD – no length or value, ignored            */
+        255 ->  : void;                  # END – terminates the option list              */
+        * -> {
+            len: uint8;            # length of the value field (0‑255 octets)      */
+            value: bytes &size=self.len;  # raw option data                     */
+        }
+    };
+};
+
+# --------------------------------------------------------------------
+#  Vector that parses the option list until the END option (255) is
+#  encountered.  The vector stops when the most‑recently‑parsed
+#  DHCPOption has code 255.  The parser also respects a possible
+#  OPTION‑OVERLOAD (code 52) that moves some options into the *file*
+#  and/or *sname* fields – those fields are exposed as additional
+#  vectors (see below) and are parsed after the main options block.
+# -------------------------------------------------------------------- */
+type DHCPOptionVector = unit {
+    options: DHCPOption[] &until=255 &eod;                # parse until END (255) or EOD        */
+
+    # If an OPTION‑OVERLOAD option is present, parse the indicated
+    #   additional option areas.  The overload value is a bit‑mask:
+    #      1 = file field contains options,
+    #      2 = sname field contains options,
+    #      3 = both contain options.                                            */
+    overload: uint8 &requires=(self.options[-1].code == 52) ? true : false;
+    if (self.overload) {
+        # decode the overload mask (value is a single byte) */
+        overload_mask: uint8 = self.options[-1].value[0];
+
+        # file field options – present when bit 0 of mask is set */
+        file_opts: DHCPOptionVector
+                 &size=self.overload_mask & 0x01 ? self.file.size : 0;
+
+        # sname field options – present when bit 1 of mask is set */
+        sname_opts: DHCPOptionVector
+                 &size=self.overload_mask & 0x02 ? self.sname.size : 0;
+    }
+};
+
+# --------------------------------------------------------------------
+#  Convenience aliases for the most common DHCP options (as defined in
+#  RFC 1533 / RFC 2132).  They are provided for readability; the parser
+#  treats them exactly like generic DHCPOption instances.
+# -------------------------------------------------------------------- */
+type DHCPMessageTypeOption = unit {
+    code: uint8 &requires=($$ == 53);   # DHCP Message Type */
+    len : uint8 &requires=($$ == 1);
+    value: uint8;                      # 1=DHCPDISCOVER … 8=DHCPINFORM */
+};
+
+type ClientIdentifierOption = unit {
+    code: uint8 &requires=($$ == 61);
+    len : uint8;
+    value: bytes &size=self.len;
+};
+
+type ServerIdentifierOption = unit {
+    code: uint8 &requires=($$ == 54);
+    len : uint8 &requires=($$ == 4);
+    value: uint32;                     # server IPv4 address */
+};
+
+type RequestedIPAddressOption = unit {
+    code: uint8 &requires=($$ == 50);
+    len : uint8 &requires=($$ == 4);
+    value: uint32;                     # IPv4 address requested by client */
+};
+
+type ParameterRequestListOption = unit {
+    code: uint8 &requires=($$ == 55);
+    len : uint8;
+    value: bytes &size=self.len;       # list of option codes the client wants */
+};
+
+# --------------------------------------------------------------------
+#  End‑of‑options marker (code 255).  This unit is only used for
+#  documentation; the generic DHCPOption handles it automatically.
+# -------------------------------------------------------------------- */
+type EndOption = unit {
+    code: uint8 &requires=($$ == 255);
+};

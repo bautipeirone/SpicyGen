@@ -1,0 +1,23 @@
+module DHCP;
+
+public type Message = unit {
+    op: uint8; # [cite: 331, 354]
+    htype: uint8; # [cite: 331, 355]
+    hlen: uint8; # [cite: 331, 356]
+    hops: uint8; # [cite: 332, 357]
+    xid: uint32; # [cite: 333, 358]
+    secs: uint16; # [cite: 334, 359]
+    flags: bitfield(16) { # [cite: 335, 360, 384]
+        broadcast: 0; # [cite: 385, 386]
+        mbz: 1..15; # [cite: 386, 387]
+    };
+    ciaddr: bytes &size=4; # [cite: 336, 361]
+    yiaddr: bytes &size=4; # [cite: 337, 363]
+    siaddr: bytes &size=4; # [cite: 338, 364]
+    giaddr: bytes &size=4; # [cite: 339, 365]
+    chaddr: bytes &size=16; # [cite: 340, 366]
+    sname: bytes &size=64; # [cite: 342, 367]
+    filename: bytes &size=128; # [cite: 343, 368]
+    options: bytes &eod; # [cite: 344, 370]
+};
+

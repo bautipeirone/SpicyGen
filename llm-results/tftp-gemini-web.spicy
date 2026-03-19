@@ -1,0 +1,32 @@
+module TFTP;
+
+public type Packet = unit {
+    opcode: uint16;
+    switch ( self.opcode ) {
+        1 -> rrq: Request;
+        2 -> wrq: Request;
+        3 -> data: Data;
+        4 -> ack: Ack;
+        5 -> error: Error;
+    };
+};
+
+type Request = unit {
+    filename: bytes &until=b"\x00";
+    mode: bytes &until=b"\x00";
+};
+
+type Data = unit {
+    block_num: uint16;
+    payload: bytes &eod;
+};
+
+type Ack = unit {
+    block_num: uint16;
+};
+
+type Error = unit {
+    error_code: uint16;
+    err_msg: bytes &until=b"\x00";
+};
+

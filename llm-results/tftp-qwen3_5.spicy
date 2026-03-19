@@ -1,0 +1,78 @@
+module tftp;
+
+# TFTP Read Request Packet (Opcode 1)
+public type RRQ = unit {
+    opcode: uint16 &requires=($$ == 1);
+    filename: bytes &until=b"\x00";
+    mode: bytes &until=b"\x00";
+};
+
+# TFTP Write Request Packet (Opcode 2)
+public type WRQ = unit {
+    opcode: uint16 &requires=($$ == 2);
+    filename: bytes &until=b"\x00";
+    mode: bytes &until=b"\x00";
+};
+
+# TFTP Data Packet (Opcode 3)
+public type DATA = unit {
+    opcode: uint16 &requires=($$ == 3);
+    block: uint16;
+    data: bytes &size=512;
+};
+
+# TFTP Acknowledgment Packet (Opcode 4)
+public type ACK = unit {
+    opcode: uint16 &requires=($$ == 4);
+    block: uint16;
+};
+
+# TFTP Error Packet (Opcode 5)
+public type ERROR = unit {
+    opcode: uint16 &requires=($$ == 5);
+    error_code: uint16;
+    error_msg: bytes &until=b"\x00";
+};
+
+# TFTP Error Codes (from RFC 1350 Appendix)
+public type ErrorCode = unit {
+    code: uint16;
+    switch (self.code) {
+        0 -> : void; # Not defined, see error message (if any)
+        1 -> : void; # File not found
+        2 -> : void; # Access violation
+        3 -> : void; # Disk full or allocation exceeded
+        4 -> : void; # Illegal TFTP operation
+        5 -> : void; # Unknown transfer ID
+        6 -> : void; # File already exists
+        7 -> : void; # No such user
+    };
+};
+
+# TFTP Transfer Modes (from RFC 1350 Section 1)
+public type TransferMode = unit {
+    mode: bytes &until=b"\x00";
+    switch (self.mode) {
+        b"netascii" -> : void; # ASCII with Telnet modifications
+        b"octet" -> : void; # Raw 8-bit bytes (binary mode)
+        b"mail" -> : void; # Netascii characters sent to a user (obsolete)
+    };
+};
+
+# TFTP Well-Known Server Port (from RFC 1350 Section 4)
+public type WellKnownPort = unit {
+    port_number: uint16 &requires=($$ == 69);
+};
+
+# TFTP Packet Type Dispatcher (based on opcode)
+public type TFTPHeader = unit {
+    opcode: uint16;
+    switch (self.opcode) {
+        1 -> rrq: RRQ;
+        2 -> wrq: WRQ;
+        3 -> data: DATA;
+        4 -> ack: ACK;
+        5 -> error: ERROR;
+        * -> : void;
+    };
+};

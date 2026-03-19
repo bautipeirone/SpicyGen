@@ -1,0 +1,50 @@
+module TFTP;
+
+# TFTP Packet Opcodes
+public type Opcode = uint16;
+
+# Error codes
+public type ErrorCode = uint16;
+
+# TFTP header
+# All TFTP packets start with a 2-byte opcode
+type TftpHeader = unit {
+    opcode: Opcode;
+};
+
+# TFTP packet types
+type RRQ_WRQ = unit {
+    opcode: Opcode &requires=(self == 1 || self == 2);
+    filename: bytes &until=b"\x00";
+    mode: bytes &until=b"\x00";
+};
+
+type DATA = unit {
+    opcode: Opcode &requires=(self == 3);
+    blocknum: uint16;
+    data: bytes &size=(512);
+};
+
+type ACK = unit {
+    opcode: Opcode &requires=(self == 4);
+    blocknum: uint16;
+};
+
+type ERROR = unit {
+    opcode: Opcode &requires=(self == 5);
+    errcode: ErrorCode;
+    errmsg: bytes &until=b"\x00";
+};
+
+# Switch for TFTP packet types
+public type TftpPacket = unit {
+    opcode: Opcode;
+    switch ( self.opcode ) {
+        1 -> rrq_wrq: RRQ_WRQ;
+        2 -> rrq_wrq: RRQ_WRQ;
+        3 -> data: DATA;
+        4 -> ack: ACK;
+        5 -> error: ERROR;
+        * -> raw: bytes &eod;
+    };
+};
