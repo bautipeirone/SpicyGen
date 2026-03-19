@@ -3,6 +3,7 @@
 ## General guidelines
 > Generally, you define parsers through types called “units” that describe the syntax of a protocol. A set of units forms a grammar. In practice, units typically correspond pretty directly to protocol data units (PDUs) as protocol specifications tend to define them.
 > One will typically create a unit type for each of the main data units that a protocol defines.
+> Subunits don't have to repeat fields declared in the parent units.
 
 ## Grammar
 * Every script starts with a `module` statement defining a namespace for the script’s content.

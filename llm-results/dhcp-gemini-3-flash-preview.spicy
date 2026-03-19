@@ -1,0 +1,71 @@
+module DHCP;
+
+# DHCP message structure based on RFC 2131
+# Note: 'file' and 'port' are reserved keywords in the specification language and have been renamed.
+
+public type Message = unit {
+    # Message op code / message type. 1 = BOOTREQUEST, 2 = BOOTREPLY
+    op: uint8 &requires=($$ == 1 || $$ == 2);
+
+    # Hardware address type, e.g., '1' = 10mb ethernet.
+    htype: uint8;
+
+    # Hardware address length (e.g. '6' for 10mb ethernet). Must be <= 16.
+    hlen: uint8 &requires=($$ <= 16);
+
+    # Client sets to zero, optionally used by relay agents.
+    hops: uint8;
+
+    # Transaction ID, a random number chosen by the client.
+    xid: uint32;
+
+    # Seconds elapsed since client began address acquisition or renewal process.
+    secs: uint16;
+
+    # Flags field including the BROADCAST bit.
+    flags: bitfield(16) {
+        broadcast: 0;
+        mbz: 1..15; # Must Be Zero
+    };
+
+    # Client IP address.
+    ciaddr: uint32;
+
+    # 'your' (client) IP address.
+    yiaddr: uint32;
+
+    # IP address of next server to use in bootstrap.
+    siaddr: uint32;
+
+    # Relay agent IP address, used in booting via a relay agent.
+    giaddr: uint32;
+
+    # Client hardware address (16 octets, only hlen octets are used).
+    chaddr: bytes &size=16;
+
+    # Optional server host name, null terminated string.
+    sname: bytes &size=64;
+
+    # Boot file name, null terminated string. 
+    # Field renamed from 'file' to 'boot_file_path' as 'file' is a reserved keyword.
+    boot_file_path: bytes &size=128;
+
+    # Magic cookie (0x63, 0x82, 0x53, 0x63)
+    magic_cookie: b"\x63\x82\x53\x63";
+
+    # Variable length options field.
+    options: Option[] &eod;
+};
+
+# DHCP Option structure
+type Option = unit {
+    tag: uint8;
+    switch ( self.tag ) {
+        0   -> : void;     # Pad Option (1 byte, no length/data)
+        255 -> : void;     # End Option (1 byte, no length/data)
+        *   -> {           # All other options
+            len: uint8;
+            value: bytes &size=self.len;
+        };
+    };
+};

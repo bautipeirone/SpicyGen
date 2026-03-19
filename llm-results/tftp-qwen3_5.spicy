@@ -1,78 +1,128 @@
 module tftp;
 
-# TFTP Read Request Packet (Opcode 1)
-public type RRQ = unit {
-    opcode: uint16 &requires=($$ == 1);
-    filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00";
-};
+/* -------------------------------------------------------------------------
+ *  Common definitions
+ * -----------------------------------------------------------------------*/
 
-# TFTP Write Request Packet (Opcode 2)
-public type WRQ = unit {
-    opcode: uint16 &requires=($$ == 2);
-    filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00";
-};
+type Opcode = uint16;
 
-# TFTP Data Packet (Opcode 3)
-public type DATA = unit {
-    opcode: uint16 &requires=($$ == 3);
-    block: uint16;
-    data: bytes &size=512;
-};
+/* -------------------------------------------------------------------------
+ *  Packet formats
+ * -----------------------------------------------------------------------*/
 
-# TFTP Acknowledgment Packet (Opcode 4)
-public type ACK = unit {
-    opcode: uint16 &requires=($$ == 4);
-    block: uint16;
-};
+public type TFTP_Packet = unit {
+    opcode: Opcode;
 
-# TFTP Error Packet (Opcode 5)
-public type ERROR = unit {
-    opcode: uint16 &requires=($$ == 5);
-    error_code: uint16;
-    error_msg: bytes &until=b"\x00";
-};
-
-# TFTP Error Codes (from RFC 1350 Appendix)
-public type ErrorCode = unit {
-    code: uint16;
-    switch (self.code) {
-        0 -> : void; # Not defined, see error message (if any)
-        1 -> : void; # File not found
-        2 -> : void; # Access violation
-        3 -> : void; # Disk full or allocation exceeded
-        4 -> : void; # Illegal TFTP operation
-        5 -> : void; # Unknown transfer ID
-        6 -> : void; # File already exists
-        7 -> : void; # No such user
-    };
-};
-
-# TFTP Transfer Modes (from RFC 1350 Section 1)
-public type TransferMode = unit {
-    mode: bytes &until=b"\x00";
-    switch (self.mode) {
-        b"netascii" -> : void; # ASCII with Telnet modifications
-        b"octet" -> : void; # Raw 8-bit bytes (binary mode)
-        b"mail" -> : void; # Netascii characters sent to a user (obsolete)
-    };
-};
-
-# TFTP Well-Known Server Port (from RFC 1350 Section 4)
-public type WellKnownPort = unit {
-    port_number: uint16 &requires=($$ == 69);
-};
-
-# TFTP Packet Type Dispatcher (based on opcode)
-public type TFTPHeader = unit {
-    opcode: uint16;
+    /* Dispatch to the concrete packet type based on the opcode value */
     switch (self.opcode) {
-        1 -> rrq: RRQ;
-        2 -> wrq: WRQ;
-        3 -> data: DATA;
-        4 -> ack: ACK;
-        5 -> error: ERROR;
-        * -> : void;
+        1 -> : RRQ_Packet;          # Read request
+        2 -> : WRQ_Packet;          # Write request
+        3 -> : DATA_Packet;          # Data block
+        4 -> : ACK_Packet;           # Acknowledgment
+        5 -> : ERROR_Packet;         # Error
+        * -> : void;                  # Unknown/unsupported – ignore
     };
 };
+
+/* -------------------------------------------------------------------------
+ *  1 – Read request (RRQ)  and  2 – Write request (WRQ)
+ *
+ *  Format (see Fig. 5‑1):
+ *      2 bytes   string   1 byte   string   1 byte
+ *      ---------------------------------------------
+ *      | Opcode | Filename |   0   |   Mode   |   0   |
+ *      ---------------------------------------------
+ *
+ *  - Filename: netascii string terminated by a zero byte.
+ *  - Mode:    netascii string terminated by a zero byte; only the
+ *             values “netascii”, “octet”, or “mail” (case‑insensitive) are
+ *             permitted.
+ * -----------------------------------------------------------------------*/
+
+type RRQ_Packet  = unit {
+    opcode: uint16 &requires=(self.opcode == 1);
+    filename: bytes &until=0x00;               # netascii, zero‑terminated
+    mode:     bytes &until=0x00
+              &requires=(   $$ == b"netascii"
+                         || $$ == b"NETASCII"
+                         || $$ == b"Octet"
+                         || $$ == b"OCTET"
+                         || $$ == b"Mail"
+                         || $$ == b"MAIL"
+                     );               # case‑insensitive check (simplified)
+};
+
+type WRQ_Packet  = unit {
+    opcode: uint16 &requires=(self.opcode == 2);
+    filename: bytes &until=0x00;
+    mode:     bytes &until=0x00
+              &requires=(   $$ == b"netascii"
+                         || $$ == b"NETASCII"
+                         || $$ == b"Octet"
+                         || $$ == b"OCTET"
+                         || $$ == b"Mail"
+                         || $$ == b"MAIL"
+                     );
+};
+
+/* -------------------------------------------------------------------------
+ *  3 – Data packet (DATA)
+ *
+ *  Format (Fig. 5‑2):
+ *      2 bytes   2 bytes      n bytes
+ *      ---------------------------------
+ *      | Opcode | Block # |   Data   |
+ *      ---------------------------------
+ *
+ *  - Block #: 16‑bit unsigned, values start at 1 and increment by 1 for each
+ *    new block.
+ *  - Data:    0 .. 512 bytes.  If exactly 512 bytes, the packet is NOT the
+ *    final block; otherwise (<512) it terminates the transfer.
+ * -----------------------------------------------------------------------*/
+
+public type DATA_Packet = unit {
+    opcode: uint16 &requires=(self.opcode == 3);
+    block:  uint16 &requires=(self.block >= 1);
+    data:   bytes &size=512 &eod;               # up to 512 bytes (may be less)
+};
+
+/* -------------------------------------------------------------------------
+ *  4 – Acknowledgment packet (ACK)
+ *
+ *  Format (Fig. 5‑3):
+ *      2 bytes   2 bytes
+ *      --------------------
+ *      | Opcode | Block # |
+ *      --------------------
+ *
+ *  - Block #: 16‑bit unsigned.  For a WRQ reply the block is 0; otherwise
+ *    it mirrors the block number of the DATA packet being acknowledged.
+ * -----------------------------------------------------------------------*/
+
+public type ACK_Packet = unit {
+    opcode: uint16 &requires=(self.opcode == 4);
+    block:  uint16;                             # 0 for WRQ‑to‑ACK, >=1 otherwise
+};
+
+/* -------------------------------------------------------------------------
+ *  5 – Error packet (ERROR)
+ *
+ *  Format (Fig. 5‑4):
+ *      2 bytes   2 bytes    string   1 byte
+ *      ------------------------------------
+ *      | Opcode | ErrCode | ErrMsg |   0   |
+ *      ------------------------------------
+ *
+ *  - ErrCode: 16‑bit unsigned, values defined in appendix (0‑7).
+ *  - ErrMsg:  netascii string terminated by a zero byte.
+ * -----------------------------------------------------------------------*/
+
+public type ERROR_Packet = unit {
+    opcode: uint16 &requires=(self.opcode == 5);
+    errcode: uint16 &requires=(self.errcode <= 7);
+    errmsg:  bytes &until=0x00;                # human‑readable netascii message
+};
+
+/* -------------------------------------------------------------------------
+ *  End of grammar
+ * -----------------------------------------------------------------------*/

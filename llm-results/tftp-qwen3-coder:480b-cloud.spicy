@@ -1,34 +1,34 @@
-module tftp;
+module TFTP;
 
 public type Packet = unit {
     opcode: uint16;
     switch ( self.opcode ) {
-        1 -> : RRQ;
-        2 -> : WRQ;
-        3 -> : DATA;
-        4 -> : ACK;
-        5 -> : ERROR;
-        * -> : void;
+        1 -> rrq: RRQ;
+        2 -> wrq: WRQ;
+        3 -> data: DATA;
+        4 -> ack: ACK;
+        5 -> error: ERROR;
+        * -> : bytes &eod;
     };
 };
 
 type RRQ = unit {
     filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00" &requires=($$ == b"netascii" || $$ == b"octet" || $$ == b"mail");
+    mode: bytes &until=b"\x00";
 };
 
 type WRQ = unit {
     filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00" &requires=($$ == b"netascii" || $$ == b"octet" || $$ == b"mail");
+    mode: bytes &until=b"\x00";
 };
 
 type DATA = unit {
-    block_number: uint16;
+    block_num: uint16;
     data: bytes &size=512;
 };
 
 type ACK = unit {
-    block_number: uint16;
+    block_num: uint16;
 };
 
 type ERROR = unit {

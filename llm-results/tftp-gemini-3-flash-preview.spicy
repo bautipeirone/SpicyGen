@@ -1,0 +1,64 @@
+module TFTP;
+
+# TFTP (Trivial File Transfer Protocol) - RFC 1350
+# TFTP packets are encapsulated in UDP datagrams.
+
+public type Packet = unit {
+    opcode: uint16 &requires=($$ >= 1 && $$ <= 5);
+
+    switch (self.opcode) {
+        1 -> rrq: Request;   # Read Request
+        2 -> wrq: Request;   # Write Request
+        3 -> data: Data;     # Data Packet
+        4 -> ack: Ack;       # Acknowledgment
+        5 -> error: Error;   # Error Packet
+    };
+};
+
+# RRQ and WRQ packets (Opcodes 1 and 2)
+type Request = unit {
+    # The file name is a sequence of bytes in netascii terminated by a zero byte.
+    filename: bytes &until=b"\x00";
+    
+    # The mode field contains the string "netascii", "octet", or "mail" (case-insensitive)
+    # terminated by a zero byte.
+    mode: bytes &until=b"\x00";
+};
+
+# DATA packet (Opcode 3)
+type Data = unit {
+    # Block numbers on data packets begin with one and increase by one for each new block.
+    block_num: uint16;
+    
+    # The data field is from 0 to 512 bytes long. 
+    # If it is 512 bytes long, the block is not the last block.
+    # If it is 0-511 bytes long, it signals the end of the transfer.
+    # &size=512 &eod allows consuming up to 512 bytes until the end of the UDP payload.
+    data: bytes &size=512 &eod;
+};
+
+# ACK packet (Opcode 4)
+type Ack = unit {
+    # Block # echoes the block number of the DATA packet being acknowledged.
+    # For a WRQ, the first ACK block number is zero.
+    block_num: uint16;
+};
+
+# ERROR packet (Opcode 5)
+type Error = unit {
+    # Error code indicates the nature of the error.
+    error_code: uint16 &requires=($$ <= 7);
+    
+    # The error message is intended for human consumption.
+    error_msg: bytes &until=b"\x00";
+};
+
+# Defined Error Codes:
+# 0: Not defined, see error message (if any).
+# 1: File not found.
+# 2: Access violation.
+# 3: Disk full or allocation exceeded.
+# 4: Illegal TFTP operation.
+# 5: Unknown transfer ID.
+# 6: File already exists.
+# 7: No such user.
