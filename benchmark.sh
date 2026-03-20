@@ -30,7 +30,7 @@ while [[ $# -gt 0 ]]; do
       shift
       shift
       ;;
-    -*|--*)
+    -*)
       echo "Unknown option $1"
       exit 1
       ;;
@@ -59,28 +59,30 @@ get_model_name() {
 # Second input is rfc
 # Third input is output file
 run_grammar_generator() {
-  local PROVIDER=$(get_provider $1)
-  local MODEL=$(get_model_name $1)
+  local PROVIDER
+  local MODEL
   local RFC_PATH=$2
   local OUTPUT_PATH=$3
-  python generate_grammar.py -p $PROVIDER -m $MODEL -o $OUTPUT_PATH $RFC_PATH
-  spicyc -j $OUTPUT_PATH 2> /dev/null
-  if [[ $? -eq 0 ]]; then
-    echo "GRAMMAR PRODUCED BY $MODEL COMPILED SUCCESFULLY: $(basename $OUTPUT_PATH)"
+  PROVIDER=$(get_provider "$1")
+  MODEL=$(get_model_name "$1")
+  python generate_grammar.py -p "$PROVIDER" -m "$MODEL" -o "$OUTPUT_PATH" "$RFC_PATH"
+  if spicyc -j "$OUTPUT_PATH" 2> /dev/null; then
+    echo "GRAMMAR PRODUCED BY $MODEL COMPILED SUCCESFULLY: $(basename "$OUTPUT_PATH")"
   else
-    echo "GRAMMAR PRODUCED BY $MODEL DIDNT COMPILE: $(basename $OUTPUT_PATH)"
+    echo "GRAMMAR PRODUCED BY $MODEL DIDNT COMPILE: $(basename "$OUTPUT_PATH")"
   fi
 }
 
 ############ INITIALIZATION #############
-source $SPEC_EXTRACT/code/venv/bin/activate
+source "$SPEC_EXTRACT/code/venv/bin/activate"
+mkdir -p "$BASE_OUTPUT_PATH"
 #########################################
 
 for p in $PROTOCOLS; do
   for m in $MODELS; do
-    RFC_PATH=$(get_rfc $p)
-    OUTPUT_PATH="$BASE_OUTPUT_PATH/$p-$(get_model_name $m).spicy"
-    run_grammar_generator $m $RFC_PATH $OUTPUT_PATH &
+    RFC_PATH=$(get_rfc "$p")
+    OUTPUT_PATH="$BASE_OUTPUT_PATH/$p-$(get_model_name "$m").spicy"
+    run_grammar_generator "$m" "$RFC_PATH" "$OUTPUT_PATH" &
   done
 done
 
