@@ -1,0 +1,60 @@
+module http;
+
+public type HTTPMessage = unit {
+    message: Message;
+};
+
+type Message = unit {
+    start_line: StartLine;
+    headers: HeaderFields[];
+    : b"\r\n";
+    body: bytes &eod;
+};
+
+type StartLine = unit {
+    switch ( self.is_request ) {
+        true -> request_line: RequestLine;
+        false -> status_line: StatusLine;
+    };
+};
+
+type RequestLine = unit {
+    method: Method;
+    : b" ";
+    request_uri: RequestURI;
+    : b" ";
+    http_version: HTTPVersion;
+    : b"\r\n";
+};
+
+type StatusLine = unit {
+    http_version: HTTPVersion;
+    : b" ";
+    status_code: StatusCode;
+    : b" ";
+    reason_phrase: bytes &until=b"\r\n";
+    : b"\r\n";
+};
+
+type Method = unit {
+    method_token: bytes &until=function::is_space_or_control();
+};
+
+type RequestURI = unit {
+    uri: bytes &until=function::is_space_or_control();
+};
+
+type HTTPVersion = unit {
+    version: bytes &until=function::is_space_or_control();
+};
+
+type StatusCode = unit {
+    code: bytes &size=3;
+};
+
+type HeaderFields = unit {
+    field_name: bytes &until=b":";
+    : b":";
+    field_value: bytes &until=b"\r\n";
+    : b"\r\n";
+};

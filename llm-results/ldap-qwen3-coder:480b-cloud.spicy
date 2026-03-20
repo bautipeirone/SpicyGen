@@ -1,0 +1,326 @@
+module LDAP;
+
+public type LDAPMessage = unit {
+    messageID: MessageID;
+    protocolOp: ProtocolOp;
+    controls: Controls &optional;
+};
+
+type MessageID = uint32 &requires=($$ >= 0 and $$ <= 2147483647);
+
+type ProtocolOp = unit {
+    op: enum {
+        bindRequest = 0,
+        bindResponse = 1,
+        unbindRequest = 2,
+        searchRequest = 3,
+        searchResEntry = 4,
+        searchResDone = 5,
+        searchResRef = 19,
+        modifyRequest = 6,
+        modifyResponse = 7,
+        addRequest = 8,
+        addResponse = 9,
+        delRequest = 10,
+        delResponse = 11,
+        modDNRequest = 12,
+        modDNResponse = 13,
+        compareRequest = 14,
+        compareResponse = 15,
+        abandonRequest = 16,
+        extendedReq = 23,
+        extendedResp = 24,
+        intermediateResponse = 25
+    };
+    data: switch (self.op) {
+        bindRequest -> BindRequest;
+        bindResponse -> BindResponse;
+        unbindRequest -> UnbindRequest;
+        searchRequest -> SearchRequest;
+        searchResEntry -> SearchResultEntry;
+        searchResDone -> SearchResultDone;
+        searchResRef -> SearchResultReference;
+        modifyRequest -> ModifyRequest;
+        modifyResponse -> ModifyResponse;
+        addRequest -> AddRequest;
+        addResponse -> AddResponse;
+        delRequest -> DelRequest;
+        delResponse -> DelResponse;
+        modDNRequest -> ModifyDNRequest;
+        modDNResponse -> ModifyDNResponse;
+        compareRequest -> CompareRequest;
+        compareResponse -> CompareResponse;
+        abandonRequest -> AbandonRequest;
+        extendedReq -> ExtendedRequest;
+        extendedResp -> ExtendedResponse;
+        intermediateResponse -> IntermediateResponse;
+    };
+};
+
+type LDAPString = bytes &until=b"\x00"; # Simplified - actual encoding is UTF-8
+
+type LDAPOID = LDAPString; # Constrained to numeric OID format
+
+type LDAPDN = LDAPString; # Constrained to distinguishedName format
+
+type RelativeLDAPDN = LDAPString; # Constrained to name-component format
+
+type AttributeDescription = LDAPString; # Constrained to attributedescription format
+
+type AttributeValue = bytes;
+
+type AssertionValue = bytes;
+
+type AttributeValueAssertion = unit {
+    attributeDesc: AttributeDescription;
+    assertionValue: AssertionValue;
+};
+
+type PartialAttribute = unit {
+    type: AttributeDescription;
+    vals: set<AttributeValue>;
+};
+
+type Attribute = PartialAttribute &requires=(self.vals.length() >= 1);
+
+type MatchingRuleId = LDAPString;
+
+type LDAPResult = unit {
+    resultCode: enum {
+        success = 0,
+        operationsError = 1,
+        protocolError = 2,
+        timeLimitExceeded = 3,
+        sizeLimitExceeded = 4,
+        compareFalse = 5,
+        compareTrue = 6,
+        authMethodNotSupported = 7,
+        strongerAuthRequired = 8,
+        referral = 10,
+        adminLimitExceeded = 11,
+        unavailableCriticalExtension = 12,
+        confidentialityRequired = 13,
+        saslBindInProgress = 14,
+        noSuchAttribute = 16,
+        undefinedAttributeType = 17,
+        inappropriateMatching = 18,
+        constraintViolation = 19,
+        attributeOrValueExists = 20,
+        invalidAttributeSyntax = 21,
+        noSuchObject = 32,
+        aliasProblem = 33,
+        invalidDNSyntax = 34,
+        aliasDereferencingProblem = 36,
+        inappropriateAuthentication = 48,
+        invalidCredentials = 49,
+        insufficientAccessRights = 50,
+        busy = 51,
+        unavailable = 52,
+        unwillingToPerform = 53,
+        loopDetect = 54,
+        namingViolation = 64,
+        objectClassViolation = 65,
+        notAllowedOnNonLeaf = 66,
+        notAllowedOnRDN = 67,
+        entryAlreadyExists = 68,
+        objectClassModsProhibited = 69,
+        affectsMultipleDSAs = 71,
+        other = 80
+    };
+    matchedDN: LDAPDN;
+    diagnosticMessage: LDAPString;
+    referral: Referral &optional;
+};
+
+type Referral = unit {
+    uris: vector<URI> &size=1..maxInt;
+};
+
+type URI = LDAPString;
+
+type Controls = vector<Control>;
+
+type Control = unit {
+    controlType: LDAPOID;
+    criticality: bool &default=false;
+    controlValue: bytes &optional;
+};
+
+public type BindRequest = unit {
+    version: uint8 &requires=($$ >= 1 and $$ <= 127);
+    name: LDAPDN;
+    authentication: AuthenticationChoice;
+};
+
+type AuthenticationChoice = unit {
+    choice: enum {
+        simple = 0,
+        sasl = 3
+    };
+    data: switch (self.choice) {
+        simple -> bytes;
+        sasl -> SaslCredentials;
+    };
+};
+
+type SaslCredentials = unit {
+    mechanism: LDAPString;
+    credentials: bytes &optional;
+};
+
+public type BindResponse = unit {
+    ldapResult: LDAPResult;
+    serverSaslCreds: bytes &optional;
+};
+
+public type UnbindRequest = unit {
+    : void; # NULL
+};
+
+public type SearchRequest = unit {
+    baseObject: LDAPDN;
+    scope: enum {
+        baseObject = 0,
+        singleLevel = 1,
+        wholeSubtree = 2
+    };
+    derefAliases: enum {
+        neverDerefAliases = 0,
+        derefInSearching = 1,
+        derefFindingBaseObj = 2,
+        derefAlways = 3
+    };
+    sizeLimit: uint32 &requires=($$ >= 0 and $$ <= 2147483647);
+    timeLimit: uint32 &requires=($$ >= 0 and $$ <= 2147483647);
+    typesOnly: bool;
+    filter: Filter;
+    attributes: AttributeSelection;
+};
+
+type AttributeSelection = vector<LDAPString>;
+
+type Filter = unit {
+    filterType: enum {
+        and = 0,
+        or = 1,
+        not = 2,
+        equalityMatch = 3,
+        substrings = 4,
+        greaterOrEqual = 5,
+        lessOrEqual = 6,
+        present = 7,
+        approxMatch = 8,
+        extensibleMatch = 9
+    };
+    filterData: switch (self.filterType) {
+        and -> set<Filter>;
+        or -> set<Filter>;
+        not -> Filter;
+        equalityMatch -> AttributeValueAssertion;
+        substrings -> SubstringFilter;
+        greaterOrEqual -> AttributeValueAssertion;
+        lessOrEqual -> AttributeValueAssertion;
+        present -> AttributeDescription;
+        approxMatch -> AttributeValueAssertion;
+        extensibleMatch -> MatchingRuleAssertion;
+    };
+};
+
+type SubstringFilter = unit {
+    type: AttributeDescription;
+    substrings: vector<SubstringChoice> &size=1..maxInt;
+};
+
+type SubstringChoice = unit {
+    choice: enum {
+        initial = 0,
+        any = 1,
+        final = 2
+    };
+    value: AssertionValue;
+};
+
+type MatchingRuleAssertion = unit {
+    matchingRule: MatchingRuleId &optional;
+    type: AttributeDescription &optional;
+    matchValue: AssertionValue;
+    dnAttributes: bool &default=false;
+};
+
+public type SearchResultEntry = unit {
+    objectName: LDAPDN;
+    attributes: PartialAttributeList;
+};
+
+type PartialAttributeList = vector<PartialAttribute>;
+
+public type SearchResultReference = unit {
+    uris: vector<URI> &size=1..maxInt;
+};
+
+public type SearchResultDone = LDAPResult;
+
+public type ModifyRequest = unit {
+    object: LDAPDN;
+    changes: vector<ModifyRequestChange>;
+};
+
+type ModifyRequestChange = unit {
+    operation: enum {
+        add = 0,
+        delete = 1,
+        replace = 2
+    };
+    modification: PartialAttribute;
+};
+
+public type ModifyResponse = LDAPResult;
+
+public type AddRequest = unit {
+    entry: LDAPDN;
+    attributes: AttributeList;
+};
+
+type AttributeList = vector<Attribute>;
+
+public type AddResponse = LDAPResult;
+
+public type DelRequest = LDAPDN;
+
+public type DelResponse = LDAPResult;
+
+public type ModifyDNRequest = unit {
+    entry: LDAPDN;
+    newrdn: RelativeLDAPDN;
+    deleteoldrdn: bool;
+    newSuperior: LDAPDN &optional;
+};
+
+public type ModifyDNResponse = LDAPResult;
+
+public type CompareRequest = unit {
+    entry: LDAPDN;
+    ava: AttributeValueAssertion;
+};
+
+public type CompareResponse = LDAPResult;
+
+public type AbandonRequest = MessageID;
+
+public type ExtendedRequest = unit {
+    requestName: LDAPOID;
+    requestValue: bytes &optional;
+};
+
+public type ExtendedResponse = unit {
+    ldapResult: LDAPResult;
+    responseName: LDAPOID &optional;
+    responseValue: bytes &optional;
+};
+
+public type IntermediateResponse = unit {
+    responseName: LDAPOID &optional;
+    responseValue: bytes &optional;
+};
+
+const maxInt = 2147483647;

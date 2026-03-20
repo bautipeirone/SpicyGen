@@ -1,0 +1,52 @@
+module http11;
+
+public type HTTPVersion = unit {
+    major: uint8;
+    minor: uint8;
+};
+
+public type RequestLine = unit {
+    method: bytes &until=b" ";
+    uri: bytes &until=b" ";
+    version: HTTPVersion;
+};
+
+public type StatusLine = unit {
+    version: HTTPVersion;
+    status_code: uint16;
+    reason_phrase: bytes &until=b"\r\n";
+};
+
+public type HeaderField = unit {
+    name: bytes &until=b":";
+    value: bytes &until=b"\r\n";
+};
+
+public type Headers = unit {
+    fields: HeaderField[];
+};
+
+public type MessageBody = unit {
+    content: bytes &eod;
+};
+
+public type ChunkedBody = unit {
+    chunks: Chunk[];
+    last_chunk: LastChunk;
+    trailer: Headers;
+};
+
+public type Chunk = unit {
+    size: uint64 &size=1;
+    data: bytes &size=self.size;
+};
+
+public type LastChunk = unit {
+    size: uint64 &size=1;
+};
+
+public type HTTPMessage = unit {
+    start_line: RequestLine | StatusLine;
+    headers: Headers;
+    body: MessageBody | ChunkedBody;
+};

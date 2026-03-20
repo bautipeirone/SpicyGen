@@ -1,0 +1,345 @@
+module ldap {
+
+/* -----------------------------------------------------------------
+   Primitive types (ASN.1 → grammar)
+   ----------------------------------------------------------------- */
+type MessageID   = uint32 &requires=($$ >= 0 && $$ <= 2147483647);
+type LDAPString  = bytes &size=Var;                # UTF‑8 octet string, length is BER‑encoded
+type LDAPOID     = bytes &size=Var;                # dotted‑decimal OID (constrained <numericoid>)
+type LDAPDN      = LDAPString;                    # constrained to <distinguishedName>
+type RelativeLDAPDN = LDAPString;                # constrained to <name‑component>
+type AttributeDescription = LDAPString;          # constrained to <attributedescription>
+type AttributeValue = bytes &size=Var;           # opaque octet string
+type AssertionValue = bytes &size=Var;            # opaque octet string
+type URI = LDAPString;                            # limited to characters permitted in URIs
+
+/* -----------------------------------------------------------------
+   Structured types (units)
+   ----------------------------------------------------------------- */
+public type LDAPResult = unit {
+    resultCode : enum {
+        success                        = 0,
+        operationsError                = 1,
+        protocolError                  = 2,
+        timeLimitExceeded              = 3,
+        sizeLimitExceeded              = 4,
+        compareFalse                   = 5,
+        compareTrue                    = 6,
+        authMethodNotSupported         = 7,
+        strongerAuthRequired          = 8,
+        referral                       = 10,
+        adminLimitExceeded            = 11,
+        unavailableCriticalExtension    = 12,
+        confidentialityRequired        = 13,
+        saslBindInProgress             = 14,
+        noSuchAttribute                = 16,
+        undefinedAttributeType         = 17,
+        inappropriateMatching          = 18,
+        constraintViolation            = 19,
+        attributeOrValueExists         = 20,
+        invalidAttributeSyntax         = 21,
+        noSuchObject                   = 32,
+        aliasProblem                   = 33,
+        invalidDNSyntax                = 34,
+        aliasDereferencingProblem      = 36,
+        inappropriateAuthentication    = 48,
+        invalidCredentials             = 49,
+        insufficientAccessRights       = 50,
+        busy                           = 51,
+        unavailable                    = 52,
+        unwillingToPerform            = 53,
+        loopDetect                     = 54,
+        namingViolation                = 64,
+        objectClassViolation           = 65,
+        notAllowedOnNonLeaf            = 66,
+        notAllowedOnRDN                = 67,
+        entryAlreadyExists             = 68,
+        objectClassModsProhibited      = 69,
+        affectsMultipleDSAs            = 71,
+        other                          = 80,
+        ...                              # extensible
+    };
+    matchedDN : LDAPDN;
+    diagnosticMessage : LDAPString;
+    referral : [3] Referral OPTIONAL;
+};
+
+public type Referral = unit {
+    uri_list : URI[1..MAX];                 # SEQUENCE SIZE (1..MAX) OF uri
+};
+
+public type Controls = unit {
+    controls : Control[0..MAX];              # SEQUENCE OF control
+};
+
+public type Control = unit {
+    controlType   : LDAPOID;
+    criticality   : boolean &default=FALSE;
+    controlValue  : bytes &size=Var OPTIONAL;
+};
+
+/* -----------------------------------------------------------------
+   Message envelope
+   ----------------------------------------------------------------- */
+public type LDAPMessage = unit {
+    messageID : MessageID;
+    protocolOp : choice {
+        bindRequest            : BindRequest,
+        bindResponse           : BindResponse,
+        unbindRequest          : UnbindRequest,
+        searchRequest          : SearchRequest,
+        searchResEntry         : SearchResultEntry,
+        searchResDone          : SearchResultDone,
+        searchResRef           : SearchResultReference,
+        modifyRequest          : ModifyRequest,
+        modifyResponse         : ModifyResponse,
+        addRequest             : AddRequest,
+        addResponse            : AddResponse,
+        delRequest             : DelRequest,
+        delResponse            : DelResponse,
+        modDNRequest           : ModifyDNRequest,
+        modDNResponse          : ModifyDNResponse,
+        compareRequest         : CompareRequest,
+        compareResponse        : CompareResponse,
+        abandonRequest         : AbandonRequest,
+        extendedReq            : ExtendedRequest,
+        extendedResp           : ExtendedResponse,
+        ...,
+        intermediateResponse  : IntermediateResponse
+    };
+    controls : [0] Controls OPTIONAL;
+};
+
+/* -----------------------------------------------------------------
+   Bind operation
+   ----------------------------------------------------------------- */
+public type BindRequest = unit {
+    version        : uint8  &requires=($$ >= 1 && $$ <= 127);
+    name           : LDAPDN;
+    authentication : AuthenticationChoice;
+};
+
+public type AuthenticationChoice = choice {
+    simple : [0] bytes &size=Var,           # simple password (UTF‑8)
+    sasl   : [3] SaslCredentials,
+    ...                                      # extensible
+};
+
+public type SaslCredentials = unit {
+    mechanism   : LDAPString;
+    credentials : bytes &size=Var OPTIONAL;
+};
+
+public type BindResponse = unit {
+    COMPONENTS OF LDAPResult;
+    serverSaslCreds : [7] bytes &size=Var OPTIONAL;
+};
+
+/* -----------------------------------------------------------------
+   Unbind
+   ----------------------------------------------------------------- */
+public type UnbindRequest = unit {
+    /* APPLICATION 2 NULL → no payload */
+    : void;
+};
+
+/* -----------------------------------------------------------------
+   Search operation
+   ----------------------------------------------------------------- */
+public type SearchRequest = unit {
+    baseObject : LDAPDN;
+    scope      : enum {
+        baseObject   = 0,
+        singleLevel  = 1,
+        wholeSubtree = 2,
+        ...           # extensible
+    };
+    derefAliases : enum {
+        neverDerefAliases  = 0,
+        derefInSearching   = 1,
+        derefFindingBaseObj= 2,
+        derefAlways        = 3
+    };
+    sizeLimit   : uint32 &requires=($$ >= 0 && $$ <= 2147483647);
+    timeLimit   : uint32 &requires=($$ >= 0 && $$ <= 2147483647);
+    typesOnly   : boolean;
+    filter      : Filter;
+    attributes  : AttributeSelection;
+};
+
+public type AttributeSelection = unit {
+    selectors : LDAPString[0..MAX];   # SEQUENCE OF selector LDAPString
+};
+
+public type Filter = choice {
+    and            : [0] Filter[1..MAX];
+    or             : [1] Filter[1..MAX];
+    not            : [2] Filter,
+    equalityMatch  : [3] AttributeValueAssertion,
+    substrings     : [4] SubstringFilter,
+    greaterOrEqual : [5] AttributeValueAssertion,
+    lessOrEqual    : [6] AttributeValueAssertion,
+    present        : [7] AttributeDescription,
+    approxMatch    : [8] AttributeValueAssertion,
+    extensibleMatch: [9] MatchingRuleAssertion,
+    ...                                      # extensible
+};
+
+public type SubstringFilter = unit {
+    type       : AttributeDescription;
+    substrings : Substring[1..MAX];
+};
+
+public type Substring = choice {
+    initial : [0] AssertionValue,   # may appear at most once, MUST be first
+    any     : [1] AssertionValue,
+    final   : [2] AssertionValue    # may appear at most once, MUST be last
+};
+
+public type MatchingRuleAssertion = unit {
+    matchingRule : [1] MatchingRuleId OPTIONAL;
+    type         : [2] AttributeDescription OPTIONAL;
+    matchValue   : [3] AssertionValue;
+    dnAttributes : [4] boolean &default=FALSE;
+};
+
+/* -----------------------------------------------------------------
+   Search result messages
+   ----------------------------------------------------------------- */
+public type SearchResultEntry = unit {
+    objectName  : LDAPDN;
+    attributes  : PartialAttributeList;
+};
+
+public type PartialAttributeList = unit {
+    partials : PartialAttribute[0..MAX];
+};
+
+public type PartialAttribute = unit {
+    type : AttributeDescription;
+    vals : AttributeValue[0..MAX];        # SET OF value AttributeValue
+};
+
+public type SearchResultReference = unit {
+    uri_list : URI[1..MAX];               # APPLICATION 19 SEQUENCE SIZE (1..MAX)
+};
+
+public type SearchResultDone = unit {
+    COMPONENTS OF LDAPResult;
+};
+
+/* -----------------------------------------------------------------
+   Modify operation
+   ----------------------------------------------------------------- */
+public type ModifyRequest = unit {
+    object  : LDAPDN;
+    changes : Change[1..MAX];
+};
+
+public type Change = unit {
+    operation    : enum {
+        add    = 0,
+        delete = 1,
+        replace= 2,
+        ...                        # extensible
+    };
+    modification : PartialAttribute;
+};
+
+public type ModifyResponse = unit {
+    COMPONENTS OF LDAPResult;
+};
+
+/* -----------------------------------------------------------------
+   Add operation
+   ----------------------------------------------------------------- */
+public type AddRequest = unit {
+    entry      : LDAPDN;
+    attributes : AttributeList;
+};
+
+public type AttributeList = unit {
+    attrs : Attribute[0..MAX];
+};
+
+public type Attribute = unit {
+    type : AttributeDescription;
+    vals : AttributeValue[1..MAX];          # ATTRIBUTE REQUIRES at least one value
+};
+
+public type AddResponse = unit {
+    COMPONENTS OF LDAPResult;
+};
+
+/* -----------------------------------------------------------------
+   Delete operation
+   ----------------------------------------------------------------- */
+public type DelRequest = unit {
+    : LDAPDN;
+};
+
+public type DelResponse = unit {
+    COMPONENTS OF LDAPResult;
+};
+
+/* -----------------------------------------------------------------
+   Modify DN operation
+   ----------------------------------------------------------------- */
+public type ModifyDNRequest = unit {
+    entry        : LDAPDN;
+    newrdn       : RelativeLDAPDN;
+    deleteoldrdn : boolean;
+    newSuperior  : [0] LDAPDN OPTIONAL;
+};
+
+public type ModifyDNResponse = unit {
+    COMPONENTS OF LDAPResult;
+};
+
+/* -----------------------------------------------------------------
+   Compare operation
+   ----------------------------------------------------------------- */
+public type CompareRequest = unit {
+    entry : LDAPDN;
+    ava   : AttributeValueAssertion;
+};
+
+public type AttributeValueAssertion = unit {
+    attributeDesc : AttributeDescription;
+    assertionValue: AssertionValue;
+};
+
+public type CompareResponse = unit {
+    COMPONENTS OF LDAPResult;
+};
+
+/* -----------------------------------------------------------------
+   Abandon operation
+   ----------------------------------------------------------------- */
+public type AbandonRequest = unit {
+    : MessageID;          # the MessageID of the operation to abandon
+};
+
+/* -----------------------------------------------------------------
+   Extended operation
+   ----------------------------------------------------------------- */
+public type ExtendedRequest = unit {
+    requestName  : [0] LDAPOID;
+    requestValue : [1] bytes &size=Var OPTIONAL;
+};
+
+public type ExtendedResponse = unit {
+    COMPONENTS OF LDAPResult;
+    responseName  : [10] LDAPOID OPTIONAL;
+    responseValue : [11] bytes &size=Var OPTIONAL;
+};
+
+/* -----------------------------------------------------------------
+   Intermediate response
+   ----------------------------------------------------------------- */
+public type IntermediateResponse = unit {
+    responseName  : [0] LDAPOID OPTIONAL;
+    responseValue : [1] bytes &size=Var OPTIONAL;
+};
+
+}   # end of module

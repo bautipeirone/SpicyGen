@@ -1,0 +1,148 @@
+module rfc2616;
+
+# Basic Rules (Section 2.2)
+const CRLF = b"\x0d\x0a";
+const SP = b" ";
+const HT = b"\x09";
+# type LWS = unit {
+#     line_sep: CRLF?;
+#     ws: (SP | HT)[];
+# };
+
+# Tokens and Basic Identifiers
+const Token = /[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\.\^\_\`\|\~\ ]+/;
+const QuotedString = /\"([^\"]|\\\")*\"/;
+
+# Section 3.1: HTTP Version
+public type HTTPVersion = unit {
+    proto: b"HTTP/";
+    major: /[0-9]+/ &convert=uint64($$) #{ self.major_val = uint64(self.major); }
+    : skip b".";
+    minor: /[0-9]+/ { self.minor_val = cast<uint64>(self.minor); }
+    
+    var major_val: uint64;
+    var minor_val: uint64;
+};
+
+# Section 3.11: Entity Tags
+type EntityTag = unit {
+    weak: b"W/";
+    opaque: QuotedString;
+};
+
+# Section 4.2: Message Headers
+type HeaderField = unit {
+    name: /[a-zA-Z0-9\-]+/;
+    : skip b":";
+    value: /[^\r\n]*/; # Simplified field-content + LWS
+    : CRLF;
+};
+
+# Section 3.6.1: Chunked Transfer Coding
+type Chunk = unit {
+    size_line: /([0-9a-fA-F]+)(;[^\r\n]*)?\r\n/; 
+    # Logic to extract size from size_line would be in a hook
+    # Here represented as size_val
+    var size_val: uint64;
+    data: bytes &size=self.size_val;
+    : CRLF;
+};
+
+type LastChunk = unit {
+    : skip b"0";
+    extensions: /[^\r\n]*/;
+    : skip CRLF;
+};
+
+type ChunkedBody = unit {
+    chunks: Chunk[] &until=b"0"; # Simplified stop condition
+    last: LastChunk;
+    trailer: HeaderField[] &until=CRLF;
+    : CRLF;
+};
+
+# Section 5.1: Request-Line
+type RequestLine = unit {
+    method: /[A-Z]+/;
+    : SP;
+    uri: /[^\s]+/;
+    : SP;
+    version: HTTPVersion;
+    : CRLF;
+};
+
+# Section 6.1: Status-Line
+type StatusLine = unit {
+    version: HTTPVersion;
+    : SP;
+    code: /[0-9]{3}/ &requires=(cast<uint64>($$) >= 100 && cast<uint64>($$) <= 599);
+    : SP;
+    reason: /[^\r\n]*/;
+    : CRLF;
+};
+
+# Section 4.3: Message Body (Conceptual Structure)
+# Note: Real implementation would switch based on Transfer-Encoding or Content-Length
+type MessageBody = unit(content_length: uint64, is_chunked: bool) {
+    switch {
+        is_chunked -> chunked: ChunkedBody;
+        content_length > 0 -> raw: bytes &size=content_length;
+        * -> : void;
+    };
+};
+
+# Section 5: Request
+public type Request = unit {
+    request_line: RequestLine;
+    headers: HeaderField[] &until=CRLF;
+    : CRLF;
+    
+    # In a full parser, these vars are populated by searching 'headers'
+    var content_len: uint64 = 0;
+    var chunked_enc: bool = False;
+    
+    body: MessageBody(self.content_len, self.chunked_enc);
+};
+
+# Section 6: Response
+public type Response = unit {
+    status_line: StatusLine;
+    headers: HeaderField[] &until=CRLF;
+    : CRLF;
+    
+    var content_len: uint64 = 0;
+    var chunked_enc: bool = False;
+    
+    # Responses to HEAD, 1xx, 204, 304 have no body (Section 4.4)
+    var has_body: bool = True; 
+    
+    body: MessageBody(self.content_len, self.chunked_enc) if (self.has_body);
+};
+
+# High level protocol unit
+public type HTTPMessage = unit {
+    # Distinguish Request from Response by looking at first bytes
+    # Responses start with "HTTP/"
+    is_response: /[H][T][T][P][\/]/;
+    
+    switch ( self.is_response ) {
+        True -> response: Response;
+        False -> request: Request;
+    };
+};
+
+# Example Protocol Parameters (Section 3.6)
+type Parameter = unit {
+    attr: Token;
+    : b"=";
+    #value: (Token | QuotedString);
+    value: Token;
+};
+
+# Section 3.7: Media Types
+type MediaType = unit {
+    m_type: Token;
+    : b"/";
+    subtype: Token;
+    parameters: (unit { : b";"; p: Parameter; })[];
+};
