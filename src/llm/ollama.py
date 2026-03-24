@@ -1,7 +1,7 @@
 from ollama import chat
 from .interface import LLMInterface, Messages
 
-class Ollama(LLMInterface):
+class OllamaProvider(LLMInterface):
     def __init__(self, model: str):
         self.model = model
 

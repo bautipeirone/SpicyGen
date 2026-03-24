@@ -3,7 +3,7 @@ from google import genai
 from google.genai import types
 from .interface import LLMInterface, Messages
 
-class GoogleGemini(LLMInterface):
+class GoogleProvider(LLMInterface):
     def __init__(self, model: str):
         self.client = genai.Client(
             api_key=os.environ.get("GEMINI_API_KEY"),
