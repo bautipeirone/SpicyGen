@@ -1,4 +1,5 @@
 from src.llm.providers import get_llm_client
+from src.agent import run_refinement_loop, clean_response
 from typing import LiteralString
 from pathlib import Path
 import argparse
@@ -48,6 +49,23 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Path to the output file where the extracted grammar will be saved (optional)",
     )
+    parser.add_argument(
+        "--refine",
+        action="store_true",
+        help="Enable the agent refinement loop: compile the output and feed errors back to the LLM until it compiles",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=5,
+        help="Maximum number of refinement iterations (default: 5, only used with --refine)",
+    )
+    parser.add_argument(
+        "--debug-dir",
+        type=Path,
+        default=None,
+        help="Directory to save persistent refinement step files",
+    )
     return parser.parse_args()
 
 
@@ -67,14 +85,6 @@ def save_response(path: Path, response: str) -> None:
         raise SystemExit(f"Unable to write to {path}: {exc}") from exc
 
 
-def clean_response(text: str) -> str:
-    text = text.strip().strip("```").strip()
-    while not text.startswith("module"):
-        # skip first line
-        text = "\n".join(text.splitlines()[1:]).strip()
-    return text
-
-
 def main() -> None:
     args = parse_args()
     load_dotenv()
@@ -87,8 +97,15 @@ def main() -> None:
     system_instruction = prompt + spicy_context
     messages = [rfc_content]
 
-    response = client.chat(system_instruction, messages)
-    content = clean_response(response)
+    if args.refine:
+        content, success = run_refinement_loop(
+            client, system_instruction, messages, max_retries=args.max_retries, debug_dir=args.debug_dir
+        )
+        if not success:
+            print("[agent] WARNING: grammar did not compile after all retries.")
+    else:
+        response = client.chat(system_instruction, messages)
+        content = clean_response(response)
 
     if args.output_file:
         save_response(args.output_file, content)
