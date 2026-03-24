@@ -1,148 +1,188 @@
-module rfc2616;
+module RFC2616;
 
-# Basic Rules (Section 2.2)
-const CRLF = b"\x0d\x0a";
+# Basic Rules
+const CRLF = b"\r\n";
 const SP = b" ";
-const HT = b"\x09";
-# type LWS = unit {
-#     line_sep: CRLF?;
-#     ws: (SP | HT)[];
-# };
 
-# Tokens and Basic Identifiers
-const Token = /[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\.\^\_\`\|\~\ ]+/;
-const QuotedString = /\"([^\"]|\\\")*\"/;
-
-# Section 3.1: HTTP Version
-public type HTTPVersion = unit {
-    proto: b"HTTP/";
-    major: /[0-9]+/ &convert=uint64($$) #{ self.major_val = uint64(self.major); }
-    : skip b".";
-    minor: /[0-9]+/ { self.minor_val = cast<uint64>(self.minor); }
-    
-    var major_val: uint64;
-    var minor_val: uint64;
+# 3.1 HTTP Version
+type HTTP_Version = unit {
+    : b"HTTP/";
+    major: /[0-9]+/;
+    : b".";
+    minor: /[0-9]+/;
 };
 
-# Section 3.11: Entity Tags
-type EntityTag = unit {
-    weak: b"W/";
-    opaque: QuotedString;
+# 5.1.1 Method
+type Method = enum {
+    OPTIONS = 1,
+    GET = 2,
+    HEAD = 3,
+    POST = 4,
+    PUT = 5,
+    DELETE = 6,
+    TRACE = 7,
+    CONNECT = 8
 };
 
-# Section 4.2: Message Headers
-type HeaderField = unit {
-    name: /[a-zA-Z0-9\-]+/;
-    : skip b":";
-    value: /[^\r\n]*/; # Simplified field-content + LWS
+# 6.1.1 Status Code
+type StatusCode = enum {
+    Continue = 100,
+    SwitchingProtocols = 101,
+    OK = 200,
+    Created = 201,
+    Accepted = 202,
+    NonAuthoritativeInformation = 203,
+    NoContent = 204,
+    ResetContent = 205,
+    PartialContent = 206,
+    MultipleChoices = 300,
+    MovedPermanently = 301,
+    Found = 302,
+    SeeOther = 303,
+    NotModified = 304,
+    UseProxy = 305,
+    TemporaryRedirect = 307,
+    BadRequest = 400,
+    Unauthorized = 401,
+    PaymentRequired = 402,
+    Forbidden = 403,
+    NotFound = 404,
+    MethodNotAllowed = 405,
+    NotAcceptable = 406,
+    ProxyAuthenticationRequired = 407,
+    RequestTimeout = 408,
+    Conflict = 409,
+    Gone = 410,
+    LengthRequired = 411,
+    PreconditionFailed = 412,
+    RequestEntityTooLarge = 413,
+    RequestURITooLong = 414,
+    UnsupportedMediaType = 415,
+    RequestedRangeNotSatisfiable = 416,
+    ExpectationFailed = 417,
+    InternalServerError = 500,
+    NotImplemented = 501,
+    BadGateway = 502,
+    ServiceUnavailable = 503,
+    GatewayTimeout = 504,
+    HTTPVersionNotSupported = 505
+};
+
+# 4.2 Message Headers
+type Header = unit {
+    name: /[^: \t\r\n]+/;
+    : /:[ \t]*/;
+    value: /[^\r\n]*/;
     : CRLF;
 };
 
-# Section 3.6.1: Chunked Transfer Coding
+# 3.6.1 Chunked Transfer Coding
 type Chunk = unit {
-    size_line: /([0-9a-fA-F]+)(;[^\r\n]*)?\r\n/; 
-    # Logic to extract size from size_line would be in a hook
-    # Here represented as size_val
-    var size_val: uint64;
-    data: bytes &size=self.size_val;
+    chunk_size_str: /[0-9a-fA-F]+/ &convert=$$.to_uint(16);
+    chunk_extension: /([ \t]*;[ \t]*[^ \t\r\n=]+(=([^ \t\r\n;]+|"[^"]*"))?)*/;
     : CRLF;
-};
-
-type LastChunk = unit {
-    : skip b"0";
-    extensions: /[^\r\n]*/;
-    : skip CRLF;
+    data: bytes &size=self.chunk_size_str;
+    : CRLF;
 };
 
 type ChunkedBody = unit {
-    chunks: Chunk[] &until=b"0"; # Simplified stop condition
-    last: LastChunk;
-    trailer: HeaderField[] &until=CRLF;
+    chunks: Chunk[] &until=($$.chunk_size_str == 0);
+    trailer: Header[];
     : CRLF;
 };
 
-# Section 5.1: Request-Line
+# 5.1 Request-Line
 type RequestLine = unit {
-    method: /[A-Z]+/;
+    method_str: /[A-Z]+/ &convert=Method($$);
     : SP;
-    uri: /[^\s]+/;
+    uri: /[^ \t\r\n]+/;
     : SP;
-    version: HTTPVersion;
+    version: HTTP_Version;
     : CRLF;
 };
 
-# Section 6.1: Status-Line
+# 6.1 Status-Line
 type StatusLine = unit {
-    version: HTTPVersion;
+    version: HTTP_Version;
     : SP;
-    code: /[0-9]{3}/ &requires=(cast<uint64>($$) >= 100 && cast<uint64>($$) <= 599);
+    code_str: /[0-9]{3}/ &convert=StatusCode($$.to_uint());
     : SP;
     reason: /[^\r\n]*/;
     : CRLF;
 };
 
-# Section 4.3: Message Body (Conceptual Structure)
-# Note: Real implementation would switch based on Transfer-Encoding or Content-Length
-type MessageBody = unit(content_length: uint64, is_chunked: bool) {
-    switch {
-        is_chunked -> chunked: ChunkedBody;
-        content_length > 0 -> raw: bytes &size=content_length;
-        * -> : void;
-    };
-};
-
-# Section 5: Request
+# 4.1 Message Types
 public type Request = unit {
-    request_line: RequestLine;
-    headers: HeaderField[] &until=CRLF;
+    line: RequestLine;
+    headers: Header[];
     : CRLF;
-    
-    # In a full parser, these vars are populated by searching 'headers'
-    var content_len: uint64 = 0;
-    var chunked_enc: bool = False;
-    
-    body: MessageBody(self.content_len, self.chunked_enc);
-};
 
-# Section 6: Response
-public type Response = unit {
-    status_line: StatusLine;
-    headers: HeaderField[] &until=CRLF;
-    : CRLF;
-    
-    var content_len: uint64 = 0;
-    var chunked_enc: bool = False;
-    
-    # Responses to HEAD, 1xx, 204, 304 have no body (Section 4.4)
-    var has_body: bool = True; 
-    
-    body: MessageBody(self.content_len, self.chunked_enc) if (self.has_body);
-};
+    # Relationship: Body parsing logic based on headers
+    # Note: Complex logic for Content-Length vs Transfer-Encoding
+    # usually requires state tracking in the parser.
+    var is_chunked: bool;
+    var content_len: uint64;
 
-# High level protocol unit
-public type HTTPMessage = unit {
-    # Distinguish Request from Response by looking at first bytes
-    # Responses start with "HTTP/"
-    is_response: /[H][T][T][P][\/]/;
-    
-    switch ( self.is_response ) {
-        True -> response: Response;
-        False -> request: Request;
+    on headers {
+        for ( h in self.headers ) {
+            if ( h.name.lower() == b"transfer-encoding" && h.value.lower() == b"chunked" )
+                self.is_chunked = True;
+            if ( h.name.lower() == b"content-length" )
+                self.content_len = h.value.to_uint();
+        }
+    }
+
+    switch {
+        -> {
+          : void &requires=(self.is_chunked);
+          body_chunked: ChunkedBody;
+        }
+        -> {
+          : void &requires=(self.content_len > 0);
+          body_fixed: bytes &size=self.content_len;
+        }
+        -> : void; # No body
     };
 };
 
-# Example Protocol Parameters (Section 3.6)
-type Parameter = unit {
-    attr: Token;
-    : b"=";
-    #value: (Token | QuotedString);
-    value: Token;
+public type Response = unit {
+    line: StatusLine;
+    headers: Header[];
+    : CRLF;
+
+    var is_chunked: bool;
+    var content_len: uint64;
+
+    on headers {
+        for ( h in self.headers ) {
+            if ( h.name.lower() == b"transfer-encoding" && h.value.lower() == b"chunked" )
+                self.is_chunked = True;
+            if ( h.name.lower() == b"content-length" )
+                self.content_len = h.value.to_uint();
+        }
+    }
+
+    switch {
+        # Responses with no bodies (1xx, 204, 304 or HEAD requests)
+        -> : void &requires=(self.line.code_str.to_int() < 200 || self.line.code_str == StatusCode::NoContent || self.line.code_str == StatusCode::NotModified);
+        
+        -> {
+          : void &requires=(self.is_chunked);
+          body_chunked: ChunkedBody;
+        }
+        -> {
+          : void &requires=(self.content_len > 0);
+          body_fixed: bytes &size=self.content_len;
+        }
+        # Default behavior: consume until end of data if not fixed length or chunked
+        -> body_to_eod: bytes &eod;
+    };
 };
 
-# Section 3.7: Media Types
-type MediaType = unit {
-    m_type: Token;
-    : b"/";
-    subtype: Token;
-    parameters: (unit { : b";"; p: Parameter; })[];
+# Generic HTTP Message wrapper
+public type HTTP_Message = unit {
+    switch {
+        -> req: Request;
+        -> res: Response;
+    };
 };

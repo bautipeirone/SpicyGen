@@ -1,0 +1,298 @@
+module IRC;
+
+type Message = unit {
+    : /(\r\n)+/; # Skip any leading blank lines
+    prefix: Prefix?;
+    command: Command;
+    params: Params;
+    : b"\r\n";
+};
+
+type Prefix = unit {
+    : b":";
+    value: /[^\x20\x00\x0d\x0a]+/;
+    : b" ";
+};
+
+type Command = unit {
+    value: /[a-zA-Z]+|[\d]{3}/;
+    : b" ";
+};
+
+type Params = unit {
+    middle: MiddleParams* &eod;
+    trailing: TrailingParam?;
+};
+
+type MiddleParams = unit {
+    : b" ";
+    value: /[^: \x00\x0d\x0a][^\x00\x0d\x0a]*/;
+};
+
+type TrailingParam = unit {
+    : b" :";
+    value: /[^\x00\x0d\x0a]*/;
+};
+
+public type PASS = unit {
+    password: b"PASS";
+    : b" ";
+    param: /[^\x00\x0d\x0a]+/;
+};
+
+public type NICK = unit {
+    nick: b"NICK";
+    : b" ";
+    nickname: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    hopcount: (b" " /[0-9]+/)?;
+};
+
+public type USER = unit {
+    user: b"USER";
+    : b" ";
+    username: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" ";
+    hostname: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" ";
+    servername: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" :";
+    realname: /[^\x00\x0d\x0a]*/;
+};
+
+public type SERVER = unit {
+    server: b"SERVER";
+    : b" ";
+    servername: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" ";
+    hopcount: /[0-9]+/;
+    : b" :";
+    info: /[^\x00\x0d\x0a]*/;
+};
+
+public type OPER = unit {
+    oper: b"OPER";
+    : b" ";
+    user: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" ";
+    password: /[^\x00\x0d\x0a]+/;
+};
+
+public type QUIT = unit {
+    quit: b"QUIT";
+    message: (b" :" /[^\x00\x0d\x0a]*/)?;
+};
+
+public type SQUIT = unit {
+    squit: b"SQUIT";
+    : b" ";
+    server: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" :";
+    comment: /[^\x00\x0d\x0a]+/;
+};
+
+public type JOIN = unit {
+    join: b"JOIN";
+    : b" ";
+    channels: /[^\x00\x0d\x0a]+/;
+};
+
+public type PART = unit {
+    part: b"PART";
+    : b" ";
+    channels: /[^\x00\x0d\x0a]+/;
+};
+
+public type MODE = unit {
+    mode: b"MODE";
+    : b" ";
+    target: /[^\x00\x0d\x0a]+/;
+    mode_string: (b" " /[^\x00\x0d\x0a]+)?; 
+};
+
+public type TOPIC = unit {
+    topic: b"TOPIC";
+    : b" ";
+    channel: /[#&][^\x00\x07\x0a\x0d ,]+/;
+    new_topic: (b" :" /[^\x00\x0d\x0a]*/)?;
+};
+
+public type NAMES = unit {
+    names: b"NAMES";
+    channels: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type LIST = unit {
+    list: b"LIST";
+    channels: (b" " /[^\x00\x0d\x0a,]*,[^\x00\x0d\x0a,]*/)?;
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type INVITE = unit {
+    invite: b"INVITE";
+    : b" ";
+    nickname: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" ";
+    channel: /[#&][^\x00\x07\x0a\x0d ,]+/;
+};
+
+public type KICK = unit {
+    kick: b"KICK";
+    : b" ";
+    channel: /[^\x00\x0d\x0a,]+,[^\x00\x0d\x0a,]*/;
+    : b" ";
+    user: /[^\x00\x0d\x0a,]+,[^\x00\x0d\x0a,]*/;
+    comment: (b" :" /[^\x00\x0d\x0a]*/)?;
+};
+
+public type VERSION = unit {
+    version: b"VERSION";
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type STATS = unit {
+    stats: b"STATS";
+    query: (b" " /[a-zA-Z]/)?;
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type LINKS = unit {
+    links: b"LINKS";
+    remote_server: (b" " /[^\x00\x0d\x0a]+/)?;
+    server_mask: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type TIME = unit {
+    time: b"TIME";
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type CONNECT = unit {
+    connect: b"CONNECT";
+    : b" ";
+    target_server: /[^\x00\x0d\x0a]+/;
+    port: (b" " /[0-9]+/)?;
+    remote_server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type TRACE = unit {
+    trace: b"TRACE";
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type ADMIN = unit {
+    admin: b"ADMIN";
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type INFO = unit {
+    info: b"INFO";
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type PRIVMSG = unit {
+    privmsg: b"PRIVMSG";
+    : b" ";
+    receivers: /[^\x00\x0d\x0a]+/;
+    : b" :";
+    text: /[^\x00\x0d\x0a]+/;
+};
+
+public type NOTICE = unit {
+    notice: b"NOTICE";
+    : b" ";
+    nickname: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" ";
+    text: /[^\x00\x00\x0d\x0a]+/;
+};
+
+public type WHO = unit {
+    who: b"WHO";
+    name: (b" " /[^\x00\x0d\x0a]+/)?;
+    o: (b" o")?;
+};
+
+public type WHOIS = unit {
+    whois: b"WHOIS";
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+    : b" ";
+    nickmasks: /[^\x00\x0d\x0a]+/;
+};
+
+public type WHOWAS = unit {
+    whowas: b"WHOWAS";
+    : b" ";
+    nickname: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    count: (b" " /[0-9]+/)?;
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type KILL = unit {
+    kill: b"KILL";
+    : b" ";
+    nickname: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    : b" :";
+    comment: /[^\x00\x0d\x0a]+/;
+};
+
+public type PING = unit {
+    ping: b"PING";
+    : b" ";
+    server1: /[^\x00\x0d\x0a]+/;
+    server2: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type PONG = unit {
+    pong: b"PONG";
+    : b" ";
+    daemon: /[^\x00\x0d\x0a]+/;
+    daemon2: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type ERROR = unit {
+    error: b"ERROR";
+    : b" :";
+    message: /[^\x00\x0d\x0a]+/;
+};
+
+public type AWAY = unit {
+    away: b"AWAY";
+    message: (b" :" /[^\x00\x0d\x0a]+/)?;
+};
+
+public type REHASH = unit {
+    rehash: b"REHASH";
+};
+
+public type RESTART = unit {
+    restart: b"RESTART";
+};
+
+public type SUMMON = unit {
+    summon: b"SUMMON";
+    : b" ";
+    user: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type USERS = unit {
+    users: b"USERS";
+    server: (b" " /[^\x00\x0d\x0a]+/)?;
+};
+
+public type WALLOPS = unit {
+    wallops: b"WALLOPS";
+    : b" :";
+    text: /[^\x00\x0d\x0a]+/;
+};
+
+public type USERHOST = unit {
+    userhost: b"USERHOST";
+    : b" ";
+    nicknames: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/ &(b" " /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/)*;
+};
+
+public type ISON = unit {
+    ison: b"ISON";
+    : b" ";
+    nicknames: /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/ &(b" " /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/)*;
+};

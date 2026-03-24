@@ -1,60 +1,112 @@
-module http;
+module HTTP;
 
-public type HTTPMessage = unit {
-    message: Message;
-};
-
-type Message = unit {
-    start_line: StartLine;
-    headers: HeaderFields[];
-    : b"\r\n";
-    body: bytes &eod;
-};
-
-type StartLine = unit {
-    switch ( self.is_request ) {
-        true -> request_line: RequestLine;
-        false -> status_line: StatusLine;
+public type Message = unit {
+    switch {
+        -> request: Request;
+        -> response: Response;
     };
+};
+
+type Request = unit {
+    line: RequestLine;
+    headers: HeaderFields[];
+        : b"\r\n";
+    body: Body &size=self._body_size();
+};
+
+type Response = unit {
+    line: StatusLine;
+    headers: HeaderFields[];
+        : b"\r\n";
+    body: Body &size=self._body_size();
 };
 
 type RequestLine = unit {
     method: Method;
     : b" ";
-    request_uri: RequestURI;
+    uri: RequestURI;
     : b" ";
-    http_version: HTTPVersion;
+    version: Version;
     : b"\r\n";
 };
 
 type StatusLine = unit {
-    http_version: HTTPVersion;
+    version: Version;
     : b" ";
-    status_code: StatusCode;
+    code: StatusCode;
     : b" ";
-    reason_phrase: bytes &until=b"\r\n";
+    reason: ReasonPhrase;
     : b"\r\n";
 };
 
 type Method = unit {
-    method_token: bytes &until=function::is_space_or_control();
+    switch {
+        b"OPTIONS"  -> : void;
+        b"GET"      -> : void;
+        b"HEAD"     -> : void;
+        b"POST"     -> : void;
+        b"PUT"      -> : void;
+        b"DELETE"   -> : void;
+        b"TRACE"    -> : void;
+        b"CONNECT"  -> : void;
+        *           -> token: Token;
+    };
 };
 
 type RequestURI = unit {
-    uri: bytes &until=function::is_space_or_control();
+    switch {
+        b"*"        -> : void;
+        -> absolute_uri: AbsoluteURI;
+        -> abs_path: AbsPath;
+        -> authority: Authority;
+    };
 };
 
-type HTTPVersion = unit {
-    version: bytes &until=function::is_space_or_control();
+type Version = unit {
+    : b"HTTP/";
+    major: uint8;
+    : b".";
+    minor: uint8;
 };
 
 type StatusCode = unit {
-    code: bytes &size=3;
+    code: uint16 &size=3;
+};
+
+type ReasonPhrase = unit {
+    phrase: bytes &until=b"\r\n";
 };
 
 type HeaderFields = unit {
-    field_name: bytes &until=b":";
+    name: Token;
     : b":";
-    field_value: bytes &until=b"\r\n";
-    : b"\r\n";
+    value: bytes &until=b"\r\n";
 };
+
+type Body = unit {
+    data: bytes &eod;
+};
+
+# Helper types for URIs and paths
+type AbsoluteURI = unit {
+    uri: bytes &until=b" ";
+};
+
+type AbsPath = unit {
+    path: bytes &until=b" ";
+};
+
+type Authority = unit {
+    authority: bytes &until=b" ";
+};
+
+type Token = unit {
+    token: bytes &until=b" ";
+};
+
+# Helper function to calculate body size from headers
+function _body_size(): uint64 {
+    # This would need to parse Content-Length or Transfer-Encoding headers
+    # For simplicity, returning 0, as proper implementation requires header parsing
+    return 0;
+}

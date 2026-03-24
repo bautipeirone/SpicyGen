@@ -1,0 +1,143 @@
+module IRC;
+
+const SPACE = / +/;
+const CRLF = b"\r\n";
+
+# The Internet Relay Chat (IRC) Message structure as defined in RFC 1459.
+# Each message consists of an optional prefix, a command, and up to 15 parameters.
+public type Message = unit {
+    # Check for prefix presence
+    peek_prefix: bytes &size=1 &peek;
+    prefix: Prefix? if (self.peek_prefix == b":");
+    
+    # The command is either a string of letters or a 3-digit number.
+    command: Command;
+
+    # Commands have specific parameter requirements according to Section 4.
+    # Parameter units handle the leading spaces and internal structure.
+    switch (self.command.name) {
+        b"PASS" -> pass: PassParams;
+        b"NICK" -> nick: NickParams;
+        b"USER" -> user_msg: UserParams;
+        b"SERVER" -> server_msg: ServerParams;
+        b"OPER" -> oper: OperParams;
+        b"QUIT" -> quit: QuitParams;
+        b"SQUIT" -> squit: SquitParams;
+        b"JOIN" -> join: JoinParams;
+        b"PART" -> part: PartParams;
+        b"MODE" -> mode: ModeParams;
+        b"TOPIC" -> topic: TopicParams;
+        b"NAMES" -> names: NamesParams;
+        b"LIST" -> list_msg: ListParams;
+        b"INVITE" -> invite: InviteParams;
+        b"KICK" -> kick: KickParams;
+        b"VERSION" -> version: VersionParams;
+        b"STATS" -> stats: StatsParams;
+        b"LINKS" -> links: LinksParams;
+        b"TIME" -> time_msg: TimeParams;
+        b"CONNECT" -> connect: ConnectParams;
+        b"TRACE" -> trace: TraceParams;
+        b"ADMIN" -> admin: AdminParams;
+        b"INFO" -> info: InfoParams;
+        b"PRIVMSG" -> privmsg: PrivmsgParams;
+        b"NOTICE" -> notice: NoticeParams;
+        b"WHO" -> who: WhoParams;
+        b"WHOIS" -> whois: WhoisParams;
+        b"WHOWAS" -> whowas: WhowasParams;
+        b"KILL" -> kill: KillParams;
+        b"PING" -> ping: PingParams;
+        b"PONG" -> pong: PongParams;
+        b"ERROR" -> error_msg: ErrorParams;
+        b"AWAY" -> away: AwayParams;
+        b"REHASH" -> : void;
+        b"RESTART" -> : void;
+        b"SUMMON" -> summon: SummonParams;
+        b"USERS" -> users: UsersParams;
+        b"WALLOPS" -> wallops: WallopsParams;
+        b"USERHOST" -> userhost: UserhostParams;
+        b"ISON" -> ison: IsonParams;
+        * -> generic_params: Param[];
+    };
+
+    # Optional trailing spaces before the CRLF sequence.
+    : SPACE?;
+    : CRLF;
+
+} &requires=($$.size() <= 512);
+
+# Indicates the origin of the message (server or user).
+type Prefix = unit {
+    : b":";
+    name: /[^!@ ]+/; # Nickname or servername
+    user_part: UserPart? if (self.peek_bang == b"!");
+    host_part: HostPart? if (self.peek_at == b"@");
+    : SPACE;
+
+    peek_bang: bytes &size=1 &peek;
+    peek_at: bytes &size=1 &peek;
+};
+
+type UserPart = unit {
+    : b"!";
+    val: /[^@ ]+/;
+};
+
+type HostPart = unit {
+    : b"@";
+    val: /[^ ]+/;
+};
+
+type Command = unit {
+    name: /[a-zA-Z]+|[0-9]{3}/;
+};
+
+# Generic parameter logic as defined in Section 2.3.1.
+# Middle parameters are strings without spaces/leading colons.
+# Trailing parameters start with a colon and may include spaces.
+type Param = unit {
+    : SPACE;
+    switch {
+        -> : b":"; trailing: /[^\r\n\0]*/;
+        -> middle: /[^ :\r\n\0][^ \r\n\0]*/;
+    };
+};
+
+# Command Parameter Definitions
+type PassParams = unit { password: Param; };
+type NickParams = unit { nickname: Param; hopcount: Param?; };
+type UserParams = unit { username: Param; hostname: Param; servername: Param; realname: Param; };
+type ServerParams = unit { servername: Param; hopcount: Param; info: Param; };
+type OperParams = unit { user_val: Param; password: Param; };
+type QuitParams = unit { msg: Param?; };
+type SquitParams = unit { server_val: Param; comment: Param; };
+type JoinParams = unit { channels: Param; keys: Param?; };
+type PartParams = unit { channels: Param; };
+type ModeParams = unit { target: Param; modes: Param?; mode_params: Param[]; };
+type TopicParams = unit { channel: Param; topic: Param?; };
+type NamesParams = unit { channels: Param?; };
+type ListParams = unit { channels: Param?; server_val: Param?; };
+type InviteParams = unit { nickname: Param; channel: Param; };
+type KickParams = unit { channel: Param; user_val: Param; comment: Param?; };
+type VersionParams = unit { server_val: Param?; };
+type StatsParams = unit { query: Param?; server_val: Param?; };
+type LinksParams = unit { remote_server: Param?; server_mask: Param?; };
+type TimeParams = unit { server_val: Param?; };
+type ConnectParams = unit { target_server: Param; port_number: Param?; remote_server: Param?; };
+type TraceParams = unit { server_val: Param?; };
+type AdminParams = unit { server_val: Param?; };
+type InfoParams = unit { server_val: Param?; };
+type PrivmsgParams = unit { receivers: Param; text: Param; };
+type NoticeParams = unit { nickname: Param; text: Param; };
+type WhoParams = unit { name_mask: Param?; op: Param?; };
+type WhoisParams = unit { server_val: Param?; nickmask: Param; };
+type WhowasParams = unit { nickname: Param; count: Param?; server_val: Param?; };
+type KillParams = unit { nickname: Param; comment: Param; };
+type PingParams = unit { server1: Param; server2: Param?; };
+type PongParams = unit { daemon: Param; daemon2: Param?; };
+type ErrorParams = unit { msg: Param; };
+type AwayParams = unit { msg: Param?; };
+type SummonParams = unit { user_val: Param; server_val: Param?; };
+type UsersParams = unit { server_val: Param?; };
+type WallopsParams = unit { text: Param; };
+type UserhostParams = unit { nicknames: Param[]; };
+type IsonParams = unit { nicknames: Param[]; };

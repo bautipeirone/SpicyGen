@@ -1,37 +1,55 @@
 module TFTP;
 
-public type Packet = unit {
-    opcode: uint16;
-    switch ( self.opcode ) {
-        1 -> rrq: RRQ;
-        2 -> wrq: WRQ;
-        3 -> data: DATA;
-        4 -> ack: ACK;
-        5 -> error: ERROR;
-        * -> : bytes &eod;
-    };
+public type Opcode = enum {
+    RRQ = 1,
+    WRQ = 2,
+    DATA = 3,
+    ACK = 4,
+    ERROR = 5,
 };
 
-type RRQ = unit {
-    filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00";
+public type ErrorCode = enum {
+    UNDEFINED = 0,
+    FILE_NOT_FOUND = 1,
+    ACCESS_VIOLATION = 2,
+    DISK_FULL = 3,
+    ILLEGAL_OPERATION = 4,
+    UNKNOWN_TRANSFER_ID = 5,
+    FILE_EXISTS = 6,
+    NO_SUCH_USER = 7,
 };
 
-type WRQ = unit {
-    filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00";
+type Mode = enum {
+    NETASCII,
+    OCTET,
+    MAIL,
 };
 
-type DATA = unit {
-    block_num: uint16;
+public type RRQ = unit {
+    opcode: uint16 &convert=Opcode($$);
+    filename: bytes &size=1 &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
+    mode: bytes &size=1 &until=b"\0" &convert=$$.split1(b"\0")[0].decode() &requires=(self.opcode == Opcode::RRQ);
+};
+
+public type WRQ = unit {
+    opcode: uint16 &convert=Opcode($$);
+    filename: bytes &size=1 &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
+    mode: bytes &size=1 &until=b"\0" &convert=$$.split1(b"\0")[0].decode() &requires=(self.opcode == Opcode::WRQ);
+};
+
+public type DATA = unit {
+    opcode: uint16 &convert=Opcode($$) &requires=($$ == 3);
+    block_number: uint16;
     data: bytes &size=512;
 };
 
-type ACK = unit {
-    block_num: uint16;
+public type ACK = unit {
+    opcode: uint16 &convert=Opcode($$) &requires=($$ == 4);
+    block_number: uint16;
 };
 
-type ERROR = unit {
-    error_code: uint16;
-    error_msg: bytes &until=b"\x00";
+public type ERROR = unit {
+    opcode: uint16 &convert=Opcode($$) &requires=($$ == 5);
+    error_code: uint16 &convert=ErrorCode($$);
+    error_msg: bytes &size=1 &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
 };

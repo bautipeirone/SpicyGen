@@ -1,71 +1,91 @@
 module DHCP;
 
-# DHCP message structure based on RFC 2131
-# Note: 'file' and 'port' are reserved keywords in the specification language and have been renamed.
-
-public type Message = unit {
-    # Message op code / message type. 1 = BOOTREQUEST, 2 = BOOTREPLY
-    op: uint8 &requires=($$ == 1 || $$ == 2);
-
-    # Hardware address type, e.g., '1' = 10mb ethernet.
-    htype: uint8;
-
-    # Hardware address length (e.g. '6' for 10mb ethernet). Must be <= 16.
-    hlen: uint8 &requires=($$ <= 16);
-
-    # Client sets to zero, optionally used by relay agents.
-    hops: uint8;
-
-    # Transaction ID, a random number chosen by the client.
-    xid: uint32;
-
-    # Seconds elapsed since client began address acquisition or renewal process.
-    secs: uint16;
-
-    # Flags field including the BROADCAST bit.
-    flags: bitfield(16) {
-        broadcast: 0;
-        mbz: 1..15; # Must Be Zero
-    };
-
-    # Client IP address.
-    ciaddr: uint32;
-
-    # 'your' (client) IP address.
-    yiaddr: uint32;
-
-    # IP address of next server to use in bootstrap.
-    siaddr: uint32;
-
-    # Relay agent IP address, used in booting via a relay agent.
-    giaddr: uint32;
-
-    # Client hardware address (16 octets, only hlen octets are used).
-    chaddr: bytes &size=16;
-
-    # Optional server host name, null terminated string.
-    sname: bytes &size=64;
-
-    # Boot file name, null terminated string. 
-    # Field renamed from 'file' to 'boot_file_path' as 'file' is a reserved keyword.
-    boot_file_path: bytes &size=128;
-
-    # Magic cookie (0x63, 0x82, 0x53, 0x63)
-    magic_cookie: b"\x63\x82\x53\x63";
-
-    # Variable length options field.
-    options: Option[] &eod;
+# Message op code / message type
+type OpCode = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
 };
 
-# DHCP Option structure
-type Option = unit {
+# DHCP Message Type (Option 53) values
+type MessageTypeValue = enum {
+    DHCPDISCOVER = 1,
+    DHCPOFFER = 2,
+    DHCPREQUEST = 3,
+    DHCPDECLINE = 4,
+    DHCPACK = 5,
+    DHCPNAK = 6,
+    DHCPRELEASE = 7,
+    DHCPINFORM = 8,
+};
+
+# Structure for DHCP Options
+type DhcpOption = unit {
     tag: uint8;
     switch ( self.tag ) {
-        0   -> : void;     # Pad Option (1 byte, no length/data)
-        255 -> : void;     # End Option (1 byte, no length/data)
-        *   -> {           # All other options
+        0 -> : void; # Pad option, no length or data
+        255 -> : void; # End option, handled by vector termination in parent
+        * -> {
             len: uint8;
             value: bytes &size=self.len;
-        };
+        }
     };
+};
+
+public type Message = unit {
+    # Message op code / message type
+    op: uint8 &convert=OpCode($$);
+
+    # Hardware address type
+    htype: uint8;
+
+    # Hardware address length
+    hlen: uint8;
+
+    # Hops
+    hops: uint8;
+
+    # Transaction ID
+    xid: uint32;
+
+    # Seconds elapsed since client began address acquisition or renewal process
+    secs: uint16;
+
+    # Flags field
+    flags: bitfield(16) {
+        broadcast: 0;
+        reserved: 1..15;
+    };
+
+    # Client IP address
+    ciaddr: addr &ipv4;
+
+    # 'your' (client) IP address
+    yiaddr: addr &ipv4;
+
+    # IP address of next server to use in bootstrap
+    siaddr: addr &ipv4;
+
+    # Relay agent IP address, used in booting via a relay agent
+    giaddr: addr &ipv4;
+
+    # Client hardware address (fixed 16 bytes, only hlen bytes are used)
+    chaddr: bytes &size=16;
+
+    # Optional server host name, null terminated string
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+
+    # Boot file name, null terminated string
+    filename: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+
+    # DHCP Magic Cookie (99, 130, 83, 99)
+    magic_cookie: uint32 &requires=($$ == 0x63825363);
+
+    # Optional parameters field (Options)
+    # The options list is a sequence of DhcpOption units
+    # It continues until the 'End' option (0xff / 255) is reached
+    options: DhcpOption[];
+    : b"\xff";
+
+    # The remaining data might be padding to reach minimum packet size
+    padding: bytes &eod;
 };

@@ -1,41 +1,148 @@
-module dhcp;
+module DHCP;
 
-# DHCP message types
-public type MessageType = unit {
-    type: uint8;
+# DHCP Message Types
+type MessageType = enum {
+    DHCPDISCOVER = 1,
+    DHCPOFFER = 2,
+    DHCPREQUEST = 3,
+    DHCPDECLINE = 4,
+    DHCPACK = 5,
+    DHCPNAK = 6,
+    DHCPRELEASE = 7,
+    DHCPINFORM = 8,
 };
 
-# DHCP options
+# Flags field bitfield
+type Flags = bitfield(16) {
+    broadcast: 0,          # BROADCAST flag (leftmost bit)
+    reserved: 1..15,       # MUST BE ZERO (reserved for future use)
+};
+
+# Option types (partial list; more can be added as needed)
+type OptionType = enum {
+    Pad = 0,
+    SubnetMask = 1,
+    TimeOffset = 2,
+    Router = 3,
+    TimeServer = 4,
+    NameServer = 5,
+    DomainNameServer = 6,
+    LogServer = 7,
+    CookieServer = 8,
+    LPRServer = 9,
+    ImpressServer = 10,
+    ResourceLocationServer = 11,
+    HostName = 12,
+    BootFileSize = 13,
+    MeritDumpFile = 14,
+    DomainName = 15,
+    SwapServer = 16,
+    RootPath = 17,
+    ExtensionsPath = 18,
+    IPForwarding = 19,
+    NonLocalSourceRouting = 20,
+    PolicyFilter = 21,
+    MaximumDatagramReassemblySize = 22,
+    DefaultIPTimeToLive = 23,
+    PathMTUAggingTimeout = 24,
+    PathMTUPlateauTable = 25,
+    InterfaceMTU = 26,
+    AllSubnetsLocal = 27,
+    BroadcastAddress = 28,
+    PerformMaskDiscovery = 29,
+    MaskSupplier = 30,
+    PerformRouterDiscovery = 31,
+    RouterSolicitationAddress = 32,
+    StaticRoute = 33,
+    TrailerEncapsulation = 34,
+    ARPCacheTimeout = 35,
+    EthernetEncapsulation = 36,
+    TCPDefaultTTL = 37,
+    TCPKeepaliveInterval = 38,
+    TCPKeepaliveGarbage = 39,
+    NISDomain = 40,
+    NISServers = 41,
+    NTPServers = 42,
+    VendorSpecificInformation = 43,
+    NetBIOSNameServer = 44,
+    NetBIOSDDServer = 45,
+    NetBIOSNodeType = 46,
+    NetBIOSScope = 47,
+    XWindowSystemFontServer = 48,
+    XWindowSystemDisplayManager = 49,
+    NetworkInformationServicePlusDomain = 50,
+    NetworkInformationServicePlusServers = 51,
+    MobileIPHomeAgent = 52,
+    SMTPServer = 53,
+    POP3Server = 54,
+    NNTPServer = 55,
+    WWWServer = 56,
+    FingerServer = 57,
+    IRCServer = 58,
+    StreetTalkServer = 59,
+    StreetTalkDirectoryAssistanceServer = 60,
+    RequestedIPAddress = 50,
+    IPAddressLeaseTime = 51,
+    OptionOverload = 52,
+    TFTPServerName = 66,
+    BootfileName = 67,
+    DHCPMessageType = 53,
+    ServerIdentifier = 54,
+    ParameterRequestList = 55,
+    Message = 56,
+    MaxDHCPMessageSize = 57,
+    RenewalTimeValue = 58,
+    RebindingTimeValue = 59,
+    VendorClassIdentifier = 60,
+    ClientIdentifier = 61,
+    End = 255,
+};
+
+# Base option structure
 public type Option = unit {
-    code: uint8;
+    code: uint8 &convert=OptionType($$);
     length: uint8;
-    value: bytes &size=self.length;
+    data: bytes &size=self.length;
 };
 
-# DHCP header fields
-public type DhcpHeader = unit {
-    op: uint8;  # 1 = BOOTREQUEST, 2 = BOOTREPLY
+# DHCP Options container with magic cookie and end marker
+public type Options = unit {
+    magic_cookie: b"\x63\x82\x52\x76";  # 99, 130, 83, 99
+    options: Option[];
+    : b"\xff";  # End option
+};
+
+# Main DHCP message structure
+public type DHCPMessage = unit {
+    op: uint8 &convert=Opcode($$);  # 1=BOOTREQUEST, 2=BOOTREPLY
     htype: uint8;  # Hardware address type
-    hlen: uint8;  # Hardware address length
-    hops: uint8;  # Client sets to zero, optionally used by relay agents
-    xid: uint32;  # Transaction ID
-    secs: uint16;  # Seconds elapsed since client began address acquisition
-    flags: bitfield(16) {
-        broadcast: 0;
-        reserved: 1..15;
-    };
-    ciaddr: uint32;  # Client IP address
-    yiaddr: uint32;  # 'Your' IP address
-    siaddr: uint32;  # Next server IP address
-    giaddr: uint32;  # Relay agent IP address
+    hlen: uint8;   # Hardware address length
+    hops: uint8;   # Hops (client sets to zero)
+    xid: uint32;   # Transaction ID
+    secs: uint16;  # Seconds elapsed since client began process
+    flags: Flags;  # Flags field
+    ciaddr: addr &ipv4;  # Client IP address
+    yiaddr: addr &ipv4;  # Your (client) IP address
+    siaddr: addr &ipv4;  # Next server IP address
+    giaddr: addr &ipv4;  # Relay agent IP address
     chaddr: bytes &size=16;  # Client hardware address
-    sname: bytes &size=64;  # Server host name
-    file: bytes &size=128;  # Boot file name
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();  # Server host name
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();  # Boot file name
+    options: Options;
 };
 
-# DHCP message structure
-public type DhcpMessage = unit {
-    header: DhcpHeader;
-    magic_cookie: bytes &size=4;  # Must be 99, 130, 83, 99
-    options: Option[] &eod;
+# Opcode conversion
+type Opcode = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+};
+
+# Helper type for parsing DHCP messages with specific message types
+public type DHCPMessageWithType = unit {
+    msg: DHCPMessage;
+    switch (self.msg.options.options[0].code) {
+        OptionType::DHCPMessageType -> 
+            msg_type: uint8 &convert=MessageType($$) &requires=(self.msg.options.options[0].data[0] == $$);
+        * -> : void;
+    };
 };

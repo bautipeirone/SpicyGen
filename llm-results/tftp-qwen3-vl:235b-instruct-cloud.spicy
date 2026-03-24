@@ -1,41 +1,40 @@
 module TFTP;
 
+type Opcode = enum {
+    RRQ = 1,
+    WRQ = 2,
+    DATA = 3,
+    ACK = 4,
+    ERROR = 5,
+};
+
 public type Packet = unit {
-    opcode: uint16;
-    switch ( self.opcode ) {
-        1 -> rrq: RRQ;
-        2 -> wrq: WRQ;
-        3 -> data: DATA;
-        4 -> ack: ACK;
-        5 -> error: ERROR;
-        * -> : void; # Invalid opcode
+    opcode: uint16 &convert=Opcode($$);
+    switch (self.opcode) {
+        Opcode::RRQ,
+        Opcode::WRQ -> request: Request;
+        Opcode::DATA -> data: Data;
+        Opcode::ACK -> ack: Ack;
+        Opcode::ERROR -> error: Error;
+        * -> : void;
     };
 };
 
-public type RRQ = unit {
-    filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00";
+type Request = unit {
+    filename: bytes &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
+    mode: bytes &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
 };
 
-public type WRQ = unit {
-    filename: bytes &until=b"\x00";
-    mode: bytes &until=b"\x00";
+type Data = unit {
+    block_number: uint16;
+    data: bytes &size=512 &requires=(len(self.data) <= 512);
 };
 
-public type DATA = unit {
-    block_num: uint16;
-    data: bytes &size=512; # Fixed size per spec, but last packet may be smaller
+type Ack = unit {
+    block_number: uint16;
 };
 
-# Note: In practice, the data field can be 0-511 bytes for the final packet.
-# However, the grammar enforces 512 bytes as per spec for non-final packets.
-# The final packet is handled by the application logic checking the size.
-
-public type ACK = unit {
-    block_num: uint16;
-};
-
-public type ERROR = unit {
+type Error = unit {
     error_code: uint16;
-    error_msg: bytes &until=b"\x00";
+    error_message: bytes &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
 };

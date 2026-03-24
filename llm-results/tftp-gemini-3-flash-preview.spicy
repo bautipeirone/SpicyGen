@@ -1,64 +1,72 @@
 module TFTP;
 
-# TFTP (Trivial File Transfer Protocol) - RFC 1350
-# TFTP packets are encapsulated in UDP datagrams.
+# TFTP Opcode enumeration based on RFC 1350
+type Opcode = enum {
+    RRQ   = 1,
+    WRQ   = 2,
+    DATA  = 3,
+    ACK   = 4,
+    ERROR = 5,
+};
 
+# TFTP Error Codes enumeration
+type ErrorCode = enum {
+    NOT_DEFINED        = 0,
+    FILE_NOT_FOUND     = 1,
+    ACCESS_VIOLATION   = 2,
+    DISK_FULL          = 3,
+    ILLEGAL_OPERATION  = 4,
+    UNKNOWN_TID        = 5,
+    FILE_EXISTS        = 6,
+    NO_SUCH_USER       = 7,
+};
+
+# Main TFTP Packet structure
 public type Packet = unit {
-    opcode: uint16 &requires=($$ >= 1 && $$ <= 5);
+    opcode: uint16 &convert=Opcode($$);
 
-    switch (self.opcode) {
-        1 -> rrq: Request;   # Read Request
-        2 -> wrq: Request;   # Write Request
-        3 -> data: Data;     # Data Packet
-        4 -> ack: Ack;       # Acknowledgment
-        5 -> error: Error;   # Error Packet
+    switch ( self.opcode ) {
+        Opcode::RRQ, 
+        Opcode::WRQ   -> request:  RRQ_WRQ;
+        Opcode::DATA  -> data_pkt: DATA_Pkt;
+        Opcode::ACK   -> ack_pkt:  ACK_Pkt;
+        Opcode::ERROR -> error_pkt: ERROR_Pkt;
+        *             -> unknown:  bytes &eod;
     };
 };
 
-# RRQ and WRQ packets (Opcodes 1 and 2)
-type Request = unit {
-    # The file name is a sequence of bytes in netascii terminated by a zero byte.
-    filename: bytes &until=b"\x00";
+# Format for Read Request (RRQ) and Write Request (WRQ)
+type RRQ_WRQ = unit {
+    # Filename is a netascii string, terminated by a null byte
+    filename: bytes &until=b"\0";
     
-    # The mode field contains the string "netascii", "octet", or "mail" (case-insensitive)
-    # terminated by a zero byte.
-    mode: bytes &until=b"\x00";
+    # Mode is a netascii string (netascii, octet, or mail), case insensitive, null terminated
+    mode:     bytes &until=b"\0";
 };
 
-# DATA packet (Opcode 3)
-type Data = unit {
-    # Block numbers on data packets begin with one and increase by one for each new block.
-    block_num: uint16;
+# Format for DATA packets
+type DATA_Pkt = unit {
+    # Block number is a 2-byte field increasing by one for each new block
+    block: uint16;
     
-    # The data field is from 0 to 512 bytes long. 
-    # If it is 512 bytes long, the block is not the last block.
-    # If it is 0-511 bytes long, it signals the end of the transfer.
-    # &size=512 &eod allows consuming up to 512 bytes until the end of the UDP payload.
-    data: bytes &size=512 &eod;
+    # Data is 0 to 512 bytes long. 
+    # A block less than 512 bytes signals the end of the transfer.
+    # Since TFTP packets are encapsulated in UDP, we consume the rest of the available payload.
+    data:  bytes &eod &size=512;
 };
 
-# ACK packet (Opcode 4)
-type Ack = unit {
-    # Block # echoes the block number of the DATA packet being acknowledged.
-    # For a WRQ, the first ACK block number is zero.
-    block_num: uint16;
+# Format for Acknowledgment (ACK) packets
+type ACK_Pkt = unit {
+    # Block number of the DATA packet being acknowledged
+    # or 0 for a WRQ acknowledgment.
+    block: uint16;
 };
 
-# ERROR packet (Opcode 5)
-type Error = unit {
-    # Error code indicates the nature of the error.
-    error_code: uint16 &requires=($$ <= 7);
+# Format for ERROR packets
+type ERROR_Pkt = unit {
+    # Error code indicating the nature of the error
+    error_code_value: uint16 &convert=ErrorCode($$);
     
-    # The error message is intended for human consumption.
-    error_msg: bytes &until=b"\x00";
+    # Error message intended for human consumption, null terminated
+    error_msg:        bytes &until=b"\0";
 };
-
-# Defined Error Codes:
-# 0: Not defined, see error message (if any).
-# 1: File not found.
-# 2: Access violation.
-# 3: Disk full or allocation exceeded.
-# 4: Illegal TFTP operation.
-# 5: Unknown transfer ID.
-# 6: File already exists.
-# 7: No such user.

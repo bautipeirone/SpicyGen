@@ -1,0 +1,218 @@
+module IRC;
+
+const CR = b"\r";
+const LF = b"\n";
+const SPACE=b" ";
+
+public type Message = unit {
+    prefix: bytes &optional &until=CR;
+    command: bytes &until=SPACE;
+    params: bytes[] &until=LF;
+};
+
+type Prefix = unit {
+    servername: bytes;
+    nickname: bytes;
+    user: bytes &optional;
+    host: bytes &optional;
+};
+
+type Command = unit {
+    command: bytes &convert=CommandType($$);
+    params: bytes[] &size=15;
+};
+
+type CommandType = enum {
+    PASS = 1,
+    NICK = 2,
+    USER = 3,
+    SERVER = 4,
+    OPER = 5,
+    QUIT = 6,
+    SQUIT = 7,
+    JOIN = 8,
+    PART = 9,
+    MODE = 10,
+    TOPIC = 11,
+    NAMES = 12,
+    LIST = 13,
+    INVITE = 14,
+    KICK = 15,
+    VERSION = 16,
+    STATS = 17,
+    LINKS = 18,
+    TIME = 19,
+    CONNECT = 20,
+    TRACE = 21,
+    ADMIN = 22,
+    INFO = 23,
+    PRIVMSG = 24,
+    NOTICE = 25,
+    WHO = 26,
+    WHOIS = 27,
+    WHOWAS = 28,
+    KILL = 29,
+    PING = 30,
+    PONG = 31,
+    AWAY = 32,
+    REHASH = 33,
+    RESTART = 34,
+    SUMMON = 35,
+    USERS = 36,
+    WALLOPS = 37,
+    USERHOST = 38,
+    ISON = 39,
+};
+
+public type NumericReply = unit {
+    code: uint16;
+    message: bytes;
+};
+
+public type ErrorReply = unit {
+    code: uint16 &convert=ErrorType($$);
+    message: bytes;
+};
+
+type ErrorType = enum {
+    ERR_NOSUCHNICK = 401,
+    ERR_NOSUCHSERVER = 402,
+    ERR_NOSUCHCHANNEL = 403,
+    ERR_CANNOTSENDTOCHAN = 404,
+    ERR_TOOMANYCHANNELS = 405,
+    ERR_WASNOSUCHNICK = 406,
+    ERR_TOOMANYTARGETS = 407,
+    ERR_NOORIGIN = 409,
+    ERR_NORECIPIENT = 411,
+    ERR_NOTEXTTOSEND = 412,
+    ERR_NOTOPLEVEL = 413,
+    ERR_WILDTOPLEVEL = 414,
+    ERR_UNKNOWNCOMMAND = 421,
+    ERR_NOMOTD = 422,
+    ERR_NOADMININFO = 423,
+    ERR_FILEERROR = 424,
+    ERR_NONICKNAMEGIVEN = 431,
+    ERR_ERRONEUSNICKNAME = 432,
+    ERR_NICKNAMEINUSE = 433,
+    ERR_NICKCOLLISION = 436,
+    ERR_USERNOTINCHANNEL = 441,
+    ERR_NOTONCHANNEL = 442,
+    ERR_USERONCHANNEL = 443,
+    ERR_NOLOGIN = 444,
+    ERR_SUMMONDISABLED = 445,
+    ERR_USERSDISABLED = 446,
+    ERR_NOTREGISTERED = 451,
+    ERR_NEEDMOREPARAMS = 461,
+    ERR_ALREADYREGISTRED = 462,
+    ERR_NOPERMFORHOST = 463,
+    ERR_PASSWDMISMATCH = 464,
+    ERR_YOUREBANNEDCREEP = 465,
+    ERR_KEYSET = 467,
+    ERR_CHANNELISFULL = 471,
+    ERR_UNKNOWNMODE = 472,
+    ERR_INVITEONLYCHAN = 473,
+    ERR_BANNEDFROMCHAN = 474,
+    ERR_BADCHANNELKEY = 475,
+    ERR_NOPRIVILEGES = 481,
+    ERR_CHANOPRIVSNEEDED = 482,
+    ERR_CANTKILLSERVER = 483,
+    ERR_NOOPERHOST = 491,
+    ERR_UMODEUNKNOWNFLAG = 501,
+    ERR_USERSDONTMATCH = 502,
+};
+
+public type UserMessage = unit {
+    command: Command;
+    parameters: bytes[] &size=4;
+};
+
+public type ChannelMessage = unit {
+    channel: bytes &until=SPACE;
+    key: bytes &optional;
+};
+
+public type JoinMessage = unit {
+    channels: bytes[] &size=10;
+    keys: bytes[] &optional;
+};
+
+public type PartMessage = unit {
+    channels: bytes[] &size=10;
+};
+
+public type ModeMessage = unit {
+    target: bytes &until=SPACE;
+    mode: bytes;
+    params: bytes[] &optional;
+};
+
+public type TopicMessage = unit {
+    channel: bytes &until=SPACE;
+    topic: bytes &optional &until=LF;
+};
+
+public type NamesMessage = unit {
+    channels: bytes[] &optional;
+};
+
+public type ListMessage = unit {
+    channels: bytes[] &optional;
+};
+
+public type InviteMessage = unit {
+    nickname: bytes;
+    channel: bytes;
+};
+
+public type KickMessage = unit {
+    channel: bytes;
+    user: bytes;
+    comment: bytes &optional;
+};
+
+public type PingMessage = unit {
+    server1: bytes;
+    server2: bytes &optional;
+};
+
+public type PongMessage = unit {
+    daemon: bytes;
+    daemon2: bytes &optional;
+};
+
+public type ErrorMessage = unit {
+    error: bytes;
+};
+
+public type AwayMessage = unit {
+    message: bytes &optional;
+};
+
+public type RehashMessage = unit {
+    : void;
+};
+
+public type RestartMessage = unit {
+    : void;
+};
+
+public type SummonMessage = unit {
+    user: bytes;
+    server: bytes &optional;
+};
+
+public type UsersMessage = unit {
+    server: bytes &optional;
+};
+
+public type WallopsMessage = unit {
+    text: bytes;
+};
+
+public type UserhostMessage = unit {
+    nicknames: bytes[] &size=5;
+};
+
+public type IsonMessage = unit {
+    nicknames: bytes[] &size=5;
+};
