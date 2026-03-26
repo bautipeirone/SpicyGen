@@ -1,0 +1,802 @@
+module DHCP;
+
+public type DHCPMessage = unit {
+    op: uint8 &convert=Opcode($$);
+    htype: uint8 &convert=HardwareType($$);
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: Flags;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    magic_cookie: b"\x63\x82\x53\x63";
+    options: DHCPOption[] &until=option_end;
+};
+
+type Opcode = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+};
+
+type HardwareType = enum {
+    ETHERNET = 1,
+};
+
+type Flags = bitfield(16) {
+    broadcast: 0;
+    reserved: 1..15;
+};
+
+type DHCPOption = unit {
+    code: uint8;
+    switch (self.code) {
+        case 0 -> : Padding;
+        case 255 -> : End;
+        default -> : OptionData;
+    };
+};
+
+type Padding = unit {
+    : void;
+};
+
+type End = unit {
+    : void;
+};
+
+type OptionData = unit {
+    len: uint8;
+    data: bytes &size=self.len;
+    switch (self.code) {
+        case 53 -> : MessageTypeOption;
+        case 50 -> : RequestedIPOption;
+        case 51 -> : IPAddressLeaseTimeOption;
+        case 54 -> : ServerIdentifierOption;
+        case 55 -> : ParameterRequestListOption;
+        case 57 -> : MaximumMessageSizeOption;
+        case 61 -> : ClientIdentifierOption;
+        case 12 -> : HostNameOption;
+        case 60 -> : VendorClassIdentifierOption;
+        case 43 -> : VendorSpecificInformationOption;
+        case 82 -> : RelayAgentInformationOption;
+        case 1 -> : SubnetMaskOption;
+        case 3 -> : RouterOption;
+        case 6 -> : DomainNameServerOption;
+        case 15 -> : DomainNameOption;
+        case 28 -> : BroadcastAddressOption;
+        case 42 -> : NetworkTimeProtocolServersOption;
+        case 26 -> : InterfaceMTUOption;
+        case 2 -> : TimeOffsetOption;
+        case 4 -> : TimeServerOption;
+        case 5 -> : NameServerOption;
+        case 7 -> : LogServerOption;
+        case 8 -> : CookieServerOption;
+        case 9 -> : LPRServerOption;
+        case 10 -> : ImpressServerOption;
+        case 11 -> : ResourceLocationServerOption;
+        case 13 -> : BootFileSizeOption;
+        case 14 -> : MeritDumpFileOption;
+        case 16 -> : SwapServerOption;
+        case 17 -> : RootPathOption;
+        case 18 -> : ExtensionsPathOption;
+        case 19 -> : IPForwardingOption;
+        case 20 -> : NonLocalSourceRoutingOption;
+        case 21 -> : PolicyFilterOption;
+        case 22 -> : MaximumDatagramReassemblySizeOption;
+        case 23 -> : DefaultIPTTLOption;
+        case 24 -> : PathMTUAgingTimeoutOption;
+        case 25 -> : PathMTUPlateauTableOption;
+        case 27 -> : AllSubnetsLocalOption;
+        case 29 -> : PerformMaskDiscoveryOption;
+        case 30 -> : MaskSupplierOption;
+        case 31 -> : PerformRouterDiscoveryOption;
+        case 32 -> : RouterSolicitationAddressOption;
+        case 33 -> : StaticRouteOption;
+        case 34 -> : TrailerEncapsulationOption;
+        case 35 -> : ARPCacheTimeoutOption;
+        case 36 -> : EthernetEncapsulationOption;
+        case 37 -> : TCPDefaultTTLOption;
+        case 38 -> : TCPKeepaliveIntervalOption;
+        case 39 -> : TCPKeepaliveGarbageOption;
+        case 40 -> : NetworkInformationServiceDomainOption;
+        case 41 -> : NetworkInformationServersOption;
+        case 44 -> : NetBIOSOverTCPIPNameServerOption;
+        case 45 -> : NetBIOSOverTCPIPDatagramDistributionServerOption;
+        case 46 -> : NetBIOSOverTCPIPNodeTypeOption;
+        case 47 -> : NetBIOSOverTCPIPScopeOption;
+        case 48 -> : XWindowSystemFontServerOption;
+        case 49 -> : XWindowSystemDisplayManagerOption;
+        case 56 -> : DHCPMessageOption;
+        case 58 -> : RenewalTimeValueOption;
+        case 59 -> : RebindingTimeValueOption;
+        case 64 -> : NetworkInformationServicePlusDomainOption;
+        case 65 -> : NetworkInformationServicePlusServersOption;
+        case 68 -> : MobileIPHomeAgentOption;
+        case 69 -> : SimpleMailTransportProtocolServerOption;
+        case 70 -> : PostOfficeProtocolServerOption;
+        case 71 -> : NetworkNewsTransportProtocolServerOption;
+        case 72 -> : DefaultWorldWideWebServerOption;
+        case 73 -> : DefaultFingerServerOption;
+        case 74 -> : DefaultInternetRelayChatServerOption;
+        case 75 -> : StreetTalkServerOption;
+        case 76 -> : StreetTalkDirectoryAssistanceServerOption;
+        case 77 -> : UserClassOption;
+        case 85 -> : NDServersOption;
+        case 86 -> : NDSTreeNameOption;
+        case 87 -> : NDSContextOption;
+        case 88 -> : BCMCSControllerDomainNameListOption;
+        case 89 -> : BCMCSControllerIPv4AddressOption;
+        case 90 -> : AuthenticationOption;
+        case 91 -> : ClientLastTransactionTimeOption;
+        case 92 -> : AssociatedIPOption;
+        case 93 -> : ClientSystemOption;
+        case 94 -> : ClientNDIOption;
+        case 95 -> : LDAPOption;
+        case 97 -> : UUIDGUIDOption;
+        case 98 -> : UserAuthOption;
+        case 100 -> : PrinterNameOption;
+        case 101 -> : MDHCPOption;
+        case 112 -> : NetInfoParentServerAddressOption;
+        case 113 -> : NetInfoParentServerTagOption;
+        case 114 -> : URLOption;
+        case 116 -> : AutoConfigureOption;
+        case 117 -> : NameServiceSearchOption;
+        case 118 -> : SubnetSelectionOption;
+        case 119 -> : DomainSearchOption;
+        case 120 -> : SIPServersDHCPOption;
+        case 121 -> : ClasslessStaticRouteOption;
+        case 122 -> : CCCOption;
+        case 123 -> : GeoConfOption;
+        case 124 -> : VendorIdentifyingVendorClassOption;
+        case 125 -> : VendorIdentifyingVendorSpecificInformationOption;
+        case 128 -> : TFTPServerNameOption;
+        case 129 -> : BootfileNameOption;
+        case 130 -> : MobileIPHomeAgentOption;
+        case 131 -> : SimpleMailTransportProtocolServerOption;
+        case 132 -> : PostOfficeProtocolServerOption;
+        case 133 -> : NetworkNewsTransportProtocolServerOption;
+        case 134 -> : DefaultWorldWideWebServerOption;
+        case 135 -> : DefaultFingerServerOption;
+        case 136 -> : DefaultInternetRelayChatServerOption;
+        case 137 -> : StreetTalkServerOption;
+        case 138 -> : StreetTalkDirectoryAssistanceServerOption;
+        case 139 -> -> : OptionOverloadOption;
+        case 140 -> : DHCPAgentOptionsOption;
+        case 141 -> : AuthenticationOption;
+        case 142 -> : ClientLastTransactionTimeOption;
+        case 143 -> : AssociatedIPOption;
+        case 144 -> : ClientSystemOption;
+        case 145 -> : ClientNDIOption;
+        case 146 -> : LDAPOption;
+        case 147 -> : UUIDGUIDOption;
+        case 148 -> : UserAuthOption;
+        case 149 -> : GEOCONF_CIVICOption;
+        case 150 -> : FORCERENEW_NONCE_CAPABLEOption;
+        case 151 -> : RDNSSSelectionOption;
+        case 152 -> : TFTP_Server_AddressOption;
+        case 153 -> : Status_CodeOption;
+        case 154 -> : Base_TimeOption;
+        case 155 -> : Start_Time_of_StateOption;
+        case 156 -> : Query_Start_TimeOption;
+        case 157 -> : Query_End_TimeOption;
+        case 158 -> : DHCP_StateOption;
+        case 159 -> : Data_SourceOption;
+        case 160 -> : PCP_ServerOption;
+        case 161 -> : OPTION_PANA_AGENTOption;
+        case 162 -> : OPTION_V4_LOSTOption;
+        case 163 -> : OPTION_CAPWAP_AC_V4Option;
+        case 164 -> : OPTION_IPv4_Address_MoSOption;
+        case 165 -> : OPTION_IPv4_FQDN_MoSOption;
+        case 166 -> : OPTION_SIP_UA_CS_ListOption;
+        case 167 -> : OPTION_IPv4_Address_ANDSFOption;
+        case 168 -> : OPTION_GEOLOCOption;
+        case 169 -> : OPTION_FORCERENEW_NONCE_CAPABLEOption;
+        case 170 -> : OPTION_RDNSSSelectionOption;
+        case 171 -> : OPTION_TFTP_Server_AddressOption;
+        case 172 -> : OPTION_STATUS_CODEOption;
+        case 173 -> : OPTION_BASE_TIMEOption;
+        case 174 -> : OPTION_START_TIME_OF_STATEOption;
+        case 175 -> : OPTION_QUERY_START_TIMEOption;
+        case 176 -> : OPTION_QUERY_END_TIMEOption;
+        case 177 -> : OPTION_DHCP_STATEOption;
+        case 178 -> : OPTION_DATA_SOURCEOption;
+        case 179 -> : OPTION_PCP_SERVEROption;
+        case 180 -> : OPTION_OPTION_PANA_AGENTOption;
+        case 181 -> : OPTION_OPTION_V4_LOSTOption;
+        case 182 -> : OPTION_OPTION_CAPWAP_AC_V4Option;
+        case 183 -> : OPTION_OPTION_IPv4_Address_MoSOption;
+        case 184 -> : OPTION_OPTION_IPv4_FQDN_MoSOption;
+        case 185 -> : OPTION_OPTION_SIP_UA_CS_ListOption;
+        case 186 -> : OPTION_OPTION_IPv4_Address_ANDSFOption;
+        case 187 -> : OPTION_OPTION_GEOLOCOption;
+        case 188 -> : OPTION_OPTION_FORCERENEW_NONCE_CAPABLEOption;
+        case 189 -> : OPTION_OPTION_RDNSSSelectionOption;
+        case 190 -> : OPTION_OPTION_TFTP_Server_AddressOption;
+        case 191 -> : OPTION_OPTION_STATUS_CODEOption;
+        case 192 -> : OPTION_OPTION_BASE_TIMEOption;
+        case 193 -> : OPTION_OPTION_START_TIME_OF_STATEOption;
+        case 194 -> : OPTION_OPTION_QUERY_START_TIMEOption;
+        case 195 -> : OPTION_OPTION_QUERY_END_TIMEOption;
+        case 196 -> : OPTION_OPTION_DHCP_STATEOption;
+        case 197 -> : OPTION_OPTION_DATA_SOURCEOption;
+        case 198 -> : OPTION_OPTION_PCP_SERVEROption;
+        case 199 -> : OPTION_OPTION_OPTION_PANA_AGENTOption;
+        case 200 -> : OPTION_OPTION_OPTION_V4_LOSTOption;
+        case 201 -> : OPTION_OPTION_OPTION_CAPWAP_AC_V4Option;
+        case 202 -> : OPTION_OPTION_OPTION_IPv4_Address_MoSOption;
+        case 203 -> : OPTION_OPTION_OPTION_IPv4_FQDN_MoSOption;
+        case 204 -> : OPTION_OPTION_OPTION_SIP_UA_CS_ListOption;
+        case 205 -> : OPTION_OPTION_OPTION_IPv4_Address_ANDSFOption;
+        case 206 -> : OPTION_OPTION_OPTION_GEOLOCOption;
+        case 207 -> : OPTION_OPTION_OPTION_FORCERENEW_NONCE_CAPABLEOption;
+        case 208 -> : OPTION_OPTION_OPTION_RDNSSSelectionOption;
+        case 209 -> : OPTION_OPTION_OPTION_TFTP_Server_AddressOption;
+        case 210 -> : OPTION_OPTION_OPTION_STATUS_CODEOption;
+        case 211 -> : OPTION_OPTION_OPTION_BASE_TIMEOption;
+        case 212 -> : OPTION_OPTION_OPTION_START_TIME_OF_STATEOption;
+        case 213 -> : OPTION_OPTION_OPTION_QUERY_START_TIMEOption;
+        case 214 -> : OPTION_OPTION_OPTION_QUERY_END_TIMEOption;
+        case 215 -> : OPTION_OPTION_OPTION_DHCP_STATEOption;
+        case 216 -> : OPTION_OPTION_OPTION_DATA_SOURCEOption;
+        case 217 -> : OPTION_OPTION_OPTION_PCP_SERVEROption;
+        case 218 -> : OPTION_OPTION_OPTION_OPTION_PANA_AGENTOption;
+        case 219 -> : OPTION_OPTION_OPTION_OPTION_V4_LOSTOption;
+        case 220 -> : OPTION_OPTION_OPTION_OPTION_CAPWAP_AC_V4Option;
+        case 221 -> : OPTION_OPTION_OPTION_OPTION_IPv4_Address_MoSOption;
+        case 222 -> : OPTION_OPTION_OPTION_OPTION_IPv4_FQDN_MoSOption;
+        case 223 -> : OPTION_OPTION_OPTION_OPTION_SIP_UA_CS_ListOption;
+        case 224 -> : OPTION_OPTION_OPTION_OPTION_IPv4_Address_ANDSFOption;
+        case 225 -> : OPTION_OPTION_OPTION_OPTION_GEOLOCOption;
+        case 226 -> : OPTION_OPTION_OPTION_OPTION_FORCERENEW_NONCE_CAPABLEOption;
+        case 227 -> : OPTION_OPTION_OPTION_OPTION_RDNSSSelectionOption;
+        case 228 -> : OPTION_OPTION_OPTION_OPTION_TFTP_Server_AddressOption;
+        case 229 -> : OPTION_OPTION_OPTION_OPTION_STATUS_CODEOption;
+        case 230 -> : OPTION_OPTION_OPTION_OPTION_BASE_TIMEOption;
+        case 231 -> : OPTION_OPTION_OPTION_OPTION_START_TIME_OF_STATEOption;
+        case 232 -> : OPTION_OPTION_OPTION_OPTION_QUERY_START_TIMEOption;
+        case 233 -> : OPTION_OPTION_OPTION_OPTION_QUERY_END_TIMEOption;
+        case 234 -> : OPTION_OPTION_OPTION_OPTION_DHCP_STATEOption;
+        case 235 -> : OPTION_OPTION_OPTION_OPTION_DATA_SOURCEOption;
+        case 236 -> : OPTION_OPTION_OPTION_OPTION_PCP_SERVEROption;
+        case 237 -> : OPTION_OPTION_OPTION_OPTION_OPTION_PANA_AGENTOption;
+        case 238 -> : OPTION_OPTION_OPTION_OPTION_OPTION_V4_LOSTOption;
+        case 239 -> : OPTION_OPTION_OPTION_OPTION_OPTION_CAPWAP_AC_V4Option;
+        case 240 -> : OPTION_OPTION_OPTION_OPTION_OPTION_IPv4_Address_MoSOption;
+        case 241 -> : OPTION_OPTION_OPTION_OPTION_OPTION_IPv4_FQDN_MoSOption;
+        case 242 -> : OPTION_OPTION_OPTION_OPTION_OPTION_SIP_UA_CS_ListOption;
+        case 243 -> : OPTION_OPTION_OPTION_OPTION_OPTION_IPv4_Address_ANDSFOption;
+        case 244 -> : OPTION_OPTION_OPTION_OPTION_OPTION_GEOLOCOption;
+        case 245 -> : OPTION_OPTION_OPTION_OPTION_OPTION_FORCERENEW_NONCE_CAPABLEOption;
+        case 246 -> : OPTION_OPTION_OPTION_OPTION_OPTION_RDNSSSelectionOption;
+        case 247 -> : OPTION_OPTION_OPTION_OPTION_OPTION_TFTP_Server_AddressOption;
+        case 248 -> : OPTION_OPTION_OPTION_OPTION_OPTION_STATUS_CODEOption;
+        case 249 -> : OPTION_OPTION_OPTION_OPTION_OPTION_BASE_TIMEOption;
+        case 250 -> : OPTION_OPTION_OPTION_OPTION_OPTION_START_TIME_OF_STATEOption;
+        case 251 -> : OPTION_OPTION_OPTION_OPTION_OPTION_QUERY_START_TIMEOption;
+        case 252 -> : OPTION_OPTION_OPTION_OPTION_OPTION_QUERY_END_TIMEOption;
+        case 253 -> : OPTION_OPTION_OPTION_OPTION_OPTION_DHCP_STATEOption;
+        case 254 -> : OPTION_OPTION_OPTION_OPTION_OPTION_DATA_SOURCEOption;
+        * -> : GenericOption;
+    };
+};
+
+type MessageTypeOption = unit {
+    type_value: uint8 &convert=DHCPMessageType($$);
+};
+
+type DHCPMessageType = enum {
+    DHCPDISCOVER = 1,
+    DHCPOFFER = 2,
+    DHCPREQUEST = 3,
+    DHCPDECLINE = 4,
+    DHCPACK = 5,
+    DHCPNAK = 6,
+    DHCPRELEASE = 7,
+    DHCPINFORM = 8,
+};
+
+type RequestedIPOption = unit {
+    address: addr &ipv4;
+};
+
+type IPAddressLeaseTimeOption = unit {
+    lease_time: uint32 &convert=cast<interval>($$);
+};
+
+type ServerIdentifierOption = unit {
+    server_id: addr &ipv4;
+};
+
+type ParameterRequestListOption = unit {
+    parameters: uint8[];
+};
+
+type MaximumMessageSizeOption = unit {
+    max_size: uint16;
+};
+
+type ClientIdentifierOption = unit {
+    identifier: bytes &eod;
+};
+
+type HostNameOption = unit {
+    hostname: bytes &eod &convert=$$.decode();
+};
+
+type VendorClassIdentifierOption = unit {
+    vendor_class: bytes &eod &convert=$$.decode();
+};
+
+type VendorSpecificInformationOption = unit {
+    vendor_data: bytes &eod;
+};
+
+type RelayAgentInformationOption = unit {
+    agent_data: bytes &eod;
+};
+
+type SubnetMaskOption = unit {
+    mask: addr &ipv4;
+};
+
+type RouterOption = unit {
+    routers: (addr &ipv4)[];
+};
+
+type DomainNameServerOption = unit {
+    dns_servers: (addr &ipv4)[];
+};
+
+type DomainNameOption = unit {
+    domain_name: bytes &eod &convert=$$.decode();
+};
+
+type BroadcastAddressOption = unit {
+    broadcast_addr: addr &ipv4;
+};
+
+type NetworkTimeProtocolServersOption = unit {
+    ntp_servers: (addr &ipv4)[];
+};
+
+type InterfaceMTUOption = unit {
+    mtu: uint16;
+};
+
+type TimeOffsetOption = unit {
+    offset: int32 &convert=cast<interval>($$);
+};
+
+type TimeServerOption = unit {
+    time_servers: (addr &ipv4)[];
+};
+
+type NameServerOption = unit {
+    name_servers: (addr &ipv4)[];
+};
+
+type LogServerOption = unit {
+    log_servers: (addr &ipv4)[];
+};
+
+type CookieServerOption = unit {
+    cookie_servers: (addr &ipv4)[];
+};
+
+type LPRServerOption = unit {
+    lpr_servers: (addr &ipv4)[];
+};
+
+type ImpressServerOption = unit {
+    impress_servers: (addr &ipv4)[];
+};
+
+type ResourceLocationServerOption = unit {
+    resource_location_servers: (addr &ipv4)[];
+};
+
+type BootFileSizeOption = unit {
+    boot_file_size: uint16;
+};
+
+type MeritDumpFileOption = unit {
+    merit_dump_file: bytes &eod &convert=$$.decode();
+};
+
+type SwapServerOption = unit {
+    swap_server: addr &ipv4;
+};
+
+type RootPathOption = unit {
+    root_path: bytes &eod &convert=$$.decode();
+};
+
+type ExtensionsPathOption = unit {
+    extensions_path: bytes &eod &convert=$$.decode();
+};
+
+type IPForwardingOption = unit {
+    ip_forwarding: uint8 &convert=($$ != 0);
+};
+
+type NonLocalSourceRoutingOption = unit {
+    non_local_source_routing: uint8 &convert=($$ != 0);
+};
+
+type PolicyFilterOption = unit {
+    policy_filters: (addr &ipv4)[];
+};
+
+type MaximumDatagramReassemblySizeOption = unit {
+    max_datagram_reassembly_size: uint16;
+};
+
+type DefaultIPTTLOption = unit {
+    default_ttl: uint8;
+};
+
+type PathMTUAgingTimeoutOption = unit {
+    path_mtu_aging_timeout: uint32 &convert=cast<interval>($$);
+};
+
+type PathMTUPlateauTableOption = unit {
+    path_mtu_plateau_table: uint16[];
+};
+
+type AllSubnetsLocalOption = unit {
+    all_subnets_local: uint8 &convert=($$ != 0);
+};
+
+type PerformMaskDiscoveryOption = unit {
+    perform_mask_discovery: uint8 &convert=($$ != 0);
+};
+
+type MaskSupplierOption = unit {
+    mask_supplier: uint8 &convert=($$ != 0);
+};
+
+type PerformRouterDiscoveryOption = unit {
+    perform_router_discovery: uint8 &convert=($$ != 0);
+};
+
+type RouterSolicitationAddressOption = unit {
+    router_solicitation_address: addr &ipv4;
+};
+
+type StaticRouteOption = unit {
+    static_routes: (addr &ipv4)[];
+};
+
+type TrailerEncapsulationOption = unit {
+    trailer_encapsulation: uint8 &convert=($$ != 0);
+};
+
+type ARPCacheTimeoutOption = unit {
+    arp_cache_timeout: uint32 &convert=cast<interval>($$);
+};
+
+type EthernetEncapsulationOption = unit {
+    ethernet_encapsulation: uint8 &convert=($$ != 0);
+};
+
+type TCPDefaultTTLOption = unit {
+    tcp_default_ttl: uint8;
+};
+
+type TCPKeepaliveIntervalOption = unit {
+    tcp_keepalive_interval: uint32 &convert=cast<interval>($$);
+};
+
+type TCPKeepaliveGarbageOption = unit {
+    tcp_keepalive_garbage: uint8 &convert=($$ != 0);
+};
+
+type NetworkInformationServiceDomainOption = unit {
+    nis_domain: bytes &eod &convert=$$.decode();
+};
+
+type NetworkInformationServersOption = unit {
+    nis_servers: (addr &ipv4)[];
+};
+
+type NetBIOSOverTCPIPNameServerOption = unit {
+    netbios_name_servers: (addr &ipv4)[];
+};
+
+type NetBIOSOverTCPIPDatagramDistributionServerOption = unit {
+    netbios_dgram_dist_servers: (addr &ipv4)[];
+};
+
+type NetBIOSOverTCPIPNodeTypeOption = unit {
+    netbios_node_type: uint8;
+};
+
+type NetBIOSOverTCPIPScopeOption = unit {
+    netbios_scope: bytes &eod &convert=$$.decode();
+};
+
+type XWindowSystemFontServerOption = unit {
+    x_window_font_servers: (addr &ipv4)[];
+};
+
+type XWindowSystemDisplayManagerOption = unit {
+    x_window_display_managers: (addr &ipv4)[];
+};
+
+type DHCPMessageOption = unit {
+    dhcp_message: bytes &eod &convert=$$.decode();
+};
+
+type RenewalTimeValueOption = unit {
+    renewal_time: uint32 &convert=cast<interval>($$);
+};
+
+type RebindingTimeValueOption = unit {
+    rebinding_time: uint32 &convert=cast<interval>($$);
+};
+
+type NetworkInformationServicePlusDomainOption = unit {
+    nis_plus_domain: bytes &eod &convert=$$.decode();
+};
+
+type NetworkInformationServicePlusServersOption = unit {
+    nis_plus_servers: (addr &ipv4)[];
+};
+
+type MobileIPHomeAgentOption = unit {
+    mobile_ip_home_agents: (addr &ipv4)[];
+};
+
+type SimpleMailTransportProtocolServerOption = unit {
+    smtp_servers: (addr &ipv4)[];
+};
+
+type PostOfficeProtocolServerOption = unit {
+    pop3_servers: (addr &ipv4)[];
+};
+
+type NetworkNewsTransportProtocolServerOption = unit {
+    nntp_servers: (addr &ipv4)[];
+};
+
+type DefaultWorldWideWebServerOption = unit {
+    www_servers: (addr &ipv4)[];
+};
+
+type DefaultFingerServerOption = unit {
+    finger_servers: (addr &ipv4)[];
+};
+
+type DefaultInternetRelayChatServerOption = unit {
+    irc_servers: (addr &ipv4)[];
+};
+
+type StreetTalkServerOption = unit {
+    street_talk_servers: (addr &ipv4)[];
+};
+
+type StreetTalkDirectoryAssistanceServerOption = unit {
+    street_talk_directory_assistance_servers: (addr &ipv4)[];
+};
+
+type UserClassOption = unit {
+    user_class: bytes &eod &convert=$$.decode();
+};
+
+type NDServersOption = unit {
+    nd_servers: (addr &ipv4)[];
+};
+
+type NDSTreeNameOption = unit {
+    nd_tree_name: bytes &eod &convert=$$.decode();
+};
+
+type NDSContextOption = unit {
+    nd_context: bytes &eod &convert=$$.decode();
+};
+
+type BCMCSControllerDomainNameListOption = unit {
+    bcmcs_controller_domain_name_list: bytes &eod &convert=$$.decode();
+};
+
+type BCMCSControllerIPv4AddressOption = unit {
+    bcmcs_controller_ipv4_addresses: (addr &ipv4)[];
+};
+
+type AuthenticationOption = unit {
+    authentication: bytes &eod;
+};
+
+type ClientLastTransactionTimeOption = unit {
+    client_last_transaction_time: uint32 &convert=cast<interval>($$);
+};
+
+type AssociatedIPOption = unit {
+    associated_ips: (addr &ipv4)[];
+};
+
+type ClientSystemOption = unit {
+    client_system: bytes &eod;
+};
+
+type ClientNDIOption = unit {
+    client_ndi: bytes &eod;
+};
+
+type LDAPOption = unit {
+    ldap_servers: (addr &ipv4)[];
+};
+
+type UUIDGUIDOption = unit {
+    uuid_guid: bytes &size=16;
+};
+
+type UserAuthOption = unit {
+    user_auth: bytes &eod;
+};
+
+type PrinterNameOption = unit {
+    printer_name: bytes &eod &convert=$$.decode();
+};
+
+type MDHCPOption = unit {
+    mdhcp: bytes &eod;
+};
+
+type NetInfoParentServerAddressOption = unit {
+    netinfo_parent_server_address: addr &ipv4;
+};
+
+type NetInfoParentServerTagOption = unit {
+    netinfo_parent_server_tag: bytes &eod &convert=$$.decode();
+};
+
+type URLOption = unit {
+    url: bytes &eod &convert=$$.decode();
+};
+
+type AutoConfigureOption = unit {
+    auto_configure: uint8;
+};
+
+type NameServiceSearchOption = unit {
+    name_service_search: bytes &eod;
+};
+
+type SubnetSelectionOption = unit {
+    subnet_selection: addr &ipv4;
+};
+
+type DomainSearchOption = unit {
+    domain_search: bytes &eod &convert=$$.decode();
+};
+
+type SIPServersDHCPOption = unit {
+    sip_servers: bytes &eod;
+};
+
+type ClasslessStaticRouteOption = unit {
+    classless_static_routes: bytes &eod;
+};
+
+type CCCOption = unit {
+    ccc: bytes &eod;
+};
+
+type GeoConfOption = unit {
+    geoconf: bytes &eod;
+};
+
+type VendorIdentifyingVendorClassOption = unit {
+    vendor_identifying_vendor_class: bytes &eod;
+};
+
+type VendorIdentifyingVendorSpecificInformationOption = unit {
+    vendor_identifying_vendor_specific_information: bytes &eod;
+};
+
+type TFTPServerNameOption = unit {
+    tftp_server_name: bytes &eod &convert=$$.decode();
+};
+
+type BootfileNameOption = unit {
+    bootfile_name: bytes &eod &convert=$$.decode();
+};
+
+type OptionOverloadOption = unit {
+    overload: uint8;
+};
+
+type DHCPAgentOptionsOption = unit {
+    dhcp_agent_options: bytes &eod;
+};
+
+type GEOCONF_CIVICOption = unit {
+    geoconf_civic: bytes &eod;
+};
+
+type FORCERENEW_NONCE_CAPABLEOption = unit {
+    force_renew_nonce_capable: uint8 &convert=($$ != 0);
+};
+
+type RDNSSSelectionOption = unit {
+    rdnss_selection: bytes &eod;
+};
+
+type TFTP_Server_AddressOption = unit {
+    tftp_server_addresses: (addr &ipv4)[];
+};
+
+type Status_CodeOption = unit {
+    status_code: bytes &eod &convert=$$.decode();
+};
+
+type Base_TimeOption = unit {
+    base_time: uint32 &convert=cast<interval>($$);
+};
+
+type Start_Time_of_StateOption = unit {
+    start_time_of_state: uint32 &convert=cast<interval>($$);
+};
+
+type Query_Start_TimeOption = unit {
+    query_start_time: uint32 &convert=cast<interval>($$);
+};
+
+type Query_End_TimeOption = unit {
+    query_end_time: uint32 &convert=cast<interval>($$);
+};
+
+type DHCP_StateOption = unit {
+    dhcp_state: uint8;
+};
+
+type Data_SourceOption = unit {
+    data_source: bytes &eod;
+};
+
+type PCP_ServerOption = unit {
+    pcp_servers: (addr &ipv4)[];
+};
+
+type OPTION_PANA_AGENTOption = unit {
+    pana_agents: (addr &ipv4)[];
+};
+
+type OPTION_V4_LOSTOption = unit {
+    v4_lost: bytes &eod;
+};
+
+type OPTION_CAPWAP_AC_V4Option = unit {
+    capwap_ac_v4: bytes &eod;
+};
+
+type OPTION_IPv4_Address_MoSOption = unit {
+    ipv4_address_mos: bytes &eod;
+};
+
+type OPTION_IPv4_FQDN_MoSOption = unit {
+    ipv4_fqdn_mos: bytes &eod;
+};
+
+type OPTION_SIP_UA_CS_ListOption = unit {
+    sip_ua_cs_list: bytes &eod;
+};
+
+type OPTION_IPv4_Address_ANDSFOption = unit {
+    ipv4_address_and_sf: bytes &eod;
+};
+
+type OPTION_GEOLOCOption = unit {
+    geoloc: bytes &eod;
+};
+
+type GenericOption = unit {
+    : bytes &eod;
+};

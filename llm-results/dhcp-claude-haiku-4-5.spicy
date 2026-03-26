@@ -1,0 +1,73 @@
+module DHCP;
+
+# Magic cookie for DHCP options
+const MagicCookie = b"\x63\x82\x53\x63";
+
+# DHCP message types
+type MessageType = enum {
+  DHCPDISCOVER = 1,
+  DHCPOFFER = 2,
+  DHCPREQUEST = 3,
+  DHCPACK = 4,
+  DHCPNAK = 5,
+  DHCPDECLINE = 6,
+  DHCPRELEASE = 7,
+  DHCPINFORM = 8,
+};
+
+# Operation codes
+type OpCode = enum {
+  BOOTREQUEST = 1,
+  BOOTREPLY = 2,
+};
+
+# Hardware types (from ARP section in Assigned Numbers RFC)
+type HardwareType = enum {
+  ETHERNET = 1,
+};
+
+# DHCP message flags field
+type Flags = unit {
+  f: bitfield(16) {
+    broadcast: 15;
+    reserved: 0..14;
+  };
+};
+
+# DHCP Options - variable length tagged parameters
+type DHCPOption = unit {
+  tag: uint8;
+  switch (self.tag) {
+    0 -> : void;  # Pad option
+    255 -> : void;  # End option
+    * -> {
+      length: uint8;
+      value: bytes &size=self.length;
+    };
+  };
+};
+
+# DHCP message options field
+type OptionsField = unit {
+  : MagicCookie;
+  options: DHCPOption[] &eod;
+};
+
+# Main DHCP message structure
+public type DHCPMessage = unit {
+  op: uint8 &convert=OpCode($$);
+  htype: uint8 &convert=HardwareType($$);
+  hlen: uint8;
+  hops: uint8;
+  xid: uint32;
+  secs: uint16;
+  flags: Flags;
+  ciaddr: addr &ipv4;
+  yiaddr: addr &ipv4;
+  siaddr: addr &ipv4;
+  giaddr: addr &ipv4;
+  chaddr: bytes &size=16;
+  sname: bytes &size=64;
+  filename: bytes &size=128;
+  options: OptionsField;
+};

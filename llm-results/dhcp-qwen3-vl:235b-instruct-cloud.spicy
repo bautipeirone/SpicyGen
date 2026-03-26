@@ -1,148 +1,134 @@
 module DHCP;
 
-# DHCP Message Types
-type MessageType = enum {
-    DHCPDISCOVER = 1,
-    DHCPOFFER = 2,
-    DHCPREQUEST = 3,
-    DHCPDECLINE = 4,
-    DHCPACK = 5,
-    DHCPNAK = 6,
-    DHCPRELEASE = 7,
-    DHCPINFORM = 8,
-};
+const MAGIC_COOKIE = b"\x63\x82\x52\x76";
 
-# Flags field bitfield
-type Flags = bitfield(16) {
-    broadcast: 0,          # BROADCAST flag (leftmost bit)
-    reserved: 1..15,       # MUST BE ZERO (reserved for future use)
-};
-
-# Option types (partial list; more can be added as needed)
-type OptionType = enum {
-    Pad = 0,
-    SubnetMask = 1,
-    TimeOffset = 2,
-    Router = 3,
-    TimeServer = 4,
-    NameServer = 5,
-    DomainNameServer = 6,
-    LogServer = 7,
-    CookieServer = 8,
-    LPRServer = 9,
-    ImpressServer = 10,
-    ResourceLocationServer = 11,
-    HostName = 12,
-    BootFileSize = 13,
-    MeritDumpFile = 14,
-    DomainName = 15,
-    SwapServer = 16,
-    RootPath = 17,
-    ExtensionsPath = 18,
-    IPForwarding = 19,
-    NonLocalSourceRouting = 20,
-    PolicyFilter = 21,
-    MaximumDatagramReassemblySize = 22,
-    DefaultIPTimeToLive = 23,
-    PathMTUAggingTimeout = 24,
-    PathMTUPlateauTable = 25,
-    InterfaceMTU = 26,
-    AllSubnetsLocal = 27,
-    BroadcastAddress = 28,
-    PerformMaskDiscovery = 29,
-    MaskSupplier = 30,
-    PerformRouterDiscovery = 31,
-    RouterSolicitationAddress = 32,
-    StaticRoute = 33,
-    TrailerEncapsulation = 34,
-    ARPCacheTimeout = 35,
-    EthernetEncapsulation = 36,
-    TCPDefaultTTL = 37,
-    TCPKeepaliveInterval = 38,
-    TCPKeepaliveGarbage = 39,
-    NISDomain = 40,
-    NISServers = 41,
-    NTPServers = 42,
-    VendorSpecificInformation = 43,
-    NetBIOSNameServer = 44,
-    NetBIOSDDServer = 45,
-    NetBIOSNodeType = 46,
-    NetBIOSScope = 47,
-    XWindowSystemFontServer = 48,
-    XWindowSystemDisplayManager = 49,
-    NetworkInformationServicePlusDomain = 50,
-    NetworkInformationServicePlusServers = 51,
-    MobileIPHomeAgent = 52,
-    SMTPServer = 53,
-    POP3Server = 54,
-    NNTPServer = 55,
-    WWWServer = 56,
-    FingerServer = 57,
-    IRCServer = 58,
-    StreetTalkServer = 59,
-    StreetTalkDirectoryAssistanceServer = 60,
-    RequestedIPAddress = 50,
-    IPAddressLeaseTime = 51,
-    OptionOverload = 52,
-    TFTPServerName = 66,
-    BootfileName = 67,
-    DHCPMessageType = 53,
-    ServerIdentifier = 54,
-    ParameterRequestList = 55,
-    Message = 56,
-    MaxDHCPMessageSize = 57,
-    RenewalTimeValue = 58,
-    RebindingTimeValue = 59,
-    VendorClassIdentifier = 60,
-    ClientIdentifier = 61,
-    End = 255,
-};
-
-# Base option structure
-public type Option = unit {
-    code: uint8 &convert=OptionType($$);
-    length: uint8;
-    data: bytes &size=self.length;
-};
-
-# DHCP Options container with magic cookie and end marker
-public type Options = unit {
-    magic_cookie: b"\x63\x82\x52\x76";  # 99, 130, 83, 99
-    options: Option[];
-    : b"\xff";  # End option
-};
-
-# Main DHCP message structure
-public type DHCPMessage = unit {
-    op: uint8 &convert=Opcode($$);  # 1=BOOTREQUEST, 2=BOOTREPLY
-    htype: uint8;  # Hardware address type
-    hlen: uint8;   # Hardware address length
-    hops: uint8;   # Hops (client sets to zero)
-    xid: uint32;   # Transaction ID
-    secs: uint16;  # Seconds elapsed since client began process
-    flags: Flags;  # Flags field
-    ciaddr: addr &ipv4;  # Client IP address
-    yiaddr: addr &ipv4;  # Your (client) IP address
-    siaddr: addr &ipv4;  # Next server IP address
-    giaddr: addr &ipv4;  # Relay agent IP address
-    chaddr: bytes &size=16;  # Client hardware address
-    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();  # Server host name
-    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();  # Boot file name
-    options: Options;
-};
-
-# Opcode conversion
 type Opcode = enum {
     BOOTREQUEST = 1,
     BOOTREPLY = 2,
 };
 
-# Helper type for parsing DHCP messages with specific message types
-public type DHCPMessageWithType = unit {
-    msg: DHCPMessage;
-    switch (self.msg.options.options[0].code) {
-        OptionType::DHCPMessageType -> 
-            msg_type: uint8 &convert=MessageType($$) &requires=(self.msg.options.options[0].data[0] == $$);
-        * -> : void;
-    };
+type Flags = bitfield(16) {
+    broadcast: 0;
+    reserved: 1..15;
+};
+
+type OptionCode = enum {
+    PAD = 0,
+    END = 255,
+    SUBNET_MASK = 1,
+    TIME_OFFSET = 2,
+    ROUTER = 3,
+    TIME_SERVER = 4,
+    NAME_SERVER = 5,
+    DNS_SERVER = 6,
+    LOG_SERVER = 7,
+    COOKIE_SERVER = 8,
+    LPR_SERVER = 9,
+    IMPRESS_SERVER = 10,
+    RESOURCE_LOCATION_SERVER = 11,
+    HOST_NAME = 12,
+    BOOT_FILE_SIZE = 13,
+    MERIT_DUMP_FILE = 14,
+    DOMAIN_NAME = 15,
+    SWAP_SERVER = 16,
+    ROOT_PATH = 17,
+    EXTENSIONS_PATH = 18,
+    IP_FORWARDING = 19,
+    NON_LOCAL_SOURCE_ROUTING = 20,
+    POLICY_FILTER = 21,
+    MAXIMUM_DATAGRAM_REASSEMBLY_SIZE = 22,
+    DEFAULT_IP_TTL = 23,
+    PATH_MTU_AGING_TIMEOUT = 24,
+    PATH_MTU_PLATEAU_TABLE = 25,
+    INTERFACE_MTU = 26,
+    ALL_SUBNETS_LOCAL = 27,
+    BROADCAST_ADDRESS = 28,
+    PERFORM_MASK_DISCOVERY = 29,
+    MASK_SUPPLIER = 30,
+    PERFORM_ROUTER_DISCOVERY = 31,
+    ROUTER_SOLICITATION_ADDRESS = 32,
+    STATIC_ROUTE = 33,
+    TRAILER_ENCAPSULATION = 34,
+    ARP_CACHE_TIMEOUT = 35,
+    ETHERNET_ENCAPSULATION = 36,
+    TCP_DEFAULT_TTL = 37,
+    TCP_KEEPALIVE_INTERVAL = 38,
+    TCP_KEEPALIVE_GARBAGE = 39,
+    NIS_DOMAIN = 40,
+    NIS_SERVERS = 41,
+    NTP_SERVERS = 42,
+    VENDOR_SPECIFIC_INFORMATION = 43,
+    NETBIOS_NAME_SERVERS = 44,
+    NETBIOS_DATAGRAM_DISTRIBUTION_SERVER = 45,
+    NETBIOS_NODE_TYPE = 46,
+    NETBIOS_SCOPE = 47,
+    XWINDOW_SYSTEM_FONT_SERVER = 48,
+    XWINDOW_SYSTEM_DISPLAY_MANAGER = 49,
+    NETWORK_INFORMATION_SERVICE_PLUS_DOMAIN = 50,
+    NETWORK_INFORMATION_SERVICE_PLUS_SERVERS = 51,
+    MOBILE_IP_HOME_AGENT = 54,
+    SMTP_SERVER = 55,
+    POP3_SERVER = 56,
+    NNTP_SERVER = 57,
+    WWW_SERVER = 58,
+    FINGER_SERVER = 59,
+    IRC_SERVER = 60,
+    STREETTALK_SERVER = 61,
+    STDA_SERVER = 62,
+    USER_CLASS = 77,
+    FQDN = 81,
+    DHCP_MESSAGE_TYPE = 53,
+    SERVER_IDENTIFIER = 54,
+    PARAMETER_REQUEST_LIST = 55,
+    MESSAGE = 56,
+    MAXIMUM_DHCP_MESSAGE_SIZE = 57,
+    RENEWAL_TIME_VALUE = 58,
+    REBINDING_TIME_VALUE = 59,
+    VENDOR_CLASS_IDENTIFIER = 60,
+    CLIENT_IDENTIFIER = 61,
+    NETWARE_IP_DOMAIN_NAME = 62,
+    NETWARE_IP_OPTION = 63,
+    NISPlus_DOMAIN = 64,
+    NISPlus_SERVERS = 65,
+    TFTP_SERVER_NAME = 66,
+    BOOTFILE_NAME = 67,
+    OPTION_OVERLOAD = 52,
+    DHCP_INFORM = 8,
+    DHCP_ACK = 5,
+    DHCP_NAK = 6,
+    DHCP_RELEASE = 7,
+    DHCP_DECLINE = 4,
+    DHCP_OFFER = 2,
+    DHCP_REQUEST = 3,
+    DHCP_DISCOVER = 1,
+};
+
+type Option = unit {
+    code: uint8 &convert=OptionCode($$);
+    length: uint8;
+    data: bytes &size=self.length;
+};
+
+type Options = unit {
+    magic_cookie: bytes &size=4 &requires=($$ == MAGIC_COOKIE);
+    options: Option[];
+    end: uint8 &requires=($$ == OptionCode::END);
+};
+
+public type DHCPMessage = unit {
+    op: uint8 &convert=Opcode($$);
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: Flags;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    options: Options;
 };
