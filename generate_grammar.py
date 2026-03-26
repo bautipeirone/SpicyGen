@@ -4,6 +4,7 @@ from typing import LiteralString
 from pathlib import Path
 import argparse
 from dotenv import load_dotenv
+import re
 
 prompt: LiteralString = """You are a communication protocol's specialist, and your job is to extract message structures from RFC specifications.
 You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
@@ -85,12 +86,24 @@ def save_response(path: Path, response: str) -> None:
         raise SystemExit(f"Unable to write to {path}: {exc}") from exc
 
 
+def clean_rfc_text(text: str):
+    header_pattern = re.compile(r'RFC (\d+)\s+(.*?)\s+([A-Za-z]+ \d{4})')
+    footer_pattern = re.compile(r'^.*\s+\[Page \d+\]$', re.MULTILINE)
+
+    text = header_pattern.sub('', text)
+    text = footer_pattern.sub('', text)
+
+    text = re.sub(r'\n\s*\n', '\n', text)
+    return text.strip()
+
+
 def main() -> None:
     args = parse_args()
     load_dotenv()
 
     spicy_context = load_file(args.instructions_file)
     rfc_content = load_file(args.rfc_file)
+    rfc_content = clean_rfc_text(rfc_content)
 
     client = get_llm_client(args.provider, args.model)
 
