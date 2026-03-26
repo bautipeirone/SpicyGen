@@ -2,6 +2,7 @@ from src.llm.interface import LLMInterface
 from src.llm.ollama import OllamaProvider
 from src.llm.google import GoogleProvider
 from src.llm.openai import OpenAIProvider
+from src.llm.claude import AnthropicProvider
 
 def get_llm_provider(provider_name: str) -> type[LLMInterface]:
     match provider_name:
@@ -11,6 +12,8 @@ def get_llm_provider(provider_name: str) -> type[LLMInterface]:
             provider = GoogleProvider
         case "openai":
             provider = OpenAIProvider
+        case "anthropic":
+            provider = AnthropicProvider
         case _:
             raise ValueError(f"Unsupported provider: {provider_name}")
     return provider

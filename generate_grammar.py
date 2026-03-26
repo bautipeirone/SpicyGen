@@ -40,7 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--provider",
         "-p",
-        choices=["ollama", "google", "openai"],
+        choices=["ollama", "google", "openai", "anthropic"],
         default="ollama",
         help="LLM provider to use (default: ollama)",
     )
