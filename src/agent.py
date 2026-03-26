@@ -1,6 +1,6 @@
 from pathlib import Path
 from src.llm.interface import LLMInterface, Messages
-from src.compiler import compile_grammar
+from src.compiler import compile_spicy_grammar
 
 
 FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the following errors:
@@ -38,7 +38,7 @@ def run_refinement_loop(
         response = client.chat(system_instruction, messages)
         code = clean_response(response)
         step_path = debug_dir / f"{attempt}-step.spicy" if debug_dir else None
-        result = compile_grammar(code, step_path)
+        result = compile_spicy_grammar(code, step_path)
 
         if result.success:
             print(f"[agent] Compilation succeeded on attempt {attempt}.")
