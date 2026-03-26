@@ -14,5 +14,5 @@ class OllamaProvider(LLMInterface):
             [{ "role": "system", "content": system_instruction }] +
             [{ "role": "user", "content": message } for message in messages]
         )
-        response = chat(model=self.model, messages=messages)
+        response = chat(model=self.model, messages=messages, options={'temperature': 0.0})
         return response.message.content

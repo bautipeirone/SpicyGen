@@ -16,7 +16,7 @@ class GoogleProvider(LLMInterface):
 
     def chat(self, system_instruction: str, messages: Messages) -> str:
         generate_content_config = types.GenerateContentConfig(
-            temperature=1.0,
+            temperature=0.0,
             thinking_config=types.ThinkingConfig(
                 thinking_level="HIGH",
             ),
