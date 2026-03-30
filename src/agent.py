@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from src.tools.compiler import compile_spicy_grammar
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
+from src.logger import logger
 from typing import Annotated
 import autogen
 
@@ -57,16 +58,17 @@ def run_refinement_loop(
         state.last_code = cleaned_code
         step_path = debug_dir / f"{state.attempt}-step.spicy" if debug_dir else None
 
-        print(f"[agent] Compiling attempt {state.attempt}/{max_retries} ...")
+        logger.info(f"Compiling attempt {state.attempt}/{max_retries} ...")
+
         result = compile_spicy_grammar(cleaned_code, step_path)
 
         if result.success:
             state.success = True
-            print(f"[agent] Compilation succeeded on attempt {state.attempt}.")
+            logger.info(f"Compilation succeeded on attempt {state.attempt}.")
             return "TERMINATE"
 
-        print(f"[agent] Compilation failed on attempt {state.attempt}.")
-        print(f"[agent] Errors:\n{result.errors}\n")
+        logger.warning(f"Compilation failed on attempt {state.attempt}.")
+        logger.error(f"Compilation Errors:\n{result.errors}\n")
         return FEEDBACK_TEMPLATE.format(errors=result.errors)
 
     assistant = autogen.AssistantAgent(

@@ -2,6 +2,7 @@ from src.llm.providers import get_autogen_config
 from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
 from src.utils import load_file, read_config
+from src.logger import logger
 from typing import LiteralString
 from pathlib import Path
 import argparse
@@ -105,10 +106,11 @@ def main() -> None:
     )
 
     if not success:
-        print("[agent] WARNING: grammar did not compile after all retries.")
+        logger.warning("Grammar did not compile after all retries.")
 
     if args.output_file:
         save_response(args.output_file, content)
+        logger.info(f"Saved grammar to {args.output_file}")
     else:
         print(content)
 
@@ -117,5 +119,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print("[ERROR]: Grammar generation failed:", e)
+        logger.error(f"Grammar generation failed: {e}")
         exit(1)
