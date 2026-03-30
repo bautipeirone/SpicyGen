@@ -1,188 +1,70 @@
-module RFC2616;
+module rfc2616;
 
-# Basic Rules
-const CRLF = b"\r\n";
+# 2.2 Basic Rules
+const Token = /[a-zA-Z0-9!#$%&'*+.\^_`|~-]+/;
 const SP = b" ";
+const CRLF = b"\r\n";
 
 # 3.1 HTTP Version
-type HTTP_Version = unit {
+type HttpVersion = unit {
     : b"HTTP/";
-    major: /[0-9]+/;
+    major_version: /[0-9]+/ &convert=$$.to_uint();
     : b".";
-    minor: /[0-9]+/;
-};
-
-# 5.1.1 Method
-type Method = enum {
-    OPTIONS = 1,
-    GET = 2,
-    HEAD = 3,
-    POST = 4,
-    PUT = 5,
-    DELETE = 6,
-    TRACE = 7,
-    CONNECT = 8
-};
-
-# 6.1.1 Status Code
-type StatusCode = enum {
-    Continue = 100,
-    SwitchingProtocols = 101,
-    OK = 200,
-    Created = 201,
-    Accepted = 202,
-    NonAuthoritativeInformation = 203,
-    NoContent = 204,
-    ResetContent = 205,
-    PartialContent = 206,
-    MultipleChoices = 300,
-    MovedPermanently = 301,
-    Found = 302,
-    SeeOther = 303,
-    NotModified = 304,
-    UseProxy = 305,
-    TemporaryRedirect = 307,
-    BadRequest = 400,
-    Unauthorized = 401,
-    PaymentRequired = 402,
-    Forbidden = 403,
-    NotFound = 404,
-    MethodNotAllowed = 405,
-    NotAcceptable = 406,
-    ProxyAuthenticationRequired = 407,
-    RequestTimeout = 408,
-    Conflict = 409,
-    Gone = 410,
-    LengthRequired = 411,
-    PreconditionFailed = 412,
-    RequestEntityTooLarge = 413,
-    RequestURITooLong = 414,
-    UnsupportedMediaType = 415,
-    RequestedRangeNotSatisfiable = 416,
-    ExpectationFailed = 417,
-    InternalServerError = 500,
-    NotImplemented = 501,
-    BadGateway = 502,
-    ServiceUnavailable = 503,
-    GatewayTimeout = 504,
-    HTTPVersionNotSupported = 505
-};
-
-# 4.2 Message Headers
-type Header = unit {
-    name: /[^: \t\r\n]+/;
-    : /:[ \t]*/;
-    value: /[^\r\n]*/;
-    : CRLF;
-};
-
-# 3.6.1 Chunked Transfer Coding
-type Chunk = unit {
-    chunk_size_str: /[0-9a-fA-F]+/ &convert=$$.to_uint(16);
-    chunk_extension: /([ \t]*;[ \t]*[^ \t\r\n=]+(=([^ \t\r\n;]+|"[^"]*"))?)*/;
-    : CRLF;
-    data: bytes &size=self.chunk_size_str;
-    : CRLF;
-};
-
-type ChunkedBody = unit {
-    chunks: Chunk[] &until=($$.chunk_size_str == 0);
-    trailer: Header[];
-    : CRLF;
+    minor_version: /[0-9]+/ &convert=$$.to_uint();
 };
 
 # 5.1 Request-Line
 type RequestLine = unit {
-    method_str: /[A-Z]+/ &convert=Method($$);
+    method_val: Token &convert=$$.decode();
     : SP;
-    uri: /[^ \t\r\n]+/;
+    uri_val: /[^\s]+/ &convert=$$.decode();
     : SP;
-    version: HTTP_Version;
+    version: HttpVersion;
     : CRLF;
 };
 
 # 6.1 Status-Line
 type StatusLine = unit {
-    version: HTTP_Version;
+    version: HttpVersion;
     : SP;
-    code_str: /[0-9]{3}/ &convert=StatusCode($$.to_uint());
+    status_code_val: /[0-9]{3}/ &convert=$$.to_uint();
     : SP;
-    reason: /[^\r\n]*/;
+    reason_phrase_val: /[^\r\n]*/ &convert=$$.decode();
     : CRLF;
+};
+
+# 4.2 Message Headers
+type MessageHeader = unit {
+    h_name: Token &convert=$$.decode();
+    : b":";
+    : /[ \t]*/;
+    h_value: /[^\r\n]*(\r\n[ \t]+[^\r\n]*)*/ &convert=$$.decode();
+    : CRLF;
+};
+
+# 5 Request
+type Request = unit {
+    start_line: RequestLine;
+    msg_headers: MessageHeader[];
+    : CRLF;
+    msg_body: bytes &eod;
+};
+
+# 6 Response
+type Response = unit {
+    start_line: StatusLine;
+    msg_headers: MessageHeader[];
+    : CRLF;
+    msg_body: bytes &eod;
 };
 
 # 4.1 Message Types
-public type Request = unit {
-    line: RequestLine;
-    headers: Header[];
-    : CRLF;
-
-    # Relationship: Body parsing logic based on headers
-    # Note: Complex logic for Content-Length vs Transfer-Encoding
-    # usually requires state tracking in the parser.
-    var is_chunked: bool;
-    var content_len: uint64;
-
-    on headers {
-        for ( h in self.headers ) {
-            if ( h.name.lower() == b"transfer-encoding" && h.value.lower() == b"chunked" )
-                self.is_chunked = True;
-            if ( h.name.lower() == b"content-length" )
-                self.content_len = h.value.to_uint();
-        }
-    }
-
+# The switch uses look-ahead to distinguish between Request and Response.
+# Response starts with "HTTP/", while Request starts with a Method (Token).
+# Since "/" is a separator, a Token cannot contain it, making "HTTP/" unique to Response.
+public type HttpMessage = unit {
     switch {
-        -> {
-          : void &requires=(self.is_chunked);
-          body_chunked: ChunkedBody;
-        }
-        -> {
-          : void &requires=(self.content_len > 0);
-          body_fixed: bytes &size=self.content_len;
-        }
-        -> : void; # No body
-    };
-};
-
-public type Response = unit {
-    line: StatusLine;
-    headers: Header[];
-    : CRLF;
-
-    var is_chunked: bool;
-    var content_len: uint64;
-
-    on headers {
-        for ( h in self.headers ) {
-            if ( h.name.lower() == b"transfer-encoding" && h.value.lower() == b"chunked" )
-                self.is_chunked = True;
-            if ( h.name.lower() == b"content-length" )
-                self.content_len = h.value.to_uint();
-        }
-    }
-
-    switch {
-        # Responses with no bodies (1xx, 204, 304 or HEAD requests)
-        -> : void &requires=(self.line.code_str.to_int() < 200 || self.line.code_str == StatusCode::NoContent || self.line.code_str == StatusCode::NotModified);
-        
-        -> {
-          : void &requires=(self.is_chunked);
-          body_chunked: ChunkedBody;
-        }
-        -> {
-          : void &requires=(self.content_len > 0);
-          body_fixed: bytes &size=self.content_len;
-        }
-        # Default behavior: consume until end of data if not fixed length or chunked
-        -> body_to_eod: bytes &eod;
-    };
-};
-
-# Generic HTTP Message wrapper
-public type HTTP_Message = unit {
-    switch {
-        -> req: Request;
         -> res: Response;
+        -> req: Request;
     };
 };

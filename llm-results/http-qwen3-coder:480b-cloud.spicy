@@ -9,22 +9,24 @@ public type Message = unit {
 
 type Request = unit {
     line: RequestLine;
-    headers: HeaderFields[];
-        : b"\r\n";
-    body: Body &size=self._body_size();
+    headers: HeaderFields;
+    : b"\r\n";
+    body: bytes &size=self.headers.content_length if (self.headers.has_content_length);
+    body: bytes &eod if (! self.headers.has_content_length && ! self.headers.has_transfer_encoding);
 };
 
 type Response = unit {
     line: StatusLine;
-    headers: HeaderFields[];
-        : b"\r\n";
-    body: Body &size=self._body_size();
+    headers: HeaderFields;
+    : b"\r\n";
+    body: bytes &size=self.headers.content_length if (self.headers.has_content_length);
+    body: bytes &eod if (! self.headers.has_content_length && ! self.headers.has_transfer_encoding);
 };
 
 type RequestLine = unit {
-    method: Method;
+    method: Token;
     : b" ";
-    uri: RequestURI;
+    uri: Token;
     : b" ";
     version: Version;
     : b"\r\n";
@@ -33,80 +35,48 @@ type RequestLine = unit {
 type StatusLine = unit {
     version: Version;
     : b" ";
-    code: StatusCode;
+    code: uint8 &size=3;
     : b" ";
-    reason: ReasonPhrase;
+    reason: bytes &until=b"\r\n";
     : b"\r\n";
-};
-
-type Method = unit {
-    switch {
-        b"OPTIONS"  -> : void;
-        b"GET"      -> : void;
-        b"HEAD"     -> : void;
-        b"POST"     -> : void;
-        b"PUT"      -> : void;
-        b"DELETE"   -> : void;
-        b"TRACE"    -> : void;
-        b"CONNECT"  -> : void;
-        *           -> token: Token;
-    };
-};
-
-type RequestURI = unit {
-    switch {
-        b"*"        -> : void;
-        -> absolute_uri: AbsoluteURI;
-        -> abs_path: AbsPath;
-        -> authority: Authority;
-    };
 };
 
 type Version = unit {
     : b"HTTP/";
-    major: uint8;
-    : b".";
-    minor: uint8;
-};
-
-type StatusCode = unit {
-    code: uint16 &size=3;
-};
-
-type ReasonPhrase = unit {
-    phrase: bytes &until=b"\r\n";
+    number: bytes &size=3;
 };
 
 type HeaderFields = unit {
-    name: Token;
-    : b":";
+    fields: HeaderField[];
+    : b"\r\n";
+
+    # has_content_length: bool &compute={`
+    #     for (auto f: self.fields) {
+    #         if (f.name == "Content-Length") return True;
+    #     }
+    #     return False;
+    # };
+
+    # has_transfer_encoding: bool &compute={
+    #     for (auto f: self.fields) {
+    #         if (f.name == "Transfer-Encoding") return True;
+    #     }
+    #     return False;
+    # };
+
+    # content_length: uint64 &compute={
+    #     for (auto f: self.fields) {
+    #         if (f.name == "Content-Length") return f.value.decode().to_int();
+    #     }
+    #     return 0;
+    # };
+};
+
+type HeaderField = unit {
+    name: Token &convert=$$.lower().decode();
+    : b": ";
     value: bytes &until=b"\r\n";
+    : b"\r\n";
 };
 
-type Body = unit {
-    data: bytes &eod;
-};
-
-# Helper types for URIs and paths
-type AbsoluteURI = unit {
-    uri: bytes &until=b" ";
-};
-
-type AbsPath = unit {
-    path: bytes &until=b" ";
-};
-
-type Authority = unit {
-    authority: bytes &until=b" ";
-};
-
-type Token = unit {
-    token: bytes &until=b" ";
-};
-
-# Helper function to calculate body size from headers
-function _body_size(): uint64 {
-    # This would need to parse Content-Length or Transfer-Encoding headers
-    # For simplicity, returning 0, as proper implementation requires header parsing
-    return 0;
-}
+const Token = /[^ \t\r\n]+/;

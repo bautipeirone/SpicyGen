@@ -1,107 +1,52 @@
-tftp
-module tftp;
+module TFTP;
 
-/* --------------------------------------------------------------------
- *  Constants for opcodes
- * -------------------------------------------------------------------- */
-const uint16 OPCODE_RRQ   = 1;
-const uint16 OPCODE_WRQ   = 2;
-const uint16 OPCODE_DATA  = 3;
-const uint16 OPCODE_ACK   = 4;
-const uint16 OPCODE_ERROR = 5;
-
-/* --------------------------------------------------------------------
- *  Generic TFTP packet – selects the concrete format based on the opcode
- * -------------------------------------------------------------------- */
-public type TFTP_Packet = unit {
-    opcode : uint16;                         # 2‑byte operation code (network order)
-
-    switch ( self.opcode ) {
-        OPCODE_RRQ  -> rrq : RRQ_WRQ;        # Read request
-        OPCODE_WRQ  -> wrq : RRQ_WRQ;        # Write request
-        OPCODE_DATA -> data : DATA;          # Data block
-        OPCODE_ACK  -> ack  : ACK;           # Acknowledgment
-        OPCODE_ERROR-> err  : ERROR;         # Error packet
-        *           -> : void;               # Unknown/unsupported opcode – ignore rest
-    };
+type Opcode = enum {
+  RRQ = 1,
+  WRQ = 2,
+  DATA = 3,
+  ACK = 4,
+  ERROR = 5,
 };
 
-/* --------------------------------------------------------------------
- *  RRQ / WRQ packet (identical layout, only opcode differs)
- *
- *   2 bytes  opcode          (1 = RRQ, 2 = WRQ)
- *   n bytes  filename        (netascii, zero‑terminated)
- *   n bytes  mode            (netascii, zero‑terminated; e.g. "netascii", "octet", "mail")
- * -------------------------------------------------------------------- */
-public type RRQ_WRQ = unit {
-    /* opcode already consumed by the outer switch – repeat here only for clarity */
-    opcode   : uint16;                       # 1 = RRQ, 2 = WRQ (must match outer selector)
-
-    filename : bytes &until=0;               # zero‑terminated filename string
-    mode     : bytes &until=0;               # zero‑terminated mode string
+type ErrorCode = enum {
+  NotDefined = 0,
+  FileNotFound = 1,
+  AccessViolation = 2,
+  DiskFull = 3,
+  IllegalOperation = 4,
+  UnknownTID = 5,
+  FileExists = 6,
+  NoSuchUser = 7,
 };
 
-/* --------------------------------------------------------------------
- *  DATA packet
- *
- *   2 bytes  opcode   = 3
- *   2 bytes  block#   (starts at 1, increments by 1)
- *   0‑512 bytes data   (may be zero length – indicates end of transfer)
- * -------------------------------------------------------------------- */
-public type DATA = unit {
-    opcode : uint16;                         # must be 3 (checked by outer selector)
-    block  : uint16;                         # block number (network order)
-
-    /* all remaining bytes of the UDP datagram belong to the data field.
-     * The UDP length is limited to 516 bytes for TFTP (4 byte header +
-     * up to 512 data).  We simply consume everything left. */
-    data   : bytes &eod;                     # 0‑512 bytes of file data
+# Request packet (RRQ/WRQ) fields
+type Request = unit {
+  filename: bytes &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
+  mode: bytes &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
 };
 
-/* --------------------------------------------------------------------
- *  ACK packet
- *
- *   2 bytes  opcode = 4
- *   2 bytes  block# (echoes block number of DATA being acknowledged)
- * -------------------------------------------------------------------- */
-public type ACK = unit {
-    opcode : uint16;                         # must be 4
-    block  : uint16;                         # block number being acknowledged
+type Data = unit {
+  block: uint16;
+  data: bytes &eod; # up to 512 bytes, actual length determined by UDP payload size
 };
 
-/* --------------------------------------------------------------------
- *  ERROR packet
- *
- *   2 bytes  opcode = 5
- *   2 bytes  error code   (see appendix)
- *   n bytes  error message (netascii, zero‑terminated)
- * -------------------------------------------------------------------- */
-public type ERROR = unit {
-    opcode    : uint16;                     # must be 5
-    errcode   : uint16;                     # numeric error identifier
-
-    errmsg    : bytes &until=0;             # human‑readable text, zero‑terminated
+type Ack = unit {
+  block: uint16;
 };
 
-/* --------------------------------------------------------------------
- *  Helper: validation constraints (optional, shown for completeness)
- * -------------------------------------------------------------------- */
-type RRQ_WRQ = unit {
-    /* opcode already checked by outer selector – enforce consistency */
-    self.opcode &requires=( self.opcode == OPCODE_RRQ || self.opcode == OPCODE_WRQ );
+type Error = unit {
+  errcode: uint16 &convert=ErrorCode($$);
+  errmsg: bytes &until=b"\0" &convert=$$.split1(b"\0")[0].decode();
 };
 
-type DATA = unit {
-    self.opcode &requires=( self.opcode == OPCODE_DATA );
-    self.data &requires=( self.data.size() <= 512 );
-};
-
-type ACK = unit {
-    self.opcode &requires=( self.opcode == OPCODE_ACK );
-};
-
-type ERROR = unit {
-    self.opcode &requires=( self.opcode == OPCODE_ERROR );
-    /* error code must be in the range 0‑7 (see RFC appendix) */
-    self.errcode &requires=( self.errcode <= 7 );
+public type TftpPacket = unit {
+  opcode: uint16 &convert=Opcode($$);
+  switch (self.opcode) {
+    Opcode::RRQ -> rrq: Request;
+    Opcode::WRQ -> wrq: Request;
+    Opcode::DATA -> data: Data;
+    Opcode::ACK -> ack: Ack;
+    Opcode::ERROR -> err: Error;
+    * -> : void;
+  };
 };

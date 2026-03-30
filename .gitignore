@@ -1,6 +1,7 @@
 .env
 .vscode
 __pycache__/
+.cache/
 
 a.out*
 *.hlto
