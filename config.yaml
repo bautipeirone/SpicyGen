@@ -1,0 +1,9 @@
+# LLM parameters
+llm:
+    temperature: 0.0
+    # max_tokens: 1000
+    # seed: 25
+
+# Agent parameters
+agent:
+    max_retries: 10

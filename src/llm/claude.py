@@ -17,7 +17,7 @@ class AnthropicProvider(LLMInterface):
 
         with self.client.messages.stream(
             model=self.model,
-            max_tokens=128000, # Anthropic requiere este argumento que depende del modelo. TODO Automatizar la lectura de este parametro
+            max_tokens=64000, # Anthropic requiere este argumento que depende del modelo. TODO Automatizar la lectura de este parametro
             system=system_instruction,
             messages=messages,
             temperature=0.0

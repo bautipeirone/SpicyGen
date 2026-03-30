@@ -1,10 +1,11 @@
-from src.llm.providers import get_llm_client
-from src.agent import run_refinement_loop, clean_response
+from src.llm.providers import get_autogen_config
+from src.agent import run_refinement_loop
 from typing import LiteralString
 from pathlib import Path
 import argparse
 from dotenv import load_dotenv
 import re
+import yaml
 
 prompt: LiteralString = """You are a communication protocol's specialist, and your job is to extract message structures from RFC specifications.
 You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
@@ -51,21 +52,17 @@ def parse_args() -> argparse.Namespace:
         help="Path to the output file where the extracted grammar will be saved (optional)",
     )
     parser.add_argument(
-        "--refine",
-        action="store_true",
-        help="Enable the agent refinement loop: compile the output and feed errors back to the LLM until it compiles",
-    )
-    parser.add_argument(
-        "--max-retries",
-        type=int,
-        default=5,
-        help="Maximum number of refinement iterations (default: 5, only used with --refine)",
-    )
-    parser.add_argument(
         "--debug-dir",
         type=Path,
         default=None,
         help="Directory to save persistent refinement step files",
+    )
+    parser.add_argument(
+        "--config",
+        "-c",
+        type=Path,
+        default=None,
+        help="Path to a config.yaml file containing generation parameters like temperature, max_tokens, etc.",
     )
     return parser.parse_args()
 
@@ -96,6 +93,25 @@ def clean_rfc_text(text: str):
     text = re.sub(r'\n\s*\n', '\n', text)
     return text.strip()
 
+def read_config(path: Path | None) -> tuple[dict, dict]:
+    # Defaults
+    agent_config = {
+        "max_retries": 5
+    }
+    llm_params = {
+        "temperature": 0.0
+    }
+
+    if path and path.exists():
+        with path.open("r") as f:
+            parsed = yaml.safe_load(f)
+            if isinstance(parsed, dict):
+                if parsed.get("llm"):
+                    llm_params = parsed.get("llm")
+                if parsed.get("agent"):
+                    agent_config = parsed.get("agent")
+
+    return llm_params, agent_config
 
 def main() -> None:
     args = parse_args()
@@ -105,20 +121,18 @@ def main() -> None:
     rfc_content = load_file(args.rfc_file)
     rfc_content = clean_rfc_text(rfc_content)
 
-    client = get_llm_client(args.provider, args.model)
+    llm_params, agent_config = read_config(args.config)
+    llm_config = get_autogen_config(args.provider, args.model, llm_params)
 
     system_instruction = prompt + spicy_context
     messages = [rfc_content]
 
-    if args.refine:
-        content, success = run_refinement_loop(
-            client, system_instruction, messages, max_retries=args.max_retries, debug_dir=args.debug_dir
-        )
-        if not success:
-            print("[agent] WARNING: grammar did not compile after all retries.")
-    else:
-        response = client.chat(system_instruction, messages)
-        content = clean_response(response)
+    content, success = run_refinement_loop(
+        llm_config, system_instruction, messages, max_retries=agent_config["max_retries"], debug_dir=args.debug_dir
+    )
+
+    if not success:
+        print("[agent] WARNING: grammar did not compile after all retries.")
 
     if args.output_file:
         save_response(args.output_file, content)
@@ -127,4 +141,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print("[ERROR]: Grammar generation failed:", e)
+        exit(1)
