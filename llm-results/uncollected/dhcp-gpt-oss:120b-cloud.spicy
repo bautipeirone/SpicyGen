@@ -1,0 +1,31 @@
+module dhcp;
+
+# Magic cookie constant (99,130,83,99)
+const DHCP_MAGIC = b"\x63\x82\x53\x63";
+
+# DHCP option: code, optional length and data (for Pad and End codes length/data omitted)
+type DHCPOption = unit {
+    code: uint8;
+    length: uint8 if(self.code != 0 && self.code != 255);
+    data: bytes &size=self.length if(self.code != 0 && self.code != 255);
+};
+
+public type DHCPMessage = unit {
+    op: uint8;
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: uint16;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    file_name: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    : DHCP_MAGIC; # magic cookie
+    options: DHCPOption[]; # variable length options, terminated by end option (code 255) in stream
+    : b"\xff"; # consume the end option byte
+};

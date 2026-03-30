@@ -1,0 +1,54 @@
+module TFTP_grammar;
+
+type OpCode = enum {
+  RRQ = 1,
+  WRQ = 2,
+  DATA = 3,
+  ACK = 4,
+  ERROR = 5,
+};
+
+type ErrorCode = enum {
+  NotDefined = 0,
+  FileNotFound = 1,
+  AccessViolation = 2,
+  DiskFull = 3,
+  IllegalOperation = 4,
+  UnknownTID = 5,
+  FileExists = 6,
+  NoSuchUser = 7,
+};
+
+type Request = unit {
+    filename: bytes &until=b"\0" &convert=$$.decode();
+    : b"\0";
+    mode: bytes &until=b"\0" &convert=$$.decode();
+    : b"\0";
+};
+
+type DataPacket = unit {
+    block: uint16;
+    data: bytes &eod;
+};
+
+type AckPacket = unit {
+    block: uint16;
+};
+
+type ErrorPacket = unit {
+    errcode: uint16 &convert=ErrorCode($$);
+    errmsg: bytes &until=b"\0" &convert=$$.decode();
+    : b"\0";
+};
+
+public type TFTP = unit {
+    opcode: uint16 &convert=OpCode($$);
+    switch (self.opcode) {
+        OpCode::RRQ,
+        OpCode::WRQ -> request: Request;
+        OpCode::DATA -> data: DataPacket;
+        OpCode::ACK -> ack: AckPacket;
+        OpCode::ERROR -> err: ErrorPacket;
+        * -> : void;
+    };
+};

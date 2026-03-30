@@ -1,0 +1,30 @@
+module dhcp;
+
+# DHCP option generic parsing
+type Option = unit {
+    code: uint8;
+    length: uint8 if(self.code != 0 && self.code != 255);
+    data: bytes &size=self.length if(self.code != 0 && self.code != 255);
+};
+
+const DHCP_MAGIC = b"\x63\x82\x53\x63";  # 99,130,83,99
+
+public type DHCPMessage = unit {
+    op: uint8;                          # 1 = BOOTREQUEST, 2 = BOOTREPLY
+    htype: uint8;                      # hardware address type
+    hlen: uint8;                        # hardware address length
+    hops: uint8;                        # hops
+    xid: uint32;                        # transaction ID
+    secs: uint16;                       # seconds elapsed
+    flags: uint16;                      # flags (broadcast etc.)
+    ciaddr: addr &ipv4;                 # client IP address
+    yiaddr: addr &ipv4;                 # your (client) IP address
+    siaddr: addr &ipv4;                 # next server IP address
+    giaddr: addr &ipv4;                 # relay agent IP address
+    chaddr: bytes &size=16;             # client hardware address (16 bytes)
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();   # server host name (null‑terminated)
+    file_name: bytes &size=128 &convert=$$.split1(b"\0")[0].decode(); # boot file name (null‑terminated)
+    : DHCP_MAGIC;                      # magic cookie
+    options: Option[];                  # DHCP options up to END option
+    : b"\xff";                        # END option (code 255)
+};

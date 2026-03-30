@@ -1,0 +1,20 @@
+module dhcp;
+
+public type DHCPMessage = unit {
+    op: uint8;                       # Message op code / message type (1 = BOOTREQUEST, 2 = BOOTREPLY)
+    htype: uint8;                    # Hardware address type
+    hlen: uint8;                      # Hardware address length
+    hops: uint8;                      # Hops
+    xid: uint32;                      # Transaction ID
+    secs: uint16;                     # Seconds elapsed since client began address acquisition/renewal
+    flags: uint16;                    # Flags (e.g., broadcast flag)
+    ciaddr: addr &ipv4;                # Client IP address; only filled in if client is already bound
+    yiaddr: addr &ipv4;                # 'Your' (client) IP address; address being offered
+    siaddr: addr &ipv4;                # Server IP address; address of next server to use in bootstrap
+    giaddr: addr &ipv4;                # Relay agent IP address
+    chaddr: bytes &size=16;            # Client hardware address (MAC)
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();   # Optional server host name (null‑terminated)
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();   # Boot file name (null‑terminated)
+    # Options field: starts with the DHCP magic cookie followed by a series of option TLVs.
+    options: bytes &eod;               # Variable‑length options (including the magic cookie)
+};
