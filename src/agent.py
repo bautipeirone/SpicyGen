@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from src.tools.compiler import compile_spicy_grammar
+from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from dataclasses import dataclass
 
 from typing import Annotated
@@ -26,6 +27,12 @@ def clean_response(text: str) -> str:
     while text and not text.startswith("module"):
         text = "\n".join(text.splitlines()[1:]).strip()
     return text
+
+def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retrieve (e.g., '1035')"]) -> str:
+    rfc_text = retrieve_rfc_by_id(rfc_id)
+    if rfc_text is None:
+        return f"Could not retrieve RFC {rfc_id}."
+    return clean_rfc_text(rfc_text)
 
 def run_refinement_loop(
     llm_config: dict,
@@ -66,7 +73,7 @@ def run_refinement_loop(
 
     assistant = autogen.AssistantAgent(
         name="SpicyDeveloper",
-        system_message=system_instruction + "\n\nWhen you emit the grammar code, use the compile_grammar tool to check if it compiles. If it returns TERMINATE, you must say TERMINATE to end the chat.",
+        system_message=system_instruction + "\n\nWhen you emit the grammar code, use the compile_grammar tool to check if it compiles. If it returns TERMINATE, you must say TERMINATE to end the chat. You can also use the retrieve_rfc_by_id tool to fetch additional RFC documents if needed.",
         llm_config=llm_config,
     )
 
@@ -84,6 +91,14 @@ def run_refinement_loop(
         executor=user_proxy,
         name="compile_grammar",
         description="Compile a Spicy grammar string. Returns TERMINATE if successful, otherwise returns compilation errors.",
+    )
+
+    autogen.agentchat.register_function(
+        retrieve_rfc_by_id_wrapper,
+        caller=assistant,
+        executor=user_proxy,
+        name="retrieve_rfc_by_id",
+        description="Retrieve an RFC text by its ID (e.g., '1035').",
     )
 
     initial_prompt = "\n".join(messages)

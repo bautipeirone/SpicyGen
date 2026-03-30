@@ -1,10 +1,10 @@
 from src.llm.providers import get_autogen_config
+from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
 from typing import LiteralString
 from pathlib import Path
 import argparse
 from dotenv import load_dotenv
-import re
 import yaml
 
 prompt: LiteralString = """You are a communication protocol's specialist, and your job is to extract message structures from RFC specifications.
@@ -34,9 +34,9 @@ def parse_args() -> argparse.Namespace:
         help="Path to the instructions file that will be added to the prompt",
     )
     parser.add_argument(
-        "rfc_file",
-        type=Path,
-        help="Path to the rfc file that will be added to the prompt",
+        "rfc_id",
+        type=str,
+        help="RFC ID (e.g., '822') or path to an RFC file.",
     )
     parser.add_argument(
         "--provider",
@@ -75,6 +75,18 @@ def load_file(path: Path) -> str:
         raise SystemExit(f"Unable to read {path}: {exc}") from exc
 
 
+def load_rfc(rfc_identifier: str) -> str:
+    try:
+        path = Path(rfc_identifier)
+        if path.exists():
+            rfc_text = load_file(path)
+        else:
+            rfc_text = retrieve_rfc_by_id(rfc_identifier)
+        return clean_rfc_text(rfc_text)
+    except Exception as exc:
+        raise SystemExit(f"Unable to read RFC {rfc_identifier}: {exc}") from exc
+
+
 def save_response(path: Path, response: str) -> None:
     try:
         with path.open("w") as f:
@@ -82,16 +94,6 @@ def save_response(path: Path, response: str) -> None:
     except OSError as exc:
         raise SystemExit(f"Unable to write to {path}: {exc}") from exc
 
-
-def clean_rfc_text(text: str):
-    header_pattern = re.compile(r'RFC (\d+)\s+(.*?)\s+([A-Za-z]+ \d{4})')
-    footer_pattern = re.compile(r'^.*\s+\[Page \d+\]$', re.MULTILINE)
-
-    text = header_pattern.sub('', text)
-    text = footer_pattern.sub('', text)
-
-    text = re.sub(r'\n\s*\n', '\n', text)
-    return text.strip()
 
 def read_config(path: Path | None) -> tuple[dict, dict]:
     # Defaults
@@ -118,8 +120,7 @@ def main() -> None:
     load_dotenv()
 
     spicy_context = load_file(args.instructions_file)
-    rfc_content = load_file(args.rfc_file)
-    rfc_content = clean_rfc_text(rfc_content)
+    rfc_content = load_rfc(args.rfc_id)
 
     llm_params, agent_config = read_config(args.config)
     llm_config = get_autogen_config(args.provider, args.model, llm_params)
