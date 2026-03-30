@@ -4,8 +4,9 @@
 ## General guidelines
 1. Generally, you define parsers through types called “units” that describe the syntax of a protocol. A set of units forms a grammar. In practice, units typically correspond pretty directly to protocol data units (PDUs) as protocol specifications tend to define them.
 2. One will typically create a unit type for each of the main data units that a protocol defines.
-3. Subunits don't have to repeat fields declared in the parent units.
-4. Inside a unit, `self` references to the current unit, and its fields can be accessed via `self.field`, and `$$` references to the last read input, this can be used to perform conversions or conditional parsing.
+3. There must be only one `public type` declaration in the entire grammar, which is the entry point for the main parser of the protocol.
+4. Subunits don't have to repeat fields declared in the parent units.
+5. Inside a unit, `self` references to the current unit, and its fields can be accessed via `self.field`, and `$$` references to the last read input, this can be used to perform conversions or conditional parsing.
 
 ## Grammar
 ### Type declarations
