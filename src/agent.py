@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from src.tools.compiler import compile_spicy_grammar
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
-from dataclasses import dataclass
-
 from typing import Annotated
 import autogen
 

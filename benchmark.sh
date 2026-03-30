@@ -15,10 +15,10 @@ usage () {
   echo "Options:"
   echo "  -m|--models <models> Comma separated list of models to use"
   echo "  -p|--protocols <protocols> Comma separated list of protocols to use"
-  echo "  --refine            Enable the agent refinement loop"
   echo "  --debug             Enable debug mode"
   echo "  --rfc-dir <path>    Path to the rfc directory"
   echo "  --output-dir <path> Path to the output directory"
+  echo "  --note <text>       Add a note for this run"
   echo "  -h|--help           Show this help message"
 }
 
@@ -46,6 +46,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --refine)
       REFINE_FLAGS="--refine"
+      shift
+      ;;
+    --note)
+      RUN_NOTE="$2"
+      shift
       shift
       ;;
     --debug)
@@ -109,13 +114,26 @@ run_grammar_generator() {
 
 ############ INITIALIZATION #############
 source "$SPEC_EXTRACT/code/venv/bin/activate"
-mkdir -p "$BASE_OUTPUT_PATH"
+
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+RUN_OUT_DIR="$BASE_OUTPUT_PATH/$TIMESTAMP"
+mkdir -p "$RUN_OUT_DIR"
+
+cat <<EOF > "$RUN_OUT_DIR/README.md"
+# Run Details
+- **Timestamp:** $TIMESTAMP
+- **Models:** $MODELS
+- **Protocols:** $PROTOCOLS
+
+## Note
+${RUN_NOTE:-"No note provided."}
+EOF
 #########################################
 
 for p in $PROTOCOLS; do
   for m in $MODELS; do
     RFC_PATH=$(get_rfc "$p")
-    OUTPUT_PATH="$BASE_OUTPUT_PATH/$p-$(get_model_name "$m").spicy"
+    OUTPUT_PATH="$RUN_OUT_DIR/$p-$(get_model_name "$m").spicy"
     run_grammar_generator "$m" "$RFC_PATH" "$OUTPUT_PATH" "$p" &
   done
 done

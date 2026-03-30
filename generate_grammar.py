@@ -1,11 +1,11 @@
 from src.llm.providers import get_autogen_config
 from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
+from src.utils import load_file, read_config
 from typing import LiteralString
 from pathlib import Path
 import argparse
 from dotenv import load_dotenv
-import yaml
 
 prompt: LiteralString = """You are a communication protocol's specialist, and your job is to extract message structures from RFC specifications.
 You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
@@ -67,14 +67,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def load_file(path: Path) -> str:
-    try:
-        with path.open("r") as f:
-            return f.read()
-    except OSError as exc:
-        raise SystemExit(f"Unable to read {path}: {exc}") from exc
-
-
 def load_rfc(rfc_identifier: str) -> str:
     try:
         path = Path(rfc_identifier)
@@ -94,26 +86,6 @@ def save_response(path: Path, response: str) -> None:
     except OSError as exc:
         raise SystemExit(f"Unable to write to {path}: {exc}") from exc
 
-
-def read_config(path: Path | None) -> tuple[dict, dict]:
-    # Defaults
-    agent_config = {
-        "max_retries": 5
-    }
-    llm_params = {
-        "temperature": 0.0
-    }
-
-    if path and path.exists():
-        with path.open("r") as f:
-            parsed = yaml.safe_load(f)
-            if isinstance(parsed, dict):
-                if parsed.get("llm"):
-                    llm_params = parsed.get("llm")
-                if parsed.get("agent"):
-                    agent_config = parsed.get("agent")
-
-    return llm_params, agent_config
 
 def main() -> None:
     args = parse_args()
