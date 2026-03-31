@@ -1,0 +1,20 @@
+module DHCP;
+
+public type DHCPMessage = unit {
+    op: uint8;
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: uint16;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    filename: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    magic: uint32 &requires=($$ == 0x63825363);
+    options: bytes &eod;
+};

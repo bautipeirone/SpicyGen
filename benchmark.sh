@@ -106,7 +106,8 @@ run_grammar_generator() {
     DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL}/refinement"
   fi
 
-  python generate_grammar.py -p "$PROVIDER" -m "$MODEL" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS "$RFC_PATH"
+  local METRICS_PATH="${OUTPUT_PATH%.spicy}.json"
+  python generate_grammar.py -p "$PROVIDER" -m "$MODEL" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$RFC_PATH"
   if spicyc -j "$OUTPUT_PATH" 2> /dev/null; then
     echo "GRAMMAR PRODUCED BY $MODEL COMPILED SUCCESFULLY: $(basename "$OUTPUT_PATH")"
   else
@@ -146,4 +147,14 @@ for p in $PROTOCOLS; do
     OUTPUT_PATH="$RUN_OUT_DIR/$p-$(get_model_name "$m").spicy"
     run_grammar_generator "$m" "$RFC_PATH" "$OUTPUT_PATH" "$p" "$DEBUG_DIR"
   done
+done
+
+# Aggregate individual JSON metrics into a single JSONL report
+REPORT_FILE="$RUN_OUT_DIR/report.jsonl"
+for f in "$RUN_OUT_DIR"/*.json; do
+  if [ -f "$f" ]; then
+    cat "$f" >> "$REPORT_FILE"
+    echo "" >> "$REPORT_FILE"
+    rm "$f"
+  fi
 done

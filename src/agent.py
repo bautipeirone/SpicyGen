@@ -45,10 +45,10 @@ def run_refinement_loop(
     messages: list[str],
     max_retries: int = 5,
     debug_dir: Path | None = None,
-) -> tuple[str, bool]:
+) -> tuple[str, bool, int]:
     """Run the compile-feedback agent loop using Autogen.
 
-    Returns a tuple of (grammar_code, compiled_successfully).
+    Returns a tuple of (grammar_code, compiled_successfully, attempts).
     """
     if debug_dir:
         debug_dir.mkdir(parents=True, exist_ok=True)
@@ -117,4 +117,4 @@ def run_refinement_loop(
         message=initial_prompt,
     )
 
-    return state.last_code, state.success
+    return state.last_code, state.success, state.attempt

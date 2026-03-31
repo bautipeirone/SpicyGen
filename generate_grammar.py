@@ -9,6 +9,8 @@ from src.logger import logger
 from typing import LiteralString
 from pathlib import Path
 import argparse
+import time
+import json
 
 prompt: LiteralString = """You are a communication protocol's specialist, and your job is to extract message structures from RFC specifications.
 You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
@@ -53,6 +55,12 @@ def parse_args() -> argparse.Namespace:
         "-o",
         type=Path,
         help="Path to the output file where the extracted grammar will be saved (optional)",
+    )
+    parser.add_argument(
+        "--metrics-file",
+        type=Path,
+        default=None,
+        help="Path to output the metrics JSON file",
     )
     parser.add_argument(
         "--debug-dir",
@@ -110,10 +118,26 @@ def main() -> None:
     system_instruction = prompt + spicy_context
     messages = [rfc_content]
 
-    exit()
-    content, success = run_refinement_loop(
+    start_time = time.time()
+    content, success, attempts = run_refinement_loop(
         llm_config, system_instruction, messages, max_retries=agent_config["max_retries"], debug_dir=args.debug_dir
     )
+    elapsed_time = time.time() - start_time
+
+    metrics = {
+        "model": args.model,
+        "provider": args.provider,
+        "protocol": args.rfc_id,
+        "success": success,
+        "attempts": attempts,
+        "time_elapsed_s": round(elapsed_time, 2)
+    }
+
+    if args.metrics_file:
+        with args.metrics_file.open("w") as f:
+            json.dump(metrics, f)
+    else:
+        print(json.dumps(metrics))
 
     if not success:
         logger.warning("Grammar did not compile after all retries.")
