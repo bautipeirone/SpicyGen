@@ -83,6 +83,8 @@ def run_refinement_loop(
         max_consecutive_auto_reply=max_retries,
         is_termination_msg=lambda x: x.get("content", "") and "TERMINATE" in x.get("content", ""),
         code_execution_config=False,
+        # Needed to avoid auto stop when LLM doesnt issue a tool call
+        default_auto_reply="Please use the `compile_grammar` tool to check if the grammar compiles. If it does not compile, correct the errors. If you think the grammar is perfect or cannot be fixed, say TERMINATE.",
     )
     
     autogen.agentchat.register_function(
