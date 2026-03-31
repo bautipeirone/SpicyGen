@@ -1,0 +1,82 @@
+module BundleProtocol;
+
+type CRCType = enum {
+    NONE = 0,
+    CRC16 = 1,
+    CRC32C = 2,
+};
+
+type BlockType = enum {
+    PAYLOAD_BLOCK = 1,
+    PREVIOUS_NODE = 6,
+    BUNDLE_AGE = 7,
+    HOP_COUNT = 10,
+};
+
+# DTN time is milliseconds since 2000-01-01 00:00:00 UTC
+type DTNTime = uint64;
+
+type CreationTimestamp = unit {
+    creation_time: DTNTime;
+    sequence_number: uint64;
+};
+
+type EndpointID = unit {
+    scheme_code: uint32;
+    ssp: bytes &eod;
+};
+
+# Primary Bundle Block structure
+type PrimaryBlock = unit {
+    version: uint32 &requires=($$ == 7);
+    bundle_control_flags: uint64;
+    crc_type: uint32 &convert=CRCType($$);
+    destination_eid: EndpointID;
+    source_node_id: EndpointID;
+    report_to_eid: EndpointID;
+    creation_timestamp: CreationTimestamp;
+    lifetime: uint64;
+    fragment_offset: uint64 if(self.bundle_control_flags & 0x01 != 0);
+    total_adu_length: uint64 if(self.bundle_control_flags & 0x01 != 0);
+    crc: bytes &size=(self.crc_type == CRCType::CRC16 ? 2 : (self.crc_type == CRCType::CRC32C ? 4 : 0)) 
+        if(self.crc_type != CRCType::NONE);
+};
+
+# Canonical Bundle Block structure
+type CanonicalBlock = unit {
+    block_type_code: uint32;
+    block_number: uint32;
+    block_processing_control_flags: uint32;
+    crc_type: uint32 &convert=CRCType($$);
+    block_type_specific_data: bytes &eod;
+    # Note: CRC calculation would be handled outside this parser
+    crc: bytes &size=(self.crc_type == CRCType::CRC16 ? 2 : (self.crc_type == CRCType::CRC32C ? 4 : 0))
+        if(self.crc_type != CRCType::NONE);
+};
+
+# Specific extension block data structures
+type PreviousNodeData = unit {
+    node_id: EndpointID;
+};
+
+type BundleAgeData = unit {
+    age: uint64;
+};
+
+type HopCountData = unit {
+    hop_limit: uint32;
+    hop_count: uint32;
+};
+
+# Bundle structure: primary block + extension blocks + payload block
+public type Bundle = unit {
+    primary_block: PrimaryBlock;
+    # Extension blocks (can be zero or more)
+    extension_blocks: CanonicalBlock[] &until=self.is_payload_block($$);
+    payload_block: CanonicalBlock;
+};
+
+# Helper method to detect payload block
+function is_payload_block(self: Bundle, block: CanonicalBlock): bool {
+    return block.block_type_code == 1;  # PAYLOAD_BLOCK = 1
+}

@@ -1,0 +1,82 @@
+module HTTP;
+
+public type Message = unit {
+    switch {
+        -> request: Request;
+        -> response: Response;
+    }
+};
+
+type Request = unit {
+    line: RequestLine;
+    headers: HeaderFields;
+    : b"\r\n";
+    body: bytes &size=self.headers.content_length if (self.headers.has_content_length);
+    body: bytes &eod if (! self.headers.has_content_length && ! self.headers.has_transfer_encoding);
+};
+
+type Response = unit {
+    line: StatusLine;
+    headers: HeaderFields;
+    : b"\r\n";
+    body: bytes &size=self.headers.content_length if (self.headers.has_content_length);
+    body: bytes &eod if (! self.headers.has_content_length && ! self.headers.has_transfer_encoding);
+};
+
+type RequestLine = unit {
+    method: Token;
+    : b" ";
+    uri: Token;
+    : b" ";
+    version: Version;
+    : b"\r\n";
+};
+
+type StatusLine = unit {
+    version: Version;
+    : b" ";
+    code: uint8 &size=3;
+    : b" ";
+    reason: bytes &until=b"\r\n";
+    : b"\r\n";
+};
+
+type Version = unit {
+    : b"HTTP/";
+    number: bytes &size=3;
+};
+
+type HeaderFields = unit {
+    fields: HeaderField[];
+    : b"\r\n";
+
+    has_content_length: bool &compute={
+        for (auto f: self.fields) {
+            if (f.name == "Content-Length") return True;
+        }
+        return False;
+    };
+
+    has_transfer_encoding: bool &compute={
+        for (auto f: self.fields) {
+            if (f.name == "Transfer-Encoding") return True;
+        }
+        return False;
+    };
+
+    content_length: uint64 &compute={
+        for (auto f: self.fields) {
+            if (f.name == "Content-Length") return f.value.decode().to_int();
+        }
+        return 0;
+    };
+};
+
+type HeaderField = unit {
+    name: Token &convert=$$.lower().decode();
+    : b": ";
+    value: bytes &until=b"\r\n";
+    : b"\r\n";
+};
+
+const Token = /[^ \t\r\n]+/;

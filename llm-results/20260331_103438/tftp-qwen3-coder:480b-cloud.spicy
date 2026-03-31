@@ -1,0 +1,45 @@
+module TFTP;
+
+type Opcode = enum {
+    RRQ = 1,
+    WRQ = 2,
+    DATA = 3,
+    ACK = 4,
+    ERROR = 5,
+};
+
+public type Packet = unit {
+    opcode: uint16 &convert=Opcode($$);
+    switch (self.opcode) {
+        Opcode::RRQ -> rrq: RRQPacket;
+        Opcode::WRQ -> wrq: WRQPacket;
+        Opcode::DATA -> data: DATAPacket;
+        Opcode::ACK -> ack: ACKPacket;
+        Opcode::ERROR -> error: ERRORPacket;
+        * -> : void;
+    };
+};
+
+type RRQPacket = unit {
+    filename: bytes &until=b"\0" &convert=$$.decode();
+    mode: bytes &until=b"\0" &convert=$$.decode().lower();
+};
+
+type WRQPacket = unit {
+    filename: bytes &until=b"\0" &convert=$$.decode();
+    mode: bytes &until=b"\0" &convert=$$.decode().lower();
+};
+
+type DATAPacket = unit {
+    block_num: uint16;
+    data: bytes &size=512;
+};
+
+type ACKPacket = unit {
+    block_num: uint16;
+};
+
+type ERRORPacket = unit {
+    error_code: uint16;
+    error_msg: bytes &until=b"\0" &convert=$$.decode();
+};

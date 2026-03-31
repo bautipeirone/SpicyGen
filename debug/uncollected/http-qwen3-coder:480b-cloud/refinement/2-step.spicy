@@ -1,0 +1,47 @@
+module HTTP;
+
+public type Message = unit {
+    switch {
+        -> request: Request;
+        -> response: Response;
+    };
+};
+
+type Request = unit {
+    line: RequestLine;
+    headers: HeaderFields;
+    : b"\r\n";
+    body: bytes &eod if(self.headers.has_content_length());
+};
+
+type Response = unit {
+    line: StatusLine;
+    headers: HeaderFields;
+    : b"\r\n";
+    body: bytes &eod if(self.headers.has_content_length());
+};
+
+type RequestLine = unit {
+    method: Token;
+    uri: Token;
+    version: Token;
+    : b"\r\n";
+};
+
+type StatusLine = unit {
+    version: Token;
+    code: uint16 &convert=$$.to_uint(10);
+    reason: bytes &until=b"\r\n";
+};
+
+type HeaderFields = unit {
+    fields: HeaderField[] &until=b"\r\n\r\n";
+};
+
+type HeaderField = unit {
+    name: Token &convert=$$.lower();
+    : b": ";
+    value: bytes &until=b"\r\n";
+};
+
+const Token = /[!#$%&'*+\-.^_`|~0-9a-zA-Z]+/;

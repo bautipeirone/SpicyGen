@@ -1,0 +1,89 @@
+module HTTP;
+
+public type HTTPMessage = unit {
+    message: Message;
+};
+
+type Message = unit {
+    start_line: StartLine;
+    headers: HeaderFields;
+    : b"\r\n";
+    body: bytes &eod if(self.has_body());
+};
+
+type StartLine = unit {
+    switch {
+        -> request_line: RequestLine;
+        -> status_line: StatusLine;
+    }
+};
+
+type RequestLine = unit {
+    method: Token;
+    : b" ";
+    request_uri: RequestURI;
+    : b" ";
+    http_version: HTTPVersion;
+    : b"\r\n";
+};
+
+type StatusLine = unit {
+    http_version: HTTPVersion;
+    : b" ";
+    status_code: StatusCode;
+    : b" ";
+    reason_phrase: ReasonPhrase;
+    : b"\r\n";
+};
+
+type RequestURI = unit {
+    uri: Token;
+};
+
+type HTTPVersion = unit {
+    version: Token &convert=$$.split1(b"/")[1];
+};
+
+type StatusCode = unit {
+    code: uint16 &convert=$$.to_uint();
+};
+
+type ReasonPhrase = unit {
+    phrase: bytes &eod &until=b"\r\n" &convert=$$.decode();
+};
+
+type HeaderFields = unit {
+    fields: Field[];
+    : b"\r\n";
+};
+
+type Field = unit {
+    name: Token;
+    : b": ";
+    value: bytes &eod &until=b"\r\n" &convert=$$.decode();
+};
+
+type Token = unit {
+    token: bytes &eod &until=b" " &convert=$$.decode();
+};
+
+# Helper functions
+function Message.has_body() {
+    return self.headers.has_transfer_encoding() or self.headers.has_content_length();
+}
+
+function HeaderFields.has_transfer_encoding() {
+    for (auto f : self.fields) {
+        if (f.name == "Transfer-Encoding")
+            return True;
+    }
+    return False;
+}
+
+function HeaderFields.has_content_length() {
+    for (auto f : self.fields) {
+        if (f.name == "Content-Length")
+            return True;
+    }
+    return False;
+}

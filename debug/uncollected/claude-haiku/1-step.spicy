@@ -1,0 +1,82 @@
+module TFTP;
+
+# Opcode enumeration
+type Opcode = enum {
+    RRQ = 1,
+    WRQ = 2,
+    DATA = 3,
+    ACK = 4,
+    ERROR = 5,
+};
+
+# Error code enumeration
+type ErrorCode = enum {
+    NotDefined = 0,
+    FileNotFound = 1,
+    AccessViolation = 2,
+    DiskFullOrAllocationExceeded = 3,
+    IllegalTFTPOperation = 4,
+    UnknownTransferID = 5,
+    FileAlreadyExists = 6,
+    NoSuchUser = 7,
+};
+
+# RRQ/WRQ packet format
+type RequestPacket = unit {
+    opcode: uint16 &convert=Opcode($$);
+    filename: bytes &until=b"\x00";
+    : b"\x00";
+    mode: bytes &until=b"\x00";
+    : b"\x00";
+};
+
+# DATA packet format
+type DataPacket = unit {
+    opcode: uint16 &convert=Opcode($$);
+    block_number: uint16;
+    data: bytes &eod;
+};
+
+# ACK packet format
+type AckPacket = unit {
+    opcode: uint16 &convert=Opcode($$);
+    block_number: uint16;
+};
+
+# ERROR packet format
+type ErrorPacket = unit {
+    opcode: uint16 &convert=Opcode($$);
+    error_code: uint16 &convert=ErrorCode($$);
+    error_message: bytes &until=b"\x00";
+    : b"\x00";
+};
+
+# Main TFTP packet - dispatches based on opcode
+public type TFTPPacket = unit {
+    switch {
+        -> opcode: uint16 &convert=Opcode($$) {
+            switch (self.opcode) {
+                Opcode::RRQ,
+                Opcode::WRQ -> {
+                    filename: bytes &until=b"\x00";
+                    : b"\x00";
+                    mode: bytes &until=b"\x00";
+                    : b"\x00";
+                };
+                Opcode::DATA -> {
+                    block_number: uint16;
+                    data: bytes &eod;
+                };
+                Opcode::ACK -> {
+                    block_number: uint16;
+                };
+                Opcode::ERROR -> {
+                    error_code: uint16 &convert=ErrorCode($$);
+                    error_message: bytes &until=b"\x00";
+                    : b"\x00";
+                };
+                * -> : void;
+            };
+        };
+    };
+};

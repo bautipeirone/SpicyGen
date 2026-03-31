@@ -1,0 +1,27 @@
+module CCSDS_SPP;
+
+# Space Packet Protocol (CCSDS 133.0-B-2)
+
+public type SpacePacket = unit {
+    # Packet Primary Header (6 octets)
+    version_number: uint8 &bitfield(3);
+    packet_type: uint8 &bitfield(1);
+    secondary_header_flag: uint8 &bitfield(1);
+    apid: uint16 &bitfield(11);
+    sequence_flags: uint8 &bitfield(2);
+    packet_sequence_count_or_name: uint16 &bitfield(14);
+    packet_data_length: uint16; # C = (Total Number of Octets in the Packet Data Field) - 1
+
+    # Packet Data Field
+    # The length of the Packet Data Field is (packet_data_length + 1)
+    packet_data_field: bytes &size=(self.packet_data_length + 1);
+};
+
+# The Packet Data Field structure
+type PacketDataField = unit {
+    # If secondary_header_flag is 1, the secondary header is present.
+    # The structure of the secondary header is mission-specific.
+    # The user data field follows.
+    # This is a simplified representation as the exact structure depends on mission-specific management.
+    data: bytes &eod;
+};

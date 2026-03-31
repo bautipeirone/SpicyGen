@@ -1,0 +1,264 @@
+module HTTP;
+
+# Basic tokens and delimiters
+const Token = /[^ \t\r\n]+/;
+const SP = / /;
+const CRLF = /\r\n/;
+const LWS = /[ \t]+/;
+const OWS = /[ \t]*/;
+const QuotedString = /"([^"\\]|\\.)*"/;
+const Comment = /\(([^()]|\([^()]*\))*\)/;
+const Hex = /[0-9A-Fa-f]/;
+const DeltaSeconds = /[0-9]+/;
+
+# HTTP version
+type Version = unit {
+    : b"HTTP/";
+    major: /[0-9]+/ &convert=$$.to_int();
+    : b".";
+    minor: /[0-9]+/ &convert=$$.to_int();
+};
+
+# Request line
+type RequestLine = unit {
+    method: Token;
+    : SP;
+    request_uri: Token;
+    : SP;
+    version: Version;
+    : CRLF;
+};
+
+# Status line
+type StatusLine = unit {
+    version: Version;
+    : SP;
+    status_code: /[0-9][0-9][0-9]/ &convert=$$.to_int();
+    : SP;
+    reason_phrase: /[^\r\n]*/;
+    : CRLF;
+};
+
+# Header field
+type HeaderField = unit {
+    name: Token;
+    : b":";
+    : OWS;
+    value: /[^\r\n]*/;
+    : CRLF;
+};
+
+# Headers section
+type Headers = unit {
+    headers: HeaderField[] until(CRLF);
+    : CRLF;
+};
+
+# Generic message
+type GenericMessage = unit {
+    start_line: bytes &eod &until=CRLF;
+    : CRLF;
+    headers: Headers;
+    body: bytes &eod;
+};
+
+# Request message
+type Request = unit {
+    request_line: RequestLine;
+    headers: Headers;
+    body: bytes &eod;
+};
+
+# Response message
+type Response = unit {
+    status_line: StatusLine;
+    headers: Headers;
+    body: bytes &eod;
+};
+
+# Main HTTP message unit
+public type Message = unit {
+    switch {
+        -> request: Request;
+        -> response: Response;
+    };
+};
+
+# Chunked transfer encoding
+type Chunk = unit {
+    chunk_size: /[0-9A-Fa-f]+/ &convert=$$.to_int(16);
+    : CRLF;
+    data: bytes &size=self.chunk_size;
+    : CRLF;
+};
+
+type ChunkedBody = unit {
+    chunks: Chunk[] until(b"0\r\n");
+    : b"0\r\n";
+    trailer: Headers;
+};
+
+# Content types
+type MediaType = unit {
+    type_value: Token;
+    : b"/";
+    subtype: Token;
+    parameters: (b";" Token b"=" (Token | QuotedString))[];
+};
+
+# Range header
+type ByteRangeSpec = unit {
+    first_byte_pos: /[0-9]+/ &convert=$$.to_int() if($$ != b"");
+    : b"-";
+    last_byte_pos: /[0-9]+/ &convert=$$.to_int() if($$ != b"");
+};
+
+type ByteRangesSpecifier = unit {
+    : b"bytes=";
+    ranges: ByteRangeSpec[];
+};
+
+# Quality values
+type QValue = unit {
+    : /0(\.[0-9]{0,3})?/ | /1(\.[0]{0,3})?/;
+};
+
+# Language tags
+type LanguageTag = unit {
+    primary_tag: /[a-zA-Z]{1,8}/;
+    subtags: (b"-" /[a-zA-Z]{1,8}/)[];
+};
+
+# Entity tags
+type EntityTag = unit {
+    weak: b"W/" if($$ == b"W/");
+    opaque_tag: QuotedString;
+};
+
+# Date/time formats
+type HTTPDate = unit {
+    date: /(Mon|Tue|Wed|Thu|Fri|Sat|Sun), [0-9]{2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT/ |
+          /(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), [0-9]{2}-(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT/ |
+          /(Mon|Tue|Wed|Thu|Fri|Sat|Sun) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9 ]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4}/;
+};
+
+# URI
+type AbsoluteURI = unit {
+    scheme: Token;
+    : b"://";
+    host: Token;
+    : b":" port: /[0-9]+/ &convert=$$.to_int() if($$ != b"");
+    abs_path: Token;
+    : b"?" query: Token if($$ != b"");
+};
+
+# Methods
+type Method = enum {
+    OPTIONS = 0,
+    GET = 1,
+    HEAD = 2,
+    POST = 3,
+    PUT = 4,
+    DELETE = 5,
+    TRACE = 6,
+    CONNECT = 7,
+};
+
+# Status codes
+type StatusCode = enum {
+    Continue = 100,
+    SwitchingProtocols = 101,
+    OK = 200,
+    Created = 201,
+    Accepted = 202,
+    NonAuthoritativeInformation = 203,
+    NoContent = 204,
+    ResetContent = 205,
+    PartialContent = 206,
+    MultipleChoices = 300,
+    MovedPermanently = 301,
+    Found = 302,
+    SeeOther = 303,
+    NotModified = 304,
+    UseProxy = 305,
+    TemporaryRedirect = 307,
+    BadRequest = 400,
+    Unauthorized = 401,
+    PaymentRequired = 402,
+    Forbidden = 403,
+    NotFound = 404,
+    MethodNotAllowed = 405,
+    NotAcceptable = 406,
+    ProxyAuthenticationRequired = 407,
+    RequestTimeout = 408,
+    Conflict = 409,
+    Gone = 410,
+    LengthRequired = 411,
+    PreconditionFailed = 412,
+    RequestEntityTooLarge = 413,
+    RequestURITooLong = 414,
+    UnsupportedMediaType = 415,
+    RequestedRangeNotSatisfiable = 416,
+    ExpectationFailed = 417,
+    InternalServerError = 500,
+    NotImplemented = 501,
+    BadGateway = 502,
+    ServiceUnavailable = 503,
+    GatewayTimeout = 504,
+    HTTPVersionNotSupported = 505,
+};
+
+# Cache control directives
+type CacheControlDirective = unit {
+    token: Token;
+    : b"=" (Token | QuotedString) if($$ != b"");
+};
+
+# Authentication challenges
+type Challenge = unit {
+    scheme: Token;
+    realm: b"realm=" QuotedString;
+    params: (b"," Token b"=" (Token | QuotedString))[];
+};
+
+# Product tokens
+type ProductToken = unit {
+    product: Token;
+    : b"/" version: Token if($$ != b"");
+};
+
+# Character sets
+type Charset = Token;
+
+# Content codings
+type ContentCoding = enum {
+    gzip = 0,
+    compress = 1,
+    deflate = 2,
+    identity = 3,
+};
+
+# Transfer codings
+type TransferCoding = enum {
+    chunked = 0,
+    identity = 1,
+    gzip = 2,
+    compress = 3,
+    deflate = 4,
+};
+
+# Range units
+type RangeUnit = enum {
+    bytes = 0,
+};
+
+# Warning codes
+type WarningCode = enum {
+    ResponseIsStale = 110,
+    RevalidationFailed = 111,
+    DisconnectedOperation = 112,
+    HeuristicExpiration = 113,
+    MiscellaneousWarning = 199,
+    TransformationApplied = 214,
+    MiscellaneousPersistentWarning = 299,
+};

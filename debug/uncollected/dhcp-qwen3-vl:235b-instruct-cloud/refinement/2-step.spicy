@@ -1,0 +1,218 @@
+module dhcp;
+
+const MAGIC_COOKIE = b"\x63\x82\x52\x76";
+
+type Opcode = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+};
+
+type DhcpMessageType = enum {
+    DHCPDISCOVER = 1,
+    DHCPOFFER = 2,
+    DHCPREQUEST = 3,
+    DHCPDECLINE = 4,
+    DHCPACK = 5,
+    DHCPNAK = 6,
+    DHCPRELEASE = 7,
+    DHCPINFORM = 8,
+};
+
+type OptionCode = enum {
+    PAD = 0,
+    END = 255,
+    SUBNET_MASK = 1,
+    TIME_OFFSET = 2,
+    ROUTERS = 3,
+    TIME_SERVERS = 4,
+    NAME_SERVERS = 5,
+    DNS_SERVERS = 6,
+    LOG_SERVERS = 7,
+    COOKIE_SERVERS = 8,
+    LPR_SERVERS = 9,
+    IMPRESS_SERVERS = 10,
+    RESOURCE_LOCATION_SERVERS = 11,
+    HOST_NAME = 12,
+    BOOT_SIZE = 13,
+    MERIT_DUMP = 14,
+    DOMAIN_NAME = 15,
+    SWAP_SERVER = 16,
+    ROOT_PATH = 17,
+    EXTENSIONS_PATH = 18,
+    IP_FORWARDING = 19,
+    NON_LOCAL_SOURCE_ROUTING = 20,
+    POLICY_FILTER = 21,
+    MAX_DATAGRAM_REASSEMBLY_SIZE = 22,
+    DEFAULT_IP_TTL = 23,
+    PATH_MTU_AGING_TIMEOUT = 24,
+    PATH_MTU_PLATEAU_TABLE = 25,
+    INTERFACE_MTU = 26,
+    ALL_SUBNETS_LOCAL = 27,
+    BROADCAST_ADDRESS = 28,
+    PERFORM_MASK_DISCOVERY = 29,
+    MASK_SUPPLIER = 30,
+    PERFORM_ROUTER_DISCOVERY = 31,
+    ROUTER_SOLICITATION_ADDRESS = 32,
+    STATIC_ROUTES = 33,
+    TRAILER_ENCAPSULATION = 34,
+    ARP_CACHE_TIMEOUT = 35,
+    ETHERNET_ENCAPSULATION = 36,
+    TCP_DEFAULT_TTL = 37,
+    TCP_KEEPALIVE_INTERVAL = 38,
+    TCP_KEEPALIVE_GARBAGE = 39,
+    NIS_DOMAIN = 40,
+    NIS_SERVERS = 41,
+    NTP_SERVERS = 42,
+    VENDOR_SPECIFIC_INFORMATION = 43,
+    NETBIOS_NAME_SERVERS = 44,
+    NETBIOS_DD_SERVERS = 45,
+    NETBIOS_NODE_TYPE = 46,
+    NETBIOS_SCOPE = 47,
+    XWINDOW_FONT_SERVERS = 48,
+    XWINDOW_DISPLAY_MANAGER = 49,
+    NETWORK_INFO_SERVICE_PLUS_DOMAIN = 64,
+    NETWORK_INFO_SERVICE_PLUS_SERVERS = 65,
+    MOBILE_IP_HOME_AGENT = 68,
+    SMTP_SERVER = 69,
+    POP3_SERVER = 70,
+    NNTP_SERVER = 71,
+    WWW_SERVER = 72,
+    FINGER_SERVER = 73,
+    IRC_SERVER = 74,
+    STREETTALK_SERVER = 75,
+    STDA_SERVER = 76,
+    REQUESTED_IP_ADDRESS = 50,
+    IP_ADDRESS_LEASE_TIME = 51,
+    OPTION_OVERLOAD = 52,
+    TFTP_SERVER_NAME = 66,
+    BOOTFILE_NAME = 67,
+    MESSAGE_TYPE = 53,
+    SERVER_IDENTIFIER = 54,
+    PARAMETER_REQUEST_LIST = 55,
+    MESSAGE = 56,
+    MAX_MESSAGE_SIZE = 57,
+    REnewal_TIME_VALUE = 58,
+    REbinding_TIME_VALUE = 59,
+    VENDOR_CLASS_IDENTIFIER = 60,
+    CLIENT_IDENTIFIER = 61,
+    NETWARE_IP_DOMAIN_NAME = 62,
+    NETWARE_IP_OPTION = 63,
+    NISPLUS_DOMAIN = 80,
+    NISPLUS_SERVERS = 81,
+    DHCP_RESERVED = 254,
+};
+
+public type DhcpMessage = unit {
+    op: uint8 &convert=Opcode($$);
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: bitfield(16) {
+        broadcast: 0;
+        reserved: 1..15;
+    };
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    options: Options;
+};
+
+type Options = unit {
+    magic_cookie: bytes &size=4 &requires=($$ == MAGIC_COOKIE);
+    entries: Option[];
+    end: uint8 &requires=($$ == OptionCode::END);
+};
+
+type Option = unit {
+    code: uint8 &convert=OptionCode($$);
+    switch (self.code) {
+        OptionCode::PAD -> : void;
+        OptionCode::END -> : void;
+        OptionCode::SUBNET_MASK,
+        OptionCode::BROADCAST_ADDRESS,
+        OptionCode::ROUTERS,
+        OptionCode::TIME_SERVERS,
+        OptionCode::NAME_SERVERS,
+        OptionCode::DNS_SERVERS,
+        OptionCode::LOG_SERVERS,
+        OptionCode::COOKIE_SERVERS,
+        OptionCode::LPR_SERVERS,
+        OptionCode::IMPRESS_SERVERS,
+        OptionCode::RESOURCE_LOCATION_SERVERS,
+        OptionCode::SWAP_SERVER,
+        OptionCode::ROOT_PATH,
+        OptionCode::EXTENSIONS_PATH,
+        OptionCode::HOST_NAME,
+        OptionCode::BOOT_SIZE,
+        OptionCode::MERIT_DUMP,
+        OptionCode::DOMAIN_NAME,
+        OptionCode::IP_FORWARDING,
+        OptionCode::NON_LOCAL_SOURCE_ROUTING,
+        OptionCode::POLICY_FILTER,
+        OptionCode::MAX_DATAGRAM_REASSEMBLY_SIZE,
+        OptionCode::DEFAULT_IP_TTL,
+        OptionCode::PATH_MTU_AGING_TIMEOUT,
+        OptionCode::PATH_MTU_PLATEAU_TABLE,
+        OptionCode::INTERFACE_MTU,
+        OptionCode::ALL_SUBNETS_LOCAL,
+        OptionCode::PERFORM_MASK_DISCOVERY,
+        OptionCode::MASK_SUPPLIER,
+        OptionCode::PERFORM_ROUTER_DISCOVERY,
+        OptionCode::ROUTER_SOLICITATION_ADDRESS,
+        OptionCode::STATIC_ROUTES,
+        OptionCode::TRAILER_ENCAPSULATION,
+        OptionCode::ARP_CACHE_TIMEOUT,
+        OptionCode::ETHERNET_ENCAPSULATION,
+        OptionCode::TCP_DEFAULT_TTL,
+        OptionCode::TCP_KEEPALIVE_INTERVAL,
+        OptionCode::TCP_KEEPALIVE_GARBAGE,
+        OptionCode::NIS_DOMAIN,
+        OptionCode::NIS_SERVERS,
+        OptionCode::NTP_SERVERS,
+        OptionCode::VENDOR_SPECIFIC_INFORMATION,
+        OptionCode::NETBIOS_NAME_SERVERS,
+        OptionCode::NETBIOS_DD_SERVERS,
+        OptionCode::NETBIOS_NODE_TYPE,
+        OptionCode::NETBIOS_SCOPE,
+        OptionCode::XWINDOW_FONT_SERVERS,
+        OptionCode::XWINDOW_DISPLAY_MANAGER,
+        OptionCode::NETWORK_INFO_SERVICE_PLUS_DOMAIN,
+        OptionCode::NETWORK_INFO_SERVICE_PLUS_SERVERS,
+        OptionCode::MOBILE_IP_HOME_AGENT,
+        OptionCode::SMTP_SERVER,
+        OptionCode::POP3_SERVER,
+        OptionCode::NNTP_SERVER,
+        OptionCode::WWW_SERVER,
+        OptionCode::FINGER_SERVER,
+        OptionCode::IRC_SERVER,
+        OptionCode::STREETTALK_SERVER,
+        OptionCode::STDA_SERVER,
+        OptionCode::NETWARE_IP_DOMAIN_NAME,
+        OptionCode::NETWARE_IP_OPTION,
+        OptionCode::NISPLUS_DOMAIN,
+        OptionCode::NISPLUS_SERVERS,
+        OptionCode::DHCP_RESERVED -> data: bytes &size=self.len;
+        OptionCode::REQUESTED_IP_ADDRESS -> ip: addr &ipv4;
+        OptionCode::IP_ADDRESS_LEASE_TIME -> lease_time: uint32 &convert=cast<interval>($$);
+        OptionCode::OPTION_OVERLOAD -> overload: uint8;
+        OptionCode::TFTP_SERVER_NAME,
+        OptionCode::BOOTFILE_NAME -> name: bytes &size=self.len &convert=$$.split1(b"\0")[0].decode();
+        OptionCode::MESSAGE_TYPE -> msg_type: uint8 &convert=DhcpMessageType($$);
+        OptionCode::SERVER_IDENTIFIER -> server_id: addr &ipv4;
+        OptionCode::PARAMETER_REQUEST_LIST -> param_list: uint8[self.len];
+        OptionCode::MESSAGE -> message: bytes &size=self.len &convert=$$.decode();
+        OptionCode::MAX_MESSAGE_SIZE -> max_size: uint16;
+        OptionCode::REnewal_TIME_VALUE -> t1: uint32 &convert=cast<interval>($$);
+        OptionCode::REbinding_TIME_VALUE -> t2: uint32 &convert=cast<interval>($$);
+        OptionCode::VENDOR_CLASS_IDENTIFIER -> vendor_class: bytes &size=self.len &convert=$$.decode();
+        OptionCode::CLIENT_IDENTIFIER -> client_id: bytes &size=self.len;
+        * -> data: bytes &size=self.len;
+    };
+    len: uint8;
+};

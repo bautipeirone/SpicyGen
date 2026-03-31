@@ -1,0 +1,34 @@
+module IRC;
+
+public type Message = unit {
+    : /(\r\n)+/; # Skip initial CRLF if any
+    msgs: OneMessage[] &eod;
+};
+
+type OneMessage = unit {
+    prefix: Prefix?;
+    command: Command;
+    params: Parameter[] &until=/\r\n/;
+    : /\r\n/;
+};
+
+type Prefix = unit {
+    : b":";
+    data: bytes &until=b" ";
+    : b" ";
+};
+
+type Command = unit {
+    name: bytes &until=(b" " | /\r\n/);
+};
+
+type Parameter = unit {
+    : b" ";
+    is_trailing: bool &optional &requires=(self.input.startswith(b":"));
+    if ( self.is_trailing ) {
+        : b":";
+        value: bytes &until=/\r\n/;
+    } else {
+        value: bytes &until=(b" " | /\r\n/);
+    };
+};

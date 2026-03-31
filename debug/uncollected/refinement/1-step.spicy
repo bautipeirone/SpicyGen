@@ -1,0 +1,112 @@
+module BPv7;
+
+# Enums
+enum CRCType {
+  none = 0,
+  crc16 = 1,
+  crc32 = 2,
+};
+
+# Endpoint ID (EID) – CBOR array of [uri_code, SSP]
+# We model SSP with a switch on uri_code.
+type EndpointID = unit {
+  uri_code: uint;
+  switch (self.uri_code) {
+    1 -> ssp_str: tstr;               # dtn scheme – text string
+    2 -> node_number: uint;            # ipn scheme – node number
+       : service_number: uint;          # service number (second element)
+    * -> ssp_raw: bytes &eod;         # any other representation
+  };
+};
+
+# Creation Timestamp – array of two unsigned integers
+type CreationTimestamp = unit {
+  time: uint;          # DTN time (ms since epoch)
+  sequence: uint;      # monotonically increasing counter
+};
+
+# Primary Block – first block of every bundle
+public type PrimaryBlock = unit {
+  version: uint &requires=($$ == 7);
+  flags: uint;                          # Bundle processing control flags
+  crc_type: CRCType &convert=CRCType($$);
+  destination: EndpointID;
+  source: EndpointID;
+  report_to: EndpointID;
+  creation_timestamp: CreationTimestamp;
+  lifetime: uint;                        # milliseconds
+  # Optional fragment fields – present only if fragment flag (bit 0) set
+  fragment_offset: uint if ((self.flags & 0x000001) != 0);
+  total_adulen: uint if ((self.flags & 0x000001) != 0);
+  # Optional CRC – present if crc_type != none
+  crc: bytes &size=2 if (self.crc_type == CRCType::crc16);
+  crc: bytes &size=4 if (self.crc_type == CRCType::crc32);
+};
+
+# Canonical (non‑primary) block – generic format
+type CanonicalBlock = unit {
+  block_type: uint;
+  block_number: uint;
+  block_flags: uint;                     # Block processing control flags
+  crc_type: CRCType &convert=CRCType($$);
+  data: bytes &eod;                     # block‑type‑specific data (CBOR byte string)
+  # Optional CRC after block data
+  crc: bytes &size=2 if (self.crc_type == CRCType::crc16);
+  crc: bytes &size=4 if (self.crc_type == CRCType::crc32);
+};
+
+# Specific extension blocks – we model the three defined ones.
+# Previous Node (type 6) – block data is an EndpointID
+type PrevNodeBlock = unit {
+  block_type: uint &requires=($$ == 6);
+  block_number: uint;
+  block_flags: uint;
+  crc_type: CRCType &convert=CRCType($$);
+  node_id: EndpointID;                  # block‑type‑specific data
+  crc: bytes &size=2 if (self.crc_type == CRCType::crc16);
+  crc: bytes &size=4 if (self.crc_type == CRCType::crc32);
+};
+
+# Bundle Age (type 7) – block data is an unsigned integer (ms)
+type BundleAgeBlock = unit {
+  block_type: uint &requires=($$ == 7);
+  block_number: uint;
+  block_flags: uint;
+  crc_type: CRCType &convert=CRCType($$);
+  age: uint;                           # milliseconds
+  crc: bytes &size=2 if (self.crc_type == CRCType::crc16);
+  crc: bytes &size=4 if (self.crc_type == CRCType::crc32);
+};
+
+# Hop Count (type 10) – block data is array [hop_limit, hop_count]
+type HopCountBlock = unit {
+  block_type: uint &requires=($$ == 10);
+  block_number: uint;
+  block_flags: uint;
+  crc_type: CRCType &convert=CRCType($$);
+  hop_limit: uint;
+  hop_count: uint;
+  crc: bytes &size=2 if (self.crc_type == CRCType::crc16);
+  crc: bytes &size=4 if (self.crc_type == CRCType::crc32);
+};
+
+# Payload Block – block type 1, block number always 1
+type PayloadBlock = unit {
+  block_type: uint &requires=($$ == 1);
+  block_number: uint &requires=($$ == 1);
+  block_flags: uint;
+  crc_type: CRCType &convert=CRCType($$);
+  payload: bytes &eod;                  # ADU or administrative record
+  crc: bytes &size=2 if (self.crc_type == CRCType::crc16);
+  crc: bytes &size=4 if (self.crc_type == CRCType::crc32);
+};
+
+# Full Bundle – indefinite‑length CBOR array: Primary, zero‑or‑more canonical blocks, Payload, break byte.
+public type Bundle = unit {
+  primary: PrimaryBlock;
+  # Extension blocks – we parse known types first, then fall‑back to generic CanonicalBlock for any others.
+  extensions: (PrevNodeBlock | BundleAgeBlock | HopCountBlock | CanonicalBlock)[];
+  payload: PayloadBlock;
+  # End of CBOR array (break byte 0xFF) – we consume it as a single byte.
+  : bytes &size=1;   # the CBOR break code
+};

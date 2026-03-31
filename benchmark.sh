@@ -6,7 +6,6 @@ PROTOCOLS="tftp dhcp http dns"
 BASE_RFC_PATH=$SPEC_EXTRACT/rfc
 BASE_OUTPUT_PATH=$SPEC_EXTRACT/code/spicy/llm-results
 
-REFINE_FLAGS=""
 DEBUG_MODE=""
 POSITIONAL_ARGS=()
 
@@ -44,8 +43,9 @@ while [[ $# -gt 0 ]]; do
       shift
       shift
       ;;
-    --refine)
-      REFINE_FLAGS="--refine"
+    -c|--config)
+      CONFIG_PATH="$2"
+      shift
       shift
       ;;
     --note)
@@ -90,21 +90,23 @@ get_model_name() {
 # Second input is rfc
 # Third input is output file
 # Fourth input is protocol
+# Fifth is debug dir (optional)
 run_grammar_generator() {
   local PROVIDER
   local MODEL
   local RFC_PATH=$2
   local OUTPUT_PATH=$3
   local PROTOCOL=$4
+  local DEBUG_DIR=$5
   PROVIDER=$(get_provider "$1")
   MODEL=$(get_model_name "$1")
   
   local DEBUG_ARGS=""
-  if [[ -n "$DEBUG_MODE" ]]; then
-    DEBUG_ARGS="--debug-dir debug/${PROTOCOL}-${MODEL}/refinement"
+  if [[ -n "$DEBUG_DIR" ]]; then
+    DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL}/refinement"
   fi
 
-  python generate_grammar.py -p "$PROVIDER" -m "$MODEL" -o "$OUTPUT_PATH" $REFINE_FLAGS $DEBUG_ARGS "$RFC_PATH"
+  python generate_grammar.py -p "$PROVIDER" -m "$MODEL" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS "$RFC_PATH"
   if spicyc -j "$OUTPUT_PATH" 2> /dev/null; then
     echo "GRAMMAR PRODUCED BY $MODEL COMPILED SUCCESFULLY: $(basename "$OUTPUT_PATH")"
   else
@@ -118,6 +120,14 @@ source "$SPEC_EXTRACT/code/venv/bin/activate"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RUN_OUT_DIR="$BASE_OUTPUT_PATH/$TIMESTAMP"
 mkdir -p "$RUN_OUT_DIR"
+if [[ -n "$DEBUG_MODE" ]]; then
+  DEBUG_DIR="debug/$TIMESTAMP"
+  mkdir -p "$DEBUG_DIR"
+fi
+
+if [[ -n "$CONFIG_PATH" ]]; then
+  CONFIG_ARGS="--config $CONFIG_PATH"
+fi
 
 cat <<EOF > "$RUN_OUT_DIR/README.md"
 # Run Details
@@ -134,8 +144,6 @@ for p in $PROTOCOLS; do
   for m in $MODELS; do
     RFC_PATH=$(get_rfc "$p")
     OUTPUT_PATH="$RUN_OUT_DIR/$p-$(get_model_name "$m").spicy"
-    run_grammar_generator "$m" "$RFC_PATH" "$OUTPUT_PATH" "$p" &
+    run_grammar_generator "$m" "$RFC_PATH" "$OUTPUT_PATH" "$p" "$DEBUG_DIR"
   done
 done
-
-wait

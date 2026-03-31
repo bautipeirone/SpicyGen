@@ -1,0 +1,55 @@
+module BundleProtocol;
+
+# Bundle Protocol Version 7 (RFC 9171)
+
+# Fundamental Data Structures
+type DTNTime = uint;
+
+type EndpointID = unit {
+    uri_code: uint;
+    ssp: bytes;
+};
+
+type CreationTimestamp = unit {
+    creation_time: DTNTime;
+    sequence_number: uint;
+};
+
+# Blocks
+type PrimaryBlock = unit {
+    version: uint;
+    bundle_control_flags: uint;
+    crc_type: uint;
+    destination: EndpointID;
+    source_node: EndpointID;
+    report_to: EndpointID;
+    creation_timestamp: CreationTimestamp;
+    lifetime: uint;
+    
+    # Conditional fields based on flags
+    # Bit 0: Bundle is a fragment
+    fragment_offset: uint if (self.bundle_control_flags & 1);
+    total_adu_length: uint if (self.bundle_control_flags & 1);
+    
+    # CRC field if type != 0
+    crc_16: bytes &size=2 if (self.crc_type == 1);
+    crc_32: bytes &size=4 if (self.crc_type == 2);
+};
+
+type CanonicalBlock = unit {
+    block_type_code: uint;
+    block_number: uint;
+    block_control_flags: uint;
+    crc_type: uint;
+    block_type_specific_data: bytes;
+    
+    # CRC field if type != 0
+    crc_16: bytes &size=2 if (self.crc_type == 1);
+    crc_32: bytes &size=4 if (self.crc_type == 2);
+};
+
+# Main Bundle Structure
+public type Bundle = unit {
+    primary: PrimaryBlock;
+    blocks: CanonicalBlock[];
+};

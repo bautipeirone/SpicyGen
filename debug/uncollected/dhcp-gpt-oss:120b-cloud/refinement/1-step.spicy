@@ -1,0 +1,38 @@
+module dhcp;
+
+const MAGIC_COOKIE = b"\x63\x82\x53\x63";
+
+type DHCPOption = unit {
+    code: uint8;
+    switch (self.code) {
+        0 -> : void; # Pad
+        255 -> : void; # End
+        * -> len: uint8;
+            data: bytes &size=self.len;
+    };
+};
+
+type DHCPOptions = unit {
+    : MAGIC_COOKIE;
+    opts: DHCPOption[];
+    # ensure an End option is present; optional padding after end is ignored
+    : b"\xff" if (self.opts[-1].code != 255); # enforce End if not already
+};
+
+public type DHCPMessage = unit {
+    op: uint8;               # Message op code / message type (1=BOOTREQUEST,2=BOOTREPLY)
+    htype: uint8;            # Hardware address type
+    hlen: uint8;             # Hardware address length
+    hops: uint8;             # Hops
+    xid: uint32;             # Transaction ID
+    secs: uint16;            # Seconds elapsed
+    flags: uint16;           # Flags
+    ciaddr: addr &ipv4;       # Client IP address (if already bound)
+    yiaddr: addr &ipv4;       # 'Your' IP address (address being offered)
+    siaddr: addr &ipv4;       # Server IP address (next server to use)
+    giaddr: addr &ipv4;       # Relay agent IP address
+    chaddr: bytes &size=16;   # Client hardware address
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode(); # Server host name (null terminated)
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode(); # Boot file name (null terminated)
+    options: DHCPOptions;    # Options (variable length)
+};

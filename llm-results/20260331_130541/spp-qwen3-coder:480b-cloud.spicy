@@ -1,0 +1,53 @@
+module SPP;
+
+# Packet Version Number enumeration
+type PacketVersionNumber = enum {
+    SpacePacket = 0  # Binary '000'
+};
+
+# Packet Type enumeration
+type PacketType = enum {
+    Telemetry = 0,     # Binary '0'
+    Telecommand = 1    # Binary '1'
+};
+
+# Sequence Flags enumeration
+type SequenceFlags = enum {
+    ContinuationSegment = 0,  # Binary '00'
+    FirstSegment = 1,         # Binary '01'
+    LastSegment = 2,          # Binary '10'
+    Unsegmented = 3           # Binary '11'
+};
+
+# Packet Primary Header bitfield structure
+public type PacketPrimaryHeader = unit {
+    # First 2 bytes (16 bits)
+    f1: bitfield(16) {
+        version_number: 0..2;        # 3 bits - Packet Version Number
+        packet_type: 3..3;           # 1 bit - Packet Type
+        secondary_hdr_flag: 4..4;    # 1 bit - Secondary Header Flag
+        apid: 5..15;                 # 11 bits - Application Process Identifier
+    };
+    
+    # Next 2 bytes (16 bits)
+    f2: bitfield(16) {
+        sequence_flags: 0..1;              # 2 bits - Sequence Flags
+        packet_sequence_count_or_name: 2..15; # 14 bits - Packet Sequence Count or Packet Name
+    };
+    
+    # Last 2 bytes (16 bits)
+    packet_data_length: uint16;            # 16 bits - Packet Data Length
+    
+    # Constraints
+    : void &requires=(self.f1.version_number == 0);  # Version must be 0 for Space Packet
+};
+
+# Space Packet structure
+public type SpacePacket = unit {
+    primary_header: PacketPrimaryHeader;
+    data_field: bytes &size=(self.primary_header.packet_data_length + 1);  # C = length - 1, so length = C + 1
+    
+    # Validate that total packet size is within limits (7-65542 octets)
+    : void &requires=(6 + (self.primary_header.packet_data_length + 1) >= 7);
+    : void &requires=(6 + (self.primary_header.packet_data_length + 1) <= 65542);
+};

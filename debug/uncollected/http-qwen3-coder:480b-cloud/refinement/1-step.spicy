@@ -1,0 +1,73 @@
+module http;
+
+public type HTTPMessage = unit {
+    line: StartLine;
+    headers: Header[];
+    : b"\r\n";
+    body: Body;
+};
+
+type StartLine = unit {
+    switch {
+        -> request_line: RequestLine;
+        -> status_line: StatusLine;
+    };
+};
+
+type RequestLine = unit {
+    method: Method;
+    : b" ";
+    uri: RequestURI;
+    : b" ";
+    version: HTTPVersion;
+    : b"\r\n";
+};
+
+type StatusLine = unit {
+    version: HTTPVersion;
+    : b" ";
+    status_code: StatusCode;
+    : b" ";
+    reason_phrase: ReasonPhrase;
+    : b"\r\n";
+};
+
+type Method = unit {
+    value: bytes &until=b" ";
+};
+
+type RequestURI = unit {
+    value: bytes &until=b" ";
+};
+
+type HTTPVersion = unit {
+    value: bytes &until=b"\r\n";
+    &requires=(self.value == b"HTTP/1.1" || self.value == b"HTTP/1.0");
+};
+
+type StatusCode = unit {
+    value: bytes &size=3;
+};
+
+type ReasonPhrase = unit {
+    value: bytes &until=b"\r\n";
+};
+
+type Header = unit {
+    name: HeaderName;
+    : b": ";
+    value: HeaderValue;
+    : b"\r\n";
+};
+
+type HeaderName = unit {
+    value: bytes &until=b":";
+};
+
+type HeaderValue = unit {
+    value: bytes &until=b"\r\n";
+};
+
+type Body = unit {
+    data: bytes &eod;
+};

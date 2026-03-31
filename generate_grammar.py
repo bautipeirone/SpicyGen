@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.llm.providers import get_autogen_config
 from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
@@ -6,7 +9,6 @@ from src.logger import logger
 from typing import LiteralString
 from pathlib import Path
 import argparse
-from dotenv import load_dotenv
 
 prompt: LiteralString = """You are a communication protocol's specialist, and your job is to extract message structures from RFC specifications.
 You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
@@ -92,6 +94,13 @@ def main() -> None:
     args = parse_args()
     load_dotenv()
 
+    logger.info(f"Generating grammar for {args.rfc_id} using {args.model}...")
+    logger.debug(f"Instructions file: {args.instructions_file}")
+    logger.debug(f"Provider: {args.provider}")
+    logger.debug(f"Output file: {args.output_file}")
+    logger.debug(f"Debug dir: {args.debug_dir}")
+    logger.debug(f"Config file: {args.config}")
+
     spicy_context = load_file(args.instructions_file)
     rfc_content = load_rfc(args.rfc_id)
 
@@ -101,6 +110,7 @@ def main() -> None:
     system_instruction = prompt + spicy_context
     messages = [rfc_content]
 
+    exit()
     content, success = run_refinement_loop(
         llm_config, system_instruction, messages, max_retries=agent_config["max_retries"], debug_dir=args.debug_dir
     )

@@ -1,0 +1,131 @@
+module DHCP;
+
+const MAGIC_COOKIE = b"\x63\x82\x52\x76";
+
+type Opcode = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+};
+
+type DhcpMessageType = enum {
+    DHCPDISCOVER = 1,
+    DHCPOFFER = 2,
+    DHCPREQUEST = 3,
+    DHCPDECLINE = 4,
+    DHCPACK = 5,
+    DHCPNAK = 6,
+    DHCPRELEASE = 7,
+    DHCPINFORM = 8,
+};
+
+type OptionCode = enum {
+    PAD = 0,
+    SUBNET_MASK = 1,
+    TIME_OFFSET = 2,
+    ROUTER = 3,
+    TIME_SERVER = 4,
+    NAME_SERVER = 5,
+    DOMAIN_NAME_SERVER = 6,
+    LOG_SERVER = 7,
+    COOKIE_SERVER = 8,
+    LPR_SERVER = 9,
+    IMPRESS_SERVER = 10,
+    RESOURCE_LOCATION_SERVER = 11,
+    HOST_NAME = 12,
+    BOOT_FILE_SIZE = 13,
+    MERIT_DUMP_FILE = 14,
+    DOMAIN_NAME = 15,
+    SWAP_SERVER = 16,
+    ROOT_PATH = 17,
+    EXTENSIONS_PATH = 18,
+    IP_FORWARDING = 19,
+    NON_LOCAL_SOURCE_ROUTING = 20,
+    POLICY_FILTER = 21,
+    MAXIMUM_DATAGRAM_REASSEMBLY_SIZE = 22,
+    DEFAULT_IP_TTL = 23,
+    PATH_MTU_AGING_TIMEOUT = 24,
+    PATH_MTU_PLATEAU_TABLE = 25,
+    INTERFACE_MTU = 26,
+    ALL_SUBNETS_LOCAL = 27,
+    BROADCAST_ADDRESS = 28,
+    PERFORM_MASK_DISCOVERY = 29,
+    MASK_SUPPLIER = 30,
+    PERFORM_ROUTER_DISCOVERY = 31,
+    ROUTER_SOLICITATION_ADDRESS = 32,
+    STATIC_ROUTE = 33,
+    TRAILER_ENCAPSULATION = 34,
+    ARP_CACHE_TIMEOUT = 35,
+    ETHERNET_ENCAPSULATION = 36,
+    TCP_DEFAULT_TTL = 37,
+    TCP_KEEPALIVE_INTERVAL = 38,
+    TCP_KEEPALIVE_GARBAGE = 39,
+    NIS_DOMAIN = 40,
+    NIS_SERVERS = 41,
+    NTP_SERVERS = 42,
+    VENDOR_ENCAPSULATED_OPTIONS = 43,
+    NETBIOS_NAME_SERVERS = 44,
+    NETBIOS_DATAGRAM_DISTRIBUTION_SERVER = 45,
+    NETBIOS_NODE_TYPE = 46,
+    NETBIOS_SCOPE = 47,
+    X_WINDOW_SYSTEM_FONT_SERVER = 48,
+    X_WINDOW_SYSTEM_DISPLAY_MANAGER = 49,
+    NETWORK_INFORMATION_SERVICE_PLUS_DOMAIN = 50,
+    NETWORK_INFORMATION_SERVICE_PLUS_SERVERS = 51,
+    MOBILE_IP_HOME_AGENT = 54,
+    SMTP_SERVER = 55,
+    POP3_SERVER = 56,
+    NNTP_SERVER = 57,
+    DEFAULT_WWW_SERVER = 58,
+    DEFAULT_FINGER_SERVER = 59,
+    DEFAULT_IRC_SERVER = 60,
+    STREETTALK_SERVER = 61,
+    STREETTALK_DIRECTORY_ASSISTANCE_SERVER = 62,
+    REQUESTED_IP_ADDRESS = 50,
+    IP_ADDRESS_LEASE_TIME = 51,
+    OPTION_OVERLOAD = 52,
+    TFTP_SERVER_NAME = 66,
+    BOOTFILE_NAME = 67,
+    MESSAGE_TYPE = 53,
+    SERVER_IDENTIFIER = 54,
+    PARAMETER_REQUEST_LIST = 55,
+    MESSAGE = 56,
+    MAX_MESSAGE_SIZE = 57,
+    RENEWAL_TIME_VALUE = 58,
+    REBINDING_TIME_VALUE = 59,
+    VENDOR_CLASS_IDENTIFIER = 60,
+    CLIENT_IDENTIFIER = 61,
+    END = 255,
+};
+
+type Option = unit {
+    code: uint8 &convert=OptionCode($$);
+    length: uint8;
+    data: bytes &size=self.length;
+};
+
+type Options = unit {
+    magic_cookie: bytes &size=4 &requires=(self.magic_cookie == MAGIC_COOKIE);
+    options: Option[];
+    end: uint8 &requires=(self.end == OptionCode::END);
+};
+
+public type DHCPMessage = unit {
+    op: uint8 &convert=Opcode($$);
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: bitfield(16) {
+        broadcast: 0;
+        mbz: 1..15;
+    };
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    options: Options;
+};

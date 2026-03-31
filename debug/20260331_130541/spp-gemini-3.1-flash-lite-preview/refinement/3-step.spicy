@@ -1,0 +1,50 @@
+module CCSDS_SPP;
+
+# Space Packet Protocol (CCSDS 133.0-B-2)
+
+# Packet Primary Header (6 octets = 48 bits)
+# 1. Packet Version Number (3 bits)
+# 2. Packet Identification Field (13 bits: Type 1, SecHdrFlag 1, APID 11)
+# 3. Packet Sequence Control Field (16 bits: SeqFlags 2, SeqCount/Name 14)
+# 4. Packet Data Length (16 bits)
+
+public type SpacePacket = unit {
+    # Parse the 6-byte header
+    # We split it into fields based on the bit layout
+    # Byte 0: Version (3 bits), Type (1 bit), SecHdrFlag (1 bit), APID (3 bits)
+    # Byte 1: APID (8 bits)
+    # Byte 2: SeqFlags (2 bits), SeqCount/Name (6 bits)
+    # Byte 3: SeqCount/Name (8 bits)
+    # Byte 4: Data Length (8 bits)
+    # Byte 5: Data Length (8 bits)
+
+    # Using a 6-byte field to capture the header
+    header_bytes: bytes &size=6;
+
+    # Calculate fields from the header_bytes
+    # This is a conceptual approach as Spicy bitfield access on bytes is limited
+    # We will use a more standard approach for parsing the header
+    
+    # Re-defining the header structure
+    # Since we cannot use bitfield on a 48-bit integer, we parse byte by byte
+    
+    # Byte 0
+    b0: uint8;
+    # Byte 1
+    b1: uint8;
+    # Byte 2
+    b2: uint8;
+    # Byte 3
+    b3: uint8;
+    # Byte 4
+    b4: uint8;
+    # Byte 5
+    b5: uint8;
+
+    # Packet Data Length is in bytes 4 and 5
+    # C = (Total Number of Octets in the Packet Data Field) - 1
+    # Length = (b4 << 8) | b5
+    # Packet Data Field Size = Length + 1
+    
+    packet_data_field: bytes &size=((self.b4 << 8) | self.b5) + 1;
+};
