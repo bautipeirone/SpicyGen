@@ -10,7 +10,7 @@ class AnthropicProvider(LLMInterface):
     @classmethod
     def get_default_model(cls) -> str:
         # max_tokens maximo para este modelo 128000
-        return "claude-opus-4-6"
+        return "claude-haiku-4-5"
 
     def chat(self, system_instruction: str, messages: Messages) -> str:
         messages = [{ "role": "user", "content": message } for message in messages]
