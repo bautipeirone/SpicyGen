@@ -12,6 +12,12 @@ FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the follo
 
 Please fix the grammar to resolve these compilation errors. Only output the corrected grammar."""
 
+AGENT_LOOP_INSTRUCTIONS = """
+When you emit the grammar code, use the compile_grammar tool to check if it compiles. If the compile_grammar tool returns TERMINATE, you must say TERMINATE to end the chat.
+
+You can also use the retrieve_rfc_by_id tool to fetch additional RFC documents if needed.
+"""
+
 @dataclass
 class State:
     attempt: int = 0
@@ -73,7 +79,7 @@ def run_refinement_loop(
 
     assistant = autogen.AssistantAgent(
         name="SpicyDeveloper",
-        system_message=system_instruction + "\n\nWhen you emit the grammar code, use the compile_grammar tool to check if it compiles. If it returns TERMINATE, you must say TERMINATE to end the chat. You can also use the retrieve_rfc_by_id tool to fetch additional RFC documents if needed.",
+        system_message=system_instruction + AGENT_LOOP_INSTRUCTIONS,
         llm_config=llm_config,
     )
 

@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 prompt: LiteralString = """You are a communication protocol's specialist, and your job is to extract message structures from RFC specifications.
 You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
 Make sure to capture all the field value constraints and relationships.
-Only output the grammar in this language for the RFC the user gives you as input.
+Use the tools provided to generate correct and complete grammars in this language for the RFC the user gives you as input.
 """
 
 SPICY_CONTEXT_PATH = Path("./INSTRUCTIONS.md")
