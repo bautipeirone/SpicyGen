@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-MODELS="ollama/qwen3-vl:235b-instruct-cloud ollama/qwen3-coder:480b-cloud google/gemini-3-flash-preview"
+MODELS="ollama/qwen3-coder:480b-cloud google/gemini-3.1-flash-lite-preview"
 PROTOCOLS="tftp dhcp http dns"
 
 BASE_RFC_PATH=$SPEC_EXTRACT/rfc
