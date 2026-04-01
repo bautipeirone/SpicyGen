@@ -132,7 +132,7 @@ public type Foo = unit {
 };
 ```
 ---
-* **Bitfields** parse an integer value of a given size, and then make selected smaller bit ranges within that value available individually through dedicated identifiers. For example, the following unit parses 4 bytes as an uint32 and then makes the value of bit 0 available as f.x1, bits 1 to 2 as f.x2, and bits 3 to 4 as f.x3, respectively:
+* **Bitfields** parse an integer value of 8, 16, 32 or 64 bits (only these are supported), and then make selected smaller bit ranges within that value available individually through dedicated identifiers. For example, the following unit parses 4 bytes as an uint32 and then makes the value of bit 0 available as f.x1, bits 1 to 2 as f.x2, and bits 3 to 4 as f.x3, respectively:
 ```
 public type Foo = unit {
     f: bitfield(32) {
@@ -142,6 +142,7 @@ public type Foo = unit {
     };
 };
 ```
+Whenever there is a fixed-length field whose length is not byte-aligned (i.e., less than 8 bits or say 12 bits), you should use a bitfield to join it with following fields until reaching a size of 8/16/32/64.
 ---
 * **Enum** types associate labels with numerical values. Only unsigned integer values can be used in enum declarations. Each enum type comes with an implicitly defined `Undef` label with a value distinct from all other ones. When coerced into a boolean, an enum will be true iff it’s not `Undef`.
 ```

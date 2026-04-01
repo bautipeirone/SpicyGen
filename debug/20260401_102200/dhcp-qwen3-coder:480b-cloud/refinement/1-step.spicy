@@ -1,0 +1,50 @@
+module DHCP;
+
+public type Message = unit {
+    op: uint8 &convert=OpCode($$);
+    htype: uint8;
+    hlen: uint8 &requires=(self.htype != 1 || $$ == 6);  # For Ethernet, hlen should be 6
+    hops: uint8;
+    xid: uint32 &byteorder=big;
+    secs: uint16 &byteorder=big;
+    flags: uint16 &byteorder=big;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    options: Options;
+};
+
+type OpCode = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+};
+
+# Magic cookie value: 99.130.83.99
+const MagicCookie = b"\x63\x82\x53\x63";
+
+type Options = unit {
+    : MagicCookie;
+    options: DhcpOption[] &until=b"\xff";
+    : b"\xff";  # End option
+};
+
+type DhcpOption = unit {
+    code: uint8;
+    length: uint8 if(self.code != 0 && self.code != 255);  # Pad and End options don't have length
+    data: bytes &size=self.length if(self.code != 0 && self.code != 255);
+};
+
+type MessageType = enum {
+    DHCPDISCOVER = 1,
+    DHCPOFFER = 2,
+    DHCPREQUEST = 3,
+    DHCPDECLINE = 4,
+    DHCPACK = 5,
+    DHCPNAK = 6,
+    DHCPRELEASE = 7,
+    DHCPINFORM = 8,
+};
