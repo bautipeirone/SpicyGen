@@ -1,0 +1,6 @@
+module SegfaultFixed;
+
+public type Main = unit {
+  # This will correctly emit a compiling error
+  bar: uint;
+};

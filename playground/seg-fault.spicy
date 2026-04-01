@@ -1,0 +1,8 @@
+module Segfault;
+
+# Wrong type declaration
+type Foo = uint;
+
+public type Main = unit {
+  foo: Foo;
+};
