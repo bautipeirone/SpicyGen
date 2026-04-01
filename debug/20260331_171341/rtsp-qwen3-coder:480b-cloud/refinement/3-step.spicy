@@ -1,0 +1,67 @@
+module RTSP;
+
+public type Message = unit {
+    switch {
+        -> request: Request;
+        -> response: Response;
+    };
+};
+
+type Request = unit {
+    line: RequestLine;
+    headers: Header[];
+    : b"\r\n";
+    body: bytes &eod;
+};
+
+type Response = unit {
+    line: StatusLine;
+    headers: Header[];
+    : b"\r\n";
+    body: bytes &eod;
+};
+
+type RequestLine = unit {
+    method: Method;
+    : b" ";
+    uri: URI;
+    : b" ";
+    version: Version;
+    : b"\r\n";
+};
+
+type StatusLine = unit {
+    version: Version;
+    : b" ";
+    status_code: uint16 &convert=cast<integer>($$.split(b" ")[0]);
+    : b" ";
+    reason_phrase: bytes &until=b"\r\n";
+};
+
+type Method = unit {
+    name: /(?:OPTIONS|DESCRIBE|ANNOUNCE|SETUP|PLAY|PAUSE|TEARDOWN|GET_PARAMETER|SET_PARAMETER|REDIRECT|RECORD)/;
+};
+
+type Version = unit {
+    : b"RTSP/";
+    major: uint8 &convert=cast<integer>($$.split(b".")[0]);
+    : b".";
+    minor: uint8 &convert=cast<integer>($$.split(b" ")[0]);
+};
+
+type Header = unit {
+    name: Token;
+    : b": ";
+    value: HeaderValue;
+    : b"\r\n";
+};
+
+type HeaderValue = unit {
+    content: bytes &until=b"\r\n";
+};
+
+type URI = unit {
+    content: bytes &until=/[\s\r\n]/;
+};
+
+const Token = /[!#$%&'*+\-.0-9A-Z^_`a-z|~]+/;
