@@ -103,7 +103,7 @@ run_grammar_generator() {
   
   local DEBUG_ARGS=""
   if [[ -n "$DEBUG_DIR" ]]; then
-    DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL}/refinement"
+    DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL}"
   fi
 
   local METRICS_PATH="${OUTPUT_PATH%.spicy}.json"

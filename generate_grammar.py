@@ -16,6 +16,7 @@ prompt: LiteralString = """You are a communication protocol's specialist, and yo
 You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
 Make sure to capture all the field value constraints and relationships.
 Use the tools provided to generate correct and complete grammars in this language for the RFC the user gives you as input.
+Retrieve any additional information you need from other RFCs using the provided tool, so the grammar is as complete as possible.
 """
 
 SPICY_CONTEXT_PATH = Path("./INSTRUCTIONS.md")
@@ -66,7 +67,7 @@ def parse_args() -> argparse.Namespace:
         "--debug-dir",
         type=Path,
         default=None,
-        help="Directory to save persistent refinement step files",
+        help="Directory to save debug information like refinement steps and compilation errors for each attempt (optional)",
     )
     parser.add_argument(
         "--config",

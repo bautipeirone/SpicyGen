@@ -50,8 +50,15 @@ def run_refinement_loop(
 
     Returns a tuple of (grammar_code, compiled_successfully, attempts).
     """
+    refinement_dir = None
+    errors_dir = debug_dir / "errors" if debug_dir else None
     if debug_dir:
+        refinement_dir = debug_dir / "refinement"
+        errors_dir = debug_dir / "errors"
         debug_dir.mkdir(parents=True, exist_ok=True)
+        refinement_dir.mkdir(parents=True, exist_ok=True)
+        errors_dir.mkdir(parents=True, exist_ok=True)
+
 
     state = State()
 
@@ -62,11 +69,12 @@ def run_refinement_loop(
         
         state.attempt += 1
         state.last_code = cleaned_code
-        step_path = debug_dir / f"{state.attempt}-step.spicy" if debug_dir else None
+        step_path = refinement_dir / f"{state.attempt}-step.spicy" if refinement_dir else None
+        errors_path = errors_dir / f"{state.attempt}-errors.log" if errors_dir else None
 
         logger.info(f"Compiling attempt {state.attempt}/{max_retries} ...")
 
-        result = compile_spicy_grammar(cleaned_code, step_path)
+        result = compile_spicy_grammar(cleaned_code, { "step_path": step_path, "errors_path": errors_path })
 
         if result.success:
             state.success = True
