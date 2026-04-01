@@ -32,7 +32,7 @@ public type Main = unit {
 
 ```text
 spicyc -j no-seg-fault.spicy
-[error] seg-fault-fixed.spicy:5:3-5:12: unknown ID 'uint'
+[error] no-seg-fault.spicy:5:3-5:12: unknown ID 'uint'
 [error] spicyc: aborting after errors
 ```
 
