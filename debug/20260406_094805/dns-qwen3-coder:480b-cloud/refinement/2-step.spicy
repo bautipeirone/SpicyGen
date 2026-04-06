@@ -1,0 +1,74 @@
+module DNS;
+
+import spicy;
+
+type QR = enum {
+    Query = 0,
+    Response = 1,
+};
+
+type Opcode = enum {
+    QUERY = 0,
+    IQUERY = 1,
+    STATUS = 2,
+};
+
+type RCode = enum {
+    NoError = 0,
+    FormErr = 1,
+    ServFail = 2,
+    NXDomain = 3,
+    NotImp = 4,
+    Refused = 5,
+};
+
+public type Message = unit {
+    header: Header;
+    question: Question[header.qdcount];
+    answer: ResourceRecord[header.ancount];
+    authority: ResourceRecord[header.nscount];
+    additional: ResourceRecord[header.arcount];
+};
+
+type Header = unit {
+    id: uint16;
+    qr: bitfield(16) {
+        qr: 0; # QR - Query/Response flag
+        opcode: 1..4; # Operation code
+        aa: 5; # Authoritative Answer
+        tc: 6; # Truncation
+        rd: 7; # Recursion Desired
+        ra: 8; # Recursion Available
+        z: 9..11; # Reserved
+        rcode: 12..15; # Response code
+    } &bit-order=spicy::BitOrder::MSB0;
+    qdcount: uint16;
+    ancount: uint16;
+    nscount: uint16;
+    arcount: uint16;
+};
+
+type Question = unit {
+    qname: DomainName;
+    qtype: uint16;
+    qclass: uint16;
+};
+
+type ResourceRecord = unit {
+    name: DomainName;
+    type: uint16;
+    class: uint16;
+    ttl: uint32;
+    rdlength: uint16;
+    rdata: bytes &size=self.rdlength;
+};
+
+type DomainName = unit {
+    labels: Label[] &until=($$ == b"\x00");
+    : uint8; # terminating zero
+};
+
+type Label = unit {
+    length: uint8 &requires=(self.length <= 63);
+    data: bytes &size=self.length;
+};

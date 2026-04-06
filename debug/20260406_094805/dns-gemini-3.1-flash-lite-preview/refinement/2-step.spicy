@@ -1,0 +1,60 @@
+module DNS;
+
+# Basic types
+type Label = unit {
+    len: uint8 &requires=($$ <= 63);
+    data: bytes &size=self.len;
+};
+
+# Domain name parsing with compression support
+type DomainName = unit {
+    switch {
+        # Pointer: 11xxxxxx xxxxxxxx
+        -> pointer: bitfield(16) {
+            is_pointer: 0..1;
+            offset: 2..15;
+        } &requires=(self.pointer.is_pointer == 3);
+        # Label: 00xxxxxx
+        -> label: Label;
+        # End of name
+        -> end: uint8 &requires=($$ == 0);
+    };
+};
+
+# Header
+public type Message = unit {
+    id: uint16;
+    flags: bitfield(16) {
+        qr: 0;
+        opcode: 1..4;
+        aa: 5;
+        tc: 6;
+        rd: 7;
+        ra: 8;
+        z: 9..11;
+        rcode: 12..15;
+    };
+    qdcount: uint16;
+    ancount: uint16;
+    nscount: uint16;
+    arcount: uint16;
+
+    # Note: The actual parsing of these sections would require loops
+    # based on the counts, but Spicy's vector syntax is limited.
+    # This is a simplified representation.
+};
+
+type Question = unit {
+    qname: DomainName;
+    qtype: uint16;
+    qclass: uint16;
+};
+
+type ResourceRecord = unit {
+    name: DomainName;
+    type_val: uint16;
+    class_val: uint16;
+    ttl: int32;
+    rdlength: uint16;
+    rdata: bytes &size=self.rdlength;
+};

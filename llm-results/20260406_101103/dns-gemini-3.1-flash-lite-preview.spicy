@@ -1,0 +1,57 @@
+module DNS;
+
+type Label = unit {
+    len: uint8 &requires=($$ <= 63);
+    data: bytes &size=self.len;
+};
+
+type DomainName = unit {
+    # Peek at the first byte to decide if it's a pointer or a label
+    # Pointers start with 11 (0xc0)
+    switch {
+        -> pointer: bitfield(16) {
+            is_pointer: 0..1;
+            offset: 2..15;
+        } &requires=(self.pointer.is_pointer == 3);
+        -> label: Label;
+        -> end_label: uint8 &requires=($$ == 0);
+    };
+};
+
+public type Message = unit {
+    id: uint16;
+    flags: bitfield(16) {
+        qr: 0;
+        opcode: 1..4;
+        aa: 5;
+        tc: 6;
+        rd: 7;
+        ra: 8;
+        z: 9..11;
+        rcode: 12..15;
+    };
+    qdcount: uint16;
+    ancount: uint16;
+    nscount: uint16;
+    arcount: uint16;
+
+    questions: Question[self.qdcount];
+    answers: ResourceRecord[self.ancount];
+    authorities: ResourceRecord[self.nscount];
+    additionals: ResourceRecord[self.arcount];
+};
+
+type Question = unit {
+    qname: DomainName;
+    qtype: uint16;
+    qclass: uint16;
+};
+
+type ResourceRecord = unit {
+    name: DomainName;
+    type_val: uint16;
+    class_val: uint16;
+    ttl: int32;
+    rdlength: uint16;
+    rdata: bytes &size=self.rdlength;
+};

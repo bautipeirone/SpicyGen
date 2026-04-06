@@ -143,6 +143,54 @@ public type Foo = unit {
 };
 ```
 Whenever there is a fixed-length field whose length is not byte-aligned (i.e., less than 8 bits or say 12 bits), you should use a bitfield to join it with following fields until reaching a size of 8/16/32/64.
+It is important to use the correct bit order parsing, this can be modified via an attribute attached to the field. When parsing a `bitfield(16)` in network byte order and with bit order `spicy::BitOrder::LSB0` (default value of `&bit-order`), bits are numbered 0 to 15 from right to left.
+```
+MSB                           LSB
+      <--   1         <--       0
+6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
++---------------+---------------+
+|               |               |
++-------------------------------+
+```
+However, you may need to use the inverse order, where the most significant bit is numbered 0 on the left with higher bit numbers representing less significant bits to the right. Here is an example
+```
+MSB                           LSB
+0       -->         1    -->
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
++-+-+-+-+-------+-+-------------+
+|F|R|R|R| opcode|M| Payload len |
+|I|S|S|S|  (4)  |A|     (7)     |
+|N|V|V|V|       |S|             |
+| |1|2|3|       |K|             |
++-+-+-+-+-------+-+-------------+
+```
+To parse a bitfield with this order, do like the following example
+```
+import spicy;
+
+public type Header= unit {
+    : bitfield(32) {
+        fin: 0;
+        rsv: 1..3;
+        opcode: 4..7;
+        mask: 8;
+        payload_len: 9..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+```
+Without the `&bit-order` attribute, the final parsed structure would have been the reversed bitfield.
+```
+MSB                           LSB
+0       -->         1    -->
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
++-------------+-+-------+-+-+-+-+
+| Payload len |M| opcode|R|R|R|F|
+|     (7)     |A|  (4)  |S|S|S|I|
+|             |S|       |V|V|V|N|
+|             |K|       |3|2|1| |
++-------------+-+-------+-+-+-+-+
+```
+
 ---
 * **Enum** types associate labels with numerical values. Only unsigned integer values can be used in enum declarations. Each enum type comes with an implicitly defined `Undef` label with a value distinct from all other ones. When coerced into a boolean, an enum will be true iff it’s not `Undef`.
 ```

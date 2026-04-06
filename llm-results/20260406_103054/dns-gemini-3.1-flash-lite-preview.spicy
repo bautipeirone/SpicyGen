@@ -1,0 +1,51 @@
+module DNS;
+
+# Basic types
+type DomainName = unit {
+    # A domain name is a sequence of labels, terminated by a zero length octet.
+    # Labels can be compressed using pointers.
+    # This is a simplified representation as full recursive parsing of 
+    # compressed names is complex in this grammar format.
+    labels: bytes &until=b"\0";
+};
+
+type Header = unit {
+    id: uint16;
+    flags: bitfield(16) {
+        qr: 0;
+        opcode: 1..4;
+        aa: 5;
+        tc: 6;
+        rd: 7;
+        ra: 8;
+        z: 9..11;
+        rcode: 12..15;
+    };
+    qdcount: uint16;
+    ancount: uint16;
+    nscount: uint16;
+    arcount: uint16;
+};
+
+type Question = unit {
+    qname: DomainName;
+    qtype: uint16;
+    qclass: uint16;
+};
+
+type ResourceRecord = unit {
+    name: DomainName;
+    type_val: uint16;
+    class_val: uint16;
+    ttl: uint32;
+    rdlength: uint16;
+    rdata: bytes &size=self.rdlength;
+};
+
+public type Message = unit {
+    header: Header;
+    questions: Question[self.header.qdcount];
+    answers: ResourceRecord[self.header.ancount];
+    authorities: ResourceRecord[self.header.nscount];
+    additionals: ResourceRecord[self.header.arcount];
+};

@@ -1,0 +1,2 @@
+[error] debug/20260406_101103/dns-qwen3-coder:480b-cloud/refinement/1-step.spicy:26:5-26:35: cannot coerce expression 'b"\x00"' of type 'const bytes' to type 'bool'
+[error] spicyc: aborting after errors

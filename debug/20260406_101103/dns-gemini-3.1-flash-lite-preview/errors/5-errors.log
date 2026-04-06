@@ -1,0 +1,9 @@
+[error] debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:8:1-19:2: grammar DNS::DomainName (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:8:19-19:1), production switch_lha_3 (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:17:9-17:48) is ambiguous for look-ahead symbol(s) { uint<8> }
+
+[error] debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:21:1-42:2: grammar DNS::Message (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:21:23-42:1), production switch_2_lha_3 (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:17:9-17:48) is ambiguous for look-ahead symbol(s) { uint<8> }
+
+[error] debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:44:1-48:2: grammar DNS::Question (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:44:17-48:1), production switch_3_lha_3 (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:17:9-17:48) is ambiguous for look-ahead symbol(s) { uint<8> }
+
+[error] debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:50:1-57:2: grammar DNS::ResourceRecord (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:50:23-57:1), production switch_4_lha_3 (debug/20260406_101103/dns-gemini-3.1-flash-lite-preview/refinement/5-step.spicy:17:9-17:48) is ambiguous for look-ahead symbol(s) { uint<8> }
+
+[error] spicyc: aborting after errors

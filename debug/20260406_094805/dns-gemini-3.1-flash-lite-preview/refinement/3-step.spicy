@@ -1,0 +1,26 @@
+module DNS;
+
+type Label = unit {
+    len: uint8 &requires=($$ <= 63);
+    data: bytes &size=self.len;
+};
+
+type DomainName = unit {
+    switch {
+        # Pointer: 11xxxxxx xxxxxxxx
+        -> pointer: uint16 &requires=(($$ & 0xc000) == 0xc000);
+        # Label: 00xxxxxx
+        -> label: Label;
+        # End of name
+        -> end: uint8 &requires=($$ == 0);
+    };
+};
+
+public type Message = unit {
+    id: uint16;
+    flags: uint16;
+    qdcount: uint16;
+    ancount: uint16;
+    nscount: uint16;
+    arcount: uint16;
+};
