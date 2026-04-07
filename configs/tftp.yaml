@@ -1,0 +1,17 @@
+
+parsers:
+  - name: "Little Zeek"
+    file: "examples/little_tftp.spicy"
+    entrypoint: "TFTP::Packet"
+
+  - name: "Zeek"
+    file: "examples/tftp.spicy"
+    entrypoint: "TFTP::Packet"
+
+  - name: "Gemini 3.1 Flash"
+    file: "llm-results/20260401_102200/tftp-gemini-3.1-flash-lite-preview.spicy"
+    entrypoint: "TFTP::Packet"
+
+  - name: "Qwen 3 Coder 480b"
+    file: "llm-results/20260401_102200/tftp-qwen3-coder:480b-cloud.spicy"
+    entrypoint: "TFTP::Packet"

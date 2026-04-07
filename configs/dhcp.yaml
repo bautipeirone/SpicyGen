@@ -1,0 +1,15 @@
+# Parser comparison config for DHCP protocol
+# Usage: python compare_parsers.py configs/dhcp.yaml data/pcap/dhcp.pcap --port 67/udp%orig
+
+parsers:
+  - name: "Zeek"
+    file: "examples/dhcp.spicy"
+    entrypoint: "DHCP::Message"
+
+  - name: "Gemini 3.1 Flash"
+    file: "llm-results/20260401_102200/dhcp-gemini-3.1-flash-lite-preview.spicy"
+    entrypoint: "DHCP::DHCPMessage"
+
+  - name: "Qwen 3 Coder 480b"
+    file: "llm-results/20260401_102200/dhcp-qwen3-coder:480b-cloud.spicy"
+    entrypoint: "DHCP::Message"
