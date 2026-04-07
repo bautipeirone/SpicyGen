@@ -1,0 +1,3 @@
+[error] debug/20260407_132922/bfd-qwen3-coder:480b-cloud/refinement/1-step.spicy:85:32-85:42: unsupported operator: <unit { XXX }>.length
+[error] debug/20260407_132922/bfd-qwen3-coder:480b-cloud/refinement/1-step.spicy:85:52-85:67: unsupported operator: <unit { XXX }>.state_flags
+[error] spicyc: aborting after errors

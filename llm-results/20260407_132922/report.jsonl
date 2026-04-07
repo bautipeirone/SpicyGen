@@ -1,0 +1,2 @@
+{"model": "gemini-3.1-flash-lite-preview", "provider": "google", "protocol": "/home/bautistapeirone/Desktop/spec-extract/rfc/bfd-rfc.txt", "success": true, "attempts": 1, "time_elapsed_s": 19.08}
+{"model": "qwen3-coder:480b-cloud", "provider": "ollama", "protocol": "/home/bautistapeirone/Desktop/spec-extract/rfc/bfd-rfc.txt", "success": true, "attempts": 2, "time_elapsed_s": 368.34}

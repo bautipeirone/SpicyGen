@@ -191,6 +191,20 @@ MSB                           LSB
 +-------------+-+-------+-+-+-+-+
 ```
 
+Fields inside the bitfield should have a `&convert` attribute in case these fields correspond to an `enum` type. For example
+```
+type Flag = enum {
+  On,
+  Off,
+}
+
+type Bar = unit {
+    f: bitfield(8) {
+        flag: 0..1 &convert=Flag($$);
+    };
+};
+```
+
 ---
 * **Enum** types associate labels with numerical values. Only unsigned integer values can be used in enum declarations. Each enum type comes with an implicitly defined `Undef` label with a value distinct from all other ones. When coerced into a boolean, an enum will be true iff it’s not `Undef`.
 ```

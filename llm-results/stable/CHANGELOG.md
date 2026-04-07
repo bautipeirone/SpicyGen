@@ -4,15 +4,20 @@ This changelog tracks which release grammars were updated in `llm-results/stable
 
 ## 2026-04-07
 
-Changed release grammars: `BFD`, `DNS qwen`
+Changed release grammars: `BFD`, `DNS`
+
+### Prompt tuning
+Modify prompt to recommend using the `&convert` attribute for bitfields' fields.
 
 ### BFD
 
-Promoted version: `20260407_113332`
+Promoted version for `qwen3-coder:480b-cloud`: `20260407_132922` \
+Promoted version for `gemini-3.1-flash-lite-preview`: `20260407_135803`
 
 | Version | Compiles | Packet parsing test |
 | --- | --- | --- |
-| `20260407_113332` | Yes | - |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
 
 ### DNS qwen
 
@@ -20,7 +25,8 @@ Promoted version: `20260407_104703`
 
 | Version | Compiles | Packet parsing test |
 | --- | --- | --- |
-| `20260407_104703` | Yes | - |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
 
 ## 2026-04-01
 
@@ -32,7 +38,8 @@ Promoted version: `20260401_114208`
 
 | Version | Compiles | Packet parsing test |
 | --- | --- | --- |
-| `20260401_114208` | Yes | - |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
 
 ### TFTP
 
@@ -40,11 +47,12 @@ Promoted version: `20260401_102200`
 
 | Version | Compiles | Packet parsing test |
 | --- | --- | --- |
-| `20260401_102200` | Yes | - |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
 
 ## 2026-03-31
 
-Changed release grammars: `RSTP`
+Changed release grammars: `RSTP`, `LDAP`
 
 ### RSTP
 
@@ -52,4 +60,15 @@ Promoted version: `20260331_171341`
 
 | Version | Compiles | Packet parsing test |
 | --- | --- | --- |
-| `20260331_171341` | Yes | - |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
+
+
+### LDAP
+
+Promoted version: `20260331_173440`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | No | - |
+| `gemini-3.1-flash-lite-preview` | No | - |

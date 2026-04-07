@@ -1,8 +1,11 @@
+# Config
 .env
 .vscode
 __pycache__/
 .cache/
+.codex
 
+# Builds
 a.out*
 *.hlto
 
