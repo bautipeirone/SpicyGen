@@ -19,9 +19,9 @@ Promoted version for `gemini-3.1-flash-lite-preview`: `20260407_135803`
 | `qwen3-coder:480b-cloud` | Yes | - |
 | `gemini-3.1-flash-lite-preview` | Yes | - |
 
-### DNS qwen
+### DNS
 
-Promoted version: `20260407_104703`
+Promoted version: `20260406_103054`
 
 | Version | Compiles | Packet parsing test |
 | --- | --- | --- |
