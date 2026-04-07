@@ -1,0 +1,91 @@
+module bfd;
+
+type Diagnostic = enum {
+    NoDiagnostic = 0,
+    ControlDetectionTimeExpired = 1,
+    EchoFunctionFailed = 2,
+    NeighborSignaledSessionDown = 3,
+    ForwardingPlaneReset = 4,
+    PathDown = 5,
+    ConcatenatedPathDown = 6,
+    AdministrativelyDown = 7,
+    ReverseConcatenatedPathDown = 8,
+};
+
+type State = enum {
+    AdminDown = 0,
+    Down = 1,
+    Init = 2,
+    Up = 3,
+};
+
+type AuthType = enum {
+    Reserved = 0,
+    SimplePassword = 1,
+    KeyedMD5 = 2,
+    MeticulousKeyedMD5 = 3,
+    KeyedSHA1 = 4,
+    MeticulousKeyedSHA1 = 5,
+};
+
+public type BFDControlPacket = unit {
+    # Parse the header fields
+    version_and_diag: bitfield(8) {
+        version: 0..2;
+        diag: 3..7;
+    };
+    
+    flags: bitfield(8) {
+        sta: 0..1;
+        p: 2;
+        f: 3;
+        c: 4;
+        a: 5;
+        d: 6;
+        m: 7;
+    };
+    
+    detect_mult: uint8 &requires=($$ > 0);
+    length: uint8;
+    
+    my_discriminator: uint32;
+    your_discriminator: uint32;
+    desired_min_tx_interval: uint32 &convert=cast<interval>($$ * 1e-6); # Convert microseconds to seconds
+    required_min_rx_interval: uint32 &convert=cast<interval>($$ * 1e-6); # Convert microseconds to seconds
+    required_min_echo_rx_interval: uint32 &convert=cast<interval>($$ * 1e-6); # Convert microseconds to seconds
+    
+    # Authentication section if present
+    auth_section: BFDAuthSection if(self.flags.a == 1);
+};
+
+type BFDAuthSection = unit {
+    auth_type: uint8;
+    auth_len: uint8;
+    
+    # Switch based on auth type
+    switch (self.auth_type) {
+        1 -> simple_password: BFDSimplePasswordAuth;
+        2, 3 -> keyed_md5: BFDKeyedMD5Auth;
+        4, 5 -> keyed_sha1: BFDKeyedSHA1Auth;
+        * -> data: bytes &eod;
+    };
+};
+
+type BFDSimplePasswordAuth = unit {
+    auth_key_id: uint8;
+    password: bytes &eod;
+};
+
+type BFDKeyedMD5Auth = unit {
+    auth_key_id: uint8;
+    reserved: uint8 &requires=($$ == 0);
+    sequence_number: uint32;
+    auth_key_digest: bytes &size=16; # MD5 digest is 16 bytes
+};
+
+type BFDKeyedSHA1Auth = unit {
+    auth_key_id: uint8;
+    reserved: uint8 &requires=($$ == 0);
+    sequence_number: uint32;
+    auth_key_hash: bytes &size=20; # SHA1 hash is 20 bytes
+};
