@@ -2,6 +2,20 @@
 
 This changelog tracks which release grammars were updated in `llm-results/stable`.
 
+## 2026-04-08
+
+Add release grammar: `IRC`
+
+### IRC
+
+Promoted version: `20260408_115044`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
+
+
 ## 2026-04-07
 
 Add release grammars: `ICMPv4`, `VXLAN`, `UDP` \
