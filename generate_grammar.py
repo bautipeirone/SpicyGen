@@ -5,7 +5,7 @@ from src.llm.providers import get_autogen_config
 from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
 from src.utils import load_file, read_config
-from src.logger import logger
+from src.logger import enable_runtime_log_file, logger
 from typing import LiteralString
 from pathlib import Path
 import argparse
@@ -101,7 +101,7 @@ def save_response(path: Path, response: str) -> None:
 
 def main() -> None:
     args = parse_args()
-    load_dotenv()
+    enable_runtime_log_file(args.debug_dir)
 
     logger.info(f"Generating grammar for {args.rfc_id} using {args.model}...")
     logger.debug(f"Instructions file: {args.instructions_file}")
