@@ -1,0 +1,21 @@
+module IRC;
+
+# IRC Protocol Grammar based on RFC 1459
+
+const SPACE = b" ";
+const CRLF = b"\r\n";
+
+# The IRC message format: [':' <prefix> <SPACE> ] <command> <params> <crlf>
+
+public type Message = unit {
+    # Optional prefix
+    prefix: bytes &until=SPACE if (self.peek(1) == b":") &convert=$$.sub(1);
+    
+    # Command
+    command: bytes &until=SPACE;
+    
+    # Parameters
+    params: bytes &until=CRLF;
+    
+    : CRLF;
+};

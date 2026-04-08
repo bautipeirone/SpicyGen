@@ -1,0 +1,27 @@
+module IRC;
+
+const CRLF = b"\x0d\x0a";
+const SPACE = b" ";
+const COLON = b":";
+
+# Basic IRC message structure
+public type Message = unit {
+    prefix: Prefix? &optional;
+    command: Command;
+    params: Params &eod;
+};
+
+type Prefix = unit {
+    : b":";
+    data: bytes &until=SPACE;
+    : SPACE;
+};
+
+type Command = unit {
+    name: bytes &until=SPACE;
+    : SPACE;
+};
+
+type Params = unit {
+    data: bytes &eod;
+};

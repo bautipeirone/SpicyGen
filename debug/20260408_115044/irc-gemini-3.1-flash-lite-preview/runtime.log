@@ -1,0 +1,27 @@
+[11:52:51] [INFO] Generating grammar for /home/bautistapeirone/Desktop/spec-extract/rfc/irc-rfc.txt using gemini-3.1-flash-lite-preview...
+[11:52:51] [DEBUG] Instructions file: INSTRUCTIONS.md
+[11:52:51] [DEBUG] Provider: google
+[11:52:51] [DEBUG] Output file: /home/bautistapeirone/Desktop/spec-extract/code/spicy/llm-results/20260408_115044/irc-gemini-3.1-flash-lite-preview.spicy
+[11:52:51] [DEBUG] Debug dir: debug/20260408_115044/irc-gemini-3.1-flash-lite-preview
+[11:52:51] [DEBUG] Config file: None
+[11:52:54] [INFO] Compiling attempt 1/5 ...
+[11:52:54] [WARNING] Compilation failed on attempt 1.
+[11:52:54] [ERROR] Compilation Errors:
+[error] debug/20260408_115044/irc-gemini-3.1-flash-lite-preview/refinement/1-step.spicy:24:24-24:33: unit does not have field 'input'
+[error] spicyc: aborting after errors
+
+[11:52:57] [INFO] Compiling attempt 2/5 ...
+[11:52:57] [WARNING] Compilation failed on attempt 2.
+[11:52:57] [ERROR] Compilation Errors:
+[error] debug/20260408_115044/irc-gemini-3.1-flash-lite-preview/refinement/2-step.spicy:12:66-12:66: syntax error, unexpected '='
+[error] spicyc: parse error
+
+[11:52:59] [INFO] Compiling attempt 3/5 ...
+[11:52:59] [WARNING] Compilation failed on attempt 3.
+[11:52:59] [ERROR] Compilation Errors:
+[error] debug/20260408_115044/irc-gemini-3.1-flash-lite-preview/refinement/3-step.spicy:10:36-10:47: call does not match any method: <IRC::Message>.peek(<uint<64>>)
+[error] spicyc: aborting after errors
+
+[11:53:01] [INFO] Compiling attempt 4/5 ...
+[11:53:05] [INFO] Compilation succeeded on attempt 4.
+[11:53:05] [INFO] Saved grammar to /home/bautistapeirone/Desktop/spec-extract/code/spicy/llm-results/20260408_115044/irc-gemini-3.1-flash-lite-preview.spicy

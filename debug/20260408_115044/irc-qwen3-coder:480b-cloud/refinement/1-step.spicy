@@ -1,0 +1,43 @@
+module IRC;
+
+const CR = b"\x0d";
+const LF = b"\x0a";
+const CRLF = b"\x0d\x0a";
+
+const Nickname = /[a-zA-Z\[\]\\`_^{|}][a-zA-Z0-9\[\]\\`_^{|}-]*/;
+const Channel = /[&#][^ \a\t\r\n,]+/;
+const ServerName = /[a-zA-Z0-9][a-zA-Z0-9.-]*/;
+const Host = /[a-zA-Z0-9][a-zA-Z0-9.-]*/;
+const User = /[^ @]+/;
+const MessageText = /[^:\r\n][^\r\n]*/;
+
+public type Message = unit {
+    prefix: Prefix? &optional;
+    command: Command;
+    params: Parameter[] &until=b"\r\n";
+};
+
+type Prefix = unit {
+    : b":";
+    server_or_nick: bytes &until=b" ";
+    user_host_part: (UserHostPart)? &optional;
+};
+
+type UserHostPart = unit {
+    user: bytes &until=b"@";
+    host: bytes &until=b" ";
+};
+
+type Command = unit {
+    cmd: bytes &until=b" ";
+};
+
+type Parameter = unit {
+    : b" ";
+    param: bytes &(self.is_trailing() ? &until=CRLF : &until=b" ");
+};
+
+# Helper function to determine if parameter is trailing
+function Parameter::is_trailing() {
+    return self.param.startswith(b":");
+}

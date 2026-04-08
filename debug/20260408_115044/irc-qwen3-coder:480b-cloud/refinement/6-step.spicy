@@ -1,0 +1,8 @@
+module IRC;
+
+const CRLF = b"\x0d\x0a";
+
+public type Message = unit {
+    data: bytes &until=CRLF;
+    : CRLF;
+};

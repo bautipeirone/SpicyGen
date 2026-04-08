@@ -1,10 +1,27 @@
 # Stable Changelog
 
-This changelog tracks which release grammars were updated in `llm-results/stable`.
+This changelog tracks which release grammars were updated in `stable` and `wip`. Grammars in the latter one don't compile yet or need polishing via prompt refinement.
+
+## Summary
+
+| Protocol | qwen3-coder:480b-cloud Compiles | qwen3-coder:480b-cloud Packet test | gemini-3.1-flash-lite-preview Compiles | gemini-3.1-flash-lite-preview Packet test |
+| --- | --- | --- | --- | --- |
+| IRC | Yes | - | Yes | - |
+| DHCP | Yes | - | Yes | - |
+| ICMPv4 | Yes | - | Yes | - |
+| VXLAN | Yes | - | Yes | - |
+| UDP | Yes | - | Yes | - |
+| BFD | Yes | - | Yes | - |
+| DNS | Yes | - | Yes | - |
+| SPP | Yes | - | Yes | - |
+| TFTP | Yes | - | Yes | - |
+| RSTP | Yes | - | Yes | - |
+| LDAP | No | - | No | - |
 
 ## 2026-04-08
 
-Add release grammar: `IRC`
+Add release grammar: `IRC` \
+Change release grammar: `DHCP`
 
 ### IRC
 
@@ -15,6 +32,11 @@ Promoted version: `20260408_115044`
 | `qwen3-coder:480b-cloud` | Yes | - |
 | `gemini-3.1-flash-lite-preview` | Yes | - |
 
+
+### DHCP
+
+Promoted version for `qwen3-coder:480b-cloud`: `20260408_002501` \
+Promoted version for `gemini-3.1-flash-lite-preview`: `20260401_102200`
 
 ## 2026-04-07
 

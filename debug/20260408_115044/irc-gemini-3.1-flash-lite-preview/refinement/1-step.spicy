@@ -1,0 +1,28 @@
+module IRC;
+
+# IRC Protocol Grammar based on RFC 1459
+
+const SPACE = b" ";
+const CRLF = b"\r\n";
+
+type Prefix = unit {
+    : b":";
+    prefix: bytes &until=SPACE;
+};
+
+type Command = unit {
+    command: bytes &until=SPACE;
+};
+
+type Params = unit {
+    # Parameters are space-separated, with the last one optionally prefixed by ':'
+    # This is a simplified representation of the parameter parsing
+    params: bytes &eod;
+};
+
+public type Message = unit {
+    prefix: Prefix if (self.input.peek(1) == b":");
+    command: Command;
+    params: Params;
+    : CRLF;
+};
