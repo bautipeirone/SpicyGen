@@ -1,0 +1,31 @@
+module DHCP;
+
+# DHCP Message Format (RFC 2131, Figure 1)
+
+type Flags = bitfield(16) {
+    broadcast: 0;
+    mbz: 1..15;
+};
+
+public type Message = unit {
+    op: uint8;
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: Flags;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    file: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    
+    # The options field is variable length.
+    # RFC 2131 states: "The first four octets of the 'options' field 
+    # of the DHCP message contain the (decimal) values 99, 130, 83 and 99"
+    magic_cookie: b"\x63\x82\x53\x63";
+    options: bytes &eod;
+};

@@ -1,0 +1,71 @@
+module DHCP;
+
+import spicy;
+
+type OpCode = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+};
+
+type HType = enum {
+    ETHERNET = 1,
+    EXPERIMENTAL_ETHERNET = 2,
+    AMATEUR_RADIO_AX25 = 3,
+    PROTEON_TOKEN_RING = 4,
+    CHAOS = 5,
+    IEEE_802 = 6,
+    ARCNET = 7,
+    HYPERCHANNEL = 8,
+    LANSTAR = 9,
+    AUTONET_SHORT_ADDRESS = 10,
+    LOCAL_TALK = 11,
+    LOCAL_NET = 12,
+    ULTRA_LINK = 13,
+    SMDS = 14,
+    FRAME_RELAY = 15,
+    ATM = 16,
+    HDLC = 17,
+    FIBRE_CHANNEL = 18,
+    ATM2 = 19,
+    SERIAL_LINE = 20,
+};
+
+type Flags = unit {
+    f: bitfield(16) {
+        broadcast: 0;
+        mbz: 1..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+# Magic cookie for DHCP options: 99, 130, 83, 99
+const MAGIC_COOKIE = b"\x63\x82\x53\x63";
+
+type DhcpOption = unit {
+    code: uint8;
+    len: uint8 if (self.code != 255);
+    data: bytes &size=self.len if (self.code != 255 && self.len > 0);
+};
+
+# Parse options until we find the END option (code 255)
+type OptionsParser = unit {
+    magic_cookie: bytes &size=4 &requires=($$ == MAGIC_COOKIE);
+    options: DhcpOption[] &eod;
+};
+
+public type Message = unit {
+    op: uint8 &convert=OpCode($$);
+    htype: uint8 &convert=HType($$);
+    hlen: uint8 &requires=(self.htype != HType::ETHERNET || $$ == 6);
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: Flags;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    filename: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    options: OptionsParser;
+};

@@ -83,6 +83,11 @@ def run_refinement_loop(
 
         logger.warning(f"Compilation failed on attempt {state.attempt}.")
         logger.error(f"Compilation Errors:\n{result.errors}\n")
+
+        if state.attempt >= max_retries:
+            logger.warning(f"Reached max compilation attempts ({max_retries}). Stopping.")
+            return f"{FEEDBACK_TEMPLATE.format(errors=result.errors)}\n\nThis was the last allowed attempt. Please say TERMINATE."
+
         return FEEDBACK_TEMPLATE.format(errors=result.errors)
 
     assistant = autogen.AssistantAgent(
@@ -91,10 +96,14 @@ def run_refinement_loop(
         llm_config=llm_config,
     )
 
+    # max_consecutive_auto_reply is set higher than max_retries because Autogen
+    # counts ALL auto-replies (including default_auto_reply nudges when the LLM
+    # responds without a tool call), not just actual compilation attempts.
+    # The real retry limit is enforced inside compile_grammar via state.attempt.
     user_proxy = autogen.UserProxyAgent(
         name="CompilerProxy",
         human_input_mode="NEVER",
-        max_consecutive_auto_reply=max_retries,
+        max_consecutive_auto_reply=max_retries * 3,
         is_termination_msg=lambda x: x.get("content", "") and "TERMINATE" in x.get("content", ""),
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call

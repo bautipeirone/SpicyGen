@@ -1,0 +1,2 @@
+[error] debug/20260408_002501/dhcp-qwen3-coder:480b-cloud/refinement/3-step.spicy:62:31-62:39: unit does not have field 'code'
+[error] spicyc: aborting after errors

@@ -25,7 +25,7 @@
 * Fields can have **constraints** on their values. The following example requires `x` to be less than 5:
 ```
 type Foo = unit {
-    x: int8 &requires=($$ < 5);
+    x: int8 &requires=(2 < $$ && $$ < 5);
 };
 ```
 * The **size** attribute specifies the size in bytes a field must consume. The value for the size attribute can reference unit parameters or previous field's values.
