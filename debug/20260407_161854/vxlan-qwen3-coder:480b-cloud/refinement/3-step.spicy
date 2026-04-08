@@ -1,0 +1,123 @@
+module vxlan;
+
+import spicy;
+
+# VXLAN header flags
+type VXLANFlags = unit {
+    f: bitfield(8) {
+        reserved1: 0..3;
+        i_flag: 4;  # I flag - must be set to 1 for valid VNI
+        reserved2: 5..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    
+    # Validate that I flag is set
+    : void &requires=(self.f.i_flag == 1);
+};
+
+# VXLAN header structure
+type VXLANHeader = unit {
+    flags: VXLANFlags;
+    reserved1: uint24 &requires=(self.reserved1 == 0);
+    vni: uint24;  # VXLAN Network Identifier
+    reserved2: uint8 &requires=(self.reserved2 == 0);
+};
+
+# UDP header with VXLAN-specific validation
+type UDPHeader = unit {
+    src_port: uint16;
+    dst_port: uint16;
+    length: uint16;
+    checksum: uint16;
+    
+    # Validate VXLAN destination port (should be 4789 by default)
+    : void &requires=(self.dst_port == 4789 || self.dst_port != 0);  # Allow configurable ports
+};
+
+# IPv4 header
+type IPv4Header = unit {
+    version_ihl: uint8;
+    type_of_service: uint8;
+    total_length: uint16;
+    identification: uint16;
+    flags_fragment: uint16;
+    ttl: uint8;
+    protocol: uint8 &requires=(self.protocol == 17);  # UDP protocol
+    header_checksum: uint16;
+    src_ip: addr &ipv4;
+    dst_ip: addr &ipv4;
+    
+    # Verify this is IPv4 (version = 4)
+    : void &requires=((self.version_ihl >> 4) == 4);
+};
+
+# IPv6 header
+type IPv6Header = unit {
+    version_tc_fl: uint32;
+    payload_length: uint16;
+    next_header: uint8 &requires=(self.next_header == 17);  # UDP protocol
+    hop_limit: uint8;
+    src_ip: addr &ipv6;
+    dst_ip: addr &ipv6;
+    
+    # Verify this is IPv6 (version = 6)
+    : void &requires=((self.version_tc_fl >> 28) == 6);
+};
+
+# Ethernet header
+type EthernetHeader = unit {
+    dst_mac: bytes &size=6;
+    src_mac: bytes &size=6;
+    ethertype: uint16;
+    
+    # Handle VLAN tagging if present (0x8100 indicates VLAN tagged frame)
+    vlan_present: uint16 if(self.ethertype == 0x8100);
+    actual_ethertype: uint16 if(self.ethertype == 0x8100);
+};
+
+# Inner Ethernet payload
+type InnerEthernetPayload = unit {
+    header: EthernetHeader;
+    payload: bytes &eod;  # Rest of the frame
+};
+
+# Main VXLAN packet structure
+public type VXLANPacket = unit {
+    outer_ethernet: EthernetHeader;
+    
+    # Determine based on ethertype if it's IPv4 or IPv6
+    switch (self.outer_ethernet.ethertype) {
+        0x0800 -> {  # IPv4
+            outer_ipv4: IPv4Header;
+            outer_udp: UDPHeader;
+            vxlan_header: VXLANHeader;
+            inner_payload: InnerEthernetPayload;
+        }
+        0x86dd -> {  # IPv6
+            outer_ipv6: IPv6Header;
+            outer_udp: UDPHeader;
+            vxlan_header: VXLANHeader;
+            inner_payload: InnerEthernetPayload;
+        }
+        0x8100 -> {  # VLAN tagged, need to check the actual ethertype
+            # For VLAN tagged frames, we need to look at the next ethertype field
+            vlan_tag: uint16;
+            vlan_ethertype: uint16;
+            switch (self.vlan_ethertype) {
+                0x0800 -> {  # IPv4
+                    outer_ipv4: IPv4Header;
+                    outer_udp: UDPHeader;
+                    vxlan_header: VXLANHeader;
+                    inner_payload: InnerEthernetPayload;
+                }
+                0x86dd -> {  # IPv6
+                    outer_ipv6: IPv6Header;
+                    outer_udp: UDPHeader;
+                    vxlan_header: VXLANHeader;
+                    inner_payload: InnerEthernetPayload;
+                }
+                * -> : bytes &eod;  # Unknown ethertype after VLAN
+            };
+        }
+        * -> : bytes &eod;  # Unknown ethertype
+    };
+};

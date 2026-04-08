@@ -4,10 +4,39 @@ This changelog tracks which release grammars were updated in `llm-results/stable
 
 ## 2026-04-07
 
+Add release grammars: `ICMPv4`, `VXLAN`, `UDP` \
 Changed release grammars: `BFD`, `DNS`
 
 ### Prompt tuning
 Modify prompt to recommend using the `&convert` attribute for bitfields' fields.
+
+### ICMPv4
+
+Promoted version: `20260407_161854`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
+
+### VXLAN
+
+Promoted version: `20260407_161854`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
+
+### UDP
+
+Promoted version: `20260407_161854`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
+
 
 ### BFD
 

@@ -1,0 +1,110 @@
+module icmp;
+
+type MessageType = enum {
+    EchoReply = 0,
+    DestinationUnreachable = 3,
+    SourceQuench = 4,
+    Redirect = 5,
+    Echo = 8,
+    TimeExceeded = 11,
+    ParameterProblem = 12,
+    Timestamp = 13,
+    TimestampReply = 14,
+    InformationRequest = 15,
+    InformationReply = 16
+};
+
+type DestinationUnreachableCode = enum {
+    NetUnreachable = 0,
+    HostUnreachable = 1,
+    ProtocolUnreachable = 2,
+    PortUnreachable = 3,
+    FragmentationNeededAndDFSet = 4,
+    SourceRouteFailed = 5
+};
+
+type RedirectCode = enum {
+    RedirectDatagramsForNetwork = 0,
+    RedirectDatagramsForHost = 1,
+    RedirectDatagramsForTOSAndNetwork = 2,
+    RedirectDatagramsForTOSAndHost = 3
+};
+
+type TimeExceededCode = enum {
+    TimeToLiveExceededInTransit = 0,
+    FragmentReassemblyTimeExceeded = 1
+};
+
+type ParameterProblemCode = enum {
+    PointerIndicatesError = 0
+};
+
+public type ICMP = unit {
+    type_value: uint8 &convert=MessageType($$);
+    code: uint8;
+    checksum: uint16;
+    switch (self.type_value) {
+        MessageType::DestinationUnreachable -> dest_unreachable: DestinationUnreachable;
+        MessageType::TimeExceeded -> time_exceeded: TimeExceeded;
+        MessageType::ParameterProblem -> param_problem: ParameterProblem;
+        MessageType::SourceQuench -> source_quench: SourceQuench;
+        MessageType::Redirect -> redirect: Redirect;
+        MessageType::Echo,
+        MessageType::EchoReply -> echo: Echo;
+        MessageType::Timestamp,
+        MessageType::TimestampReply -> timestamp: Timestamp;
+        MessageType::InformationRequest,
+        MessageType::InformationReply -> info: Information;
+        * -> unknown: bytes &eod;
+    };
+};
+
+type DestinationUnreachable = unit {
+    unused: uint32;
+    ip_header: bytes &size=8; # First 64 bits of original datagram's IP header
+    data: bytes &size=8; # First 64 bits of original datagram's data
+};
+
+type TimeExceeded = unit {
+    unused: uint32;
+    ip_header: bytes &size=8; # First 64 bits of original datagram's IP header
+    data: bytes &size=8; # First 64 bits of original datagram's data
+};
+
+type ParameterProblem = unit {
+    pointer: uint8;
+    unused: bytes &size=3;
+    ip_header: bytes &size=8; # First 64 bits of original datagram's IP header
+    data: bytes &size=8; # First 64 bits of original datagram's data
+};
+
+type SourceQuench = unit {
+    unused: uint32;
+    ip_header: bytes &size=8; # First 64 bits of original datagram's IP header
+    data: bytes &size=8; # First 64 bits of original datagram's data
+};
+
+type Redirect = unit {
+    gateway_address: addr &ipv4;
+    ip_header: bytes &size=8; # First 64 bits of original datagram's IP header
+    data: bytes &size=8; # First 64 bits of original datagram's data
+};
+
+type Echo = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    data: bytes &eod;
+};
+
+type Timestamp = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    originate_timestamp: uint32;
+    receive_timestamp: uint32;
+    transmit_timestamp: uint32;
+};
+
+type Information = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+};
