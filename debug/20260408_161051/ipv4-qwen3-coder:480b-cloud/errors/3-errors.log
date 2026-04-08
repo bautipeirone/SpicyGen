@@ -1,0 +1,2 @@
+[error] debug/20260408_161051/ipv4-qwen3-coder:480b-cloud/refinement/3-step.spicy:21:4-21:6: syntax error, unexpected identifier, expecting attribute or ';'
+[error] spicyc: parse error

@@ -1,0 +1,54 @@
+module tcp;
+
+type Flag = enum {
+    Off = 0,
+    On = 1,
+};
+
+type ControlBits = unit {
+    urg: uint8 &convert=Flag($$);
+    ack: uint8 &convert=Flag($$);
+    psh: uint8 &convert=Flag($$);
+    rst: uint8 &convert=Flag($$);
+    syn: uint8 &convert=Flag($$);
+    fin: uint8 &convert=Flag($$);
+};
+
+type OptionKind = enum {
+    EndOfList = 0,
+    NoOperation = 1,
+    MaxSegmentSize = 2,
+};
+
+type Option = unit {
+    kind: uint8 &convert=OptionKind($$);
+    data: bytes &size=(self.kind == OptionKind::EndOfList || self.kind == OptionKind::NoOperation ? 0 : ($$ - 2));
+        : bytes &size=(self.kind == OptionKind::EndOfList || self.kind == OptionKind::NoOperation ? 0 : 2) if (self.kind != OptionKind::EndOfList && self.kind != OptionKind::NoOperation);
+} &size=$$;
+
+type Header = unit {
+    src_port: uint16;
+    dst_port: uint16;
+    seq_num: uint32;
+    ack_num: uint32;
+    f: bitfield(16) {
+        data_offset: 0..3;
+        reserved: 4..9;
+        urg: 10;
+        ack: 11;
+        psh: 12;
+        rst: 13;
+        syn: 14;
+        fin: 15;
+    };
+    window: uint16;
+    checksum: uint16;
+    urgent_pointer: uint16;
+    options: Option[] &size=(self.f.data_offset*4 - 20) if (self.f.data_offset > 5);
+    padding: bytes &size=(self.f.data_offset*4 - 20 - self.options.length()) if (self.f.data_offset > 5 && self.options.length() < (self.f.data_offset*4 - 20));
+    payload: bytes &eod;
+};
+
+public type TCP = unit {
+    header: Header;
+};

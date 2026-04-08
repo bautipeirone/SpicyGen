@@ -1,0 +1,45 @@
+module tcp;
+
+type Flag = enum {
+    Off = 0,
+    On = 1,
+};
+
+type OptionKind = enum {
+    EndOfList = 0,
+    NoOperation = 1,
+    MaxSegmentSize = 2,
+};
+
+type Option = unit {
+    kind: uint8 &convert=OptionKind($$);
+    length: uint8 if (self.kind == OptionKind::MaxSegmentSize);
+    data: bytes &size=(self.kind == OptionKind::MaxSegmentSize ? (self.length - 2) : 0) if (self.kind == OptionKind::MaxSegmentSize);
+};
+
+type Header = unit {
+    src_port: uint16;
+    dst_port: uint16;
+    seq_num: uint32;
+    ack_num: uint32;
+    f: bitfield(16) {
+        data_offset: 0..3;
+        reserved: 4..9;
+        urg: 10 &convert=Flag($$);
+        ack: 11 &convert=Flag($$);
+        psh: 12 &convert=Flag($$);
+        rst: 13 &convert=Flag($$);
+        syn: 14 &convert=Flag($$);
+        fin: 15 &convert=Flag($$);
+    };
+    window: uint16;
+    checksum: uint16;
+    urgent_pointer: uint16;
+    options: Option[] &size=(self.f.data_offset*4 - 20) if (self.f.data_offset > 5);
+    padding: bytes &size=0 if (self.f.data_offset > 5);  # Simplified padding
+    payload: bytes &eod;
+};
+
+public type TCP = unit {
+    header: Header;
+};

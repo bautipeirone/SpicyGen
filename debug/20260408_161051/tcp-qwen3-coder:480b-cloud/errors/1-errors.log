@@ -1,0 +1,2 @@
+[error] debug/20260408_161051/tcp-qwen3-coder:480b-cloud/refinement/1-step.spicy:27:9-27:10: $$ is not available in this context
+[error] spicyc: aborting after errors

@@ -1,0 +1,33 @@
+module IP;
+
+type Datagram = unit {
+    version_ihl: uint8;
+    type_of_service: uint8;
+    total_length: uint16;
+    identification: uint16;
+    flags_fragment_offset: uint16;
+    ttl: uint8;
+    protocol: uint8;
+    checksum: uint16;
+    source_address: addr &ipv4;
+    destination_address: addr &ipv4;
+    options: Option[] &size=(self.ihl * 4 - 20) if(self.ihl > 5);
+    data: bytes &eod;
+};
+
+public type IPDatagram = unit {
+    datagram: Datagram;
+} &let version = self.datagram.version_ihl >> 4
+  &let ihl = self.datagram.version_ihl & 0x0F;
+
+type Option = unit {
+    opt_type: uint8;
+    switch (self.opt_type) {
+        0 -> : void;  # End of Option List
+        1 -> : void;  # No Operation
+        * -> {
+            length: uint8;
+            data: bytes &size=self.length - 2;
+        };
+    };
+};

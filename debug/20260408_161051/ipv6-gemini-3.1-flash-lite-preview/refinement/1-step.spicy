@@ -1,0 +1,62 @@
+module IPv6;
+
+# IPv6 Header
+public type IPv6Header = unit {
+    version: uint8 &bit-order=spicy::BitOrder::MSB0 &size=4;
+    traffic_class: uint8 &bit-order=spicy::BitOrder::MSB0 &size=8;
+    flow_label: uint32 &bit-order=spicy::BitOrder::MSB0 &size=20;
+    payload_length: uint16;
+    next_header: uint8;
+    hop_limit: uint8;
+    source_address: addr &ipv6;
+    destination_address: addr &ipv6;
+};
+
+# Options (TLV)
+type Option = unit {
+    type_value: uint8;
+    switch (self.type_value) {
+        0 -> : void; # Pad1
+        1 -> {
+            len: uint8;
+            data: bytes &size=self.len;
+        };
+        * -> {
+            len: uint8;
+            data: bytes &size=self.len;
+        };
+    };
+};
+
+# Hop-by-Hop Options Header
+type HopByHopOptionsHeader = unit {
+    next_header: uint8;
+    hdr_ext_len: uint8;
+    options: bytes &size=(self.hdr_ext_len * 8);
+};
+
+# Routing Header (Type 0)
+type RoutingHeader = unit {
+    next_header: uint8;
+    hdr_ext_len: uint8;
+    routing_type: uint8;
+    segments_left: uint8;
+    data: bytes &size=(self.hdr_ext_len * 8);
+};
+
+# Fragment Header
+type FragmentHeader = unit {
+    next_header: uint8;
+    reserved1: uint8;
+    fragment_offset: uint16 &bit-order=spicy::BitOrder::MSB0 &size=13;
+    res: uint8 &bit-order=spicy::BitOrder::MSB0 &size=2;
+    m_flag: uint8 &bit-order=spicy::BitOrder::MSB0 &size=1;
+    identification: uint32;
+};
+
+# Destination Options Header
+type DestinationOptionsHeader = unit {
+    next_header: uint8;
+    hdr_ext_len: uint8;
+    options: bytes &size=(self.hdr_ext_len * 8);
+};

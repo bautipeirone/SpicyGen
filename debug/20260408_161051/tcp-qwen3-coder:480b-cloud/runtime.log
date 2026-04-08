@@ -1,0 +1,27 @@
+[16:23:22] [INFO] Generating grammar for /home/bautistapeirone/Desktop/spec-extract/rfc/tcp-rfc.txt using qwen3-coder:480b-cloud...
+[16:23:22] [DEBUG] Instructions file: INSTRUCTIONS.md
+[16:23:22] [DEBUG] Provider: ollama
+[16:23:22] [DEBUG] Output file: /home/bautistapeirone/Desktop/spec-extract/code/spicy/llm-results/20260408_161051/tcp-qwen3-coder:480b-cloud.spicy
+[16:23:22] [DEBUG] Debug dir: debug/20260408_161051/tcp-qwen3-coder:480b-cloud
+[16:23:22] [DEBUG] Config file: None
+[16:25:50] [INFO] Compiling attempt 1/5 ...
+[16:25:50] [WARNING] Compilation failed on attempt 1.
+[16:25:50] [ERROR] Compilation Errors:
+[error] debug/20260408_161051/tcp-qwen3-coder:480b-cloud/refinement/1-step.spicy:27:9-27:10: $$ is not available in this context
+[error] spicyc: aborting after errors
+
+[16:27:30] [INFO] Compiling attempt 2/5 ...
+[16:27:30] [WARNING] Compilation failed on attempt 2.
+[16:27:30] [ERROR] Compilation Errors:
+[error] debug/20260408_161051/tcp-qwen3-coder:480b-cloud/refinement/2-step.spicy:48:55-48:63: unsupported operator: <bytes>.length
+[error] spicyc: aborting after errors
+
+[16:29:39] [INFO] Compiling attempt 3/5 ...
+[16:29:39] [WARNING] Compilation failed on attempt 3.
+[16:29:39] [ERROR] Compilation Errors:
+[error] debug/20260408_161051/tcp-qwen3-coder:480b-cloud/refinement/3-step.spicy:41:4-41:10: syntax error, unexpected identifier, expecting attribute or ';'
+[error] spicyc: parse error
+
+[16:32:27] [INFO] Compiling attempt 4/5 ...
+[16:32:33] [INFO] Compilation succeeded on attempt 4.
+[16:32:33] [INFO] Saved grammar to /home/bautistapeirone/Desktop/spec-extract/code/spicy/llm-results/20260408_161051/tcp-qwen3-coder:480b-cloud.spicy

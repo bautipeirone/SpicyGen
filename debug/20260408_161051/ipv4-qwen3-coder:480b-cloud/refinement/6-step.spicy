@@ -1,0 +1,16 @@
+module IP;
+
+public type Datagram = unit {
+    version_ihl: uint8;
+    type_of_service: uint8;
+    total_length: uint16;
+    identification: uint16;
+    flags_fragment_offset: uint16;
+    ttl: uint8;
+    protocol: uint8;
+    checksum: uint16;
+    source_address: addr &ipv4;
+    destination_address: addr &ipv4;
+    # Options and data would go here
+    payload: bytes &eod;
+};

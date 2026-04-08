@@ -1,0 +1,132 @@
+module IPv6;
+
+# Next Header values from RFC 1700 and related RFCs
+const IP_PROTOCOL_HOPOPT = 0;
+const IP_PROTOCOL_TCP = 6;
+const IP_PROTOCOL_UDP = 17;
+const IP_PROTOCOL_IPV6 = 41;
+const IP_PROTOCOL_ROUTING = 43;
+const IP_PROTOCOL_FRAGMENT = 44;
+const IP_PROTOCOL_DSTOPTS = 60;
+const IP_PROTOCOL_ICMPV6 = 58;
+const IP_PROTOCOL_NONE = 59;
+
+# Option Type values
+const OPT_PAD1 = 0;
+const OPT_PADN = 1;
+
+# Routing header types
+const ROUTING_TYPE_0 = 0;
+
+# IPv6 Header
+public type IPv6Header = unit {
+    version: uint8 &convert=$$ >> 4;
+    traffic_class: uint8 &convert=($$ & 0x0F) << 4 | ($$ >> 4);
+    flow_label: uint24 &convert=($$ & 0xFFFFF);
+    payload_length: uint16;
+    next_header: uint8;
+    hop_limit: uint8;
+    source_address: addr &ipv6;
+    destination_address: addr &ipv6;
+    
+    # Process extension headers and payload
+    switch (self.next_header) {
+        IP_PROTOCOL_HOPOPT -> hop_by_hop: HopByHopOptionsHeader;
+        IP_PROTOCOL_ROUTING -> routing: RoutingHeader;
+        IP_PROTOCOL_FRAGMENT -> fragment: FragmentHeader;
+        IP_PROTOCOL_DSTOPTS -> dst_opts: DestinationOptionsHeader;
+        IP_PROTOCOL_NONE -> : void;
+        * -> payload: bytes &size=self.payload_length;
+    }
+};
+
+# Generic Option format
+type Option = unit {
+    opt_type: uint8;
+    switch (self.opt_type) {
+        OPT_PAD1 -> : void;
+        OPT_PADN -> pad_n: PadNOption;
+        * -> generic_opt: GenericOption;
+    }
+};
+
+type GenericOption = unit {
+    opt_data_len: uint8;
+    opt_data: bytes &size=self.opt_data_len;
+};
+
+type PadNOption = unit {
+    opt_data_len: uint8;
+    opt_data: bytes &size=self.opt_data_len;
+};
+
+# Hop-by-Hop Options Header
+type HopByHopOptionsHeader = unit {
+    next_header: uint8;
+    hdr_ext_len: uint8;
+    options: Option[] &size=(self.hdr_ext_len + 1) * 8 - 2;
+    
+    switch (self.next_header) {
+        IP_PROTOCOL_ROUTING -> routing: RoutingHeader;
+        IP_PROTOCOL_FRAGMENT -> fragment: FragmentHeader;
+        IP_PROTOCOL_DSTOPTS -> dst_opts: DestinationOptionsHeader;
+        IP_PROTOCOL_NONE -> : void;
+        * -> payload: bytes &eod;
+    }
+};
+
+# Destination Options Header
+type DestinationOptionsHeader = unit {
+    next_header: uint8;
+    hdr_ext_len: uint8;
+    options: Option[] &size=(self.hdr_ext_len + 1) * 8 - 2;
+    
+    switch (self.next_header) {
+        IP_PROTOCOL_HOPOPT -> hop_by_hop: HopByHopOptionsHeader;
+        IP_PROTOCOL_ROUTING -> routing: RoutingHeader;
+        IP_PROTOCOL_FRAGMENT -> fragment: FragmentHeader;
+        IP_PROTOCOL_DSTOPTS -> dst_opts: DestinationOptionsHeader;
+        IP_PROTOCOL_NONE -> : void;
+        * -> payload: bytes &eod;
+    }
+};
+
+# Routing Header
+type RoutingHeader = unit {
+    next_header: uint8;
+    hdr_ext_len: uint8;
+    routing_type: uint8;
+    segments_left: uint8;
+    
+    switch (self.routing_type) {
+        ROUTING_TYPE_0 -> type0: RoutingType0Header(self.hdr_ext_len, self.segments_left);
+        * -> unknown_routing: UnknownRoutingHeader(self.hdr_ext_len);
+    }
+};
+
+type UnknownRoutingHeader = unit {
+    hdr_ext_len: uint8 &private;
+    reserved: uint32;
+    data: bytes &size=(self.hdr_ext_len + 1) * 8 - 6;
+};
+
+type RoutingType0Header = unit {
+    hdr_ext_len: uint8 &private;
+    segments_left: uint8 &private;
+    reserved: uint32;
+    addresses: (addr &ipv6)[(self.hdr_ext_len + 1) / 2];
+};
+
+# Fragment Header
+type FragmentHeader = unit {
+    next_header: uint8;
+    reserved: uint8;
+    fragment_offset_and_flags: uint16;
+    identification: uint32;
+    
+    fragment_offset: uint16 &convert=(self.fragment_offset_and_flags >> 3);
+    m_flag: uint8 &convert=(self.fragment_offset_and_flags & 0x01);
+    
+    # Fragmented payload follows
+    fragment_data: bytes &eod;
+};

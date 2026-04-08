@@ -17,11 +17,41 @@ This changelog tracks which release grammars were updated in `stable` and `wip`.
 | TFTP | Yes | - | Yes | - |
 | RSTP | Yes | - | Yes | - |
 | LDAP | No | - | No | - |
+| IPv4 | Yes | - | Yes | - |
+| IPv6 | Yes | - | No | - |
+| TCP | Yes | - | Yes | - |
 
 ## 2026-04-08
 
-Add release grammar: `IRC` \
+Add release grammar: `IRC`, `IPv4`, `IPv6`, `TCP` \
 Change release grammar: `DHCP`
+
+### IPv4
+
+Promoted version: `20260408_161051`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
+
+### IPv6
+
+Promoted version: `20260408_161051`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | No | - |
+
+### TCP
+
+Promoted version: `20260408_161051`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | - |
+| `gemini-3.1-flash-lite-preview` | Yes | - |
 
 ### IRC
 

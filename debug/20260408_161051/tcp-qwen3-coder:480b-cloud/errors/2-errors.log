@@ -1,0 +1,2 @@
+[error] debug/20260408_161051/tcp-qwen3-coder:480b-cloud/refinement/2-step.spicy:48:55-48:63: unsupported operator: <bytes>.length
+[error] spicyc: aborting after errors

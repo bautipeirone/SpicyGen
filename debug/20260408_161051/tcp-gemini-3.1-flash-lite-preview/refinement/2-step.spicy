@@ -1,0 +1,39 @@
+module TCP;
+
+public type Header = unit {
+    src_port: uint16;
+    dst_port: uint16;
+    seq_num: uint32;
+    ack_num: uint32;
+    
+    # Data Offset (4 bits), Reserved (6 bits), Control Bits (6 bits)
+    # Total 16 bits.
+    : bitfield(16) {
+        data_offset: 0..3;
+        reserved: 4..9;
+        urg: 10;
+        ack: 11;
+        psh: 12;
+        rst: 13;
+        syn: 14;
+        fin: 15;
+    } &bit-order=spicy::BitOrder::MSB0;
+    
+    window: uint16;
+    checksum: uint16;
+    urgent_pointer: uint16;
+    
+    # Options and Padding
+    # Data offset is in 32-bit words. Header is at least 5 words (20 bytes).
+    # We need to consume the rest of the header based on data_offset.
+    # This is tricky in Spicy without dynamic sizing based on previous fields.
+    # For now, we consume the rest of the header as bytes.
+    # The actual length of the header is data_offset * 4 bytes.
+    # Since we already read 20 bytes, we read (data_offset * 4 - 20) bytes.
+    # Note: This requires data_offset to be accessible.
+    
+    # Simplified approach:
+    # options_and_padding: bytes &size=(self.data_offset * 4 - 20);
+    
+    data: bytes &eod;
+};
