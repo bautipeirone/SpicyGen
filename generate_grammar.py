@@ -76,6 +76,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to a config.yaml file containing generation parameters like temperature, max_tokens, etc.",
     )
+    parser.add_argument(
+        "--protocol",
+        type=str,
+        default=None,
+        help="Protocol name (e.g. 'dhcp', 'dns') used to look up packets for runtime check.",
+    )
     return parser.parse_args()
 
 
@@ -121,7 +127,10 @@ def main() -> None:
 
     start_time = time.time()
     content, success, attempts = run_refinement_loop(
-        llm_config, system_instruction, messages, max_retries=agent_config["max_retries"], debug_dir=args.debug_dir
+        llm_config, system_instruction, messages,
+        max_retries=agent_config["max_retries"],
+        debug_dir=args.debug_dir,
+        protocol=args.protocol,
     )
     elapsed_time = time.time() - start_time
 

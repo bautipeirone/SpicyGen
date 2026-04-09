@@ -1,0 +1,22 @@
+{
+  "dhcp": {
+    "accept": [
+      "dhcp.bin"
+    ],
+    "reject": [
+      "bad-dhcp.bin"
+    ]
+  },
+  "spp": {
+    "accept": [
+      "spp_seeds/spp_1.bin",
+      "spp_seeds/spp_02.bin",
+      "spp_seeds/spp_03.bin"
+    ],
+    "reject": [
+      "spp_seeds/invalid_spp_01.bin",
+      "spp_seeds/invalid_spp_02.bin",
+      "spp_seeds/invalid_spp_03.bin"
+    ]
+  }
+}

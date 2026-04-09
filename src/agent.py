@@ -2,18 +2,32 @@ from dataclasses import dataclass
 from pathlib import Path
 from src.tools.compiler import compile_spicy_grammar
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
+from src.tools.runtime import run_parser_check_from_code
 from src.logger import logger
 from typing import Annotated
 import autogen
 
-FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the following errors:
+COMPILATION_FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the following errors:
 
 {errors}
 
 Please fix the grammar to resolve these compilation errors. Only output the corrected grammar."""
 
+RUNTIME_FEEDBACK_TEMPLATE = """The grammar you produced failed to parse the following packets:
+
+{errors}
+
+Please fix the grammar to handle these packets correctly, then use compile_grammar again."""
+
 AGENT_LOOP_INSTRUCTIONS = """
-When you emit the grammar code, use the compile_grammar tool to check if it compiles. If the compile_grammar tool returns TERMINATE, you must say TERMINATE to end the chat.
+IMPORTANT WORKFLOW — follow these steps in order:
+
+1. Write the grammar and use the `compile_grammar` tool to check if it compiles.
+2. If ``compile_grammar`` returns SUCCESS, use the `parse_packets` tool with the same grammar code to verify it against known protocol packets.
+   - If all packets pass, say TERMINATE.
+   - If some packets fail, fix the grammar and go back to step 1.
+3. If ``compile_grammar`` returns errors, fix the grammar and try again.
+4. If there are no packets registered for this protocol, you will be told so — in that case say TERMINATE after a successful compilation.
 
 You can also use the retrieve_rfc_by_id tool to fetch additional RFC documents if needed.
 """
@@ -23,6 +37,7 @@ class State:
     attempt: int = 0
     last_code: str = ""
     success: bool = False
+    protocol: str | None = None
 
 def clean_response(text: str) -> str:
     """Strip markdown fences and leading non-grammar lines."""
@@ -45,6 +60,7 @@ def run_refinement_loop(
     messages: list[str],
     max_retries: int = 5,
     debug_dir: Path | None = None,
+    protocol: str | None = None,
 ) -> tuple[str, bool, int]:
     """Run the compile-feedback agent loop using Autogen.
 
@@ -60,7 +76,7 @@ def run_refinement_loop(
         errors_dir.mkdir(parents=True, exist_ok=True)
 
 
-    state = State()
+    state = State(protocol=protocol)
 
     def compile_grammar(code: Annotated[str, "The Spicy grammar code to compile"]) -> str:
         cleaned_code = clean_response(code)
@@ -79,16 +95,43 @@ def run_refinement_loop(
         if result.success:
             state.success = True
             logger.info(f"Compilation succeeded on attempt {state.attempt}.")
-            return "TERMINATE"
+            return "SUCCESS"
 
         logger.warning(f"Compilation failed on attempt {state.attempt}.")
         logger.error(f"Compilation Errors:\n{result.errors}\n")
 
         if state.attempt >= max_retries:
             logger.warning(f"Reached max compilation attempts ({max_retries}). Stopping.")
-            return f"{FEEDBACK_TEMPLATE.format(errors=result.errors)}\n\nThis was the last allowed attempt. Please say TERMINATE."
+            return f"{COMPILATION_FEEDBACK_TEMPLATE.format(errors=result.errors)}\n\nThis was the last allowed attempt. Please say TERMINATE."
 
-        return FEEDBACK_TEMPLATE.format(errors=result.errors)
+        return COMPILATION_FEEDBACK_TEMPLATE.format(errors=result.errors)
+
+    def parse_packets(code: Annotated[str, "The Spicy grammar code to parse packets with"]) -> str:
+        """Run the grammar against known protocol packets."""
+        cleaned_code = clean_response(code)
+        if not cleaned_code:
+            cleaned_code = code
+
+        if not state.protocol:
+            logger.warning("No protocol set — skipping Runtime check.")
+            return "No protocol configured for Runtime checking. Say TERMINATE if the grammar compiled successfully."
+
+        logger.info(f"Running Runtime check for protocol '{state.protocol}'...")
+        check_result = run_parser_check_from_code(cleaned_code, state.protocol)
+
+        if not check_result.verdicts:
+            logger.warning(f"No packets registered for protocol '{state.protocol}'.")
+            return f"No packets registered for protocol '{state.protocol}'. Say TERMINATE if the grammar compiled successfully."
+
+        summary = check_result.summary()
+        if check_result.all_passed:
+            logger.info(f"Runtime check PASSED for '{state.protocol}'.")
+            logger.debug(f"Runtime check details:\n{summary}")
+            return f"All packets parsed correctly. Say TERMINATE."
+        else:
+            logger.warning(f"Runtime check FAILED for '{state.protocol}'.")
+            logger.debug(f"Runtime check details:\n{summary}")
+            return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
     assistant = autogen.AssistantAgent(
         name="SpicyDeveloper",
@@ -104,7 +147,7 @@ def run_refinement_loop(
         name="CompilerProxy",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=max_retries * 3,
-        is_termination_msg=lambda x: x.get("content", "") and "TERMINATE" in x.get("content", ""),
+        is_termination_msg=lambda x: (x.get("content", "") and "TERMINATE" in x.get("content", "")) or state.attempt >= max_retries,
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call
         default_auto_reply="Please use the `compile_grammar` tool to check if the grammar compiles. If it does not compile, correct the errors. If you think the grammar is perfect or cannot be fixed, say TERMINATE.",
@@ -124,6 +167,14 @@ def run_refinement_loop(
         executor=user_proxy,
         name="retrieve_rfc_by_id",
         description="Retrieve an RFC text by its ID (e.g., '1035').",
+    )
+
+    autogen.agentchat.register_function(
+        parse_packets,
+        caller=assistant,
+        executor=user_proxy,
+        name="parse_packets",
+        description="Run the grammar against known accept/reject packets for the current protocol. Use this AFTER a successful compilation to verify semantic correctness.",
     )
 
     initial_prompt = "\n".join(messages)
