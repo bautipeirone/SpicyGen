@@ -1,7 +1,0 @@
-[error] debug/20260401_114208/spp-gemini-3.1-flash-lite-preview/refinement/1-step.spicy:8:9-8:18: integer type's width must be one of 8/16/32/64, but is 3
-[error] debug/20260401_114208/spp-gemini-3.1-flash-lite-preview/refinement/1-step.spicy:7:14-9:5: integer type's width must be one of 8/16/32/64, but is 3
-[error] debug/20260401_114208/spp-gemini-3.1-flash-lite-preview/refinement/1-step.spicy:11:9-11:23: integer type's width must be one of 8/16/32/64, but is 13
-[error] debug/20260401_114208/spp-gemini-3.1-flash-lite-preview/refinement/1-step.spicy:12:9-12:33: integer type's width must be one of 8/16/32/64, but is 13
-[error] debug/20260401_114208/spp-gemini-3.1-flash-lite-preview/refinement/1-step.spicy:13:9-13:20: integer type's width must be one of 8/16/32/64, but is 13
-[error] debug/20260401_114208/spp-gemini-3.1-flash-lite-preview/refinement/1-step.spicy:10:21-14:5: integer type's width must be one of 8/16/32/64, but is 13
-[error] spicyc: aborting after errors

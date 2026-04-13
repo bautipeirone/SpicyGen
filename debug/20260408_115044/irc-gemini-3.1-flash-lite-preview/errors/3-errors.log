@@ -1,2 +1,0 @@
-[error] debug/20260408_115044/irc-gemini-3.1-flash-lite-preview/refinement/3-step.spicy:10:36-10:47: call does not match any method: <IRC::Message>.peek(<uint<64>>)
-[error] spicyc: aborting after errors

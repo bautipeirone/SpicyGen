@@ -1,2 +1,0 @@
-[error] debug/20260406_103054/dns-qwen3-coder:480b-cloud/refinement/2-step.spicy:97:29-97:39: unsupported operator: <Label> == <const bytes>
-[error] spicyc: aborting after errors

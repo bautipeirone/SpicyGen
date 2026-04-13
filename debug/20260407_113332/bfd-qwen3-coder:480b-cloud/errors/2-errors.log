@@ -1,4 +1,0 @@
-[error] debug/20260407_113332/bfd-qwen3-coder:480b-cloud/refinement/2-step.spicy:53:61-53:69: unsupported operator: <uint<32>> * <real>
-[error] debug/20260407_113332/bfd-qwen3-coder:480b-cloud/refinement/2-step.spicy:54:62-54:70: unsupported operator: <uint<32>> * <real>
-[error] debug/20260407_113332/bfd-qwen3-coder:480b-cloud/refinement/2-step.spicy:55:67-55:75: unsupported operator: <uint<32>> * <real>
-[error] spicyc: aborting after errors
