@@ -3,6 +3,7 @@ from pathlib import Path
 from src.tools.compiler import compile_spicy_grammar
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from src.tools.runtime import run_parser_check_from_code
+from src.protocol import Protocol
 from src.logger import logger
 from typing import Annotated
 import autogen
@@ -34,10 +35,10 @@ You can also use the retrieve_rfc_by_id tool to fetch additional RFC documents i
 
 @dataclass
 class State:
+    protocol: Protocol
     attempt: int = 0
     last_code: str = ""
     success: bool = False
-    protocol: str | None = None
 
 def clean_response(text: str) -> str:
     """Strip markdown fences and leading non-grammar lines."""
@@ -56,16 +57,17 @@ def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retr
 
 def run_refinement_loop(
     llm_config: dict,
-    system_instruction: str,
+    system_message: str,
     messages: list[str],
-    max_retries: int = 5,
+    protocol: Protocol,
+    agent_config: dict,
     debug_dir: Path | None = None,
-    protocol: str | None = None,
 ) -> tuple[str, bool, int]:
     """Run the compile-feedback agent loop using Autogen.
 
     Returns a tuple of (grammar_code, compiled_successfully, attempts).
     """
+    max_retries = agent_config.get("max_retries")
     refinement_dir = None
     errors_dir = debug_dir / "errors" if debug_dir else None
     if debug_dir:
@@ -112,30 +114,27 @@ def run_refinement_loop(
         if not cleaned_code:
             cleaned_code = code
 
-        if not state.protocol:
-            logger.warning("No protocol set — skipping Runtime check.")
-            return "No protocol configured for Runtime checking. Say TERMINATE if the grammar compiled successfully."
-
-        logger.info(f"Running Runtime check for protocol '{state.protocol}'...")
+        logger.info(f"Running Runtime check for protocol '{state.protocol.name}'...")
         check_result = run_parser_check_from_code(cleaned_code, state.protocol)
 
         if not check_result.verdicts:
-            logger.warning(f"No packets registered for protocol '{state.protocol}'.")
-            return f"No packets registered for protocol '{state.protocol}'. Say TERMINATE if the grammar compiled successfully."
+            logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
+            return f"No packets registered for protocol '{state.protocol.name}'. Say TERMINATE if the grammar compiled successfully."
 
         summary = check_result.summary()
         if check_result.all_passed:
-            logger.info(f"Runtime check PASSED for '{state.protocol}'.")
+            logger.info(f"Runtime check PASSED for '{state.protocol.name}'.")
             logger.debug(f"Runtime check details:\n{summary}")
             return f"All packets parsed correctly. Say TERMINATE."
         else:
-            logger.warning(f"Runtime check FAILED for '{state.protocol}'.")
+            logger.warning(f"Runtime check FAILED for '{state.protocol.name}'.")
             logger.debug(f"Runtime check details:\n{summary}")
             return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
+    system_message = system_message + AGENT_LOOP_INSTRUCTIONS
     assistant = autogen.AssistantAgent(
         name="SpicyDeveloper",
-        system_message=system_instruction + AGENT_LOOP_INSTRUCTIONS,
+        system_message=system_message,
         llm_config=llm_config,
     )
 
@@ -179,6 +178,14 @@ def run_refinement_loop(
 
     initial_prompt = "\n".join(messages)
     initial_prompt += "\n\nPlease output the grammar and use the compile_grammar tool to verify it."
+
+    logger.info("System message and tools initialized. Starting the agent loop...")
+    logger.info(f"LLM Config: {llm_config | { 'config_list' : '...' }}")
+    logger.info(f"Agent config: {agent_config}")
+    logger.info(f"Tools available: {[tool.name for tool in assistant.tools]}")
+    logger.debug(f"Initial system message:\n{system_message}")
+    logger.debug(f"Initial user message (start):\n{initial_prompt[:300]}\n...")
+    logger.debug(f"Initial user message (end):\n{initial_prompt[-300:]}\n...")
 
     user_proxy.initiate_chat(
         assistant,

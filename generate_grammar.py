@@ -6,6 +6,7 @@ from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
 from src.utils import load_file, read_config
 from src.logger import enable_runtime_log_file, logger
+from src.protocol import load_protocol, load_spec
 from typing import LiteralString
 from pathlib import Path
 import argparse
@@ -40,8 +41,14 @@ def parse_args() -> argparse.Namespace:
         help="Path to the instructions file that will be added to the prompt",
     )
     parser.add_argument(
+        "protocol",
+        type=str,
+        help="Protocol name (e.g. 'dhcp', 'dns') used to look up packets for runtime check.",
+    )
+    parser.add_argument(
         "rfc_id",
         type=str,
+        default=None,
         help="RFC ID (e.g., '822') or path to an RFC file.",
     )
     parser.add_argument(
@@ -76,25 +83,7 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to a config.yaml file containing generation parameters like temperature, max_tokens, etc.",
     )
-    parser.add_argument(
-        "--protocol",
-        type=str,
-        default=None,
-        help="Protocol name (e.g. 'dhcp', 'dns') used to look up packets for runtime check.",
-    )
     return parser.parse_args()
-
-
-def load_rfc(rfc_identifier: str) -> str:
-    try:
-        path = Path(rfc_identifier)
-        if path.exists():
-            rfc_text = load_file(path)
-        else:
-            rfc_text = retrieve_rfc_by_id(rfc_identifier)
-        return clean_rfc_text(rfc_text)
-    except Exception as exc:
-        raise SystemExit(f"Unable to read RFC {rfc_identifier}: {exc}") from exc
 
 
 def save_response(path: Path, response: str) -> None:
@@ -109,28 +98,37 @@ def main() -> None:
     args = parse_args()
     enable_runtime_log_file(args.debug_dir)
 
-    logger.info(f"Generating grammar for {args.rfc_id} using {args.model}...")
+    logger.info(f"Generating grammar for {args.protocol} ({args.rfc_id}) using {args.model}...")
     logger.debug(f"Instructions file: {args.instructions_file}")
     logger.debug(f"Provider: {args.provider}")
     logger.debug(f"Output file: {args.output_file}")
     logger.debug(f"Debug dir: {args.debug_dir}")
     logger.debug(f"Config file: {args.config}")
 
+    protocol = load_protocol(args.protocol)
+    if protocol is None:
+        logger.error(f"Protocol '{args.protocol}' not found in index. Exiting.")
+        exit(1)
+
     spicy_context = load_file(args.instructions_file)
-    rfc_content = load_rfc(args.rfc_id)
+    spec_content = load_spec(protocol)
+
+    if spec_content is None:
+        logger.error(f"No specification content found for protocol '{protocol.name}'.")
+        exit(1)
 
     llm_params, agent_config = read_config(args.config)
     llm_config = get_autogen_config(args.provider, args.model, llm_params)
 
     system_instruction = prompt + spicy_context
-    messages = [rfc_content]
+    messages = [spec_content]
 
     start_time = time.time()
     content, success, attempts = run_refinement_loop(
         llm_config, system_instruction, messages,
-        max_retries=agent_config["max_retries"],
+        protocol=protocol,
+        agent_config=agent_config,
         debug_dir=args.debug_dir,
-        protocol=args.protocol,
     )
     elapsed_time = time.time() - start_time
 

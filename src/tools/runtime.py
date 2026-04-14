@@ -1,20 +1,19 @@
 """Semantic validation of Spicy grammars against known packets in runtime execution.
 
 This module runs compiled Spicy grammars through ``spicy-driver`` to verify
-that they correctly accept or reject a set of hardcoded binary packets.
+that they correctly accept or reject a set of raw binary packets stored on
+disk per protocol.
 """
 
-import json
 import subprocess
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from src.logger import logger
+from src.protocol import Protocol
 
-# Default location of the packet index relative to the project root.
-_DEFAULT_INDEX_PATH = Path(__file__).resolve().parents[2] / "data" / "binary" / "packet_index.json"
-_BINARY_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "binary"
+_RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
 
 # ---------------------------------------------------------------------------
@@ -123,59 +122,55 @@ def run_spicy_driver(grammar_file: str, packet_file: str) -> ParseResult:
     )
 
 
-def load_packet_index(index_path: Path | None = None) -> dict:
-    """Load the JSON packet index.
-
-    Returns a dict mapping protocol names to ``{"accept": [...], "reject": [...]}``.
-    """
-    path = index_path or _DEFAULT_INDEX_PATH
-    logger.debug(f"Loading packet index from {path}")
-    with open(path, "r") as f:
-        index = json.load(f)
-    logger.info(f"Loaded packet index with {len(index)} protocol(s): {', '.join(index.keys())}")
-    return index
-
-
 def run_parser_check(
     grammar_file: str,
-    protocol: str,
-    index_path: Path | None = None,
+    protocol: Protocol | str
 ) -> SemanticCheckResult:
-    """Run a grammar against all packets for *protocol* defined in the index.
+    """Run a grammar against all packets for *protocol* found on disk.
 
     Parameters
     ----------
     grammar_file:
         Path to the ``.spicy`` grammar file.
     protocol:
-        Protocol name to look up in the packet index (e.g. ``"dhcp"``).
+        Protocol or protocol name to look up under ``data/raw/<protocol>``.
     index_path:
-        Optional override for the packet index JSON path.
+        Unused compatibility argument retained for existing callers.
 
     Returns
     -------
     SemanticCheckResult
         Aggregated verdicts for every packet.
     """
-    index = load_packet_index(index_path)
+    protocol_name = protocol.name
+    protocol_dir = _RAW_BASE_DIR / protocol_name
+    accept_dir = protocol_dir / "positive"
+    reject_dir = protocol_dir / "negative"
 
-    if protocol not in index:
-        logger.warning(f"Protocol '{protocol}' not found in packet index. Skipping semantic check.")
-        return SemanticCheckResult(protocol=protocol)
+    accept_packets = sorted(
+        str(path.relative_to(_RAW_BASE_DIR))
+        for path in accept_dir.rglob("*")
+        if path.is_file()
+    ) if accept_dir.exists() else []
+    reject_packets = sorted(
+        str(path.relative_to(_RAW_BASE_DIR))
+        for path in reject_dir.rglob("*")
+        if path.is_file()
+    ) if reject_dir.exists() else []
 
-    entry = index[protocol]
-    accept_packets: list[str] = entry.get("accept", [])
-    reject_packets: list[str] = entry.get("reject", [])
+    result = SemanticCheckResult(protocol=protocol_name)
+    
+    if not protocol_dir.exists():
+        logger.warning(f"No raw packet directory found for protocol '{protocol_name}' at {protocol_dir}")
+        return result
 
     logger.info(
-        f"Semantic check for '{protocol}': "
+        f"Semantic check for '{protocol_name}': "
         f"{len(accept_packets)} accept packet(s), {len(reject_packets)} reject packet(s)"
     )
 
-    result = SemanticCheckResult(protocol=protocol)
-
     for rel_path in accept_packets:
-        abs_path = str(_BINARY_BASE_DIR / rel_path)
+        abs_path = str(_RAW_BASE_DIR / rel_path)
         parse_result = run_spicy_driver(grammar_file, abs_path)
         verdict = PacketVerdict(
             packet_path=rel_path,
@@ -188,7 +183,7 @@ def run_parser_check(
             logger.warning(f"FAIL (accept): {rel_path} was rejected. stderr: {parse_result.stderr.strip()}")
 
     for rel_path in reject_packets:
-        abs_path = str(_BINARY_BASE_DIR / rel_path)
+        abs_path = str(_RAW_BASE_DIR / rel_path)
         parse_result = run_spicy_driver(grammar_file, abs_path)
         verdict = PacketVerdict(
             packet_path=rel_path,
@@ -206,8 +201,7 @@ def run_parser_check(
 
 def run_parser_check_from_code(
     grammar_code: str,
-    protocol: str,
-    index_path: Path | None = None,
+    protocol: Protocol
 ) -> SemanticCheckResult:
     """Convenience wrapper: writes *grammar_code* to a temp file, then runs
     :func:`run_parser_check` against it.
@@ -220,4 +214,4 @@ def run_parser_check_from_code(
     ) as tmp:
         tmp.write(grammar_code)
         tmp.flush()
-        return run_parser_check(tmp.name, protocol, index_path)
+        return run_parser_check(tmp.name, protocol)
