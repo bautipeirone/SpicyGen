@@ -4,7 +4,7 @@ from pathlib import Path
 def read_config(path: Path | None) -> tuple[dict, dict]:
     # Defaults
     agent_config = {
-        "max_retries": 5
+        "max_retries": 15
     }
     llm_params = {
         "temperature": 0.0
