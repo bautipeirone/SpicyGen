@@ -9,3 +9,10 @@ __pycache__/
 a.out*
 *.hlto
 
+# Runtime debug and outputs
+llm-results/*
+!llm-results/stable
+!llm-results/wip
+!llm-results/CHANGELOG.md
+
+debug/
