@@ -51,12 +51,13 @@
   },
   "rtsp": {
     "type": "text",
-    "spec_type": "rfc"
+    "spec_type": "rfc",
+    "rfc_id": "2326"
   },
   "spp": {
     "type": "binary",
     "spec_type": "bluebook",
-    "local_spec_file": "spp-bluebook.txt"
+    "local_spec_file": "/home/bautistapeirone/Desktop/spec-extract/rfc/spp-bluebook.txt"
   },
   "tcp": {
     "type": "binary",
