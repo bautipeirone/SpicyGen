@@ -1,0 +1,11 @@
+module Bitfield;
+
+import spicy;
+
+public type Main = unit {
+    bf: bitfield(16) {
+        x: 0..7;
+        y: 8..15;
+    } &bit-order=spicy::BitOrder::LSB0;
+    on %done { print self; }
+};
