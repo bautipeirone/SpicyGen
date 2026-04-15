@@ -29,6 +29,14 @@ class Protocol:
     spec_id: str | None  # Can refer to RFC ID, IEEE standard number, etc.
     local_spec_file: Path | None
 
+    @property
+    def is_text_protocol(self) -> bool:
+        return self.type == ProtocolType.TEXT
+    
+    @property
+    def is_binary_protocol(self) -> bool:
+        return self.type == ProtocolType.BINARY
+
 
 def load_protocol_index(index_path: Path | None = None) -> dict:
     """Load the JSON packet index.

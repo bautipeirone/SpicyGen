@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from src.logger import logger
-from src.protocol import Protocol
+from src.protocol import Protocol, ProtocolType
 
 _RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
@@ -45,7 +45,7 @@ class PacketVerdict:
 @dataclass
 class SemanticCheckResult:
     """Aggregated results of running a grammar against all packets for a protocol."""
-    protocol: str
+    protocol: Protocol
     verdicts: list[PacketVerdict] = field(default_factory=list)
 
     @property
@@ -72,15 +72,23 @@ class SemanticCheckResult:
         lines = []
         if not self.all_passed:
             lines.append("")
-            lines.append("Failures:")
+            lines.append("Packets tested:")
             for v in self.verdicts:
+                lines.append(f"- {v.packet_path}: {'PASS' if v.passed else 'FAIL'}")
+                lines.append(f"Expected: {'ACCEPT' if v.expected_accept else 'REJECT'}")
+                lines.append(f"Actual: {'ACCEPTED' if v.actual_accept else 'REJECTED'}")
+
+                packet_repr = get_packet_representation(_RAW_BASE_DIR / v.packet_path, self.protocol.type)
+                if packet_repr is not None:
+                    lines.append(f"Packet representation:")
+                    lines.append(packet_repr)
+
                 if not v.passed:
-                    expected = "accept" if v.expected_accept else "reject"
-                    actual = "accepted" if v.actual_accept else "rejected"
-                    lines.append(f"  - {v.packet_path}: expected {expected}, but was {actual}")
                     if v.stderr:
+                        lines.append(f"Error output from parsing:")
                         for err_line in v.stderr.strip().splitlines():
-                            lines.append(f"      {err_line}")
+                            lines.append(f"  {err_line}")
+                lines.append("")
         return "\n".join(lines)
 
     def summary(self) -> str:
@@ -94,6 +102,29 @@ class SemanticCheckResult:
 # ---------------------------------------------------------------------------
 # Core functions
 # ---------------------------------------------------------------------------
+
+def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType) -> str | None:
+    """Return the raw text packet or a binary hexdump for a packet on disk."""
+    try:
+        with open(packet_path, "rb") as f:
+            data = f.read()
+    except OSError as exc:
+        return None
+
+    if packet_type == ProtocolType.TEXT:
+        packet = data.decode("utf-8", errors="replace")
+        if not packet:
+            return "<empty>"
+        return packet
+
+    elif packet_type == ProtocolType.BINARY:
+        lines = []
+        for offset in range(0, len(data), 16):
+            chunk = data[offset:offset + 16]
+            hex_bytes = " ".join(f"{byte:02x}" for byte in chunk)
+            ascii_bytes = "".join(chr(byte) if 32 <= byte <= 126 else "." for byte in chunk)
+            lines.append(f"{offset:08x}  {hex_bytes:<47}  {ascii_bytes}")
+        return "\n".join(lines)
 
 def run_spicy_driver(grammar_file: str, packet_file: str) -> ParseResult:
     """Run ``spicy-driver <grammar_file> < <packet_file>`` and return the result."""
@@ -124,7 +155,7 @@ def run_spicy_driver(grammar_file: str, packet_file: str) -> ParseResult:
 
 def run_parser_check(
     grammar_file: str,
-    protocol: Protocol | str
+    protocol: Protocol
 ) -> SemanticCheckResult:
     """Run a grammar against all packets for *protocol* found on disk.
 
@@ -133,7 +164,7 @@ def run_parser_check(
     grammar_file:
         Path to the ``.spicy`` grammar file.
     protocol:
-        Protocol or protocol name to look up under ``data/raw/<protocol>``.
+        Protocol to look up under ``data/raw/<protocol>``.
     index_path:
         Unused compatibility argument retained for existing callers.
 
@@ -158,7 +189,7 @@ def run_parser_check(
         if path.is_file()
     ) if reject_dir.exists() else []
 
-    result = SemanticCheckResult(protocol=protocol_name)
+    result = SemanticCheckResult(protocol=protocol)
     
     if not protocol_dir.exists():
         logger.warning(f"No raw packet directory found for protocol '{protocol_name}' at {protocol_dir}")
