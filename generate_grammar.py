@@ -46,12 +46,6 @@ def parse_args() -> argparse.Namespace:
         help="Protocol name (e.g. 'dhcp', 'dns') used to look up packets for runtime check.",
     )
     parser.add_argument(
-        "rfc_id",
-        type=str,
-        default=None,
-        help="RFC ID (e.g., '822') or path to an RFC file.",
-    )
-    parser.add_argument(
         "--provider",
         "-p",
         choices=["ollama", "google", "openai", "anthropic"],
@@ -98,7 +92,7 @@ def main() -> None:
     args = parse_args()
     enable_runtime_log_file(args.debug_dir)
 
-    logger.info(f"Generating grammar for {args.protocol} ({args.rfc_id}) using {args.model}...")
+    logger.info(f"Generating grammar for {args.protocol} using {args.model}...")
     logger.debug(f"Instructions file: {args.instructions_file}")
     logger.debug(f"Provider: {args.provider}")
     logger.debug(f"Output file: {args.output_file}")
@@ -135,7 +129,7 @@ def main() -> None:
     metrics = {
         "model": args.model,
         "provider": args.provider,
-        "protocol": args.rfc_id,
+        "protocol": protocol.name,
         "success": success,
         "attempts": attempts,
         "time_elapsed_s": round(elapsed_time, 2)
