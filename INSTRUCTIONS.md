@@ -7,6 +7,7 @@
 3. There must be only one `public type` declaration in the entire grammar, which is the entry point for the main parser of the protocol.
 4. Subunits don't have to repeat fields declared in the parent units.
 5. Inside a unit, `self` references to the current unit, and its fields can be accessed via `self.field`, and `$$` references to the last read input, this can be used to perform conversions or conditional parsing.
+6. Every field mentioned in the specification should be accessible by itself, not as a combination of fields like merging them into an integer type.
 
 ## Grammar
 ### Type declarations
@@ -44,6 +45,7 @@ public type Foo = unit {
   * `&eod`: Consumes all subsequent data until the end of the input is reached.
   * `&size=N`: Consumes exactly N bytes. The attribute may be combined with &eod to consume up to N bytes instead (i.e., permit running out of input before the size limit is reached).
   * `&until=DELIM`: Consumes bytes until the specified delimiter is found. DELIM must be of type bytes itself. The delimiter will not be included into the resulting value, but consumed.
+  hint: since `&until=DELIM` consumes the delimiter value at the end of the field, there is no need to add the delimiter as a separate follow-up field.
 * Fields that have a fixed size of N bytes but contain null terminated strings should be declared like this:
 `bytes &size=N &convert=$$.split1(b"\0")[0].decode();`. This will only retain the significant part of the field.
 
@@ -142,7 +144,7 @@ public type Foo = unit {
     };
 };
 ```
-Whenever there is a fixed-length field whose length is not byte-aligned (i.e., less than 8 bits or say 12 bits), you should use a bitfield to join it with following fields until reaching a size of 8/16/32/64.
+Whenever there is a fixed-length field whose length is not byte-aligned (i.e., less than 8 bits or say 12 bits), you should use a bitfield to join it with following fields until reaching a size of 8/16/32/64 instead of using an integer type.
 It is important to use the correct bit order parsing, this can be modified via an attribute attached to the field. When parsing a `bitfield(16)` in network byte order and with bit order `spicy::BitOrder::LSB0` (default value of `&bit-order`), bits are numbered 0 to 15 from right to left.
 ```
 MSB                           LSB
