@@ -1,0 +1,82 @@
+{
+  "bfd": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "5880"
+  },
+  "bpv7": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "9171"
+  },
+  "dhcp": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "2131"
+  },
+  "dns": {
+    "type": "",
+    "spec_type": "rfc",
+    "rfc_id": "1035"
+  },
+  "http1.1": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "2616"
+  },
+  "icmpv4": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "792"
+  },
+  "ipv4": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "791"
+  },
+  "ipv6": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "2460"
+  },
+  "irc": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "1459"
+  },
+  "ldap": {
+    "type": "",
+    "spec-type": "rfc",
+    "rfc_id": "4511"
+  },
+  "rtsp": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "2326"
+  },
+  "spp": {
+    "type": "binary",
+    "spec_type": "bluebook",
+    "local_spec_file": "/home/bautistapeirone/Desktop/spec-extract/rfc/spp-bluebook.txt"
+  },
+  "tcp": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": ""
+  },
+  "tftp": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "1350"
+  },
+  "udp": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": ""
+  },
+  "vxlan": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "7348"
+  }
+}
