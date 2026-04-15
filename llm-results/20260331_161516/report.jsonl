@@ -1,2 +1,0 @@
-{"model": "gpt-oss:120b-cloud", "provider": "ollama", "protocol": "/home/bautistapeirone/Desktop/spec-extract/rfc/dhcp-rfc.txt", "success": true, "attempts": 3, "time_elapsed_s": 30.69}
-{"model": "gpt-oss:120b-cloud", "provider": "ollama", "protocol": "/home/bautistapeirone/Desktop/spec-extract/rfc/tftp-rfc.txt", "success": true, "attempts": 3, "time_elapsed_s": 41.23}

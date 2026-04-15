@@ -1,9 +1,0 @@
-module UDP;
-
-public type Datagram = unit {
-    src_port: uint16;
-    dst_port: uint16;
-    length: uint16;
-    checksum: uint16;
-    data: bytes &size=(self.length - 8) &eod;
-};

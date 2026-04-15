@@ -1,2 +1,0 @@
-{"model": "gemini-3.1-flash-lite-preview", "provider": "google", "protocol": "/home/bautistapeirone/Desktop/spec-extract/rfc/irc-rfc.txt", "success": true, "attempts": 4, "time_elapsed_s": 14.2}
-{"model": "qwen3-coder:480b-cloud", "provider": "ollama", "protocol": "/home/bautistapeirone/Desktop/spec-extract/rfc/irc-rfc.txt", "success": true, "attempts": 6, "time_elapsed_s": 112.16}

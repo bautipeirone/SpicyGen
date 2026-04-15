@@ -1,2 +1,0 @@
-// Success state is incorrect, the last file compiles.
-{"model": "qwen3-coder:480b-cloud", "provider": "ollama", "protocol": "/home/bautistapeirone/Desktop/spec-extract/rfc/dhcp-rfc.txt", "success": false, "attempts": 3, "time_elapsed_s": 1333.41}
