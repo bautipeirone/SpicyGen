@@ -62,7 +62,7 @@
   "tcp": {
     "type": "binary",
     "spec_type": "rfc",
-    "rfc_id": ""
+    "rfc_id": "793"
   },
   "tftp": {
     "type": "binary",
@@ -72,7 +72,7 @@
   "udp": {
     "type": "binary",
     "spec_type": "rfc",
-    "rfc_id": ""
+    "rfc_id": "768"
   },
   "vxlan": {
     "type": "binary",

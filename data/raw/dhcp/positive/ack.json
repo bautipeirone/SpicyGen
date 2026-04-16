@@ -1,0 +1,122 @@
+{
+  "chaddr_str": "00:0b:82:01:fc:42",
+  "ciaddr": "0.0.0.0",
+  "file_n": "",
+  "flags": 0,
+  "giaddr": "0.0.0.0",
+  "hlen": 6,
+  "hops": 0,
+  "htype": "ETHERNET_10MB",
+  "op": "BOOTREPLY",
+  "options": [
+    {
+      "code": "MESSAGE_TYPE",
+      "message_type": "ACK"
+    },
+    {
+      "code": "RENEWAL_TIME_VALUE",
+      "renewal_time_value": 1800
+    },
+    {
+      "code": "REBIND_TIME_VALUE",
+      "rebind_time_value": 3150
+    },
+    {
+      "code": "IP_ADDRESS_LEASE_TIME",
+      "ip_address_lease_time": 3600
+    },
+    {
+      "code": "SERVER_IDENTIFIER",
+      "server_identifier": "192.168.0.1"
+    },
+    {
+      "code": "SUBNET_MASK"
+    },
+    {
+      "code": "END"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    }
+  ],
+  "secs": 0.0,
+  "siaddr": "0.0.0.0",
+  "sname": "",
+  "xid": 15646,
+  "yiaddr": "192.168.0.10"
+}

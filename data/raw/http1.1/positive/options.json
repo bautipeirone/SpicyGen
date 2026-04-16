@@ -1,0 +1,36 @@
+{
+  "request": {
+    "message": {
+      "content_type": [
+        "TEXT",
+        "PLAIN"
+      ],
+      "delivery_mode": "EndOfData",
+      "end_of_hdr": "\\x0d\\x0a",
+      "has_body": false,
+      "headers": [
+        {
+          "content": "127.0.0.1:8080",
+          "name": "Host"
+        },
+        {
+          "content": "curl/8.0.1",
+          "name": "User-Agent"
+        },
+        {
+          "content": "*/*",
+          "name": "Accept"
+        }
+      ],
+      "is_request": true,
+      "use_content_length": true
+    },
+    "request": {
+      "method": "OPTIONS",
+      "uri": "/hello.txt",
+      "version": {
+        "number": "1.1"
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "chaddr_str": "00:0b:82:01:fc:42",
+  "ciaddr": "0.0.0.0",
+  "file_n": "",
+  "flags": 0,
+  "giaddr": "0.0.0.0",
+  "hlen": 6,
+  "hops": 0,
+  "htype": "ETHERNET_10MB",
+  "op": "BOOTREQUEST",
+  "options": [
+    {
+      "code": "MESSAGE_TYPE",
+      "message_type": "REQUEST"
+    },
+    {
+      "client_identifier": "\\x00\\x0b\\x82\\x01\\xfcB",
+      "client_type": "ETHERNET_10MB",
+      "code": "CLIENT_IDENTIFIER",
+      "len": 7
+    },
+    {
+      "code": "REQUESTED_ADDRESS",
+      "requested_address": "192.168.0.10"
+    },
+    {
+      "code": "SERVER_IDENTIFIER",
+      "server_identifier": "192.168.0.1"
+    },
+    {
+      "code": "PARAMETER_REQUESTS",
+      "len": 4,
+      "request_values": [
+        "SUBNET_MASK",
+        "ROUTER",
+        "DOMAIN_NAME_SERVER",
+        "NETWORK_TIME_PROTOCOL_SERVER"
+      ]
+    },
+    {
+      "code": "END"
+    },
+    {
+      "code": "PAD"
+    }
+  ],
+  "secs": 0.0,
+  "siaddr": "0.0.0.0",
+  "sname": "",
+  "xid": 15646,
+  "yiaddr": "0.0.0.0"
+}

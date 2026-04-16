@@ -1,0 +1,7 @@
+{
+  "op": "WRQ",
+  "wrq": {
+    "filename": "rfc1350.txt",
+    "mode": "octet"
+  }
+}

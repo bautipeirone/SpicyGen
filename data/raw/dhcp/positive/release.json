@@ -1,0 +1,114 @@
+{
+  "chaddr_str": "00:0c:29:67:42:7a",
+  "ciaddr": "192.168.60.100",
+  "file_n": "",
+  "flags": 0,
+  "giaddr": "0.0.0.0",
+  "hlen": 6,
+  "hops": 0,
+  "htype": "ETHERNET_10MB",
+  "op": "BOOTREQUEST",
+  "options": [
+    {
+      "code": "MESSAGE_TYPE",
+      "message_type": "RELEASE"
+    },
+    {
+      "code": "SERVER_IDENTIFIER",
+      "server_identifier": "10.0.41.30"
+    },
+    {
+      "code": "HOST_NAME",
+      "host_name": "dhcptestclient",
+      "len": 14
+    },
+    {
+      "code": "USER_CLASS",
+      "len": 7,
+      "user_class": "\\x06markku"
+    },
+    {
+      "code": "END"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    },
+    {
+      "code": "PAD"
+    }
+  ],
+  "secs": 0.0,
+  "siaddr": "0.0.0.0",
+  "sname": "",
+  "xid": 3510729295,
+  "yiaddr": "0.0.0.0"
+}

@@ -1,0 +1,30 @@
+{
+  "chaddr_str": "00:00:00:00:00:00",
+  "ciaddr": "10.0.41.30",
+  "file_n": "",
+  "flags": 32768,
+  "giaddr": "0.0.0.0",
+  "hlen": 6,
+  "hops": 0,
+  "htype": "ETHERNET_10MB",
+  "op": "BOOTREQUEST",
+  "options": [
+    {
+      "code": "MESSAGE_TYPE",
+      "message_type": "<unknown-8>"
+    },
+    {
+      "code": "VENDOR_SPECIFIC_INFORMATION",
+      "len": 2,
+      "vendor_specific_information": "^\u0000"
+    },
+    {
+      "code": "END"
+    }
+  ],
+  "secs": 2560.0,
+  "siaddr": "0.0.0.0",
+  "sname": "",
+  "xid": 699835726,
+  "yiaddr": "0.0.0.0"
+}

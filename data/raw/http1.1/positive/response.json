@@ -1,0 +1,57 @@
+{
+  "reply": {
+    "message": {
+      "body": {},
+      "body_len": 0,
+      "content_encoding": "gzip",
+      "content_length": 1272,
+      "content_type": [
+        "TEXT",
+        "HTML"
+      ],
+      "content_type_parameter": "charset=ISO-8859-1",
+      "delivery_mode": "Length",
+      "end_of_hdr": "\\x0d\\x0a",
+      "has_body": true,
+      "headers": [
+        {
+          "content": "policyref=\"http://www.googleadservices.com/pagead/p3p.xml\", CP=\"NOI DEV PSA PSD IVA PVD OTP OUR OTR IND OTC\"",
+          "name": "P3P"
+        },
+        {
+          "content": "text/html; charset=ISO-8859-1",
+          "name": "Content-Type"
+        },
+        {
+          "content": "gzip",
+          "name": "Content-Encoding"
+        },
+        {
+          "content": "CAFE/1.0",
+          "name": "Server"
+        },
+        {
+          "content": "private, x-gzip-ok=\"\"",
+          "name": "Cache-control"
+        },
+        {
+          "content": "1272",
+          "name": "Content-length"
+        },
+        {
+          "content": "Thu, 13 May 2004 10:17:14 GMT",
+          "name": "Date"
+        }
+      ],
+      "is_request": false,
+      "use_content_length": false
+    },
+    "reply": {
+      "reason": "OK",
+      "status": 200,
+      "version": {
+        "number": "1.1"
+      }
+    }
+  }
+}
