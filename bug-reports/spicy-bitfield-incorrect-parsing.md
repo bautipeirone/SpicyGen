@@ -1,6 +1,6 @@
 # spicy incorrectly parses a bitfield with field value constraints
 
-The following grammar incorrectly parses the string
+The following grammar contains a constraint that the x field inside the bitfield should be zero, which causes Spicy to incorrectly parse an input ignoring the MSB0 bit order.
 
 ```spicy
 module Bitfield;
@@ -21,7 +21,8 @@ printf "\xff\x00" | spicy-driver ./playground/bitfield-incorrect-parsing.spicy
 [$bf=(x: 0, y: 255)]
 ```
 
-Whereas, if we remove the `= 0` constraint inside the bitfield, the output changes
+As a baseline, if we remove the `= 0` constraint inside the bitfield, the MSB0 bit order is respected and the output changes:
+
 ```spicy
 module Bitfield;
 
