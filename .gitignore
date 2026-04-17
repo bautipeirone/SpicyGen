@@ -10,9 +10,9 @@ a.out*
 *.hlto
 
 # Runtime debug and outputs
-llm-results/*
-!llm-results/stable
-!llm-results/wip
-!llm-results/CHANGELOG.md
+outputs/*
+!outputs/stable
+!outputs/wip
+!outputs/CHANGELOG.md
 
 debug/

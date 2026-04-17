@@ -3,7 +3,7 @@
 MODELS="ollama/qwen3-coder:480b-cloud google/gemini-3.1-flash-lite-preview"
 PROTOCOLS="tftp dhcp http dns"
 
-BASE_OUTPUT_PATH="$PWD/llm-results"
+BASE_OUTPUT_PATH="$PWD/outputs"
 
 DEBUG_MODE=""
 POSITIONAL_ARGS=()
@@ -110,8 +110,8 @@ TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RUN_OUT_DIR="$BASE_OUTPUT_PATH/$TIMESTAMP"
 mkdir -p "$RUN_OUT_DIR"
 if [[ -n "$DEBUG_MODE" ]]; then
-  DEBUG_DIR="debug/$TIMESTAMP"
-  mkdir -p "$DEBUG_DIR"
+  DEBUG_DIR="$RUN_OUT_DIR/debug"
+  mkdir "$DEBUG_DIR"
 fi
 
 if [[ -n "$CONFIG_PATH" ]]; then
