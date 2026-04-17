@@ -144,7 +144,7 @@ def main() -> None:
         print(json.dumps(metrics))
 
     if not success:
-        logger.warning("Grammar did not compile after all retries.")
+        logger.warning("Grammar did not pass tests.")
 
     if args.output_file:
         save_response(args.output_file, content)

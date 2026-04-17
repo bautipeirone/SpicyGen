@@ -50,6 +50,7 @@ def clean_response(text: str) -> str:
     return text
 
 def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retrieve (e.g., '1035')"]) -> str:
+    logger.debug("Retrieving RFC with ID: %s", rfc_id)
     rfc_text = retrieve_rfc_by_id(rfc_id)
     if rfc_text is None:
         return f"Could not retrieve RFC {rfc_id}."
@@ -68,6 +69,7 @@ def run_refinement_loop(
     Returns a tuple of (grammar_code, compiled_successfully, attempts).
     """
     max_retries = agent_config.get("max_retries")
+    use_parsing_tree_tool = agent_config.get("use_parsing_tree_tool")
     refinement_dir = None
     errors_dir = debug_dir / "errors" if debug_dir else None
     if debug_dir:
@@ -95,7 +97,6 @@ def run_refinement_loop(
         result = compile_spicy_grammar(cleaned_code, { "step_path": step_path, "errors_path": errors_path })
 
         if result.success:
-            state.success = True
             logger.info(f"Compilation succeeded on attempt {state.attempt}.")
             return "SUCCESS"
 
@@ -115,7 +116,7 @@ def run_refinement_loop(
             cleaned_code = code
 
         logger.info(f"Running Runtime check for protocol '{state.protocol.name}'...")
-        check_result = run_parser_check_from_code(cleaned_code, state.protocol)
+        check_result = run_parser_check_from_code(cleaned_code, state.protocol, show_parsing_tree=use_parsing_tree_tool)
 
         if not check_result.verdicts:
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
@@ -123,12 +124,11 @@ def run_refinement_loop(
 
         summary = check_result.summary()
         if check_result.all_passed:
+            state.success = True
             logger.info(f"Runtime check PASSED for '{state.protocol.name}'.")
-            logger.debug(f"Runtime check details:\n{summary}")
             return f"All packets parsed correctly. Say TERMINATE."
         else:
             logger.warning(f"Runtime check FAILED for '{state.protocol.name}'.")
-            logger.debug(f"Runtime check details:\n{summary}")
             return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
     system_message = system_message + AGENT_LOOP_INSTRUCTIONS

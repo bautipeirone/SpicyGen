@@ -9,9 +9,12 @@ import subprocess
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
+import os
+import difflib
 
 from src.logger import logger
 from src.protocol import Protocol, ProtocolType
+from src.utils import generate_diff
 
 _RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
@@ -25,8 +28,8 @@ class ParseResult:
     """Result of running spicy-driver on a single packet."""
     packet_path: str
     success: bool
-    stdout: str
-    stderr: str
+    error: str
+    parse_tree: str | None = None
 
 
 @dataclass
@@ -35,12 +38,12 @@ class PacketVerdict:
     packet_path: str
     expected_accept: bool
     actual_accept: bool
-    stderr: str
+    error: str
+    parse_tree_summary: str | None = None
 
     @property
     def passed(self) -> bool:
         return self.expected_accept == self.actual_accept
-
 
 @dataclass
 class SemanticCheckResult:
@@ -83,10 +86,14 @@ class SemanticCheckResult:
                     lines.append(f"Packet representation:")
                     lines.append(packet_repr)
 
+                if v.parse_tree_summary:
+                    lines.append(f"Parse tree summary:")
+                    lines.append(v.parse_tree_summary)
+
                 if not v.passed:
-                    if v.stderr:
+                    if v.error:
                         lines.append(f"Error output from parsing:")
-                        for err_line in v.stderr.strip().splitlines():
+                        for err_line in v.error.strip().splitlines():
                             lines.append(f"  {err_line}")
                 lines.append("")
         return "\n".join(lines)
@@ -98,6 +105,38 @@ class SemanticCheckResult:
         lines.append(f"  Overall: {'PASS' if self.all_passed else 'FAIL'}")
         lines.append(self.report_errors())
         return "\n".join(lines)
+
+
+def get_parse_tree_summary(parse_result: ParseResult) -> str | None:
+    if parse_result.parse_tree is None:
+        return None
+    
+    packet_path, _ = os.path.splitext(parse_result.packet_path)
+    expected_tree_path = Path(f"{packet_path}.json")
+    if not expected_tree_path.exists():
+        logger.warning(f"No expected parse tree found for packet '{parse_result.packet_path}' at {expected_tree_path}. Skipping parse tree diff.")
+        return None
+    
+    with open(expected_tree_path, "r") as f:
+        expected_tree = f.read()
+
+    actual_tree = parse_result.parse_tree
+    parse_tree_diff = generate_diff(actual_tree, expected_tree)
+    if not parse_tree_diff:
+        logger.debug(f"No differences found in parse trees for {parse_result.packet_path}.")
+        return "No differences found in parse trees."
+
+    summary_lines = []
+
+    summary_lines.append(f"Actual parse tree:")
+    summary_lines.append(f"```json\n{actual_tree}\n```")
+    summary_lines.append(f"Expected parse tree:")
+    summary_lines.append(f"```json\n{expected_tree}\n```")
+    summary_lines.append("Parse tree diff (actual vs expected):")
+    summary_lines.append(f"```diff\n{parse_tree_diff}\n```")
+
+    logger.debug(f"Generated parse tree diff for {os.path.basename(parse_result.packet_path)}")    
+    return "\n".join(summary_lines)
 
 # ---------------------------------------------------------------------------
 # Core functions
@@ -126,36 +165,50 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
             lines.append(f"{offset:08x}  {hex_bytes:<47}  {ascii_bytes}")
         return "\n".join(lines)
 
-def run_spicy_driver(grammar_file: str, packet_file: str) -> ParseResult:
-    """Run ``spicy-driver <grammar_file> < <packet_file>`` and return the result."""
-    packet_path = Path(packet_file)
-    logger.info(f"Running spicy-driver: {grammar_file} < {packet_path.name}")
+def run_spicy_parser(grammar_file: str, packet_file: str) -> ParseResult:
+    """Run ``spicy-dump <grammar_file> < <packet_file>`` and return the result."""
+    packet_name = os.path.basename(packet_file)
+    logger.info(f"Running spicy-dump: {grammar_file} < {packet_name}")
 
     with open(packet_file, "rb") as pf:
-        result = subprocess.run(
-            ["spicy-driver", grammar_file],
+        spicy_proc = subprocess.Popen(
+            ["spicy-dump", "-J", grammar_file],
             stdin=pf,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
         )
 
-    success = result.returncode == 0
+        fmt_proc = subprocess.Popen(["jq", "--monochrome-output", "--indent", "2"],
+            stdin=spicy_proc.stdout,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        spicy_proc.stdout.close()
+        formatted_stdout, _ = fmt_proc.communicate()
+        spicy_stderr = spicy_proc.stderr.read()
+        spicy_returncode = spicy_proc.wait()
+
+    success = spicy_returncode == 0
     if success:
-        logger.debug(f"  spicy-driver accepted {packet_path.name}")
+        logger.debug(f"spicy-dump accepted {packet_name}")
     else:
-        logger.debug(f"  spicy-driver rejected {packet_path.name}: {result.stderr.strip()}")
+        logger.debug(f"spicy-dump rejected {packet_name}: {spicy_stderr.strip()}")
 
     return ParseResult(
         packet_path=packet_file,
         success=success,
-        stdout=result.stdout,
-        stderr=result.stderr,
+        parse_tree=formatted_stdout if success else None,
+        error=spicy_stderr.strip(),
     )
 
 
 def run_parser_check(
     grammar_file: str,
-    protocol: Protocol
+    protocol: Protocol,
+    show_parsing_tree: bool
 ) -> SemanticCheckResult:
     """Run a grammar against all packets for *protocol* found on disk.
 
@@ -165,8 +218,8 @@ def run_parser_check(
         Path to the ``.spicy`` grammar file.
     protocol:
         Protocol to look up under ``data/raw/<protocol>``.
-    index_path:
-        Unused compatibility argument retained for existing callers.
+    show_parsing_tree:
+        Whether to include the parsing tree output from spicy-driver in the error report.
 
     Returns
     -------
@@ -180,12 +233,12 @@ def run_parser_check(
 
     accept_packets = sorted(
         str(path.relative_to(_RAW_BASE_DIR))
-        for path in accept_dir.rglob("*")
+        for path in accept_dir.rglob("*.bin")
         if path.is_file()
     ) if accept_dir.exists() else []
     reject_packets = sorted(
         str(path.relative_to(_RAW_BASE_DIR))
-        for path in reject_dir.rglob("*")
+        for path in reject_dir.rglob("*.bin")
         if path.is_file()
     ) if reject_dir.exists() else []
 
@@ -202,37 +255,40 @@ def run_parser_check(
 
     for rel_path in accept_packets:
         abs_path = str(_RAW_BASE_DIR / rel_path)
-        parse_result = run_spicy_driver(grammar_file, abs_path)
+        parse_result = run_spicy_parser(grammar_file, abs_path)
+        parse_tree_summary = get_parse_tree_summary(parse_result) if show_parsing_tree else None
         verdict = PacketVerdict(
             packet_path=rel_path,
             expected_accept=True,
             actual_accept=parse_result.success,
-            stderr=parse_result.stderr,
+            error=parse_result.error,
+            parse_tree_summary=parse_tree_summary,
         )
         result.verdicts.append(verdict)
         if not verdict.passed:
-            logger.warning(f"FAIL (accept): {rel_path} was rejected. stderr: {parse_result.stderr.strip()}")
+            logger.warning(f"FAIL (accept): {rel_path} was rejected. stderr: {parse_result.error.strip()}")
 
     for rel_path in reject_packets:
         abs_path = str(_RAW_BASE_DIR / rel_path)
-        parse_result = run_spicy_driver(grammar_file, abs_path)
+        parse_result = run_spicy_parser(grammar_file, abs_path)
         verdict = PacketVerdict(
             packet_path=rel_path,
             expected_accept=False,
             actual_accept=parse_result.success,
-            stderr=parse_result.stderr,
+            error=parse_result.error,
         )
         result.verdicts.append(verdict)
         if not verdict.passed:
             logger.warning(f"FAIL (reject): {rel_path} was accepted but should have been rejected.")
 
-    logger.info(f"Semantic check result: {result.summary()}")
+    logger.debug(f"Semantic check result: {result.summary()}")
     return result
 
 
 def run_parser_check_from_code(
     grammar_code: str,
-    protocol: Protocol
+    protocol: Protocol,
+    show_parsing_tree: bool = False
 ) -> SemanticCheckResult:
     """Convenience wrapper: writes *grammar_code* to a temp file, then runs
     :func:`run_parser_check` against it.
@@ -245,4 +301,4 @@ def run_parser_check_from_code(
     ) as tmp:
         tmp.write(grammar_code)
         tmp.flush()
-        return run_parser_check(tmp.name, protocol)
+        return run_parser_check(tmp.name, protocol, show_parsing_tree)

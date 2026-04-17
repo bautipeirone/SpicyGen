@@ -5,6 +5,7 @@ from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from enum import Enum
 from src.logger import logger
 import json
+import os
 
 # Default location of the packet index relative to the project root.
 _DEFAULT_INDEX_PATH = Path(__file__).resolve().parents[1] / "protocol_index.json"
@@ -67,16 +68,16 @@ def load_protocol(protocol_name: str, index_path: Path | None = None) -> Protoco
     )
 
 
-def load_rfc(rfc_identifier: Path | str) -> str:
+def load_rfc(rfc_id: str) -> str:
     try:
-        path = Path(rfc_identifier)
-        if path.exists():
-            rfc_text = load_file(path)
-        else:
-            rfc_text = retrieve_rfc_by_id(rfc_identifier)
-        return clean_rfc_text(rfc_text)
+        logger.debug(f"Retrieving RFC {rfc_id}...")
+        rfc_content = retrieve_rfc_by_id(rfc_id)
+        if rfc_content is None:
+            return None
+        rfc_content = clean_rfc_text(rfc_content)
+        return rfc_content
     except Exception as exc:
-        raise SystemExit(f"Unable to read RFC {rfc_identifier}: {exc}") from exc
+        raise SystemExit(f"Unable to read RFC {rfc_id}: {exc}") from exc
 
 
 def load_spec(protocol: Protocol) -> str | None:
@@ -85,10 +86,7 @@ def load_spec(protocol: Protocol) -> str | None:
         logger.debug(f"Loading protocol spec for {protocol.name} from {protocol.local_spec_file}")
         return load_file(protocol.local_spec_file)
     elif protocol.spec_type == ProtocolSpecType.RFC and protocol.spec_id:
-        logger.debug(f"Retrieving RFC {protocol.spec_id} for protocol {protocol.name}")
-        rfc_content = retrieve_rfc_by_id(protocol.spec_id)
-        rfc_content = clean_rfc_text(rfc_content)
-        return rfc_content
+        return load_rfc(protocol.spec_id)
     else:
         logger.warning(f"No specification found for protocol '{protocol.name}'")
         return None

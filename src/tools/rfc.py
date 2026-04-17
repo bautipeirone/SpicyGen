@@ -1,5 +1,6 @@
 import requests
 import re
+from src.logger import logger
 
 RFC_NAME_TO_ID = {
     "dns": "1035",
@@ -29,6 +30,8 @@ def retrieve_rfc_by_id(rfc_id: str) -> str | None:
     url = RFC_EDITOR_URL.format(rfc_id=rfc_id)
     response = requests.get(url, timeout=15)
     if response.status_code == 200:
+        logger.debug(f"Successfully retrieved RFC {rfc_id} from {url}")
         return response.text
     else:
+        logger.error(f"Failed to retrieve RFC {rfc_id} from {url}: HTTP {response.status_code}")
         return None

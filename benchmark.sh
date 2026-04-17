@@ -96,10 +96,10 @@ run_grammar_generator() {
 
   local METRICS_PATH="${OUTPUT_PATH%.spicy}.json"
   python generate_grammar.py -p "$PROVIDER" -m "$MODEL" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
-  if spicyc -j "$OUTPUT_PATH" 2> /dev/null; then
-    echo "GRAMMAR PRODUCED BY $MODEL COMPILED SUCCESFULLY: $(basename "$OUTPUT_PATH")"
+  if [ $? -ne 0 ]; then
+    echo "GRAMMAR PRODUCED BY $MODEL DIDNT PASS TESTS: $(basename "$OUTPUT_PATH")"
   else
-    echo "GRAMMAR PRODUCED BY $MODEL DIDNT COMPILE: $(basename "$OUTPUT_PATH")"
+    echo "GRAMMAR PRODUCED BY $MODEL PASSED TESTS: $(basename "$OUTPUT_PATH")"
   fi
 }
 
