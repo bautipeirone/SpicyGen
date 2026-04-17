@@ -1,5 +1,6 @@
 # Grammar specification language
 **Only use the tools explained in this document. It is STRICTLY prohibited to use syntax not declared here.**
+**The name of the module MUST be PROTOCOL_NAME + LLM_NAME. This is an example of the format: TCP_GPT.**
 
 ## General guidelines
 1. Generally, you define parsers through types called “units” that describe the syntax of a protocol. A set of units forms a grammar. In practice, units typically correspond pretty directly to protocol data units (PDUs) as protocol specifications tend to define them.
