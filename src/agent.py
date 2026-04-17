@@ -116,7 +116,7 @@ def run_refinement_loop(
             cleaned_code = code
 
         logger.info(f"Running Runtime check for protocol '{state.protocol.name}'...")
-        check_result = run_parser_check_from_code(cleaned_code, state.protocol, show_parsing_tree=use_parsing_tree_tool)
+        check_result = run_parser_check_from_code(cleaned_code, state.protocol, show_parsing_tree=use_parsing_tree_tool, debug_dir=debug_dir)
 
         if not check_result.verdicts:
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")

@@ -142,6 +142,49 @@ def get_parse_tree_summary(parse_result: ParseResult) -> str | None:
 # Core functions
 # ---------------------------------------------------------------------------
 
+def precompile_grammar(grammar_file: str, debug_dir: Path | None = None) -> Path | None:
+    """Pre-compile a ``.spicy`` grammar to a ``.hlto`` binary.
+
+    Runs ``spicyc -j <grammar_file> -o <output>`` so that repeated calls to
+    :func:`run_spicy_parser` can skip the compilation step entirely.
+
+    Parameters
+    ----------
+    grammar_file:
+        Path to the ``.spicy`` source grammar.
+    debug_dir:
+        Optional debug directory.  When provided the ``.hlto`` is written into
+        ``<debug_dir>/build/<grammar_file>.hlto``; otherwise a temporary directory is
+        used.
+
+    Returns
+    -------
+    Path | None
+        Path to the compiled ``.hlto`` file, or ``None`` if compilation failed.
+    """
+    grammar_name = os.path.splitext(os.path.basename(grammar_file))[0]
+    if debug_dir is not None:
+        build_dir = debug_dir / "build"
+        build_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        build_dir = Path(tempfile.mkdtemp(prefix="spicy_build_"))
+    hlto_path = build_dir / f"{grammar_name}.hlto"
+
+    logger.info(f"Pre-compiling grammar to {hlto_path}")
+    proc = subprocess.run(
+        ["spicyc", "-j", grammar_file, "-o", str(hlto_path)],
+        capture_output=True,
+        text=True,
+    )
+
+    if proc.returncode != 0:
+        logger.error(f"Pre-compilation failed: {proc.stderr.strip()}")
+        return None
+
+    logger.info(f"Pre-compilation succeeded: {hlto_path}")
+    return hlto_path
+
+
 def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType) -> str | None:
     """Return the raw text packet or a binary hexdump for a packet on disk."""
     try:
@@ -208,7 +251,8 @@ def run_spicy_parser(grammar_file: str, packet_file: str) -> ParseResult:
 def run_parser_check(
     grammar_file: str,
     protocol: Protocol,
-    show_parsing_tree: bool
+    show_parsing_tree: bool,
+    debug_dir: Path | None = None,
 ) -> SemanticCheckResult:
     """Run a grammar against all packets for *protocol* found on disk.
 
@@ -220,6 +264,9 @@ def run_parser_check(
         Protocol to look up under ``data/raw/<protocol>``.
     show_parsing_tree:
         Whether to include the parsing tree output from spicy-driver in the error report.
+    debug_dir:
+        Optional debug directory. When provided, the compiled ``.hlto`` is
+        stored in ``<debug_dir>/build/``.
 
     Returns
     -------
@@ -253,9 +300,13 @@ def run_parser_check(
         f"{len(accept_packets)} accept packet(s), {len(reject_packets)} reject packet(s)"
     )
 
+    # Pre-compile grammar once to avoid repeated compilation per packet
+    hlto_path = precompile_grammar(grammar_file, debug_dir)
+    parser_input = str(hlto_path) if hlto_path is not None else grammar_file
+
     for rel_path in accept_packets:
         abs_path = str(_RAW_BASE_DIR / rel_path)
-        parse_result = run_spicy_parser(grammar_file, abs_path)
+        parse_result = run_spicy_parser(parser_input, abs_path)
         parse_tree_summary = get_parse_tree_summary(parse_result) if show_parsing_tree else None
         verdict = PacketVerdict(
             packet_path=rel_path,
@@ -270,7 +321,7 @@ def run_parser_check(
 
     for rel_path in reject_packets:
         abs_path = str(_RAW_BASE_DIR / rel_path)
-        parse_result = run_spicy_parser(grammar_file, abs_path)
+        parse_result = run_spicy_parser(parser_input, abs_path)
         verdict = PacketVerdict(
             packet_path=rel_path,
             expected_accept=False,
@@ -288,7 +339,8 @@ def run_parser_check(
 def run_parser_check_from_code(
     grammar_code: str,
     protocol: Protocol,
-    show_parsing_tree: bool = False
+    show_parsing_tree: bool = False,
+    debug_dir: Path | None = None,
 ) -> SemanticCheckResult:
     """Convenience wrapper: writes *grammar_code* to a temp file, then runs
     :func:`run_parser_check` against it.
@@ -301,4 +353,4 @@ def run_parser_check_from_code(
     ) as tmp:
         tmp.write(grammar_code)
         tmp.flush()
-        return run_parser_check(tmp.name, protocol, show_parsing_tree)
+        return run_parser_check(tmp.name, protocol, show_parsing_tree, debug_dir=debug_dir)
