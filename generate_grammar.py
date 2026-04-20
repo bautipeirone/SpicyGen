@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from src.llm.providers import get_autogen_config
+from src.providers import get_autogen_config
 from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
 from src.utils import load_file, read_config
@@ -31,7 +31,7 @@ def parse_args() -> argparse.Namespace:
         "-m",
         action="store",
         default=None,
-        help="Model to query",
+        help="Model to query (must be a key from the model_index.json file)",
     )
     parser.add_argument(
         "--instructions-file",
@@ -44,13 +44,6 @@ def parse_args() -> argparse.Namespace:
         "protocol",
         type=str,
         help="Protocol name (e.g. 'dhcp', 'dns') used to look up packets for runtime check.",
-    )
-    parser.add_argument(
-        "--provider",
-        "-p",
-        choices=["ollama", "google", "openai", "anthropic"],
-        default="ollama",
-        help="LLM provider to use (default: ollama)",
     )
     parser.add_argument(
         "--output-file",
@@ -92,9 +85,8 @@ def main() -> None:
     args = parse_args()
     enable_runtime_log_file(args.debug_dir)
 
-    logger.info(f"Generating grammar for {args.protocol} using {args.model}...")
+    logger.info(f"Generating grammar for {args.protocol} using {args.model}")
     logger.debug(f"Instructions file: {args.instructions_file}")
-    logger.debug(f"Provider: {args.provider}")
     logger.debug(f"Output file: {args.output_file}")
     logger.debug(f"Debug dir: {args.debug_dir}")
     logger.debug(f"Config file: {args.config}")
@@ -112,7 +104,7 @@ def main() -> None:
         exit(1)
 
     llm_params, agent_config = read_config(args.config)
-    llm_config = get_autogen_config(args.provider, args.model, llm_params)
+    llm_config = get_autogen_config(args.model, llm_params)
 
     model_name = args.model.split("-")[0]
     prompt = PROMPT_TEMPLATE.format(name=model_name)
@@ -130,7 +122,6 @@ def main() -> None:
 
     metrics = {
         "model": args.model,
-        "provider": args.provider,
         "protocol": protocol.name,
         "success": success,
         "attempts": attempts,
@@ -152,6 +143,7 @@ def main() -> None:
     else:
         print(content)
 
+    return 0 if success else 1
 
 if __name__ == "__main__":
     try:

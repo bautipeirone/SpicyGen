@@ -1,0 +1,26 @@
+{
+  "gemini-3-flash": {
+    "name": "gemini-3-flash-preview",
+    "provider": "google",
+    "context-window": "1000000",
+    "cutoff-date": "01-25"
+  },
+  "gemini-3.1-flash": {
+    "name": "gemini-3.1-flash-lite-preview",
+    "provider": "google",
+    "context-window": "1000000",
+    "cutoff-date": "01-25"
+  },
+  "qwen3-coder": {
+    "name": "qwen3-coder:480b-cloud",
+    "provider": "ollama",
+    "context-window": "262144",
+    "cutoff-date": "01-25"
+  },
+  "gpt-oss": {
+    "name": "gpt-oss:120b-cloud",
+    "provider": "ollama",
+    "context-window": "128000",
+    "cutoff-date": "06-24"
+  }
+}

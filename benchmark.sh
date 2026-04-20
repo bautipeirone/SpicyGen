@@ -1,9 +1,10 @@
 #!/usr/bin/bash
 
-MODELS="ollama/qwen3-coder:480b-cloud google/gemini-3.1-flash-lite-preview"
+MODELS="qwen3-coder gemini-3.1-flash"
 PROTOCOLS="tftp dhcp http dns"
 
 BASE_OUTPUT_PATH="$PWD/outputs"
+MODEL_INDEX_FILE="model_index.json"
 
 DEBUG_MODE=""
 POSITIONAL_ARGS=()
@@ -68,38 +69,46 @@ done
 set -- "${POSITIONAL_ARGS[@]}"
 
 get_provider() {
-  echo "${1%/*}"
+  local MODEL=$1
+  PROVIDER=$(jq -r --arg MODEL "$MODEL" '.[$MODEL].provider' < "$MODEL_INDEX_FILE")
+  if [ "$PROVIDER" = "null" ]; then
+    echo "Null provider" 1>&2
+    exit 1
+  fi
+  echo "$PROVIDER"
 }
 
 get_model_name() {
-  echo "${1#*/}"
+  local MODEL=$1
+  MODEL_NAME=$(jq -r --arg MODEL "$MODEL" '.[$MODEL].name' < "$MODEL_INDEX_FILE")
+  if [ "$MODEL_NAME" = "null" ]; then
+    echo "Model name not found" 1>&2
+    exit 1
+  fi
+  echo "$MODEL_NAME"
 }
 
-# First input is model
-# Second input is rfc
-# Third input is output file
-# Fourth input is protocol
-# Fifth is debug dir (optional)
+# First input is model id (from model_index.json)
+# Second input is protocol
 run_grammar_generator() {
-  local PROVIDER
-  local MODEL
-  local OUTPUT_PATH=$2
-  local PROTOCOL=$3
-  local DEBUG_DIR=$4
-  PROVIDER=$(get_provider "$1")
-  MODEL=$(get_model_name "$1")
+  local MODEL_ID=$1
+  local PROTOCOL=$2
+
+  MODEL_NAME=$(get_model_name "$MODEL_ID")
+
+  OUTPUT_PATH="$RUN_OUT_DIR/$PROTOCOL-$MODEL_NAME.spicy"
   
   local DEBUG_ARGS=""
   if [[ -n "$DEBUG_DIR" ]]; then
-    DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL}"
+    DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL_NAME}"
   fi
 
   local METRICS_PATH="${OUTPUT_PATH%.spicy}.json"
-  python generate_grammar.py -p "$PROVIDER" -m "$MODEL" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
+  python generate_grammar.py -m "$MODEL_ID" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
   if [ $? -ne 0 ]; then
-    echo "GRAMMAR PRODUCED BY $MODEL DIDNT PASS TESTS: $(basename "$OUTPUT_PATH")"
+    echo "GRAMMAR PRODUCED BY $MODEL_ID DIDNT PASS TESTS: $(basename "$OUTPUT_PATH")"
   else
-    echo "GRAMMAR PRODUCED BY $MODEL PASSED TESTS: $(basename "$OUTPUT_PATH")"
+    echo "GRAMMAR PRODUCED BY $MODEL_ID PASSED TESTS: $(basename "$OUTPUT_PATH")"
   fi
 }
 
@@ -131,8 +140,7 @@ EOF
 
 for p in $PROTOCOLS; do
   for m in $MODELS; do
-    OUTPUT_PATH="$RUN_OUT_DIR/$p-$(get_model_name "$m").spicy"
-    run_grammar_generator "$m" "$OUTPUT_PATH" "$p" "$DEBUG_DIR"
+    run_grammar_generator "$m" "$p"
   done
 done
 
