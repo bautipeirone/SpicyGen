@@ -16,3 +16,6 @@ outputs/*
 !outputs/CHANGELOG.md
 
 debug/
+
+# Extra
+deprecated/
