@@ -1,0 +1,7 @@
+{
+  "checksum": 21160,
+  "data": "\\x00\\x03\\x00\\x05 Protocol or TFTP.  It has been implemented\\x0a   on top of the Internet User Datagram protocol (UDP or Datagram) [2]\\x0a\\x0a\\x0a\\x0aSollins                                                         [Page 1]\\x0a\\x0c\\x0aRFC 1350                    TFTP Revision 2                    July 1992\\x0a\\x0a\\x0a   so it may be used to move files between machines on different\\x0a   networks implementing UDP.  (This should not exclude the possibility\\x0a   of implementing TFTP on top of other datagram protocols.)  It is\\x0a   designed to be small and easy to imp",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

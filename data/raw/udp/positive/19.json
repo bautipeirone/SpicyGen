@@ -1,0 +1,7 @@
+{
+  "checksum": 42540,
+  "data": "\\x00\\x03\\x00\\x09512 bytes\\x0a   signals termination of a transfer.  If a packet gets lost in the\\x0a   network, the intended recipient will timeout and may retransmit his\\x0a   last packet (which may be data or an acknowledgment), thus causing\\x0a   the sender of the lost packet to retransmit that lost packet.  The\\x0a   sender has to keep just one packet on hand for retransmission, since\\x0a   the lock step acknowledgment guarantees that all older packets have\\x0a   been received.  Notice that both machines involved in a transfer are\\x0a   consi",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

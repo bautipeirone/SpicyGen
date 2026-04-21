@@ -1,0 +1,7 @@
+{
+  "checksum": 65476,
+  "data": "\\x00\\x03\\x00\\x11ledgment packet for write, or the first data\\x0a   packet for read.  In general an acknowledgment packet will contain\\x0a   the block number of the data packet being acknowledged.  Each data\\x0a   packet has associated with it a block number; block numbers are\\x0a   consecutive and begin with one.  Since the positive response to a\\x0a   write request is an acknowledgment packet, in this special case the\\x0a   block number will be zero.  (Normally, since an acknowledgment packet\\x0a   is acknowledging a data packet, the acknowle",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

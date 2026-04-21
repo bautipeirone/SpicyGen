@@ -1,0 +1,7 @@
+{
+  "checksum": 51725,
+  "data": "\\x00\\x03\\x00\\x12dgment packet will\\x0a   contain the block number of the data packet being acknowledged.)  If\\x0a   the reply is an error packet, then the request has been denied.\\x0a\\x0a   In order to create a connection, each end of the connection chooses a\\x0a   TID for itself, to be used for the duration of that connection.  The\\x0a   TID's chosen for a connection should be randomly chosen, so that the\\x0a   probability that the same number is chosen twice in immediate\\x0a   succession is very low.  Every packet has associated with it the two",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

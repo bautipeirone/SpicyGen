@@ -1,0 +1,7 @@
+{
+  "checksum": 19708,
+  "data": "\\x00\\x03\\x00.thm is used here.)\\x0a                   Field contains zero if unused.\\x0a\\x0a   Note: TFTP passes transfer identifiers (TID's) to the Internet User\\x0a   Datagram protocol to be used as the source and destination ports.\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0aSollins                                                        [Page 10]\\x0a\\x0c\\x0aRFC 1350                    TFTP Revision 2                    July 1992\\x0a\\x0a\\x0aReferences\\x0a\\x0a   [1]  USA Standard Code for Information Interchange, USASI X3.4-1968.\\x0a\\x0a   [2]  Postel, J., \"User Datagram  Protocol,\" RFC 768, USC/I",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

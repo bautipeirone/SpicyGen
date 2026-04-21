@@ -1,0 +1,7 @@
+{
+  "checksum": 49151,
+  "data": "\\x00\\x03\\x00\\x01\\x0a\\x0a\\x0a\\x0a\\x0a\\x0aNetwork Working Group                                         K. Sollins\\x0aRequest For Comments: 1350                                           MIT\\x0aSTD: 33                                                        July 1992\\x0aObsoletes: RFC 783\\x0a\\x0a\\x0a                     THE TFTP PROTOCOL (REVISION 2)\\x0a\\x0aStatus of this Memo\\x0a\\x0a   This RFC specifies an IAB standards track protocol for the Internet\\x0a   community, and requests discussion and suggestions for improvements.\\x0a   Please refer to the current edition of the \"IA",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

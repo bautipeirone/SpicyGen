@@ -1,0 +1,7 @@
+{
+  "checksum": 16475,
+  "data": "\\x00\\x03\\x00\\x03protocol was originally designed by Noel Chiappa, and was\\x0a   redesigned by him, Bob Baldwin and Dave Clark, with comments from\\x0a   Steve Szymanski.  The current revision of the document includes\\x0a   modifications stemming from discussions with and suggestions from\\x0a   Larry Allen, Noel Chiappa, Dave Clark, Geoff Cooper, Mike Greenwald,\\x0a   Liza Martin, David Reed, Craig Milo Rogers (of USC-ISI), Kathy\\x0a   Yellick, and the author.  The acknowledgement and retransmission\\x0a   scheme was inspired by TCP, and the erro",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

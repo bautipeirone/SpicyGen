@@ -1,0 +1,7 @@
+{
+  "checksum": 64439,
+  "data": "\\x00\\x03\\x00\\x0ccess\\x0a   denied during a transfer).\\x0a\\x0a   TFTP recognizes only one error condition that does not cause\\x0a   termination, the source port of a received packet being incorrect.\\x0a   In this case, an error packet is sent to the originating host.\\x0a\\x0a   This protocol is very restrictive, in order to simplify\\x0a   implementation.  For example, the fixed length blocks make allocation\\x0a   straight forward, and the lock step acknowledgement provides flow\\x0a   control and eliminates the need to reorder incoming data packets.\\x0a\\x0a3. R",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

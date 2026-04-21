@@ -1,0 +1,7 @@
+{
+  "checksum": 49304,
+  "data": "\\x00\\x03\\x00\\x1ciginal.\\x0a   Mail mode uses the name of a mail recipient in place of a file and\\x0a   must begin with a WRQ.  Otherwise it is identical to netascii mode.\\x0a   The mail recipient string should be of the form \"username\" or\\x0a   \"username@hostname\".  If the second form is used, it allows the\\x0a   option of mail forwarding by a relay computer.\\x0a\\x0a   The discussion above assumes that both the sender and recipient are\\x0a   operating in the same mode, but there is no reason that this has to\\x0a   be the case.  For example, one migh",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

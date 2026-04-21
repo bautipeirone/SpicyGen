@@ -1,0 +1,18 @@
+{
+  "dataField": {
+    "data": "\\xab\\xcd\\xef\\x01"
+  },
+  "primaryHeader": {
+    "packetDataLength": 3,
+    "sequenceControl": {
+      "packetSequenceCount": 0,
+      "sequenceFlags": 0
+    },
+    "versionAndId": {
+      "apid": 555,
+      "packetType": 0,
+      "packetVersionNumber": 0,
+      "secondaryHeaderFlag": 0
+    }
+  }
+}

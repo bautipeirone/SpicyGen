@@ -1,0 +1,26 @@
+{
+  "bitfield1": {
+    "ihl": 15,
+    "version": 4
+  },
+  "bitfield2": {
+    "flags": 2,
+    "fragment_offset": 0
+  },
+  "checksum": 64816,
+  "dst": "127.0.0.1",
+  "id": 0,
+  "options": [
+    {
+      "data": "\\x00\\x00\\x00\\x01\\x01\"\\x00\\x01\\xae\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x01",
+      "len": 40,
+      "type_val": "CommercialSecurity"
+    }
+  ],
+  "payload": "\\x08\\x001\\xa5\\x87\\x0a\\x00\\x01\\x81M\\xaeE$\\xb9\\x00\\x00\\x08\\x09\\x0a\\x0b\\x0c\\x0d\\x0e\\x0f\\x10\\x11\\x12\\x13\\x14\\x15\\x16\\x17\\x18\\x19\\x1a\\x1b\\x1c\\x1d\\x1e\\x1f !\"#$%&'()*+,-./01234567",
+  "protocol": 1,
+  "src": "127.0.0.1",
+  "tos": 0,
+  "total_length": 124,
+  "ttl": 64
+}

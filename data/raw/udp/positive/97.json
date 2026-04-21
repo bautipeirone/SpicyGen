@@ -1,0 +1,7 @@
+{
+  "checksum": 7889,
+  "data": "\\x00\\x03\\x000  violate the security of the server hosts file system.  TFTP is often\\x0a   installed with controls such that only files that have public read\\x0a   access are available via TFTP and writing files via TFTP is\\x0a   disallowed.\\x0a\\x0aAuthor's Address\\x0a\\x0a   Karen R. Sollins\\x0a   Massachusetts Institute of Technology\\x0a   Laboratory for Computer Science\\x0a   545 Technology Square\\x0a   Cambridge, MA 02139-1986\\x0a\\x0a   Phone: (617) 253-6006\\x0a\\x0a   EMail: SOLLINS@LCS.MIT.EDU\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0aSollins                                            ",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

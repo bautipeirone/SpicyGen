@@ -1,0 +1,7 @@
+{
+  "checksum": 47263,
+  "data": "\\x00\\x03\\x00+\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0aSollins                                                         [Page 9]\\x0a\\x0c\\x0aRFC 1350                    TFTP Revision 2                    July 1992\\x0a\\x0a\\x0aError Codes\\x0a\\x0a   Value     Meaning\\x0a\\x0a   0         Not defined, see error message (if any).\\x0a   1         File not found.\\x0a   2         Access violation.\\x0a   3         Disk full or allocation exceeded.\\x0a   4         Illegal TFTP operation.\\x0a   5         Unknown transfer ID.\\x0a   6         File already exists.\\x0a   7         No such user.\\x0a\\x0aInternet User Datagram Hea",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

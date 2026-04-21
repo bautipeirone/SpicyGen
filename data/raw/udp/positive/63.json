@@ -1,0 +1,7 @@
+{
+  "checksum": 10946,
+  "data": "\\x00\\x03\\x00\\x1fn\\x0a   TFTP, but one would be compatible with this specification.\\x0a\\x0a   It is also possible to define other modes for cooperating pairs of\\x0a\\x0a\\x0a\\x0aSollins                                                         [Page 6]\\x0a\\x0c\\x0aRFC 1350                    TFTP Revision 2                    July 1992\\x0a\\x0a\\x0a   hosts, although this must be done with care.  There is no requirement\\x0a   that any other hosts implement these.  There is no central authority\\x0a   that will define these modes or assign them names.\\x0a\\x0a\\x0a                   2 by",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

@@ -1,0 +1,10 @@
+{
+  "header": {
+    "checksum": 64763,
+    "code": 4,
+    "type_val": "DestinationUnreachable"
+  },
+  "original": {
+    "data": ""
+  }
+}

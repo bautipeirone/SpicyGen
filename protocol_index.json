@@ -4,6 +4,11 @@
     "spec_type": "rfc",
     "rfc_id": "5880"
   },
+  "bgp": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "1105"
+  },
   "bpv7": {
     "type": "binary",
     "spec_type": "rfc",
@@ -19,6 +24,11 @@
     "spec_type": "rfc",
     "rfc_id": "1035"
   },
+  "dtls": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "6347"
+  },
   "http1.1": {
     "type": "text",
     "spec_type": "rfc",
@@ -28,6 +38,11 @@
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "792"
+  },
+  "icmpv6": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "4443"
   },
   "ipv4": {
     "type": "binary",

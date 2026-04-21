@@ -1,0 +1,7 @@
+{
+  "checksum": 21359,
+  "data": "\\x00\\x03\\x00/nformation\\x0a        Sciences Institute, 28 August 1980.\\x0a\\x0a   [3]  Postel, J., \"Telnet Protocol Specification,\" RFC 764,\\x0a        USC/Information Sciences Institute, June, 1980.\\x0a\\x0a   [4]  Braden, R., Editor, \"Requirements for Internet Hosts --\\x0a        Application and Support\", RFC 1123, USC/Information Sciences\\x0a        Institute, October 1989.\\x0a\\x0aSecurity Considerations\\x0a\\x0a   Since TFTP includes no login or access control mechanisms, care must\\x0a   be taken in the rights granted to a TFTP server process so as not to\\x0a ",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

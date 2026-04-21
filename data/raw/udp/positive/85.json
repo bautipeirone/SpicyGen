@@ -1,0 +1,7 @@
+{
+  "checksum": 35247,
+  "data": "\\x00\\x03\\x00*|   Block #  |\\x0a          --------------------\\x0a          2 bytes  2 bytes        string    1 byte\\x0a          ----------------------------------------\\x0a   ERROR | 05    |  ErrorCode |   ErrMsg   |   0  |\\x0a          ----------------------------------------\\x0a\\x0aInitial Connection Protocol for reading a file\\x0a\\x0a   1. Host  A  sends  a  \"RRQ\"  to  host  B  with  source= A's TID,\\x0a      destination= 69.\\x0a\\x0a   2. Host B sends a \"DATA\" (with block number= 1) to host  A  with\\x0a      source= B's TID, destination= A's TID.\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

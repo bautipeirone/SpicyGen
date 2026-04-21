@@ -1,0 +1,11 @@
+{
+  "gateway_address": "0.0.0.0",
+  "header": {
+    "checksum": 64255,
+    "code": 0,
+    "type_val": "Redirect"
+  },
+  "original": {
+    "data": ""
+  }
+}

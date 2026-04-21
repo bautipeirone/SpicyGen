@@ -1,0 +1,7 @@
+{
+  "checksum": 27656,
+  "data": "\\x00\\x03\\x00,der [2]\\x0a\\x0a   (This has been included only for convenience.  TFTP need not be\\x0a   implemented on top of the Internet User Datagram Protocol.)\\x0a\\x0a     Format\\x0a\\x0a    0                   1                   2                   3\\x0a    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1\\x0a   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\\x0a   |          Source Port          |       Destination Port        |\\x0a   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\\x0a   |            Le",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

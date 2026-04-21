@@ -1,0 +1,7 @@
+{
+  "checksum": 21597,
+  "data": "\\x00\\x03\\x00\\x14ge by the requestor as its destination TID.\\x0a   The two chosen TID's are then used for the remainder of the transfer.\\x0a\\x0a   As an example, the following shows the steps used to establish a\\x0a   connection to write a file.  Note that WRQ, ACK, and DATA are the\\x0a   names of the write request, acknowledgment, and data types of packets\\x0a   respectively.  The appendix contains a similar example for reading a\\x0a   file.\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0aSollins                                                         [Page 4]\\x0a\\x0c\\x0aRFC 1350           ",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

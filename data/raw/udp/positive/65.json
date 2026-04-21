@@ -1,0 +1,7 @@
+{
+  "checksum": 21682,
+  "data": "\\x00\\x03\\x00 tes     2 bytes      n bytes\\x0a                   ----------------------------------\\x0a                  | Opcode |   Block #  |   Data     |\\x0a                   ----------------------------------\\x0a\\x0a                        Figure 5-2: DATA packet\\x0a\\x0a\\x0a   Data is actually transferred in DATA packets depicted in Figure 5-2.\\x0a   DATA packets (opcode = 3) have a block number and data field.  The\\x0a   block numbers on data packets begin with one and increase by one for\\x0a   each new block of data.  This restriction allows the",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

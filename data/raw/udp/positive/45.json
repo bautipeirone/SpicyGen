@@ -1,0 +1,7 @@
+{
+  "checksum": 36712,
+  "data": "\\x00\\x03\\x00\\x16hes the value that was agreed on in steps 1\\x0a   and 2.  If a source TID does not match, the packet should be\\x0a   discarded as erroneously sent from somewhere else.  An error packet\\x0a   should be sent to the source of the incorrect packet, while not\\x0a   disturbing the transfer.  This can be done only if the TFTP in fact\\x0a   receives a packet with an incorrect TID.  If the supporting protocols\\x0a   do not allow it, this particular error condition will not arise.\\x0a\\x0a   The following example demonstrates a correct opera",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

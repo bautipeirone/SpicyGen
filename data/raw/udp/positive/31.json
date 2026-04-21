@@ -1,0 +1,7 @@
+{
+  "checksum": 16250,
+  "data": "\\x00\\x03\\x00\\x0fto the Datagram layer to be used as ports; therefore\\x0a   they must be between 0 and 65,535.  The initialization of TID's is\\x0a   discussed in the section on initial connection protocol.\\x0a\\x0a   The  TFTP header consists of a 2 byte opcode field which indicates\\x0a   the packet's type (e.g., DATA, ERROR, etc.)  These opcodes and  the\\x0a   formats of  the various types of packets are discussed further in the\\x0a   section on TFTP packets.\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0aSollins                                                         [Page 3]\\x0a\\x0c\\x0a",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

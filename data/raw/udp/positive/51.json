@@ -1,0 +1,7 @@
+{
+  "checksum": 56310,
+  "data": "\\x00\\x03\\x00\\x19(ACK)\\x0a            5     Error (ERROR)\\x0a\\x0a   The TFTP header of a packet contains the  opcode  associated  with\\x0a   that packet.\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0a\\x0aSollins                                                         [Page 5]\\x0a\\x0c\\x0aRFC 1350                    TFTP Revision 2                    July 1992\\x0a\\x0a\\x0a            2 bytes     string    1 byte     string   1 byte\\x0a            ------------------------------------------------\\x0a           | Opcode |  Filename  |   0  |    Mode    |   0  |\\x0a            ----------------------------------",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

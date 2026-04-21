@@ -1,0 +1,7 @@
+{
+  "checksum": 65227,
+  "data": "\\x00\\x03\\x00\\x08should be consulted for further valuable\\x0a   directives and suggestions on TFTP.\\x0a\\x0a2. Overview of the Protocol\\x0a\\x0a   Any transfer begins with a request to read or write a file, which\\x0a   also serves to request a connection.  If the server grants the\\x0a   request, the connection is opened and the file is sent in fixed\\x0a   length blocks of 512 bytes.  Each data packet contains one block of\\x0a   data, and must be acknowledged by an acknowledgment packet before the\\x0a   next packet can be sent.  A data packet of less than ",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

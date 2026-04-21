@@ -1,0 +1,7 @@
+{
+  "checksum": 1239,
+  "data": "\\x00\\x03\\x00\\x10RFC 1350                    TFTP Revision 2                    July 1992\\x0a\\x0a\\x0a          ---------------------------------------------------\\x0a         |  Local Medium  |  Internet  |  Datagram  |  TFTP  |\\x0a          ---------------------------------------------------\\x0a\\x0a                      Figure 3-1: Order of Headers\\x0a\\x0a\\x0a4. Initial Connection Protocol\\x0a\\x0a   A transfer is established by sending a request (WRQ to write onto a\\x0a   foreign file system, or RRQ to read from it), and receiving a\\x0a   positive reply, an acknow",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}

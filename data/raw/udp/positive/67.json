@@ -1,0 +1,7 @@
+{
+  "checksum": 13151,
+  "data": "\\x00\\x03\\x00! program to use a\\x0a   single number to discriminate between new packets and duplicates.\\x0a   The data field is from zero to 512 bytes long.  If it is 512 bytes\\x0a   long, the block is not the last block of data; if it is from zero to\\x0a   511 bytes long, it signals the end of the transfer.  (See the section\\x0a   on Normal Termination for details.)\\x0a\\x0a   All  packets other than duplicate ACK's and those used for\\x0a   termination are acknowledged unless a timeout occurs [4].  Sending a\\x0a   DATA packet is an acknowledgment ",
+  "dst_port": 2087,
+  "length": 524,
+  "src_port": 57509
+}
