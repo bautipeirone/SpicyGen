@@ -1,0 +1,50 @@
+# This grammar was generated with Gemini 3.1 Flash and then refined
+# manually to fix bit order on bitfields and include better options parsing.
+module IP;
+
+import spicy;
+
+type OptionCode = enum {
+  EndOfOptionList = 0,
+  CommercialSecurity = 134,
+};
+
+type Option = unit {
+    type_val: uint8 &convert=OptionCode($$);
+    switch (self.type_val) {
+        OptionCode::EndOfOptionList -> : void; # End of Option list
+        * -> {
+            len: uint8;
+            data: bytes &size=self.len - 2;
+        }
+    };
+};
+
+public type Datagram = unit {
+    # Use bitfield to handle 4-bit fields
+    bitfield1: bitfield(8) {
+        version: 0..3;
+        ihl: 4..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    tos: uint8;
+    total_length: uint16;
+    id: uint16;
+    bitfield2: bitfield(16) {
+        flags: 0..2;
+        fragment_offset: 3..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+    ttl: uint8;
+    protocol: uint8;
+    checksum: uint16;
+    src: addr &ipv4;
+    dst: addr &ipv4;
+    
+    options: Option[] &size=((self.bitfield1.ihl * 4) - 20);
+    payload: bytes &size=(self.total_length - (self.bitfield1.ihl * 4));
+    # Options are present if IHL > 5. IHL is in 32-bit words.
+    # Header length in bytes is IHL * 4.
+    # Options start after the 20-byte fixed header.
+    # We need to access IHL from the bitfield.
+    # Since we can't easily access bitfield fields from outside, 
+    # we redefine the header structure.
+};
