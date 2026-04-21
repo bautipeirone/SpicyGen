@@ -6,5 +6,5 @@ llm:
 
 # Agent parameters
 agent:
-    max_retries: 10
+    max_retries: 15
     use_parsing_tree_tool: true
