@@ -1,0 +1,12 @@
+{
+  "destination_address": "2a00:5e80:101:212d:504:7b1:2572:db22",
+  "differentiated_service_code": 0,
+  "explicit_congestion": 0,
+  "flow_label": 0,
+  "hop_limit": 53,
+  "next_header": "ProtocolTCP",
+  "payload": "\\x00P\\x90\\xaaIS\\x95\\x96\\x14\\x96G\\x9f\\xa0\\x12o\\x90\\x18\\xd7\\x00\\x00\\x02\\x04\\x05\\xa0\\x04\\x02\\x08\\x0a0\\xce\\xf3\\x10\\x00\\x063\\xce\\x01\\x03\\x03\\x07",
+  "payload_length": 40,
+  "source_address": "2606:f200:0:7:bad:f00d:d00d:1",
+  "version": 6
+}

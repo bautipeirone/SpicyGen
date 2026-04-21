@@ -1,0 +1,30 @@
+{
+  "authentication": {
+    "auth_type": "SimplePassword",
+    "simple_auth": {
+      "auth_key_id": 2,
+      "auth_len": 9,
+      "password": "secret"
+    }
+  },
+  "desired_min_tx_interval": 1000000,
+  "detect_mult": 5,
+  "length": 33,
+  "my_discriminator": 1,
+  "required_min_echo_rx_interval": 0,
+  "required_min_rx_interval": 1000000,
+  "state_flags": {
+    "authentication_present": 1,
+    "control_plane_independent": 0,
+    "demand": 0,
+    "final": 0,
+    "multipoint": 0,
+    "poll": 0,
+    "state": "Down"
+  },
+  "version_diag": {
+    "diag": "NoDiagnostic",
+    "version": 1
+  },
+  "your_discriminator": 0
+}

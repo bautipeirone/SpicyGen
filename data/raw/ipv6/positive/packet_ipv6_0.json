@@ -1,0 +1,12 @@
+{
+  "destination_address": "ff02::1",
+  "differentiated_service_code": 56,
+  "explicit_congestion": 0,
+  "flow_label": 0,
+  "hop_limit": 255,
+  "next_header": "ProtocolICMPv6",
+  "payload": "\\x86\\x00\\xfe\\xa6@\\x08\\x07\\x08\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x05\\x01\\x00\\x00\\x00\\x00\\x05\\xaa",
+  "payload_length": 24,
+  "source_address": "fe80::ca4c:75ff:fe78:ed00",
+  "version": 6
+}
