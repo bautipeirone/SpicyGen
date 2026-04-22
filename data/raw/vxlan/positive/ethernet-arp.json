@@ -1,0 +1,15 @@
+{
+  "header": {
+    "flags": {
+      "f": {
+        "i_flag": 1,
+        "reserved1": 0,
+        "reserved2": 0
+      }
+    },
+    "group_policy_id": "\\x00\\x00\\x00",
+    "reserved2": 0,
+    "vni": 100
+  },
+  "payload": "\\xff\\xff\\xff\\xff\\xff\\xff\\x000\\x88\\x01\\x00\\x02\\x08\\x06\\x00\\x01\\x08\\x00\\x06\\x04\\x00\\x01\\x000\\x88\\x01\\x00\\x02\\xc0\\xa8\\xcb\\x05\\x00\\x00\\x00\\x00\\x00\\x00\\xc0\\xa8\\xcb\\x03"
+}
