@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 64293
+  data: \x00\x03\x00\x07Telnet Protocol\x0a   Specification" [3].)  Note that it is 8 bit ascii.  The term\x0a   "netascii" will be used throughout this document to mean this\x0a   particular version of ascii.); octet (This replaces the "binary" mode\x0a   of previous versions of this document.) raw 8 bit bytes; mail,\x0a   netascii characters sent to a user rather than a file.  (The mail\x0a   mode is obsolete and should not be implemented or used.)  Additional\x0a   modes can be defined by pairs of cooperating hosts.\x0a\x0a   Reference [4] (section 4.2) 
+}

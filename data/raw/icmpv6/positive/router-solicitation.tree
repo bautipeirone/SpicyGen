@@ -1,0 +1,6 @@
+ICMPv6_GEMINI::ICMPv6 {
+  type_val: <unknown-133>
+  code: 0
+  checksum: 16471
+  body: \x00\x00\x00\x00\x01\x01\xee\xb1N\x94b%
+}

@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 27264
+  data: \x00\x03\x00\x18erefore, if different TID's are chosen for the two\x0a   connections on host B and host A checks the source TID's of the\x0a   messages it receives, the first connection can be maintained while\x0a   the second is rejected by returning an error packet.\x0a\x0a5. TFTP Packets\x0a\x0a   TFTP supports five types of packets, all of which have been mentioned\x0a   above:\x0a\x0a          opcode  operation\x0a            1     Read request (RRQ)\x0a            2     Write request (WRQ)\x0a            3     Data (DATA)\x0a            4     Acknowledgment 
+}

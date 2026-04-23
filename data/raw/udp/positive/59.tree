@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 60900
+  data: \x00\x03\x00\x1dt build a storage server.  There\x0a   is no reason that such a machine needs to translate netascii into its\x0a   own form of text.  Rather, the sender might send files in netascii,\x0a   but the storage server might simply store them without translation in\x0a   8-bit format.  Another such situation is a problem that currently\x0a   exists on DEC-20 systems.  Neither netascii nor octet accesses all\x0a   the bits in a word.  One might create a special mode for such a\x0a   machine which read all the bits in a word, but in whi
+}

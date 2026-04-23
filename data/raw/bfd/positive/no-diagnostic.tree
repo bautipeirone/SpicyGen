@@ -1,0 +1,30 @@
+BFD::BFDControlPacket {
+  version_diag: {
+    version: 1
+    diag: NoDiagnostic
+  }
+  state_flags: {
+    state: Down
+    poll: 0
+    final: 0
+    control_plane_independent: 0
+    authentication_present: 1
+    demand: 0
+    multipoint: 0
+  }
+  detect_mult: 5
+  length: 33
+  my_discriminator: 1
+  your_discriminator: 0
+  desired_min_tx_interval: 1000000
+  required_min_rx_interval: 1000000
+  required_min_echo_rx_interval: 0
+  authentication: BFD::Authentication {
+    auth_type: SimplePassword
+    simple_auth: BFD::SimplePasswordAuth {
+      auth_len: 9
+      auth_key_id: 2
+      password: secret
+    }
+  }
+}

@@ -1,0 +1,18 @@
+CCSDS::SpacePacket {
+  primaryHeader: CCSDS::PacketPrimaryHeader {
+    versionAndId: {
+      packetVersionNumber: 0
+      packetType: 0
+      secondaryHeaderFlag: 1
+      apid: 1
+    }
+    sequenceControl: {
+      sequenceFlags: 3
+      packetSequenceCount: 0
+    }
+    packetDataLength: 126
+  }
+  dataField: CCSDS::PacketDataField {
+    data: \x1c{\x00[\x8e\x9f\x89\x07\x00\x01\x82\x01r//b.dtn/bundlesink\x82\x01x0//ud3tn.dtn/3d359a1d-770a-41af-b49f-f5a6fd29ce29\x82\x01\x00\x82\x1b\x00\x00\x00\xab\xe2\xd4\xd2\xb0\x01\x1a\x05&\\x00B\x80\x16\x85\x01\x01\x00\x00MHello, world!\xff\xd6#
+  }
+}

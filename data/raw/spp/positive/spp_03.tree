@@ -1,0 +1,18 @@
+CCSDS::SpacePacket {
+  primaryHeader: CCSDS::PacketPrimaryHeader {
+    versionAndId: {
+      packetVersionNumber: 0
+      packetType: 0
+      secondaryHeaderFlag: 1
+      apid: 8
+    }
+    sequenceControl: {
+      sequenceFlags: 0
+      packetSequenceCount: 1
+    }
+    packetDataLength: 0
+  }
+  dataField: CCSDS::PacketDataField {
+    data: \x00
+  }
+}

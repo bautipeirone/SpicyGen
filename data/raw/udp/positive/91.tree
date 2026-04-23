@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 6232
+  data: \x00\x03\x00-ngth             |           Checksum            |\x0a   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\x0a\x0a\x0a   Values of Fields\x0a\x0a\x0a   Source Port     Picked by originator of packet.\x0a\x0a   Dest. Port      Picked by destination machine (69 for RRQ or WRQ).\x0a\x0a   Length          Number of bytes in UDP packet, including UDP header.\x0a\x0a   Checksum        Reference 2 describes rules for computing checksum.\x0a                   (The implementor of this should be sure that the\x0a                   correct algori
+}

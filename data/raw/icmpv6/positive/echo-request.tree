@@ -1,0 +1,5 @@
+ICMPv6_GEMINI::ICMPv6 {
+  type_val: EchoRequest
+  code: 0
+  checksum: 23918
+}

@@ -1,0 +1,32 @@
+BFD::BFDControlPacket {
+  version_diag: {
+    version: 1
+    diag: NoDiagnostic
+  }
+  state_flags: {
+    state: Down
+    poll: 0
+    final: 0
+    control_plane_independent: 0
+    authentication_present: 1
+    demand: 0
+    multipoint: 0
+  }
+  detect_mult: 5
+  length: 48
+  my_discriminator: 1
+  your_discriminator: 0
+  desired_min_tx_interval: 1000000
+  required_min_rx_interval: 1000000
+  required_min_echo_rx_interval: 0
+  authentication: BFD::Authentication {
+    auth_type: KeyedMD5
+    md5_auth: BFD::KeyedMD5Auth {
+      auth_len: 24
+      auth_key_id: 2
+      reserved: 0
+      sequence_number: 5
+      auth_key_digest: \x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16
+    }
+  }
+}

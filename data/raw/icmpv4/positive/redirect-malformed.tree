@@ -1,0 +1,11 @@
+ICMP::ICMPMessage {
+  header: ICMP::ICMPHeader {
+    type_val: Redirect
+    code: 0
+    checksum: 64255
+  }
+  original: ICMP::OriginalDatagram {
+    data: 
+  }
+  gateway_address: 0.0.0.0
+}

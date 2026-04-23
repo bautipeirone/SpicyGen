@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 25980
+  data: \x00\x03\x00\x15         TFTP Revision 2                    July 1992\x0a\x0a\x0a      1. Host A sends  a  "WRQ"  to  host  B  with  source=  A's  TID,\x0a         destination= 69.\x0a\x0a      2. Host  B  sends  a "ACK" (with block number= 0) to host A with\x0a         source= B's TID, destination= A's TID.\x0a\x0a   At this point the connection has been established and the first data\x0a   packet can be sent by Host A with a sequence number of 1.  In the\x0a   next step, and in all succeeding steps, the hosts should make sure\x0a   that the source TID matc
+}

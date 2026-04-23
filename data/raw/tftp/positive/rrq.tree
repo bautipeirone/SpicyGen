@@ -1,0 +1,7 @@
+TFTP::Packet {
+  op: RRQ
+  rrq: TFTP::Request {
+    filename: rfc1350.txt
+    mode: octet
+  }
+}

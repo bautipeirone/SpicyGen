@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 34176
+  data: \x00\x03\x00\x1ech the receiver\x0a   stored the information in 8-bit format.  When such a file is\x0a   retrieved from the storage site, it must be restored to its original\x0a   form to be useful, so the reverse mode must also be implemented.  The\x0a   user site will have to remember some information to achieve this.  In\x0a   both of these examples, the request packets would specify octet mode\x0a   to the foreign host, but the local host would be in some other mode.\x0a   No such machine or application specific modes have been specified i
+}

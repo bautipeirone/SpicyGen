@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 39917
+  data: \x00\x03\x00\x1bt translate the data to its own\x0a   format.  Octet mode is used to transfer a file that is in the 8-bit\x0a   format of the machine from which the file is being transferred.  It\x0a   is assumed that each type of machine has a single 8-bit format that\x0a   is more common, and that that format is chosen.  For example, on a\x0a   DEC-20, a 36 bit machine, this is four 8-bit bytes to a word with\x0a   four bits of breakage.  If a host receives a octet file and then\x0a   returns it, the returned file must be identical to the or
+}

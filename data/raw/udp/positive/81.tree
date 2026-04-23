@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 52669
+  data: \x00\x03\x00( Timeouts must also be used to detect errors.\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0a\x0aSollins                                                         [Page 8]\x0a\x0c\x0aRFC 1350                    TFTP Revision 2                    July 1992\x0a\x0a\x0aI. Appendix\x0a\x0aOrder of Headers\x0a\x0a                                                  2 bytes\x0a    ----------------------------------------------------------\x0a   |  Local Medium  |  Internet  |  Datagram  |  TFTP Opcode  |\x0a    ----------------------------------------------------------\x0a\x0aTFTP Formats\x0a\x0a   Type   Op #
+}

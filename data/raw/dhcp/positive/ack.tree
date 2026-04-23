@@ -1,0 +1,122 @@
+DHCP::Message {
+  op: BOOTREPLY
+  htype: ETHERNET_10MB
+  hlen: 6
+  hops: 0
+  xid: 15646
+  secs: 0.000000s
+  flags: 0
+  ciaddr: 0.0.0.0
+  yiaddr: 192.168.0.10
+  siaddr: 0.0.0.0
+  giaddr: 0.0.0.0
+  chaddr_str: 00:0b:82:01:fc:42
+  sname: 
+  file_n: 
+  options: [
+    DHCP::Option {
+      code: MESSAGE_TYPE
+      message_type: ACK
+    }
+    DHCP::Option {
+      code: RENEWAL_TIME_VALUE
+      renewal_time_value: 1800
+    }
+    DHCP::Option {
+      code: REBIND_TIME_VALUE
+      rebind_time_value: 3150
+    }
+    DHCP::Option {
+      code: IP_ADDRESS_LEASE_TIME
+      ip_address_lease_time: 3600
+    }
+    DHCP::Option {
+      code: SERVER_IDENTIFIER
+      server_identifier: 192.168.0.1
+    }
+    DHCP::Option {
+      code: SUBNET_MASK
+    }
+    DHCP::Option {
+      code: END
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+  ]
+}

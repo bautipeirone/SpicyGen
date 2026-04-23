@@ -1,0 +1,10 @@
+ICMP::ICMPMessage {
+  header: ICMP::ICMPHeader {
+    type_val: TimeExceeded
+    code: 0
+    checksum: 29093
+  }
+  original: ICMP::OriginalDatagram {
+    data: E\x00\x00Tfq@\x00\x01\x01\xe6U\x0a\x0a\x12\xc9\x08\x08\x08\x08\x08\x00ym\x01\xec\x00\x01
+  }
+}

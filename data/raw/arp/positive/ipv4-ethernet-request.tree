@@ -1,0 +1,11 @@
+ARP_Qwen3::ARP {
+  hrd: Ethernet
+  pro: 2048
+  hln: 6
+  pln: 4
+  op: REQUEST
+  sha: \x00&\x16\x00\x00\xd2
+  spa: \xc0\xa8\x00\x0a
+  tha: \x00\x00\x00\x00\x00\x00
+  tpa: \xc0\xa8\x00e
+}

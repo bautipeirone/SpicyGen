@@ -1,0 +1,55 @@
+HTTP::Request {
+  request: HTTP::RequestLine {
+    method: GET
+    uri: /download.html
+    version: HTTP::Version {
+      number: 1.1
+    }
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: Host
+        content: www.ethereal.com
+      }
+      HTTP::Header {
+        name: User-Agent
+        content: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.6) Gecko/20040113
+      }
+      HTTP::Header {
+        name: Accept
+        content: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,image/jpeg,image/gif;q=0.2,*/*;q=0.1
+      }
+      HTTP::Header {
+        name: Accept-Language
+        content: en-us,en;q=0.5
+      }
+      HTTP::Header {
+        name: Accept-Encoding
+        content: gzip,deflate
+      }
+      HTTP::Header {
+        name: Accept-Charset
+        content: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+      }
+      HTTP::Header {
+        name: Keep-Alive
+        content: 300
+      }
+      HTTP::Header {
+        name: Connection
+        content: keep-alive
+      }
+      HTTP::Header {
+        name: Referer
+        content: http://www.ethereal.com/development.html
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    has_body: False
+    is_request: True
+    use_content_length: True
+    content_type: (TEXT, PLAIN)
+    delivery_mode: EndOfData
+  }
+}

@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 69
+  length: 28
+  checksum: 9261
+  data: \x00\x02rfc1350.txt\x00octet\x00
+}

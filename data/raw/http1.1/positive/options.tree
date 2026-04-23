@@ -1,0 +1,31 @@
+HTTP::Request {
+  request: HTTP::RequestLine {
+    method: OPTIONS
+    uri: /hello.txt
+    version: HTTP::Version {
+      number: 1.1
+    }
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: Host
+        content: 127.0.0.1:8080
+      }
+      HTTP::Header {
+        name: User-Agent
+        content: curl/8.0.1
+      }
+      HTTP::Header {
+        name: Accept
+        content: */*
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    has_body: False
+    is_request: True
+    use_content_length: True
+    content_type: (TEXT, PLAIN)
+    delivery_mode: EndOfData
+  }
+}

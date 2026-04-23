@@ -1,0 +1,12 @@
+IPv6::IPv6Header {
+  version: 6
+  differentiated_service_code: 0
+  explicit_congestion: 0
+  flow_label: 0
+  payload_length: 32
+  next_header: ProtocolTCP
+  hop_limit: 63
+  source_address: 2a00:5e80:101:212d:504:7b1:2572:db22
+  destination_address: 2606:f200:0:7:bad:f00d:d00d:1
+  payload: \x90\xaa\x00P\x14\x96G\x9fIS\x95\x97\x80\x10\x00\xda\xb6\x11\x00\x00\x01\x01\x08\x0a\x00\x064\x020\xce\xf3\x10
+}

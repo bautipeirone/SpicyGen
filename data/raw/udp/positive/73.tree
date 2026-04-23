@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 57623
+  data: \x00\x03\x00$-----------------------------------\x0a\x0a                        Figure 5-4: ERROR packet\x0a\x0a\x0a   An ERROR packet (opcode 5) takes the form depicted in Figure 5-4.  An\x0a   ERROR packet can be the acknowledgment of any other type of packet.\x0a   The error code is an integer indicating the nature of the error.  A\x0a   table of values and meanings is given in the appendix.  (Note that\x0a   several error codes have been added to this version of this\x0a   document.) The error message is intended for human consumption, and\x0a   sh
+}

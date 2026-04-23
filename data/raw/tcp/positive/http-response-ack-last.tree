@@ -1,0 +1,21 @@
+TCP::Header {
+  src_port: 3372
+  dst_port: 80
+  seq_num: 951058419
+  ack_num: 290236744
+  control: {
+    data_offset: 5
+    reserved: 0
+    urg: 0
+    ack: 1
+    psh: 0
+    rst: 0
+    syn: 0
+    fin: 0
+  }
+  window: 9236
+  checksum: 12657
+  urgent_pointer: 0
+  options_and_padding: 
+  data: 
+}

@@ -1,0 +1,6 @@
+TFTP::Packet {
+  op: ACK
+  ack: TFTP::Acknowledgement {
+    num: 49
+  }
+}

@@ -1,0 +1,29 @@
+RTSP::Message {
+  request: RTSP::RequestLine {
+    method: PLAY
+    uri: rtsp://127.0.0.1:8554/aacAudioTest/
+    version: RTSP::RTSPVersion {
+      major: 1
+      minor: 0
+    }
+  }
+  headers: [
+    RTSP::Header {
+      name: CSeq
+      value: 4
+    }
+    RTSP::Header {
+      name: User-Agent
+      value: ./testRTSPClient (LIVE555 Streaming Media v2018.08.28)
+    }
+    RTSP::Header {
+      name: Session
+      value: 000022B8
+    }
+    RTSP::Header {
+      name: Range
+      value: npt=0.000-
+    }
+  ]
+  body: 
+}

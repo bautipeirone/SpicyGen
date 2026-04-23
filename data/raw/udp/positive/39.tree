@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 57157
+  data: \x00\x03\x00\x13\x0a   TID's of the ends of the connection, the source TID and the\x0a   destination TID.  These TID's are handed to the supporting UDP (or\x0a   other datagram protocol) as the source and destination ports.  A\x0a   requesting host chooses its source TID as described above, and sends\x0a   its initial request to the known TID 69 decimal (105 octal) on the\x0a   serving host.  The response to the request, under normal operation,\x0a   uses a TID chosen by the server as its source TID and the TID chosen\x0a   for the previous messa
+}

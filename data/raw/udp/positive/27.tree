@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 11648
+  data: \x00\x03\x00\x0delation to other Protocols\x0a\x0a   As mentioned TFTP is designed to be implemented on top of the\x0a   Datagram protocol (UDP).  Since Datagram is implemented on the\x0a   Internet protocol, packets will have an Internet header, a Datagram\x0a   header, and a TFTP header.  Additionally, the packets may have a\x0a   header (LNI, ARPA header, etc.)  to allow them through the local\x0a   transport medium.  As shown in Figure 3-1, the order of the contents\x0a   of a packet will be: local medium header, if used, Internet header,\x0a   
+}

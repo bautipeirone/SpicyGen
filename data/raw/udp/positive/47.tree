@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 1859
+  data: \x00\x03\x00\x17tion of the\x0a   protocol in which the above situation can occur.  Host A sends a\x0a   request to host B. Somewhere in the network, the request packet is\x0a   duplicated, and as a result two acknowledgments are returned to host\x0a   A, with different TID's chosen on host B in response to the two\x0a   requests.  When the first response arrives, host A continues the\x0a   connection.  When the second response to the request arrives, it\x0a   should be rejected, but there is no reason to terminate the first\x0a   connection.  Th
+}

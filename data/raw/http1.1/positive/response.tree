@@ -1,0 +1,52 @@
+HTTP::Reply {
+  reply: HTTP::ReplyLine {
+    version: HTTP::Version {
+      number: 1.1
+    }
+    status: 200
+    reason: OK
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: P3P
+        content: policyref="http://www.googleadservices.com/pagead/p3p.xml", CP="NOI DEV PSA PSD IVA PVD OTP OUR OTR IND OTC"
+      }
+      HTTP::Header {
+        name: Content-Type
+        content: text/html; charset=ISO-8859-1
+      }
+      HTTP::Header {
+        name: Content-Encoding
+        content: gzip
+      }
+      HTTP::Header {
+        name: Server
+        content: CAFE/1.0
+      }
+      HTTP::Header {
+        name: Cache-control
+        content: private, x-gzip-ok=""
+      }
+      HTTP::Header {
+        name: Content-length
+        content: 1272
+      }
+      HTTP::Header {
+        name: Date
+        content: Thu, 13 May 2004 10:17:14 GMT
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    body: HTTP::Body {}
+    has_body: True
+    is_request: False
+    content_encoding: gzip
+    use_content_length: False
+    body_len: 0
+    content_length: 1272
+    content_type: (TEXT, HTML)
+    content_type_parameter: charset=ISO-8859-1
+    delivery_mode: Length
+  }
+}

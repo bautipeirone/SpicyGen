@@ -1,0 +1,10 @@
+ICMP::ICMPMessage {
+  header: ICMP::ICMPHeader {
+    type_val: DestinationUnreachable
+    code: 4
+    checksum: 64763
+  }
+  original: ICMP::OriginalDatagram {
+    data: 
+  }
+}

@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 33366
+  data: \x00\x03\x00\x1a--------------\x0a\x0a                       Figure 5-1: RRQ/WRQ packet\x0a\x0a\x0a   RRQ and WRQ packets (opcodes 1 and 2 respectively) have the format\x0a   shown in Figure 5-1.  The file name is a sequence of bytes in\x0a   netascii terminated by a zero byte.  The mode field contains the\x0a   string "netascii", "octet", or "mail" (or any combination of upper\x0a   and lower case, such as "NETASCII", NetAscii", etc.) in netascii\x0a   indicating the three modes defined in the protocol.  A host which\x0a   receives netascii mode data mus
+}

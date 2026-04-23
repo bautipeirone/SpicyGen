@@ -1,0 +1,7 @@
+UDP::Datagram {
+  source_port: 57509
+  destination_port: 2087
+  length: 524
+  checksum: 6067
+  data: \x00\x03\x00%ould be in netascii.  Like all other strings, it is terminated with\x0a   a zero byte.\x0a\x0a6. Normal Termination\x0a\x0a   The end of a transfer is marked by a DATA packet that contains\x0a   between 0 and 511 bytes of data (i.e., Datagram length < 516).  This\x0a   packet is acknowledged by an ACK packet like all other DATA packets.\x0a   The host acknowledging the final DATA packet may terminate its side\x0a   of the connection on sending the final ACK.  On the other hand,\x0a   dallying is encouraged.  This means that the host sen
+}

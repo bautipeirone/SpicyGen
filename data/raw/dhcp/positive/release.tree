@@ -1,0 +1,114 @@
+DHCP::Message {
+  op: BOOTREQUEST
+  htype: ETHERNET_10MB
+  hlen: 6
+  hops: 0
+  xid: 3510729295
+  secs: 0.000000s
+  flags: 0
+  ciaddr: 192.168.60.100
+  yiaddr: 0.0.0.0
+  siaddr: 0.0.0.0
+  giaddr: 0.0.0.0
+  chaddr_str: 00:0c:29:67:42:7a
+  sname: 
+  file_n: 
+  options: [
+    DHCP::Option {
+      code: MESSAGE_TYPE
+      message_type: RELEASE
+    }
+    DHCP::Option {
+      code: SERVER_IDENTIFIER
+      server_identifier: 10.0.41.30
+    }
+    DHCP::Option {
+      code: HOST_NAME
+      len: 14
+      host_name: dhcptestclient
+    }
+    DHCP::Option {
+      code: USER_CLASS
+      len: 7
+      user_class: \x06markku
+    }
+    DHCP::Option {
+      code: END
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+  ]
+}

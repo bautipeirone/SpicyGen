@@ -1,0 +1,7 @@
+TFTP::Packet {
+  op: DATA
+  data: TFTP::Data {
+    num: 1
+    data: 
+  }
+}

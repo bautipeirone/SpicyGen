@@ -1,0 +1,66 @@
+DHCP::Message {
+  op: BOOTREQUEST
+  htype: ETHERNET_10MB
+  hlen: 6
+  hops: 0
+  xid: 15645
+  secs: 0.000000s
+  flags: 0
+  ciaddr: 0.0.0.0
+  yiaddr: 0.0.0.0
+  siaddr: 0.0.0.0
+  giaddr: 0.0.0.0
+  chaddr_str: 00:0b:82:01:fc:42
+  sname: 
+  file_n: 
+  options: [
+    DHCP::Option {
+      code: MESSAGE_TYPE
+      message_type: DISCOVER
+    }
+    DHCP::Option {
+      code: CLIENT_IDENTIFIER
+      len: 7
+      client_type: ETHERNET_10MB
+      client_identifier: \x00\x0b\x82\x01\xfcB
+    }
+    DHCP::Option {
+      code: REQUESTED_ADDRESS
+      requested_address: 0.0.0.0
+    }
+    DHCP::Option {
+      code: PARAMETER_REQUESTS
+      len: 4
+      request_values: [
+        SUBNET_MASK
+        ROUTER
+        DOMAIN_NAME_SERVER
+        NETWORK_TIME_PROTOCOL_SERVER
+      ]
+    }
+    DHCP::Option {
+      code: END
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+    DHCP::Option {
+      code: PAD
+    }
+  ]
+}

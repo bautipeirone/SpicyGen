@@ -1,0 +1,32 @@
+IP::Datagram {
+  bitfield1: {
+    version: 4
+    ihl: 11
+  }
+  tos: 0
+  total_length: 108
+  id: 0
+  bitfield2: {
+    flags: 2
+    fragment_offset: 0
+  }
+  ttl: 64
+  protocol: 1
+  checksum: 44388
+  src: 127.0.0.1
+  dst: 127.0.0.1
+  options: [
+    IP::Option {
+      type_val: CommercialSecurity
+      len: 22
+      data: \x00\x00\x00\x02\x02\x10\x00\x02\x00\x00\x00\x02\x00\x04\x00\x05\x00\x06\x00\xef
+    }
+    IP::Option {
+      type_val: EndOfOptionList
+    }
+    IP::Option {
+      type_val: EndOfOptionList
+    }
+  ]
+  payload: \x08\x00!P\x8c\x0a\x00\x01\x92M\xaeE\x13\x0e\x0c\x00\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !"#$%&'()*+,-./01234567
+}
