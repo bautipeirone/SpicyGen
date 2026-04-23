@@ -1,4 +1,9 @@
 {
+  "arp": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "826"
+  },
   "bfd": {
     "type": "binary",
     "spec_type": "rfc",
@@ -73,6 +78,11 @@
     "type": "binary",
     "spec_type": "bluebook",
     "local_spec_file": "/home/bautistapeirone/Desktop/spec-extract/rfc/spp-bluebook.txt"
+  },
+  "ssh": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "4253"
   },
   "tcp": {
     "type": "binary",
