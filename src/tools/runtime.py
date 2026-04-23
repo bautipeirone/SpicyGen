@@ -14,7 +14,7 @@ import difflib
 
 from src.logger import logger
 from src.protocol import Protocol, ProtocolType
-from src.utils import generate_diff
+from src.tools.parse_tree import parse_spicy_output, match_parse_trees
 
 _RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
@@ -112,7 +112,7 @@ def get_parse_tree_summary(parse_result: ParseResult) -> str | None:
         return None
     
     packet_path, _ = os.path.splitext(parse_result.packet_path)
-    expected_tree_path = Path(f"{packet_path}.json")
+    expected_tree_path = Path(f"{packet_path}.tree")
     if not expected_tree_path.exists():
         logger.warning(f"No expected parse tree found for packet '{parse_result.packet_path}' at {expected_tree_path}. Skipping parse tree diff.")
         return None
@@ -121,22 +121,17 @@ def get_parse_tree_summary(parse_result: ParseResult) -> str | None:
         expected_tree = f.read()
 
     actual_tree = parse_result.parse_tree
-    parse_tree_diff = generate_diff(actual_tree, expected_tree)
-    if not parse_tree_diff:
-        logger.debug(f"No differences found in parse trees for {parse_result.packet_path}.")
-        return "No differences found in parse trees."
 
-    summary_lines = []
-
-    summary_lines.append(f"Actual parse tree:")
-    summary_lines.append(f"```json\n{actual_tree}\n```")
-    summary_lines.append(f"Expected parse tree:")
-    summary_lines.append(f"```json\n{expected_tree}\n```")
-    summary_lines.append("Parse tree diff (actual vs expected):")
-    summary_lines.append(f"```diff\n{parse_tree_diff}\n```")
-
+    actual_tree = parse_spicy_output(actual_tree)
+    expected_tree = parse_spicy_output(expected_tree)
+    
+    summary = "The parse tree of the actual packet is different from the expected one.\n"
+    summary += "The following mismatches were found between the actual parse tree and the expected parse tree:\n"
+    parse_tree_diffs = [str(mismatch) for mismatch in match_parse_trees(actual_tree, expected_tree)]
+    summary += "\n".join(parse_tree_diffs)
+    
     logger.debug(f"Generated parse tree diff for {os.path.basename(parse_result.packet_path)}")    
-    return "\n".join(summary_lines)
+    return summary
 
 # ---------------------------------------------------------------------------
 # Core functions
@@ -214,37 +209,24 @@ def run_spicy_parser(grammar_file: str, packet_file: str) -> ParseResult:
     logger.info(f"Running spicy-dump: {grammar_file} < {packet_name}")
 
     with open(packet_file, "rb") as pf:
-        spicy_proc = subprocess.Popen(
-            ["spicy-dump", "-J", grammar_file],
+        result = subprocess.run(
+            ["spicy-dump", grammar_file],
             stdin=pf,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
         )
 
-        fmt_proc = subprocess.Popen(["jq", "--monochrome-output", "--indent", "2"],
-            stdin=spicy_proc.stdout,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-
-        spicy_proc.stdout.close()
-        formatted_stdout, _ = fmt_proc.communicate()
-        spicy_stderr = spicy_proc.stderr.read()
-        spicy_returncode = spicy_proc.wait()
-
-    success = spicy_returncode == 0
+    success = result.returncode == 0
     if success:
         logger.debug(f"spicy-dump accepted {packet_name}")
     else:
-        logger.debug(f"spicy-dump rejected {packet_name}: {spicy_stderr.strip()}")
+        logger.debug(f"spicy-dump rejected {packet_name}: {result.stderr.strip()}")
 
     return ParseResult(
         packet_path=packet_file,
         success=success,
-        parse_tree=formatted_stdout if success else None,
-        error=spicy_stderr.strip(),
+        parse_tree=result.stdout if success else None,
+        error=result.stderr.strip(),
     )
 
 

@@ -26,7 +26,7 @@ IMPORTANT WORKFLOW — follow these steps in order:
 1. Write the grammar and use the `compile_grammar` tool to check if it compiles.
 2. If ``compile_grammar`` returns SUCCESS, use the `parse_packets` tool with the same grammar code to verify it against known protocol packets.
    - If all packets pass, say TERMINATE.
-   - If some packets fail, fix the grammar and go back to step 1.
+   - If some packets fail, fix the grammar and go back to step 1. Use the summary provided for each packet to understand what is wrong with the grammar.
 3. If ``compile_grammar`` returns errors, fix the grammar and try again.
 4. If there are no packets registered for this protocol, you will be told so — in that case say TERMINATE after a successful compilation.
 
