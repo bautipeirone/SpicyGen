@@ -1,0 +1,21 @@
+{
+  "ack_num": 951058419,
+  "checksum": 11018,
+  "data": "",
+  "dst_port": 3372,
+  "f": {
+    "ack": 1,
+    "data_offset": 5,
+    "fin": 0,
+    "psh": 0,
+    "reserved": 0,
+    "rst": 0,
+    "syn": 0,
+    "urg": 0
+  },
+  "options": "",
+  "seq_num": 290218380,
+  "src_port": 80,
+  "urgent_ptr": 0,
+  "window": 6432
+}
