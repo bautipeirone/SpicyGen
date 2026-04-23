@@ -1,0 +1,77 @@
+module BGP_LLM;
+
+type LinkType = enum {
+    INTERNAL = 0,
+    UP = 1,
+    DOWN = 2,
+    H_LINK = 3
+};
+
+type Direction = enum {
+    UP = 1,
+    DOWN = 2,
+    H_LINK = 3,
+    EGP_LINK = 4,
+    INCOMPLETE = 5
+};
+
+type MsgType = enum {
+    OPEN = 1,
+    UPDATE = 2,
+    NOTIFICATION = 3,
+    KEEPALIVE = 4,
+    OPEN_CONFIRM = 5
+};
+
+type ASPath = unit {
+    direction: uint8 &convert=Direction($$);
+    as_number: uint16;
+};
+
+type NetworkMetric = unit {
+    net_addr: addr &ipv4;
+    metric: uint16;
+};
+
+type Header = unit {
+    marker: bytes &size=16 &requires=($$ == b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff");
+    length: uint16;
+    version: uint8;
+    type_val: uint8 &convert=MsgType($$);
+    hold_time: uint16;
+};
+
+type OpenMsg = unit {
+    my_as: uint16;
+    link_type: uint8 &convert=LinkType($$);
+    auth_code: uint8;
+    auth_data: bytes &eod;
+};
+
+type UpdateMsg = unit {
+    gateway: addr &ipv4;
+    as_count: uint8;
+    direction: uint8 &convert=Direction($$);
+    as_number: uint16;
+    as_path: ASPath[self.as_count - 1];
+    net_count: uint16;
+    networks: NetworkMetric[self.net_count];
+};
+
+type NotificationMsg = unit {
+    opcode: uint16;
+    data: bytes &eod;
+};
+
+public type BGPMessage = unit {
+    header: Header;
+    switch (self.header.type_val) {
+        MsgType::OPEN -> open: OpenMsg;
+        MsgType::UPDATE -> update: UpdateMsg;
+        MsgType::NOTIFICATION -> notification: NotificationMsg;
+        MsgType::KEEPALIVE -> : void;
+        MsgType::OPEN_CONFIRM -> : void;
+        * -> : void;
+    } if (self.header.length > 19);
+    : void if (self.header.length <= 19);
+};

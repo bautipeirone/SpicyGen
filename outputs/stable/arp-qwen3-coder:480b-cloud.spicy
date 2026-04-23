@@ -1,0 +1,22 @@
+module ARP_Qwen3;
+
+type HardwareType = enum {
+    Ethernet = 1,
+};
+
+type Opcode = enum {
+    REQUEST = 1,
+    REPLY = 2,
+};
+
+public type ARP = unit {
+    hrd: uint16 &convert=HardwareType($$);
+    pro: uint16;
+    hln: uint8;
+    pln: uint8;
+    op: uint16 &convert=Opcode($$);
+    sha: bytes &size=self.hln;
+    spa: bytes &size=self.pln;
+    tha: bytes &size=self.hln;
+    tpa: bytes &size=self.pln;
+};

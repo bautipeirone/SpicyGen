@@ -1,0 +1,56 @@
+module ICMPv6_GEMINI;
+
+type Type = enum {
+    DestinationUnreachable = 1,
+    PacketTooBig = 2,
+    TimeExceeded = 3,
+    ParameterProblem = 4,
+    EchoRequest = 128,
+    EchoReply = 129
+};
+
+type Code = enum {
+    Default = 0
+};
+
+public type ICMPv6 = unit {
+    type_val: uint8 &convert=Type($$);
+    code: uint8;
+    checksum: uint16;
+
+    switch (self.type_val) {
+        Type::DestinationUnreachable -> : DestinationUnreachable(self.code);
+        Type::PacketTooBig -> : PacketTooBig;
+        Type::TimeExceeded -> : TimeExceeded(self.code);
+        Type::ParameterProblem -> : ParameterProblem(self.code);
+        Type::EchoRequest -> : EchoMessage;
+        Type::EchoReply -> : EchoMessage;
+        * -> body: bytes &eod;
+    };
+};
+
+type DestinationUnreachable = unit(code: uint8) {
+    : uint32; # Unused
+    invoking_packet: bytes &eod;
+};
+
+type PacketTooBig = unit {
+    mtu: uint32;
+    invoking_packet: bytes &eod;
+};
+
+type TimeExceeded = unit(code: uint8) {
+    : uint32; # Unused
+    invoking_packet: bytes &eod;
+};
+
+type ParameterProblem = unit(code: uint8) {
+    pointer: uint32;
+    invoking_packet: bytes &eod;
+};
+
+type EchoMessage = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    data: bytes &eod;
+};

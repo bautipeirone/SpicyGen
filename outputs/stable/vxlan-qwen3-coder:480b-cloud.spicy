@@ -1,95 +1,20 @@
-module vxlan;
+module VXLAN_LLM;
 
-import spicy;
-
-# VXLAN header flags
-type VXLANFlags = unit {
-    f: bitfield(8) {
-        reserved1: 0..3;
-        i_flag: 4;  # I flag - must be set to 1 for valid VNI
-        reserved2: 5..7;
-    } &bit-order=spicy::BitOrder::MSB0;
-};
-
-# VXLAN header structure
-type VXLANHeader = unit {
-    flags: VXLANFlags;
-    reserved1: uint32;  # 24 bits reserved + 8 bits more reserved
-    vni: uint32 &convert=($$ >> 8);  # 24-bit VNI in a 32-bit field, shifted right by 8 bits to get the actual VNI
-    reserved2: uint8;
-};
-
-# UDP header with VXLAN-specific validation
-type UDPHeader = unit {
-    src_port: uint16;
-    dst_port: uint16;
-    length: uint16;
-    checksum: uint16;
-};
-
-# IPv4 header
-type IPv4Header = unit {
-    version_ihl: uint8;
-    type_of_service: uint8;
-    total_length: uint16;
-    identification: uint16;
-    flags_fragment: uint16;
-    ttl: uint8;
-    protocol: uint8;
-    header_checksum: uint16;
-    src_ip: addr &ipv4;
-    dst_ip: addr &ipv4;
-};
-
-# IPv6 header
-type IPv6Header = unit {
-    version_tc_fl: uint32;
-    payload_length: uint16;
-    next_header: uint8;
-    hop_limit: uint8;
-    src_ip: addr &ipv6;
-    dst_ip: addr &ipv6;
-};
-
-# Ethernet header
-type EthernetHeader = unit {
-    dst_mac: bytes &size=6;
-    src_mac: bytes &size=6;
-    ethertype: uint16;
-};
-
-# Inner Ethernet payload
-type InnerEthernetPayload = unit {
-    header: EthernetHeader;
-    payload: bytes &eod;  # Rest of the frame
-};
-
-# Main VXLAN packet structure for IPv4
-type VXLANPacketIPv4 = unit {
-    outer_ethernet: EthernetHeader;
-    outer_ipv4: IPv4Header;
-    outer_udp: UDPHeader;
-    vxlan_header: VXLANHeader;
-    inner_payload: InnerEthernetPayload;
-};
-
-# Main VXLAN packet structure for IPv6
-type VXLANPacketIPv6 = unit {
-    outer_ethernet: EthernetHeader;
-    outer_ipv6: IPv6Header;
-    outer_udp: UDPHeader;
-    vxlan_header: VXLANHeader;
-    inner_payload: InnerEthernetPayload;
-};
-
-# Generic VXLAN packet
 public type VXLANPacket = unit {
-    outer_ethernet: EthernetHeader;
+    # VXLAN Header (8 bytes total)
+    header: VXLANHeader;
     
-    # Check ethertype to determine IP version
-    switch (self.outer_ethernet.ethertype) {
-        0x0800 -> ipv4_packet: VXLANPacketIPv4;
-        0x86dd -> ipv6_packet: VXLANPacketIPv6;
-        * -> remainder: bytes &eod;
+    # Payload (encapsulated frame)
+    payload: bytes &eod;
+};
+
+type VXLANHeader = unit {
+    flags: bitfield(8) {
+        reserved1: 0..3;
+        i_flag: 4;
+        reserved2: 5..7;
     };
+    group_policy_id: bytes &size=3;
+    vni: uint32 &convert=($$ >> 8);
+    reserved2: uint8;
 };

@@ -1,0 +1,123 @@
+module BGP_LLM;
+
+# Message types
+type MessageType = enum {
+    OPEN = 1,
+    UPDATE = 2,
+    NOTIFICATION = 3,
+    KEEPALIVE = 4,
+    OPEN_CONFIRM = 5,
+};
+
+# Link types
+type LinkType = enum {
+    INTERNAL = 0,
+    UP = 1,
+    DOWN = 2,
+    H_LINK = 3,
+};
+
+# Direction codes
+type DirectionCode = enum {
+    UP = 1,
+    DOWN = 2,
+    H_LINK = 3,
+    EGP_LINK = 4,
+    INCOMPLETE = 5,
+};
+
+# Opcodes for notifications
+type Opcode = enum {
+    LINK_TYPE_ERROR = 1,
+    UNKNOWN_AUTH_CODE = 2,
+    AUTH_FAILURE = 3,
+    UPDATE_ERROR = 4,
+    CONNECTION_NOT_SYNC = 5,
+    BAD_MESSAGE_LENGTH = 6,
+    BAD_TYPE_CODE = 7,
+    BAD_VERSION_NUMBER = 8,
+    INVALID_AS_FIELD = 9,
+    BGP_CEASE = 10,
+};
+
+# Authentication Code
+type AuthCode = enum {
+    NONE = 0,
+};
+
+# OPEN Message
+type OpenMessage = unit {
+    my_as: uint16;
+    link_type: uint8 &convert=LinkType($$);
+    auth_code: uint8 &convert=AuthCode($$);
+    auth_data: bytes &eod;
+};
+
+# OPEN CONFIRM Message
+type OpenConfirmMessage = unit {
+    # Empty message body
+};
+
+# UPDATE Message
+type UpdateMessage = unit {
+    gateway: uint32;
+    as_count: uint8;
+    as_path: ASPathEntry[self.as_count];
+    net_count: uint16;
+    networks: NetworkEntry[self.net_count];
+};
+
+# AS Path Entry
+type ASPathEntry = unit {
+    direction: uint8 &convert=DirectionCode($$);
+    as_number: uint16;
+};
+
+# Network Entry
+type NetworkEntry = unit {
+    network_addr: uint32;
+    metric: uint16;
+};
+
+# NOTIFICATION Message
+type NotificationMessage = unit {
+    opcode: uint16 &convert=Opcode($$);
+    data: bytes &eod;
+};
+
+# KEEPALIVE Message
+type KeepaliveMessage = unit {
+    # No additional fields beyond header
+};
+
+# Main BGP Message
+public type BGPMessage = unit {
+    marker: bytes &size=16 &requires=($$ == b"\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF");
+    length: uint16;
+    version: uint8 &requires=($$ == 1);
+    type_value: uint8 &convert=MessageType($$);
+    
+    switch (self.type_value) {
+        MessageType::OPEN -> {
+            hold_time: uint16;
+            msg_data: OpenMessage;
+        }
+        MessageType::UPDATE -> {
+            hold_time: uint16;
+            msg_data: UpdateMessage;
+        }
+        MessageType::NOTIFICATION -> {
+            hold_time: uint16;
+            msg_data: NotificationMessage;
+        }
+        MessageType::KEEPALIVE -> {
+            # No hold_time field for KEEPALIVE messages
+            msg_data: KeepaliveMessage;
+        }
+        MessageType::OPEN_CONFIRM -> {
+            hold_time: uint16;
+            msg_data: OpenConfirmMessage;
+        }
+        * -> : void;
+    }
+};

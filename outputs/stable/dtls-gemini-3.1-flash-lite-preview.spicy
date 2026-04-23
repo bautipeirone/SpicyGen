@@ -1,0 +1,51 @@
+module DTLS_GPT;
+
+# Basic types
+type ContentType = uint8;
+type ProtocolVersion = uint16;
+type HandshakeType = uint8;
+
+# Record Layer
+public type DTLSPlaintext = unit {
+    type_value: ContentType;
+    version: ProtocolVersion;
+    epoch: uint16;
+    # uint48 is not standard, using 6 bytes
+    sequence_number: bytes &size=6;
+    length: uint16;
+    fragment: bytes &size=self.length;
+};
+
+# Handshake Protocol
+type HelloVerifyRequest = unit {
+    server_version: ProtocolVersion;
+    cookie_len: uint8;
+    cookie: bytes &size=self.cookie_len;
+};
+
+type ClientHello = unit {
+    client_version: ProtocolVersion;
+    random: bytes &size=32;
+    session_id: bytes &size=1; 
+    cookie_len: uint8;
+    cookie: bytes &size=self.cookie_len;
+    cipher_suites_len: uint16;
+    cipher_suites: bytes &size=self.cipher_suites_len;
+    compression_methods_len: uint8;
+    compression_methods: bytes &size=self.compression_methods_len;
+};
+
+type Handshake = unit {
+    msg_type: HandshakeType;
+    # uint24 is not standard, using 3 bytes
+    length: bytes &size=3;
+    message_seq: uint16;
+    fragment_offset: bytes &size=3;
+    fragment_length: bytes &size=3;
+    
+    switch (self.msg_type) {
+        1 -> client_hello: ClientHello;
+        3 -> hello_verify_request: HelloVerifyRequest;
+        * -> body: bytes &size=self.length.to_uint();
+    };
+};

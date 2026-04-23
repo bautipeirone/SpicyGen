@@ -6,20 +6,36 @@ This changelog tracks which release grammars were updated in `stable` and `wip`.
 
 | Protocol | qwen3-coder:480b-cloud Compiles | qwen3-coder:480b-cloud Packet test | gemini-3.1-flash-lite-preview Compiles | gemini-3.1-flash-lite-preview Packet test |
 | --- | --- | --- | --- | --- |
-| IRC | Yes | - | Yes | - |
-| DHCP | Yes | - | Yes | - |
-| ICMPv4 | Yes | - | Yes | - |
-| VXLAN | Yes | - | Yes | - |
-| UDP | Yes | - | Yes | - |
-| BFD | Yes | - | Yes | - |
-| DNS | Yes | - | Yes | - |
-| SPP | Yes | - | Yes | - |
-| TFTP | Yes | - | Yes | - |
-| RSTP | Yes | - | Yes | - |
-| LDAP | No | - | No | - |
-| IPv4 | Yes | - | Yes | - |
-| IPv6 | Yes | - | No | - |
-| TCP | Yes | - | Yes | - |
+| ARP | ✅ | ✅ | ✅ | ✅ |
+| IRC | ✅ | - | ✅ | - |
+| DHCP | ✅ | ✅ | ✅ | ✅ |
+| ICMPv4 | ✅ | ✅ | ✅ | ✅ |
+| ICMPv6 | ✅ | ✅ | ✅ | ✅ | 
+| VXLAN | ✅ | - | ✅ | - |
+| UDP | ✅ | ✅ | ✅ | ✅ |
+| BFD | ✅ | ✅ | ✅ | ✅ |
+| DNS | ✅ | - | ✅ | - |
+| SPP | ✅ | ✅ | ✅ | ✅ |
+| TFTP | ✅ | ✅ | ✅ | ✅ |
+| RSTP | ✅ | - | ✅ | - |
+| LDAP | ❌ | - | ❌ | - |
+| IPv4 | ✅ | - | ✅ | - |
+| IPv6 | ✅ | - | ❌ | - |
+| TCP | ✅ | - | ✅ | - |
+| DTLS | ✅ | ✅ | ✅ | ✅ |
+
+## 2026-04-20
+
+Add release grammar: `DTLS`
+
+### DTLS 
+
+Promoted version: `20260420_110214`
+
+| Version | Compiles | Packet parsing test |
+| --- | --- | --- |
+| `qwen3-coder:480b-cloud` | Yes | Yes |
+| `gemini-3.1-flash-lite-preview` | Yes | Yes |
 
 ## 2026-04-08
 

@@ -1,0 +1,217 @@
+module DTLS_RFC6347;
+
+import spicy;
+
+type ContentType = enum {
+    change_cipher_spec = 20,
+    alert = 21,
+    handshake = 22,
+    application_data = 23,
+};
+
+type ProtocolVersion = unit {
+    major: uint8;
+    minor: uint8;
+};
+
+type Random = unit {
+    gmt_unix_time: uint32;
+    random_bytes: bytes &size=28;
+};
+
+type SessionID = unit {
+    length: uint8;
+    sid: bytes &size=self.length;
+};
+
+type CipherSuite = unit {
+    cs: uint16;
+};
+
+type CompressionMethod = unit {
+    method: uint8;
+};
+
+# DTLS Record Layer Structures
+type DTLSPlaintext = unit {
+    type_value: uint8 &convert=ContentType($$);
+    version: ProtocolVersion;
+    epoch: uint16;
+    sequence_number: bytes &size=6;  # 48 bits = 6 bytes
+    length: uint16;
+    fragment: bytes &size=self.length;
+};
+
+type DTLSCompressed = unit {
+    type_value: uint8 &convert=ContentType($$);
+    version: ProtocolVersion;
+    epoch: uint16;
+    sequence_number: bytes &size=6;  # 48 bits = 6 bytes
+    length: uint16;
+    fragment: bytes &size=self.length;
+};
+
+type GenericBlockCipher = unit {
+    # Simplified - actual structure depends on cipher
+    iv: bytes &size=16;  # Example size
+    content: bytes &eod;
+};
+
+type GenericAEADCipher = unit {
+    # Simplified - actual structure depends on cipher
+    nonce_explicit: bytes &size=8;  # Example size
+    content: bytes &eod;
+};
+
+type DTLSCiphertext = unit {
+    type_value: uint8 &convert=ContentType($$);
+    version: ProtocolVersion;
+    epoch: uint16;
+    sequence_number: bytes &size=6;  # 48 bits = 6 bytes
+    length: uint16;
+    fragment: bytes &size=self.length;
+    # Note: Actual fragment parsing would depend on cipher type
+};
+
+# Handshake Protocol Structures
+type HandshakeType = enum {
+    hello_request = 0,
+    client_hello = 1,
+    server_hello = 2,
+    hello_verify_request = 3,
+    certificate = 11,
+    server_key_exchange = 12,
+    certificate_request = 13,
+    server_hello_done = 14,
+    certificate_verify = 15,
+    client_key_exchange = 16,
+    finished = 20,
+};
+
+type HelloVerifyRequest = unit {
+    server_version: ProtocolVersion;
+    cookie_len: uint8;
+    cookie: bytes &size=self.cookie_len;
+};
+
+type ClientHello = unit {
+    client_version: ProtocolVersion;
+    random: Random;
+    session_id: SessionID;
+    cookie_len: uint8;
+    cookie: bytes &size=self.cookie_len;
+    cipher_suites_len: uint16;
+    cipher_suites: CipherSuite[] &size=self.cipher_suites_len;
+    compression_methods_len: uint8;
+    compression_methods: CompressionMethod[] &size=self.compression_methods_len;
+};
+
+type ServerHello = unit {
+    server_version: ProtocolVersion;
+    random: Random;
+    session_id: SessionID;
+    cipher_suite: CipherSuite;
+    compression_method: CompressionMethod;
+};
+
+type Certificate = unit {
+    certificates_len_bytes: bytes &size=3;  # 24 bits = 3 bytes
+    certificates: bytes &eod;
+};
+
+type ServerKeyExchange = unit {
+    params: bytes &eod;  # Variable depending on key exchange
+};
+
+type CertificateRequest = unit {
+    certificate_types_len: uint8;
+    certificate_types: bytes &size=self.certificate_types_len;
+    signature_algorithms_len: uint16;  # TLS 1.2 addition
+    signature_algorithms: bytes &size=self.signature_algorithms_len;
+    certificate_authorities_len: uint16;
+    certificate_authorities: bytes &size=self.certificate_authorities_len;
+};
+
+type ServerHelloDone = unit {
+    # Empty structure
+};
+
+type CertificateVerify = unit {
+    signature_algorithm: uint16;  # TLS 1.2 addition
+    signature_len: uint16;
+    signature: bytes &size=self.signature_len;
+};
+
+type ClientKeyExchange = unit {
+    exchange_keys: bytes &eod;  # Variable depending on key exchange
+};
+
+type Finished = unit {
+    verify_data: bytes &size=12;  # 12 bytes for TLS 1.2
+};
+
+type Handshake = unit {
+    msg_type: uint8 &convert=HandshakeType($$);
+    length_bytes: bytes &size=3;  # 24 bits = 3 bytes
+    message_seq: uint16;
+    fragment_offset_bytes: bytes &size=3;  # 24 bits = 3 bytes
+    fragment_length_bytes: bytes &size=3;  # 24 bits = 3 bytes
+    body: bytes &eod;
+};
+
+# Alert Protocol
+type AlertLevel = enum {
+    warning = 1,
+    fatal = 2,
+};
+
+type AlertDescription = enum {
+    close_notify = 0,
+    unexpected_message = 10,
+    bad_record_mac = 20,
+    decryption_failed = 21,
+    record_overflow = 22,
+    decompression_failure = 30,
+    handshake_failure = 40,
+    no_certificate = 41,
+    bad_certificate = 42,
+    unsupported_certificate = 43,
+    certificate_revoked = 44,
+    certificate_expired = 45,
+    certificate_unknown = 46,
+    illegal_parameter = 47,
+    unknown_ca = 48,
+    access_denied = 49,
+    decode_error = 50,
+    decrypt_error = 51,
+    export_restriction = 60,
+    protocol_version = 70,
+    insufficient_security = 71,
+    internal_error = 80,
+    user_canceled = 90,
+    no_renegotiation = 100,
+    unsupported_extension = 110,
+};
+
+type Alert = unit {
+    level: uint8 &convert=AlertLevel($$);
+    description: uint8 &convert=AlertDescription($$);
+};
+
+# Main DTLS parser
+public type DTLSRecord = unit {
+    type_value: uint8 &convert=ContentType($$);
+    version: ProtocolVersion;
+    epoch: uint16;
+    sequence_number: bytes &size=6;  # 48 bits = 6 bytes
+    length: uint16;
+    fragment: bytes &size=self.length;
+    
+    switch (self.type_value) {
+        ContentType::handshake -> handshake: Handshake;
+        ContentType::change_cipher_spec -> ccs: bytes &size=self.length;
+        ContentType::alert -> alert: Alert;
+        ContentType::application_data -> app_data: bytes &size=self.length;
+        * -> unknown: bytes &size=self.length;
+    };
+};

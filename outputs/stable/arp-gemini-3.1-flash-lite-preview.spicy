@@ -1,0 +1,13 @@
+module ARP_GEMINI;
+
+public type ARP = unit {
+    hrd: uint16;
+    pro: uint16;
+    hln: uint8;
+    pln: uint8;
+    op: uint16;
+    sha: bytes &size=self.hln;
+    spa: bytes &size=self.pln;
+    tha: bytes &size=self.hln;
+    tpa: bytes &size=self.pln;
+};

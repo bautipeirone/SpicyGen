@@ -1,0 +1,88 @@
+module ICMPv6_Qwen3;
+
+# ICMPv6 message types
+type MessageType = enum {
+    DestinationUnreachable = 1,
+    PacketTooBig = 2,
+    TimeExceeded = 3,
+    ParameterProblem = 4,
+    EchoRequest = 128,
+    EchoReply = 129,
+};
+
+# Codes for Destination Unreachable
+type DestinationUnreachableCode = enum {
+    NoRouteToDestination = 0,
+    CommunicationAdministrativelyProhibited = 1,
+    BeyondScopeOfSourceAddress = 2,
+    AddressUnreachable = 3,
+    PortUnreachable = 4,
+    SourceAddressFailedIngressEgressPolicy = 5,
+    RejectRouteToDestination = 6,
+};
+
+# Codes for Time Exceeded
+type TimeExceededCode = enum {
+    HopLimitExceededInTransit = 0,
+    FragmentReassemblyTimeExceeded = 1,
+};
+
+# Codes for Parameter Problem
+type ParameterProblemCode = enum {
+    ErroneousHeaderFieldEncountered = 0,
+    UnrecognizedNextHeaderTypeEncountered = 1,
+    UnrecognizedIPv6OptionEncountered = 2,
+};
+
+public type ICMPv6 = unit {
+    type_value: uint8 &convert=MessageType($$);
+    code: uint8;
+    checksum: uint16;
+    switch (self.type_value) {
+        MessageType::DestinationUnreachable -> : DestinationUnreachableBody;
+        MessageType::PacketTooBig -> : PacketTooBigBody;
+        MessageType::TimeExceeded -> : TimeExceededBody;
+        MessageType::ParameterProblem -> : ParameterProblemBody;
+        MessageType::EchoRequest -> : EchoRequestBody;
+        MessageType::EchoReply -> : EchoReplyBody;
+        * -> data: bytes &eod;
+    };
+};
+
+# Message body structures for each type
+
+type DestinationUnreachableBody = unit {
+    code_value: uint8 &convert=DestinationUnreachableCode($$);
+    unused: uint32;
+    invoking_packet: bytes &eod;
+};
+
+type PacketTooBigBody = unit {
+    code_value: uint8 &requires=($$ == 0);  # Code must be 0
+    mtu: uint32;
+    invoking_packet: bytes &eod;
+};
+
+type TimeExceededBody = unit {
+    code_value: uint8 &convert=TimeExceededCode($$);
+    unused: uint32;
+    invoking_packet: bytes &eod;
+};
+
+type ParameterProblemBody = unit {
+    code_value: uint8 &convert=ParameterProblemCode($$);
+    pointer: uint32;
+    invoking_packet: bytes &eod;
+};
+
+type EchoRequestBody = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    data: bytes &eod;
+};
+
+type EchoReplyBody = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    data: bytes &eod;
+};
