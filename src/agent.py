@@ -39,6 +39,8 @@ class State:
     attempt: int = 0
     last_code: str = ""
     success: bool = False
+    best_score: int = 0
+    best_code: str | None = None
 
 def clean_response(text: str) -> str:
     """Strip markdown fences and leading non-grammar lines."""
@@ -122,6 +124,12 @@ def run_refinement_loop(
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
             return f"No packets registered for protocol '{state.protocol.name}'. Say TERMINATE if the grammar compiled successfully."
 
+        score = check_result.score
+        if score > state.best_score:
+            state.best_score = score
+            state.best_code = cleaned_code
+            logger.info(f"New best score: {score} on attempt {state.attempt}.")
+
         summary = check_result.summary()
         if check_result.all_passed:
             state.success = True
@@ -187,9 +195,13 @@ def run_refinement_loop(
     logger.debug(f"Initial user message (start):\n{initial_prompt[:300]}\n...")
     logger.debug(f"Initial user message (end):\n{initial_prompt[-300:]}\n...")
 
-    user_proxy.initiate_chat(
-        assistant,
-        message=initial_prompt,
-    )
+    try:
+        user_proxy.initiate_chat(
+            assistant,
+            message=initial_prompt,
+        )
+    except Exception as e:
+        logger.error(f"Agent loop terminated with an exception: {e}")
 
-    return state.last_code, state.success, state.attempt
+    code_to_return = state.best_code if state.best_code is not None else state.last_code
+    return code_to_return, state.success, state.attempt

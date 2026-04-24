@@ -68,6 +68,10 @@ class SemanticCheckResult:
         return sum(1 for v in self.verdicts if not v.expected_accept and v.passed)
 
     @property
+    def score(self) -> int:
+        return self.accept_passed + self.reject_passed
+
+    @property
     def reject_total(self) -> int:
         return sum(1 for v in self.verdicts if not v.expected_accept)
 
