@@ -14,7 +14,7 @@ import difflib
 
 from src.logger import logger
 from src.protocol import Protocol, ProtocolType
-from src.tools.parse_tree import parse_spicy_output, match_parse_trees
+from src.tools.parse_tree import parse_spicy_output, compare_parse_trees
 
 _RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
@@ -129,9 +129,12 @@ def get_parse_tree_summary(parse_result: ParseResult) -> str | None:
     actual_tree = parse_spicy_output(actual_tree)
     expected_tree = parse_spicy_output(expected_tree)
     
+    parse_tree_diffs = [str(mismatch) for mismatch in compare_parse_trees(actual_tree, expected_tree)]
+    if not parse_tree_diffs:
+        return None
+
     summary = "The parse tree of the actual packet is different from the expected one.\n"
     summary += "The following mismatches were found between the actual parse tree and the expected parse tree:\n"
-    parse_tree_diffs = [str(mismatch) for mismatch in match_parse_trees(actual_tree, expected_tree)]
     summary += "\n".join(parse_tree_diffs)
     
     logger.debug(f"Generated parse tree diff for {os.path.basename(parse_result.packet_path)}")    

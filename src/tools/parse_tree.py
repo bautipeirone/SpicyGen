@@ -34,27 +34,59 @@ from src.logger import logger
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
-type ParseTree = dict[str, dict | list | str]
+type ParseTree = FieldUnit
+type ParseTreeField = FieldUnit | FieldString | FieldArray | FieldBitfield
 
 @dataclass(frozen=True)
-class ParseTreeField:
-    unit_name: str | None
-    field_name: str
-    field_value: Any
-    field_type: type
-
-    def show_field_value(self) -> str:
-        field_value_repr = str(self.field_value)
-        if self.field_type == str:
-            return field_value_repr[:25] + "..." if len(field_value_repr) > 25 else field_value_repr
-        return field_value_repr
+class FieldUnit:
+    name: str
+    type: str
+    value: dict[str, ParseTreeField]
 
     def __repr__(self) -> str:
-        repr = f"{self.field_name} = {self.show_field_value()}"
-        if self.unit_name is not None:
-            repr += f" in {self.unit_name}"
-        return repr
+        field_names = list(self.value.keys())
+        preview = ", ".join(field_names[:4])
+        if len(field_names) > 4:
+            preview += ", ..."
+        field_count = len(field_names)
+        location = self.name or "<root>"
+        return f"{location}: {self.type} with {field_count} field(s){f' [{preview}]' if preview else ''}"
 
+@dataclass(frozen=True)
+class FieldString:
+    name: str
+    value: str
+
+    def __repr__(self) -> str:
+        preview = self.value[:40] + ("..." if len(self.value) > 40 else "")
+        location = self.name or "<value>"
+        return f"{location}: {preview!r}"
+
+@dataclass(frozen=True)
+class FieldArray:
+    name: str
+    value: list[ParseTreeField]
+
+    def __repr__(self) -> str:
+        items = [repr(item) for item in self.value[:2]]
+        if len(self.value) > 2:
+            items.append("...")
+        preview = ", ".join(items)
+        location = self.name or "<array>"
+        return f"{location}: array[{len(self.value)}]{f' [{preview}]' if preview else ''}"
+
+@dataclass(frozen=True)
+class FieldBitfield:
+    name: str
+    value: dict[str, FieldString]
+
+    def __repr__(self) -> str:
+        entries = [f"{key}={field.value!r}" for key, field in list(self.value.items())[:8]]
+        if len(self.value) > 8:
+            entries.append("...")
+        preview = ", ".join(entries)
+        location = self.name or "<bitfield>"
+        return f"{location}: {f' {{{preview}}}' if preview else ''}"
 
 @dataclass(frozen=True)
 class ParseTreeMismatch:
@@ -62,69 +94,131 @@ class ParseTreeMismatch:
     ref_field: ParseTreeField
 
     def __repr__(self) -> str:
-        report = "Mismatch:\n"
-        report += f"{self.field} != {self.ref_field}"
-        return report
+        field_name = self.field.name or self.ref_field.name or "<anonymous>"
 
+        if type(self.field) != type(self.ref_field):
+            return (
+                f"Mismatch at {field_name}: type differs "
+                f"got {self.field}; expected {self.ref_field}"
+            )
 
-def match_by_field_name(pt: ParseTree, ref: ParseTree) -> Generator[ParseTreeMismatch, None, None]:
-    pt = pt.copy()
-    ref = ref.copy()
+        if isinstance(self.field, FieldString) and isinstance(self.ref_field, FieldString):
+            return (
+                f"Mismatch at {field_name}: value differs; "
+                f"got {self.field}; expected {self.ref_field}"
+            )
 
-    pt_unit_name = pt.pop("_type", None)
-    ref_unit_name = ref.pop("_type", None)
-    
+        if isinstance(self.field, FieldArray) and isinstance(self.ref_field, FieldArray):
+            return (
+                f"Mismatch at {field_name}: array length differs "
+                f"({len(self.field.value)} vs {len(self.ref_field.value)}); "
+                f"got {self.field}; expected {self.ref_field}"
+            )
+
+        if isinstance(self.field, FieldUnit) and isinstance(self.ref_field, FieldUnit):
+            extra_fields = sorted(set(self.field.value) - set(self.ref_field.value))
+            missing_fields = sorted(set(self.ref_field.value) - set(self.field.value))
+            details = []
+
+            if self.field.type != self.ref_field.type:
+                details.append(
+                    f"unit type differs ({self.field.type} vs {self.ref_field.type})"
+                )
+            if extra_fields:
+                details.append(f"only in got: {', '.join(extra_fields)}")
+            if missing_fields:
+                details.append(f"only in expected: {', '.join(missing_fields)}")
+
+            detail_text = "; ".join(details) if details else "nested fields differ"
+            return f"Mismatch at {field_name}: {detail_text}"
+
+        if isinstance(self.field, FieldBitfield) and isinstance(self.ref_field, FieldBitfield):
+            extra_flags = sorted(set(self.field.value) - set(self.ref_field.value))
+            missing_flags = sorted(set(self.ref_field.value) - set(self.field.value))
+            changed_flags = sorted(
+                key
+                for key in set(self.field.value) & set(self.ref_field.value)
+                if self.field.value[key] != self.ref_field.value[key]
+            )
+            details = []
+
+            if extra_flags:
+                details.append(f"only in got: {', '.join(extra_flags)}")
+            if missing_flags:
+                details.append(f"only in expected: {', '.join(missing_flags)}")
+            if changed_flags:
+                details.append(f"different values for: {', '.join(changed_flags)}")
+
+            detail_text = "; ".join(details) if details else "bitfield contents differ"
+            return f"Mismatch at {field_name}: {detail_text}"
+
+        return f"Mismatch at {field_name}: got {self.field}; expected {self.ref_field}"
+
+def compare_parse_trees(pt: ParseTree, ref: ParseTree) -> list[ParseTreeMismatch]:
+    """Compare two parse trees and return a list of mismatches."""
+    return match_objects(pt.value, ref.value)
+
+def compare_fields(field1: ParseTreeField, field2: ParseTreeField) -> list[ParseTreeMismatch]:
+    mismatches: list[ParseTreeMismatch] = []
+    match field1, field2:
+        case FieldString(name1, value1), FieldString(name2, value2):
+            if value1 != value2:
+                mismatches.append(ParseTreeMismatch(field1, field2))
+        case FieldArray(_, value1), FieldArray(_, value2):
+            ...
+        case FieldUnit(_, _, value1), FieldUnit(_, _, value2):
+            mismatches.extend(match_objects(value1, value2))
+        case FieldBitfield(_, value1), FieldBitfield(_, value2):
+            mismatches.extend(match_objects(value1, value2))
+        
+    if type(field1) != type(field2):
+        mismatches.append(ParseTreeMismatch(field1, field2))
+    return mismatches
+
+def match_arrays(array, ref_array) -> list[ParseTreeMismatch]:
+    mismatches = []
+    if len(array) != len(ref_array):
+        mismatches.append(ParseTreeMismatch(FieldArray("", array), FieldArray("", ref_array)))
+    for pt_item, ref_item in zip(array, ref_array):
+        mismatches.extend(compare_fields(pt_item, ref_item))
+    return mismatches
+
+def match_objects(pt: dict[str, ParseTreeField], ref: dict[str, ParseTreeField]) -> list[ParseTreeMismatch]:
+    fields = set()
+    mismatches = []
+    for mismatch in match_by_field_name(pt, ref):
+        field_name = mismatch.field.name
+        if field_name in fields:
+            continue
+        fields.add(field_name)
+        mismatches.append(mismatch)
+    for mismatch in match_by_field_order(pt, ref):
+        field_name = mismatch.field.name
+        if field_name in fields:
+            continue
+        fields.add(field_name)
+        mismatches.append(mismatch)
+    return mismatches
+
+def match_by_field_name(pt: dict[str, ParseTreeField], ref: dict[str, ParseTreeField]) -> list[ParseTreeMismatch]:
     pt_field_names = set(pt.keys())
     ref_field_names = set(ref.keys())
     common_field_names = pt_field_names & ref_field_names
+    mismatches = []
     for field_name in common_field_names:
         pt_value = pt[field_name]
         ref_value = ref[field_name]
-        pt_type = type(pt_value)
-        ref_type = type(ref_value)
-        pt_field = ParseTreeField(pt_unit_name, field_name, pt_value, pt_type)
-        ref_field = ParseTreeField(ref_unit_name, field_name, ref_value, ref_type)
-        if pt_type != ref_type:
-            yield ParseTreeMismatch(pt_field, ref_field)
-        elif pt_value != ref_value:
-            yield ParseTreeMismatch(pt_field, ref_field)
+        mismatches.extend(compare_fields(pt_value, ref_value))
+    return mismatches
 
-
-def match_by_field_order(pt: ParseTree, ref: ParseTree) -> Generator[ParseTreeMismatch, None, None]:
-    pt = pt.copy()
-    ref = ref.copy()
-
-    pt_unit_name = pt.pop("_type", None)
-    ref_unit_name = ref.pop("_type", None)
-
+def match_by_field_order(pt: dict[str, ParseTreeField], ref: dict[str, ParseTreeField]) -> list[ParseTreeMismatch]:
+    mismatches = []
     for (pt_key, pt_value), (ref_key, ref_value) in zip(pt.items(), ref.items()):
-        pt_type = type(pt_value)
-        ref_type = type(ref_value)
-        pt_field = ParseTreeField(pt_unit_name, pt_key, pt_value, pt_type)
-        ref_field = ParseTreeField(ref_unit_name, ref_key, ref_value, ref_type)
-        if pt_type != ref_type:
-            yield ParseTreeMismatch(pt_field, ref_field)
-        elif pt_value != ref_value:
-            yield ParseTreeMismatch(pt_field, ref_field)
+        mismatches.extend(compare_fields(pt_value, ref_value))
+    return mismatches
 
 
-def match_parse_trees(pt: ParseTree, ref: ParseTree) -> Generator[ParseTreeMismatch, None, None]:
-    fields = set()
-    for mismatch in match_by_field_name(pt, ref):
-        field_name = mismatch.field.field_name
-        if field_name in fields:
-            continue
-        fields.add(field_name)
-        yield mismatch
-    for mismatch in match_by_field_order(pt, ref):
-        field_name = mismatch.field.field_name
-        if field_name in fields:
-            continue
-        fields.add(field_name)
-        yield mismatch
-
-
-def parse_spicy_output(text: str) -> dict | list | str:
+def parse_spicy_output(text: str) -> ParseTree:
     """Parse a single ``spicy-dump`` output block into a Python structure.
 
     Returns a *dict* for objects (with an optional ``"_type"`` key),
@@ -132,7 +226,6 @@ def parse_spicy_output(text: str) -> dict | list | str:
     """
     parser = _Parser(text)
     result = parser.parse_top_level()
-    logger.debug(f"Parsed spicy output: top-level type = {type(result).__name__}")
     return result
 
 
@@ -214,14 +307,14 @@ class _Parser:
 
     # -- recursive descent --------------------------------------------------
 
-    def parse_top_level(self) -> dict | list | str:
+    def parse_top_level(self) -> ParseTree:
         """Entry point: parse the top-level value."""
         self._skip_ws()
         if self._at_end():
-            return {}
+            return FieldUnit("", "Void", {})
         return self._parse_value_in_context()
 
-    def _parse_value_in_context(self) -> dict | list | str:
+    def _parse_value_in_context(self) -> ParseTreeField:
         """Parse a value that appears at the *start* of a context.
 
         This is used for the top level and for array elements where the value
@@ -236,9 +329,9 @@ class _Parser:
         ch = self._peek()
 
         if ch == "{":
-            return self._parse_object(type_name=None)
+            return FieldBitfield(name="", value=self._parse_object())
         if ch is None or ch in "}]":
-            return ""
+            return FieldString(name="", value="")
 
         # Try to read a qualified name followed by '{'
         saved = self.pos
@@ -246,20 +339,18 @@ class _Parser:
         self._skip_spaces()
 
         if self._peek() == "{":
-            return self._parse_object(type_name=name)
+            return FieldUnit(name="", type=name, value=self._parse_object())
 
         # Not an object — fall back to reading the rest of the line as scalar
         self.pos = saved
-        return self._read_line_rest()
+        return FieldString(name="", value=self._read_line_rest())
 
-    def _parse_object(self, type_name: str | None) -> dict:
+    def _parse_object(self) -> dict[str, ParseTreeField]:
         """Parse an object body.  Consumes the opening ``{``."""
         assert self._peek() == "{"
         self._advance()  # consume '{'
 
-        result: dict = {}
-        if type_name:
-            result["_type"] = type_name
+        fields: dict = {}
 
         while True:
             self._skip_ws()
@@ -304,14 +395,14 @@ class _Parser:
             ch = self._peek()
 
             if ch == "{":
-                # Anonymous nested object
-                result[field_name] = self._parse_object(type_name=None)
+                # Bitfield
+                fields[field_name] = FieldBitfield(field_name, self._parse_object())
             elif ch == "[":
                 # Array
-                result[field_name] = self._parse_array()
+                fields[field_name] = FieldArray(field_name, self._parse_array())
             elif ch == "\n" or ch is None:
                 # Empty value  (e.g., ``payload: ``)
-                result[field_name] = ""
+                fields[field_name] = FieldString(field_name, "")
                 if ch == "\n":
                     self._advance()
             else:
@@ -321,20 +412,20 @@ class _Parser:
                 self._skip_spaces()
 
                 if self._peek() == "{":
-                    result[field_name] = self._parse_object(type_name=maybe_name)
+                    fields[field_name] = FieldUnit(field_name, maybe_name, self._parse_object())
                 else:
                     # Plain scalar — rewind and grab the whole line
                     self.pos = saved
-                    result[field_name] = self._read_line_rest()
+                    fields[field_name] = FieldString(field_name, self._read_line_rest())
 
-        return result
+        return fields
 
-    def _parse_array(self) -> list:
+    def _parse_array(self) -> list[ParseTreeField]:
         """Parse an array body.  Consumes the opening ``[``."""
         assert self._peek() == "["
         self._advance()  # consume '['
 
-        items: list = []
+        items: list[ParseTreeField] = []
 
         while True:
             self._skip_ws()
