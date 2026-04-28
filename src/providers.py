@@ -18,8 +18,9 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
 
     provider_name = model_index[model]["provider"]
     model_name = model_index[model]["name"]
+    price = model_index[model].get("price")
     llm_params = llm_params or {}
-    
+
     if provider_name == "ollama":
         config = {
             "config_list": [{
@@ -53,6 +54,9 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
         }
     else:
         raise ValueError(f"Unsupported provider for Autogen: {provider_name}")
+
+    if price is not None:
+        config["config_list"][0]["price"] = price
 
     config.update(llm_params)
     return config
