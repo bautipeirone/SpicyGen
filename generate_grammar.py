@@ -112,7 +112,7 @@ def main() -> None:
     messages = [spec_content]
 
     start_time = time.time()
-    content, success, attempts = run_refinement_loop(
+    content, success, attempts, conversation_usage = run_refinement_loop(
         llm_config, system_instruction, messages,
         protocol=protocol,
         agent_config=agent_config,
@@ -125,7 +125,8 @@ def main() -> None:
         "protocol": protocol.name,
         "success": success,
         "attempts": attempts,
-        "time_elapsed_s": round(elapsed_time, 2)
+        "time_elapsed_s": round(elapsed_time, 2),
+        "usage": conversation_usage,
     }
 
     if args.metrics_file:

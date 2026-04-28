@@ -11,14 +11,14 @@ def read_model_index():
     except OSError as exc:
         raise SystemExit(f"Unable to read model index from {MODEL_INDEX_PATH}: {exc}") from exc
 
-def get_autogen_config(model: str, extra_kwargs: dict | None = None) -> dict:
+def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
     model_index = read_model_index()
     if model not in model_index:
         raise ValueError(f"Model '{model}' not found in model index.")
 
     provider_name = model_index[model]["provider"]
     model_name = model_index[model]["name"]
-    extra_kwargs = extra_kwargs or {}
+    llm_params = llm_params or {}
     
     if provider_name == "ollama":
         config = {
@@ -54,7 +54,7 @@ def get_autogen_config(model: str, extra_kwargs: dict | None = None) -> dict:
     else:
         raise ValueError(f"Unsupported provider for Autogen: {provider_name}")
 
-    config.update(extra_kwargs)
+    config.update(llm_params)
     return config
 
 # LEGACY CODE
