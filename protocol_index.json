@@ -34,6 +34,11 @@
     "spec_type": "rfc",
     "rfc_id": "6347"
   },
+  "hap": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "907"
+  },
   "http1.1": {
     "type": "text",
     "spec_type": "rfc",
