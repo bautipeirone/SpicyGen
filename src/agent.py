@@ -71,7 +71,8 @@ def run_refinement_loop(
     Returns a tuple of (grammar_code, compiled_successfully, attempts).
     """
     max_retries = agent_config.get("max_retries")
-    use_parsing_tree_tool = agent_config.get("use_parsing_tree_tool")
+    show_packet_representation = agent_config.get("show_packet_representation")
+    show_parsing_tree = agent_config.get("show_parsing_tree")
     refinement_dir = None
     errors_dir = debug_dir / "errors" if debug_dir else None
     if debug_dir:
@@ -80,7 +81,6 @@ def run_refinement_loop(
         debug_dir.mkdir(parents=True, exist_ok=True)
         refinement_dir.mkdir(parents=True, exist_ok=True)
         errors_dir.mkdir(parents=True, exist_ok=True)
-
 
     state = State(protocol=protocol)
 
@@ -118,7 +118,7 @@ def run_refinement_loop(
             cleaned_code = code
 
         logger.info(f"Running Runtime check for protocol '{state.protocol.name}'...")
-        check_result = run_parser_check_from_code(cleaned_code, state.protocol, show_parsing_tree=use_parsing_tree_tool, debug_dir=debug_dir)
+        check_result = run_parser_check_from_code(cleaned_code, state.protocol, show_parsing_tree=show_parsing_tree, debug_dir=debug_dir)
 
         if not check_result.verdicts:
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
@@ -130,7 +130,7 @@ def run_refinement_loop(
             state.best_code = cleaned_code
             logger.info(f"New best score: {score} on attempt {state.attempt}.")
 
-        summary = check_result.summary()
+        summary = check_result.summary(show_packet_representation=show_packet_representation)
         if check_result.all_passed:
             state.success = True
             logger.info(f"Runtime check PASSED for '{state.protocol.name}'.")

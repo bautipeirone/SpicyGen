@@ -75,7 +75,7 @@ class SemanticCheckResult:
     def reject_total(self) -> int:
         return sum(1 for v in self.verdicts if not v.expected_accept)
 
-    def report_errors(self) -> str:
+    def report_errors(self, show_packet_representation: bool) -> str:
         lines = []
         if not self.all_passed:
             lines.append("")
@@ -85,7 +85,7 @@ class SemanticCheckResult:
                 lines.append(f"Expected: {'ACCEPT' if v.expected_accept else 'REJECT'}")
                 lines.append(f"Actual: {'ACCEPTED' if v.actual_accept else 'REJECTED'}")
 
-                packet_repr = get_packet_representation(_RAW_BASE_DIR / v.packet_path, self.protocol.type)
+                packet_repr = get_packet_representation(_RAW_BASE_DIR / v.packet_path, self.protocol.type) if show_packet_representation else None
                 if packet_repr is not None:
                     lines.append(f"Packet representation:")
                     lines.append(packet_repr)
@@ -102,12 +102,12 @@ class SemanticCheckResult:
                 lines.append("")
         return "\n".join(lines)
 
-    def summary(self) -> str:
+    def summary(self, show_packet_representation: bool = False) -> str:
         lines = [f"Runtime check for protocol '{self.protocol}':"]
         lines.append(f"  Accept set: {self.accept_passed}/{self.accept_total} passed")
         lines.append(f"  Reject set: {self.reject_passed}/{self.reject_total} passed")
         lines.append(f"  Overall: {'PASS' if self.all_passed else 'FAIL'}")
-        lines.append(self.report_errors())
+        lines.append(self.report_errors(show_packet_representation=show_packet_representation))
         return "\n".join(lines)
 
 

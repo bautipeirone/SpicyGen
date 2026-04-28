@@ -7,4 +7,5 @@ llm:
 # Agent parameters
 agent:
     max_retries: 15
-    use_parsing_tree_tool: true
+    show_packet_representation: false
+    show_parsing_tree: false

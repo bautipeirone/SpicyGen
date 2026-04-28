@@ -6,7 +6,8 @@ def read_config(path: Path | None) -> tuple[dict, dict]:
     # Defaults
     agent_config = {
         "max_retries": 15,
-        "use_diff_tool": True
+        "show_packet_representation": False,
+        "show_parsing_tree": False
     }
     llm_params = {
         "temperature": 0.0
