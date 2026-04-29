@@ -62,7 +62,7 @@
   "ipv6": {
     "type": "binary",
     "spec_type": "rfc",
-    "rfc_id": "2460"
+    "local_spec_file": "specs/ipv6-header-format.txt"
   },
   "irc": {
     "type": "text",
