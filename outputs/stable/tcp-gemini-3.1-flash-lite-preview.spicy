@@ -1,21 +1,26 @@
-module TCP;
+module TCP_GPT;
 
-public type Header = unit {
-    src_port: uint16;
-    dst_port: uint16;
-    seq_num: uint32;
-    ack_num: uint32;
+import spicy;
+
+type Option = unit {
+    kind: uint8;
+    switch (self.kind) {
+        0 -> : void;
+        1 -> : void;
+        * -> {
+            length: uint8;
+            data: bytes &size=self.length - 2;
+        }
+    };
+};
+
+public type TCPHeader = unit {
+    source_port: uint16;
+    destination_port: uint16;
+    sequence_number: uint32;
+    acknowledgment_number: uint32;
     
-    # Data Offset (4 bits), Reserved (6 bits), Control Bits (6 bits)
-    # Total 16 bits.
-    # Using bitfield(16) and standard bit order.
-    # The RFC says:
-    # Data Offset: 4 bits
-    # Reserved: 6 bits
-    # Control Bits: 6 bits
-    # Total: 16 bits.
-    
-    control: bitfield(16) {
+    f: bitfield(16) {
         data_offset: 0..3;
         reserved: 4..9;
         urg: 10;
@@ -24,19 +29,15 @@ public type Header = unit {
         rst: 13;
         syn: 14;
         fin: 15;
-    };
+    } &bit-order=spicy::BitOrder::MSB0;
     
     window: uint16;
     checksum: uint16;
     urgent_pointer: uint16;
     
-    # Options and Padding
-    # The header length is in 32-bit words.
-    # Header length = data_offset * 4 bytes.
-    # We have already read 20 bytes (src_port, dst_port, seq_num, ack_num, control, window, checksum, urgent_pointer).
-    # Wait, 2+2+4+4+2+2+2+2 = 20 bytes. Correct.
-    
-    options_and_padding: bytes &size=(self.control.data_offset * 4 - 20);
+    # Data offset is in 32-bit words. Header is at least 5 words (20 bytes).
+    # Options start after the 20th byte.
+    options: bytes &size=(self.f.data_offset * 4) - 20 if (self.f.data_offset > 5);
     
     data: bytes &eod;
 };

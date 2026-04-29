@@ -1,21 +1,30 @@
-module TCP_RFC793;
+module TCP_Qwen3;
 
-public type TCPHeader = unit {
+import spicy;
+
+type ControlBits = unit {
+    : bitfield(16) {
+        data_offset: 0..3;     # Data Offset (4 bits)
+        reserved: 4..9;        # Reserved (6 bits)
+        urg: 10;               # URG flag
+        ack: 11;               # ACK flag
+        psh: 12;               # PSH flag
+        rst: 13;               # RST flag
+        syn: 14;               # SYN flag
+        fin: 15;               # FIN flag
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+public type TCP_Header = unit {
     src_port: uint16;
     dst_port: uint16;
     seq_num: uint32;
     ack_num: uint32;
-    data_offset_and_reserved: uint8;
-    flags: uint8;
-    window_size: uint16;
+    control_bits: ControlBits;
+    window: uint16;
     checksum: uint16;
-    urgent_pointer: uint16;
-    options: TCPOption[] &size=((self.data_offset_and_reserved >> 4) * 4) - 20 if(((self.data_offset_and_reserved >> 4) * 4) > 20);
-    data: bytes &eod;
-};
-
-type TCPOption = unit {
-    kind: uint8;
-    length: uint8 if(self.kind == 2 || self.kind == 3 || self.kind == 4); # Options with length field
-    value_bytes: bytes &size=(self.length - 2) if(self.kind == 2 || self.kind == 3 || self.kind == 4);
+    urgent_ptr: uint16;
+    # Options parsing - need to calculate remaining header size
+    # Basic header is 20 bytes, data_offset tells us total header size in 32-bit words
+    options_data: bytes &size=(self.control_bits.data_offset * 4 - 20) if(self.control_bits.data_offset > 5);
 };
