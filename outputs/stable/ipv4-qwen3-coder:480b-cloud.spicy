@@ -1,16 +1,75 @@
-module IP;
+module IP_Qwen3;
 
-public type Datagram = unit {
-    version_ihl: uint8;
-    type_of_service: uint8;
+import spicy;
+
+type Option = unit {
+    type_field: uint8;
+    switch (self.type_field) {
+        0 -> : void;  # End of Option List
+        1 -> : void;  # No Operation
+        130 -> {      # Security
+            length: uint8;
+            security: uint16;
+            compartments: uint16;
+            handling_restrictions: uint16;
+            tcc: bytes &size=3;
+        }
+        131 -> {      # Loose Source Routing
+            length: uint8;
+            pointer: uint8;
+            route_data: bytes &size=self.length - 3;
+        }
+        137 -> {      # Strict Source Routing
+            length: uint8;
+            pointer: uint8;
+            route_data: bytes &size=self.length - 3;
+        }
+        7 -> {        # Record Route
+            length: uint8;
+            pointer: uint8;
+            route_data: bytes &size=self.length - 3;
+        }
+        136 -> {      # Stream ID
+            length: uint8;
+            stream_id: uint16;
+        }
+        68 -> {       # Internet Timestamp
+            length: uint8;
+            pointer: uint8;
+            overflow_flags: uint8;
+            timestamp_data: bytes &size=self.length - 4;
+        }
+        * -> {        # Unknown option
+            length: uint8;
+            data: bytes &size=self.length - 2;
+        }
+    };
+};
+
+public type IP_Header = unit {
+    version_ihl: bitfield(8) {
+        version: 0..3;
+        ihl: 4..7;  # Internet Header Length in 32-bit words
+    } &bit-order=spicy::BitOrder::MSB0;
+    type_of_service: bitfield(8) {
+        precedence: 0..2;
+        delay: 3;
+        throughput: 4;
+        reliability: 5;
+        reserved: 6..7;
+    } &bit-order=spicy::BitOrder::MSB0;
     total_length: uint16;
     identification: uint16;
-    flags_fragment_offset: uint16;
+    flags_fragment: bitfield(16) {
+        reserved: 0;
+        df: 1;      # Don't Fragment
+        mf: 2;      # More Fragments
+        fragment_offset: 3..15;
+    } &bit-order=spicy::BitOrder::MSB0;
     ttl: uint8;
     protocol: uint8;
     checksum: uint16;
-    source_address: addr &ipv4;
-    destination_address: addr &ipv4;
-    # Options and data would go here
-    payload: bytes &eod;
+    src_addr: addr &ipv4;
+    dst_addr: addr &ipv4;
+    options_and_padding: bytes &size=(self.version_ihl.ihl*4 - 20) if(self.version_ihl.ihl > 5);
 };
