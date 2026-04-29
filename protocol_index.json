@@ -57,7 +57,7 @@
   "ipv4": {
     "type": "binary",
     "spec_type": "rfc",
-    "rfc_id": "791"
+    "local_spec_file": "specs/ipv4-header-format.txt"
   },
   "ipv6": {
     "type": "binary",
@@ -92,7 +92,7 @@
   "tcp": {
     "type": "binary",
     "spec_type": "rfc",
-    "rfc_id": "793"
+    "local_spec_file": "specs/tcp-header-format.txt"
   },
   "tftp": {
     "type": "binary",
