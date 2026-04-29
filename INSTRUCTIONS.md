@@ -18,6 +18,7 @@
 * A unit field can have another unit as its type. If the subunit receives parameters, they must be given right after the type. All units have to be declared globally, anonymous units are not allowed.
 * Globally defined constants and regex are declared with the reserved keyword `const`, units are declared with `type` and the main unit with `public type`.
 * Comment lines only start with the `#` symbol. Multiline comments are not supported.
+* All blocks end with a `;`. The ONLY exception is blocks inside a `switch` statement. The `switch` itself has to end with a `;`.
 
 ### Fields
 * Each field inside a unit has a type and an optional name. The type defines how that field will be parsed from raw input data. If a field has a name, it can later be referenced to access its value via `self.fieldName`. Consequently, all fields with semantic meanings have names, while those which are unlikely to be relevant later do not (e.g., whitespace). Fields like this are called anonymous, and can be used for special packet structures that do not correspond to packet fields (i.e. mandatory bytes at start of field, padding). You should always declare them like `: Type;`, this is, omit the name but not the colons.
@@ -88,7 +89,6 @@ public type Foo = unit {
 
 ## Important considerations
 * For multi-byte integer values, it is important to consider the byte order for parsing. Network byte order (i.e., big-endian) is the default. To change byte order, use field attributes.
-* Most sentences like `type` declarations, `module`, etc. end with a `;`. There is one exception: dont end with a `;` blocks of code like `* -> { ... }` found inside `switch` statements.
 * The following words are reserved and cant be used as field names: file, port, type, time. The following can be used to replace them: filename, port_number, type_value, time_value.
 * Booleans are denoted `True` and `False`.
 
@@ -105,8 +105,8 @@ public type Foo = unit {
           u8: uint8;
           u16: uint16;
           u32: uint32;
-        }
-    };
+        } # This block doesnt carry a `;`
+    }; # The block for the switch does carry a `;`
 };
 ```
 They can also be specified without a condition, and the branch is decided by look-ahead on the input stream. This mechanism becomes powerful once you have subunits that are recognizable by how they start:
