@@ -5,7 +5,8 @@ from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from src.tools.runtime import run_parser_check_from_code
 from src.protocol import Protocol
 from src.logger import logger
-from typing import Annotated
+from src.usage import extract_cost_summary, CostSummary
+from typing import Annotated, Any
 import autogen
 
 COMPILATION_FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the following errors:
@@ -65,10 +66,10 @@ def run_refinement_loop(
     protocol: Protocol,
     agent_config: dict,
     debug_dir: Path | None = None,
-) -> tuple[str, bool, int]:
+) -> tuple[str, bool, int, dict[str, CostSummary]]:
     """Run the compile-feedback agent loop using Autogen.
 
-    Returns a tuple of (grammar_code, compiled_successfully, attempts).
+    Returns a tuple of (grammar_code, compiled_successfully, attempts, cost_summary).
     """
     max_retries = agent_config.get("max_retries")
     show_packet_representation = agent_config.get("show_packet_representation")
@@ -195,8 +196,9 @@ def run_refinement_loop(
     logger.debug(f"Initial user message (start):\n{initial_prompt[:300]}\n...")
     logger.debug(f"Initial user message (end):\n{initial_prompt[-300:]}\n...")
 
+    chat_result = None
     try:
-        user_proxy.initiate_chat(
+        chat_result = user_proxy.initiate_chat(
             assistant,
             message=initial_prompt,
         )
@@ -204,4 +206,5 @@ def run_refinement_loop(
         logger.error(f"Agent loop terminated with an exception: {e}")
 
     code_to_return = state.best_code if state.best_code is not None else state.last_code
-    return code_to_return, state.success, state.attempt
+    cost_summary = extract_cost_summary(chat_result.cost) if chat_result is not None else None
+    return code_to_return, state.success, state.attempt, cost_summary
