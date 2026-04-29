@@ -13,6 +13,7 @@
 ## Grammar
 ### Type declarations
 * Every script starts with a `module` statement defining a namespace for the script’s content.
+* Then, you have to import spicy with the line `import spicy;`.
 * The layout of a piece of data is defined by creating a `unit` type. The type lists individual *fields* in the order they are to be parsed.
 * A unit field can have another unit as its type. If the subunit receives parameters, they must be given right after the type. All units have to be declared globally, anonymous units are not allowed.
 * Globally defined constants and regex are declared with the reserved keyword `const`, units are declared with `type` and the main unit with `public type`.
