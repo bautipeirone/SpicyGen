@@ -26,7 +26,7 @@
 * You can use `void` as type for empty fields (i.e. 0 byte fields).
 * Fields may use the `&convert=EXPR` attribute to transform the read input. Inside the expression, `self` can be used to reference the state of the unit (i.e. `self.opcode`) and `$$` references to the read input that will be transformed (i.e. `&convert=$$.to_uint(16)`). It is very common to use `&convert` to cast a field into an enum like `op: uint8 &convert=Opcode($$)`.
 * Conditional fields are implemented by appending an `if(COND)` to the field declaration.
-* Fields can have **constraints** on their values. The following example requires `x` to be less than 5:
+* Fields can have **constraints** on their values. The following example requires `x` to be greater than 2 and less than 5:
 ```
 type Foo = unit {
     x: int8 &requires=(2 < $$ && $$ < 5);
@@ -87,10 +87,34 @@ public type Foo = unit {
   * &eod: Parses elements until the end of the input stream is reached.
   * &size=N: Parses the vector from the subsequent N bytes of input data.
 
-## Important considerations
-* For multi-byte integer values, it is important to consider the byte order for parsing. Network byte order (i.e., big-endian) is the default. To change byte order, use field attributes.
-* The following words are reserved and cant be used as field names: file, port, type, time. The following can be used to replace them: filename, port_number, type_value, time_value.
-* Booleans are denoted `True` and `False`.
+## Line Based Parsing
+This section describes common and reusable patterns for parsing line-based protocols. 
+These are common regex definitions to use.
+```
+const Token      = /[^ \t\r\n]+/;
+const HeaderName  = /[^:\r\n]+/;
+const WhiteSpace = /[ \t]+/;
+const NewLine    = /\r?\n/;
+```
+Their usage is highly encouraged to achieve correct parsing. When reading a value until the end of line, using the `&until` attribute is prefered.
+This is an example of how to parse the `key: value` header style that is very common among text protocols.
+```
+module Test;
+
+import spicy;
+
+const Token      = /[^ \t\r\n]+/;
+const HeaderName  = /[^:\r\n]+/;
+const WhiteSpace = /[ \t]+/;
+const NewLine    = /\r?\n/;
+
+public type KeyValue = unit {
+	key: HeaderName;
+  : b":";
+  : WhiteSpace;
+  value: bytes &until=b"\n";
+};
+```
 
 ## Examples
 * **switch** constructs are supported as a way to branch into one of several parsing alternatives.
@@ -135,80 +159,6 @@ public type Foo = unit {
     data: bytes &size=self.len if(self.cond > 0);
 };
 ```
----
-* **Bitfields** parse an integer value of 8, 16, 32 or 64 bits (only these are supported), and then make selected smaller bit ranges within that value available individually through dedicated identifiers. For example, the following unit parses 4 bytes as an uint32 and then makes the value of bit 0 available as f.x1, bits 1 to 2 as f.x2, and bits 3 to 4 as f.x3, respectively:
-```
-public type Foo = unit {
-    f: bitfield(32) {
-        x1: 0;
-        x2: 1..2;
-        x3: 3..4;
-    };
-};
-```
-Whenever there is a fixed-length field whose length is not byte-aligned (i.e., less than 8 bits or say 12 bits), you should use a bitfield to join it with following fields until reaching a size of 8/16/32/64 instead of using an integer type.
-It is important to use the correct bit order parsing, this can be modified via an attribute attached to the field. When parsing a `bitfield(16)` in network byte order and with bit order `spicy::BitOrder::LSB0` (default value of `&bit-order`), bits are numbered 0 to 15 from right to left.
-```
-MSB                           LSB
-      <--   1         <--       0
-6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-+---------------+---------------+
-|               |               |
-+-------------------------------+
-```
-However, you may need to use the inverse order, where the most significant bit is numbered 0 on the left with higher bit numbers representing less significant bits to the right. Here is an example
-```
-MSB                           LSB
-0       -->         1    -->
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-+-+-+-+-+-------+-+-------------+
-|F|R|R|R| opcode|M| Payload len |
-|I|S|S|S|  (4)  |A|     (7)     |
-|N|V|V|V|       |S|             |
-| |1|2|3|       |K|             |
-+-+-+-+-+-------+-+-------------+
-```
-To parse a bitfield with this order, do like the following example
-```
-import spicy;
-
-public type Header= unit {
-    : bitfield(32) {
-        fin: 0;
-        rsv: 1..3;
-        opcode: 4..7;
-        mask: 8;
-        payload_len: 9..15;
-    } &bit-order=spicy::BitOrder::MSB0;
-};
-```
-Without the `&bit-order` attribute, the final parsed structure would have been the reversed bitfield.
-```
-MSB                           LSB
-0       -->         1    -->
-0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
-+-------------+-+-------+-+-+-+-+
-| Payload len |M| opcode|R|R|R|F|
-|     (7)     |A|  (4)  |S|S|S|I|
-|             |S|       |V|V|V|N|
-|             |K|       |3|2|1| |
-+-------------+-+-------+-+-+-+-+
-```
-
-Fields inside the bitfield should have a `&convert` attribute in case these fields correspond to an `enum` type. For example
-```
-type Flag = enum {
-  On,
-  Off,
-}
-
-type Bar = unit {
-    f: bitfield(8) {
-        flag: 0..1 &convert=Flag($$);
-    };
-};
-```
-
 ---
 * **Enum** types associate labels with numerical values. Only unsigned integer values can be used in enum declarations. Each enum type comes with an implicitly defined `Undef` label with a value distinct from all other ones. When coerced into a boolean, an enum will be true iff it’s not `Undef`.
 ```
