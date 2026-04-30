@@ -1,0 +1,138 @@
+module IP_claude;
+
+import spicy;
+
+type OptionType = enum {
+    EndOfList    = 0,
+    NoOperation  = 1,
+    Security     = 130,
+    LooseSourceRoute  = 131,
+    StrictSourceRoute = 137,
+    RecordRoute  = 7,
+    StreamID     = 136,
+    Timestamp    = 68
+};
+
+# Security Option (Type=130, Length=11)
+type SecurityOption = unit {
+    security:       uint16;
+    compartments:   uint16;
+    handling:       uint16;
+    tcc:            bytes &size=3;
+};
+
+# Loose Source and Record Route (Type=131)
+type LooseSourceRouteOption = unit(len: uint8) {
+    pointer:    uint8;
+    route_data: bytes &size=(len - 3);
+};
+
+# Strict Source and Record Route (Type=137)
+type StrictSourceRouteOption = unit(len: uint8) {
+    pointer:    uint8;
+    route_data: bytes &size=(len - 3);
+};
+
+# Record Route (Type=7)
+type RecordRouteOption = unit(len: uint8) {
+    pointer:    uint8;
+    route_data: bytes &size=(len - 3);
+};
+
+# Stream Identifier (Type=136, Length=4)
+type StreamIDOption = unit {
+    stream_id: uint16;
+};
+
+# Internet Timestamp entry (flag=0: timestamp only, flag=1 or 3: address + timestamp)
+type TimestampEntry = unit(flg: uint8) {
+    internet_address: addr &ipv4 if(flg == 1 || flg == 3);
+    timestamp:        uint32;
+};
+
+# Internet Timestamp (Type=68)
+type TimestampOption = unit(len: uint8) {
+    pointer:  uint8;
+    oflw_flg: bitfield(8) {
+        flg:  0..3;
+        oflw: 4..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    entries: TimestampEntry(self.oflw_flg.flg)[] &size=(len - 4);
+};
+
+# A single IP option
+type Option = unit {
+    opt_type: uint8 &convert=OptionType($$);
+    switch (self.opt_type) {
+        OptionType::EndOfList   -> : void;
+        OptionType::NoOperation -> : void;
+        OptionType::Security    -> {
+            length:        uint8;
+            security_data: SecurityOption;
+        }
+        OptionType::LooseSourceRoute -> {
+            lsrr_length: uint8;
+            lsrr_data:   LooseSourceRouteOption(self.lsrr_length);
+        }
+        OptionType::StrictSourceRoute -> {
+            ssrr_length: uint8;
+            ssrr_data:   StrictSourceRouteOption(self.ssrr_length);
+        }
+        OptionType::RecordRoute -> {
+            rr_length: uint8;
+            rr_data:   RecordRouteOption(self.rr_length);
+        }
+        OptionType::StreamID -> {
+            sid_length: uint8;
+            sid_data:   StreamIDOption;
+        }
+        OptionType::Timestamp -> {
+            ts_length: uint8;
+            ts_data:   TimestampOption(self.ts_length);
+        }
+        * -> {
+            gen_length: uint8;
+            gen_data:   bytes &size=(self.gen_length - 2);
+        }
+    };
+};
+
+# Type of Service field
+type TypeOfService = unit {
+    tos: bitfield(8) {
+        reserved:    0..1;
+        reliability: 2;
+        throughput:  3;
+        delay:       4;
+        precedence:  5..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+# Flags + Fragment Offset (16 bits total)
+# MSB0: bit 0 = reserved, bit 1 = DF, bit 2 = MF, bits 3..15 = fragment offset
+type FlagsAndOffset = unit {
+    flags_offset: bitfield(16) {
+        fragment_offset: 3..15;
+        mf:              2;
+        df:              1;
+        reserved:        0;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+public type IPv4Header = unit {
+    ver_ihl: bitfield(8) {
+        ihl:     4..7;
+        version: 0..3;
+    } &bit-order=spicy::BitOrder::MSB0;
+    tos:             TypeOfService;
+    total_length:    uint16;
+    identification:  uint16;
+    flags_offset:    FlagsAndOffset;
+    ttl:             uint8;
+    protocol:        uint8;
+    header_checksum: uint16;
+    src:             addr &ipv4;
+    dst:             addr &ipv4;
+    options:         Option[] &size=((self.ver_ihl.ihl * 4) - 20) if(self.ver_ihl.ihl > 5);
+    data:            bytes &eod;
+};

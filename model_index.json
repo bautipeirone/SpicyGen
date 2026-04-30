@@ -25,5 +25,12 @@
     "provider": "ollama",
     "context-window": "128000",
     "cutoff-date": "06-24"
+  },
+  "claude-sonnet-4-6": {
+    "name": "claude-sonnet-4-6",
+    "provider": "anthropic",
+    "context-window": "1000000",
+    "cutoff-date": "08-25",
+    "price": [0.003, 0.015]
   }
 }
