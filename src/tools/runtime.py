@@ -144,7 +144,7 @@ def get_parse_tree_summary(parse_result: ParseResult) -> str | None:
 # Core functions
 # ---------------------------------------------------------------------------
 
-def precompile_grammar(grammar_file: str, debug_dir: Path | None = None) -> Path | None:
+def precompile_grammar(grammar_file: str, output_path: Path | None = None) -> Path | None:
     """Pre-compile a ``.spicy`` grammar to a ``.hlto`` binary.
 
     Runs ``spicyc -j <grammar_file> -o <output>`` so that repeated calls to
@@ -155,26 +155,22 @@ def precompile_grammar(grammar_file: str, debug_dir: Path | None = None) -> Path
     grammar_file:
         Path to the ``.spicy`` source grammar.
     debug_dir:
-        Optional debug directory.  When provided the ``.hlto`` is written into
-        ``<debug_dir>/build/<grammar_file>.hlto``; otherwise a temporary directory is
-        used.
+        Optional output path.  If not provided, the compiled ``.hlto`` is stored
+        in a temporary directory that is deleted after use.
 
     Returns
     -------
     Path | None
         Path to the compiled ``.hlto`` file, or ``None`` if compilation failed.
     """
-    grammar_name = os.path.splitext(os.path.basename(grammar_file))[0]
-    if debug_dir is not None:
-        build_dir = debug_dir / "build"
-        build_dir.mkdir(parents=True, exist_ok=True)
-    else:
+    if output_path is None:
+        grammar_name = os.path.splitext(os.path.basename(grammar_file))[0]
         build_dir = Path(tempfile.mkdtemp(prefix="spicy_build_"))
-    hlto_path = build_dir / f"{grammar_name}.hlto"
+        output_path = build_dir / f"{grammar_name}.hlto"
 
-    logger.info(f"Pre-compiling grammar to {hlto_path}")
+    logger.info(f"Pre-compiling grammar to {output_path}")
     proc = subprocess.run(
-        ["spicyc", "-j", grammar_file, "-o", str(hlto_path)],
+        ["spicyc", "-j", grammar_file, "-o", str(output_path)],
         capture_output=True,
         text=True,
     )
@@ -183,8 +179,8 @@ def precompile_grammar(grammar_file: str, debug_dir: Path | None = None) -> Path
         logger.error(f"Pre-compilation failed: {proc.stderr.strip()}")
         return None
 
-    logger.info(f"Pre-compilation succeeded: {hlto_path}")
-    return hlto_path
+    logger.info(f"Pre-compilation succeeded: {output_path}")
+    return output_path
 
 
 def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType) -> str | None:
@@ -210,7 +206,7 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
             lines.append(f"{offset:08x}  {hex_bytes:<47}  {ascii_bytes}")
         return "\n".join(lines)
 
-def run_spicy_parser(grammar_file: str, packet_file: str) -> ParseResult:
+def run_spicy_parser(grammar_file: str, packet_file: str, errors_file: None = None) -> ParseResult:
     """Run ``spicy-dump <grammar_file> < <packet_file>`` and return the result."""
     packet_name = os.path.basename(packet_file)
     logger.info(f"Running spicy-dump: {grammar_file} < {packet_name}")
@@ -241,7 +237,7 @@ def run_parser_check(
     grammar_file: str,
     protocol: Protocol,
     show_parsing_tree: bool,
-    debug_dir: Path | None = None,
+    debug_info: dict[str, Path | None] | None = None
 ) -> SemanticCheckResult:
     """Run a grammar against all packets for *protocol* found on disk.
 
@@ -267,6 +263,9 @@ def run_parser_check(
     accept_dir = protocol_dir / "positive"
     reject_dir = protocol_dir / "negative"
 
+    build_path = debug_info.get("build_path") if debug_info else None
+    errors_path = debug_info.get("errors_path") if debug_info else None
+
     accept_packets = sorted(
         str(path.relative_to(_RAW_BASE_DIR))
         for path in accept_dir.rglob("*.bin")
@@ -290,8 +289,10 @@ def run_parser_check(
     )
 
     # Pre-compile grammar once to avoid repeated compilation per packet
-    hlto_path = precompile_grammar(grammar_file, debug_dir)
+    hlto_path = precompile_grammar(grammar_file, build_path)
     parser_input = str(hlto_path) if hlto_path is not None else grammar_file
+
+    errors_log: list[str] = []
 
     for rel_path in accept_packets:
         abs_path = str(_RAW_BASE_DIR / rel_path)
@@ -305,6 +306,8 @@ def run_parser_check(
             parse_tree_summary=parse_tree_summary,
         )
         result.verdicts.append(verdict)
+        if parse_result.error:
+            errors_log.append(parse_result.error.strip())
         if not verdict.passed:
             logger.warning(f"FAIL (accept): {rel_path} was rejected. stderr: {parse_result.error.strip()}")
 
@@ -318,8 +321,14 @@ def run_parser_check(
             error=parse_result.error,
         )
         result.verdicts.append(verdict)
+        if parse_result.error:
+            errors_log.append(parse_result.error.strip())
         if not verdict.passed:
             logger.warning(f"FAIL (reject): {rel_path} was accepted but should have been rejected.")
+
+    if errors_log and errors_path:
+        with open(errors_path, "w") as f:
+            f.write("\n".join(errors_log))
 
     logger.debug(f"Semantic check result: {result.summary()}")
     return result
@@ -329,7 +338,7 @@ def run_parser_check_from_code(
     grammar_code: str,
     protocol: Protocol,
     show_parsing_tree: bool = False,
-    debug_dir: Path | None = None,
+    debug_info: dict[str, Path | None] | None = None
 ) -> SemanticCheckResult:
     """Convenience wrapper: writes *grammar_code* to a temp file, then runs
     :func:`run_parser_check` against it.
@@ -342,4 +351,4 @@ def run_parser_check_from_code(
     ) as tmp:
         tmp.write(grammar_code)
         tmp.flush()
-        return run_parser_check(tmp.name, protocol, show_parsing_tree, debug_dir=debug_dir)
+        return run_parser_check(tmp.name, protocol, show_parsing_tree, debug_info=debug_info)

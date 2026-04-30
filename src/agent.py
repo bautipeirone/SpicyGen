@@ -75,13 +75,16 @@ def run_refinement_loop(
     show_packet_representation = agent_config.get("show_packet_representation")
     show_parsing_tree = agent_config.get("show_parsing_tree")
     refinement_dir = None
-    errors_dir = debug_dir / "errors" if debug_dir else None
+    errors_dir = None
+    build_dir = None
     if debug_dir:
         refinement_dir = debug_dir / "refinement"
         errors_dir = debug_dir / "errors"
+        build_dir = debug_dir / "build"
         debug_dir.mkdir(parents=True, exist_ok=True)
         refinement_dir.mkdir(parents=True, exist_ok=True)
         errors_dir.mkdir(parents=True, exist_ok=True)
+        build_dir.mkdir(parents=True, exist_ok=True)
 
     state = State(protocol=protocol)
 
@@ -93,11 +96,12 @@ def run_refinement_loop(
         state.attempt += 1
         state.last_code = cleaned_code
         step_path = refinement_dir / f"{state.attempt}-step.spicy" if refinement_dir else None
-        errors_path = errors_dir / f"{state.attempt}-errors.log" if errors_dir else None
+        errors_path = errors_dir / f"{state.attempt}-compilation.log" if errors_dir else None
+        debug_info = { "step_path": step_path, "errors_path": errors_path }
 
         logger.info(f"Compiling attempt {state.attempt}/{max_retries} ...")
 
-        result = compile_spicy_grammar(cleaned_code, { "step_path": step_path, "errors_path": errors_path })
+        result = compile_spicy_grammar(cleaned_code, debug_info=debug_info)
 
         if result.success:
             logger.info(f"Compilation succeeded on attempt {state.attempt}.")
@@ -118,8 +122,12 @@ def run_refinement_loop(
         if not cleaned_code:
             cleaned_code = code
 
+        build_path = build_dir / f"{state.attempt}.hlto" if build_dir else None
+        errors_path = errors_dir / f"{state.attempt}-runtime.log" if errors_dir else None
+        debug_info = { "build_path": build_path, "errors_path": errors_path }
+
         logger.info(f"Running Runtime check for protocol '{state.protocol.name}'...")
-        check_result = run_parser_check_from_code(cleaned_code, state.protocol, show_parsing_tree=show_parsing_tree, debug_dir=debug_dir)
+        check_result = run_parser_check_from_code(cleaned_code, state.protocol, show_parsing_tree=show_parsing_tree, debug_info=debug_info)
 
         if not check_result.verdicts:
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
