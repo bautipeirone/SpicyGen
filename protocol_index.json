@@ -34,6 +34,12 @@
     "spec_type": "rfc",
     "rfc_id": "6347"
   },
+  "ftp": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "959",
+    "local_spec_file": "specs/ftp.txt"
+  },
   "hap": {
     "type": "binary",
     "spec_type": "rfc",
@@ -77,7 +83,8 @@
   "rtsp": {
     "type": "text",
     "spec_type": "rfc",
-    "rfc_id": "2326"
+    "rfc_id": "2326",
+    "local_spec_file": "specs/rtsp.txt"
   },
   "spp": {
     "type": "binary",
