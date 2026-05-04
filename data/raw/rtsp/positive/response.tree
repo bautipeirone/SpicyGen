@@ -1,0 +1,32 @@
+RTSP_gemini::Message {
+  response: RTSP_gemini::Response {
+    line: RTSP_gemini::StatusLine {
+      version: RTSP/1.0
+      code: 200
+      reason: OK
+    }
+    headers: [
+      RTSP_gemini::Header {
+        name: CSeq
+        value: 4\x0d
+      }
+      RTSP_gemini::Header {
+        name: Session
+        value: 12345678\x0d
+      }
+      RTSP_gemini::Header {
+        name: Date
+        value: Mon, 04 May 2026 11:00:00 GMT\x0d
+      }
+      RTSP_gemini::Header {
+        name: Range
+        value: npt=0.000-\x0d
+      }
+      RTSP_gemini::Header {
+        name: RTP-Info
+        value: url=rtsp://://example.com\x0d
+      }
+    ]
+    message_body: 
+  }
+}
