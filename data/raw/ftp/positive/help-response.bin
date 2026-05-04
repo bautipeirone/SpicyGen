@@ -1,0 +1,9 @@
+214-The following commands are recognized.
+USER
+PASS
+QUIT
+CWD
+PWD
+PORT
+PASV
+TYPE

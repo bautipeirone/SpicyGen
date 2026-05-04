@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    acct: FTP_gemini::AcctCmd {
+      arg: session
+    }
+  }
+}

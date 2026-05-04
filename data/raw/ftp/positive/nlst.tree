@@ -1,0 +1,5 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    nlst: FTP_gemini::NlstCmd {}
+  }
+}

@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  response: FTP_gemini::Response {
+    code: 214
+    sep: -
+    text: The following commands are recognized.\x0aUSER\x0aPASS\x0aQUIT\x0aCWD\x0aPWD\x0aPORT\x0aPASV\x0aTYPE
+  }
+}

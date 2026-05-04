@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  response: FTP_gemini::Response {
+    code: 200
+    sep:  
+    text: NOOP ok.
+  }
+}

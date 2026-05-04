@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    stru: FTP_gemini::StruCmd {
+      stru_code: F
+    }
+  }
+}

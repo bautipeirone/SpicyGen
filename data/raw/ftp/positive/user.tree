@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    user: FTP_gemini::UserCmd {
+      arg: anonymous
+    }
+  }
+}

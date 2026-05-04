@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  response: FTP_gemini::Response {
+    code: 331
+    sep:  
+    text: Please specify the password.
+  }
+}

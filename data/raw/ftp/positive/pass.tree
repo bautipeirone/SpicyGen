@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    pass: FTP_gemini::PassCmd {
+      arg: ubuntu
+    }
+  }
+}
