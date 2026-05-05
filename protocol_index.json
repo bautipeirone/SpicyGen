@@ -73,7 +73,8 @@
   "irc": {
     "type": "text",
     "spec_type": "rfc",
-    "rfc_id": "1459"
+    "rfc_id": "1459",
+    "local_spec_file": "specs/irc-grammar.txt"
   },
   "ldap": {
     "type": "",

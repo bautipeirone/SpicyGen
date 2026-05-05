@@ -94,7 +94,7 @@ These are common regex definitions to use.
 const Token      = /[^ \t\r\n]+/;
 const HeaderName  = /[^:\r\n]+/;
 const WhiteSpace = /[ \t]+/;
-const NewLine    = /\r?\n/;
+const CRLF    = /\r\n/;
 ```
 Their usage is highly encouraged to achieve correct parsing. When reading a value until the end of line, using the `&until` attribute is prefered.
 This is an example of how to parse the `key: value` header style that is very common among text protocols.
@@ -106,15 +106,64 @@ import spicy;
 const Token      = /[^ \t\r\n]+/;
 const HeaderName  = /[^:\r\n]+/;
 const WhiteSpace = /[ \t]+/;
-const NewLine    = /\r?\n/;
+const CRLF    = /\r\n/;
 
 public type KeyValue = unit {
 	key: HeaderName;
   : b":";
   : WhiteSpace;
-  value: bytes &until=b"\n";
+  value: bytes &until=b"\r\n";
 };
 ```
+This is the desired pattern for branching between requests and replies. Note that for this to work,
+methods have to be listed explictly, so that the look ahead parsing works correctly.
+```
+type RequestLine = unit {
+    method: /GET|POST|DELETE/;
+    :        WhiteSpace;
+    uri:     Token;
+    :        WhiteSpace;
+    version: Version;
+    :        CRLF;
+};
+
+# Code for parsing replies and headers...
+
+public type Message = unit {
+    switch {
+      -> request: RequestLine;
+      -> reply:   ReplyLine;
+    };
+    headers: KeyValue[];
+    : CRLF;
+};
+```
+Use the following pattern when you have to parse text fields that may appear or not, and that are identified by how they start. The patterns MUST NOT be ambiguous among the branches to match.
+```
+const Argument = /[a-zA-Z]*/;
+
+type Optional = unit {
+  : b"-";
+  flag: Argument;
+};
+
+public type Main = unit {
+    switch {
+      -> { opt: Optional; arg: Argument; }
+      -> { arg: Argument; }      
+    };
+};
+```
+The following is an incorrect way of doing it because both branches match for inputs that start with "-".
+```
+public type Wrong = unit {
+  switch {
+    -> { opt: Optional; arg: Token; }
+    -> { arg: Token; }
+  };
+};
+```
+Avoid this by making the branches mutually exclusive on what they match.
 
 ## Examples
 * **switch** constructs are supported as a way to branch into one of several parsing alternatives.

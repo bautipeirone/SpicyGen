@@ -1,0 +1,57 @@
+module IRC_gemini;
+
+import spicy;
+
+const SPACE = /[ ]+/;
+const CRLF = /\r\n/;
+
+public type Message = unit {
+    switch {
+        -> {
+            : b":";
+            prefix: Prefix;
+            : SPACE;
+        }
+        -> : void;
+    };
+    command: /[a-zA-Z]+|[0-9]{3}/;
+    params: Param[];
+    : CRLF;
+};
+
+type UserPart = unit {
+    switch {
+        -> {
+            : b"!";
+            user: /[^ @\r\n]+/;
+        }
+        -> : void;
+    };
+};
+
+type HostPart = unit {
+    switch {
+        -> {
+            : b"@";
+            host: /[^ \r\n]+/;
+        }
+        -> : void;
+    };
+};
+
+type Prefix = unit {
+    name: /[^ !@\r\n]+/;
+    user: UserPart;
+    host: HostPart;
+};
+
+type Param = unit {
+    : SPACE;
+    switch {
+        -> {
+            : b":";
+            trailing: /[^\r\n]*/;
+        }
+        -> middle: /[^ \r\n:][^ \r\n]*/;
+    };
+};
