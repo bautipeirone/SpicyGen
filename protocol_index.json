@@ -87,6 +87,12 @@
     "rfc_id": "2326",
     "local_spec_file": "specs/rtsp.txt"
   },
+  "smtp": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "5321",
+    "local_spec_file": "specs/smtp-grammar.txt"
+  },
   "spp": {
     "type": "binary",
     "spec_type": "bluebook",
