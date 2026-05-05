@@ -1,0 +1,19 @@
+IRC_gemini::Message {
+  prefix: IRC_gemini::Prefix {
+    name: irc.example.com
+    user: IRC_gemini::UserPart {}
+    host: IRC_gemini::HostPart {}
+  }
+  command: 433
+  params: [
+    IRC_gemini::Param {
+      middle: *
+    }
+    IRC_gemini::Param {
+      middle: bautista
+    }
+    IRC_gemini::Param {
+      trailing: Nickname is already in use.
+    }
+  ]
+}

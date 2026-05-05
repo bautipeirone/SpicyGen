@@ -1,0 +1,8 @@
+IRC_gemini::Message {
+  command: PONG
+  params: [
+    IRC_gemini::Param {
+      trailing: irc.example.com
+    }
+  ]
+}

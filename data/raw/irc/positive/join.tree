@@ -1,0 +1,8 @@
+IRC_gemini::Message {
+  command: JOIN
+  params: [
+    IRC_gemini::Param {
+      middle: #engineering
+    }
+  ]
+}

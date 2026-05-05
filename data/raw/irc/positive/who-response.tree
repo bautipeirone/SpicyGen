@@ -1,0 +1,34 @@
+IRC_gemini::Message {
+  prefix: IRC_gemini::Prefix {
+    name: sterling.freenode.net
+    user: IRC_gemini::UserPart {}
+    host: IRC_gemini::HostPart {}
+  }
+  command: 352
+  params: [
+    IRC_gemini::Param {
+      middle: vmlemon
+    }
+    IRC_gemini::Param {
+      middle: #rokymotion
+    }
+    IRC_gemini::Param {
+      middle: n=lando
+    }
+    IRC_gemini::Param {
+      middle: pool-71-121-181-242.sttlwa.dsl-w.verizon.net
+    }
+    IRC_gemini::Param {
+      middle: irc.freenode.net
+    }
+    IRC_gemini::Param {
+      middle: land0
+    }
+    IRC_gemini::Param {
+      middle: H
+    }
+    IRC_gemini::Param {
+      trailing: 0 gaim
+    }
+  ]
+}

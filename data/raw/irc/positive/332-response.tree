@@ -1,0 +1,19 @@
+IRC_gemini::Message {
+  prefix: IRC_gemini::Prefix {
+    name: irc.example.com
+    user: IRC_gemini::UserPart {}
+    host: IRC_gemini::HostPart {}
+  }
+  command: 332
+  params: [
+    IRC_gemini::Param {
+      middle: bautista
+    }
+    IRC_gemini::Param {
+      middle: #engineering
+    }
+    IRC_gemini::Param {
+      trailing: Discussion on protocol verification
+    }
+  ]
+}

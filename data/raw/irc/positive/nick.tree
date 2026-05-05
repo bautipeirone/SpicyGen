@@ -1,0 +1,8 @@
+IRC_gemini::Message {
+  command: NICK
+  params: [
+    IRC_gemini::Param {
+      middle: bautista
+    }
+  ]
+}
