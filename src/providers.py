@@ -52,6 +52,15 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
                 "api_type": "anthropic"
             }]
         }
+    elif provider_name == "openai-account":
+        config = {
+            "config_list": [{
+                "model": model_name,
+                "api_key": "dummy",
+                "api_type": "openai",
+                "base_url": "http://127.0.0.1:8000/v1"
+            }]
+        }
     else:
         raise ValueError(f"Unsupported provider for Autogen: {provider_name}")
 

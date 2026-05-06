@@ -26,11 +26,11 @@
     "context-window": "128000",
     "cutoff-date": "06-24"
   },
-  "claude-sonnet-4-6": {
-    "name": "claude-sonnet-4-6",
-    "provider": "anthropic",
+  "gpt-5.4": {
+    "name": "gpt-5.4",
+    "provider": "openai-account",
     "context-window": "1000000",
     "cutoff-date": "08-25",
-    "price": [0.003, 0.015]
+    "price": [0.0025, 0.015]
   }
 }
