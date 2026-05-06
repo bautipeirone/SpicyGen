@@ -109,6 +109,12 @@
     "spec_type": "rfc",
     "local_spec_file": "specs/tcp-header-format.txt"
   },
+  "telnet": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "854",
+    "local_spec_file": "specs/telnet-grammar.txt"
+  },
   "tftp": {
     "type": "binary",
     "spec_type": "rfc",
