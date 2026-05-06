@@ -7,4 +7,6 @@ Call-ID: 1-670@127.0.0.1
 CSeq: 3 BYE
 Contact: sip:sipp@127.0.0.1:5061
 Max-Forwards: 100
+Reason: SIP;cause=200;text="Call completed"
 Content-Length: 0
+

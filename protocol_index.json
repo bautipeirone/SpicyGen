@@ -88,6 +88,12 @@
     "rfc_id": "2326",
     "local_spec_file": "specs/rtsp.txt"
   },
+  "sip": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "3261",
+    "local_spec_file": "specs/sip-grammar.txt"
+  },
   "smtp": {
     "type": "text",
     "spec_type": "rfc",

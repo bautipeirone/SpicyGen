@@ -1,0 +1,11 @@
+MESSAGE sip:bob@example.com SIP/2.0
+Via: SIP/2.0/UDP pc33.example.com;branch=z9hG4bKmsg001
+Max-Forwards: 70
+From: Alice <sip:alice@example.com>;tag=msg-a1
+To: Bob <sip:bob@example.com>
+Call-ID: msg-001@pc33.example.com
+CSeq: 1 MESSAGE
+Content-Type: text/plain
+Content-Length: 31
+
+Hello Bob, are you available?

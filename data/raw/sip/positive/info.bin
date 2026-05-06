@@ -1,0 +1,12 @@
+INFO sip:bob@example.com SIP/2.0
+Via: SIP/2.0/UDP pc33.example.com;branch=z9hG4bKinfo001
+Max-Forwards: 70
+From: Alice <sip:alice@example.com>;tag=info-a1
+To: Bob <sip:bob@example.com>;tag=info-b1
+Call-ID: info-001@example.com
+CSeq: 88 INFO
+Content-Type: application/dtmf-relay
+Content-Length: 24
+
+Signal=5
+Duration=160

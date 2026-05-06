@@ -1,0 +1,12 @@
+REFER sip:bob@example.com SIP/2.0
+Via: SIP/2.0/UDP pc33.example.com;branch=z9hG4bKref001
+Max-Forwards: 70
+From: Alice <sip:alice@example.com>;tag=ref-a1
+To: Bob <sip:bob@example.com>;tag=ref-b1
+Call-ID: ref-001@example.com
+CSeq: 7 REFER
+Contact: <sip:alice@pc33.example.com>
+Refer-To: <sip:carol@example.com>
+Referred-By: <sip:alice@example.com>
+Content-Length: 0
+
