@@ -1,0 +1,6 @@
+HTTP/1.1 204 No Content
+Date: Wed, 06 May 2026 10:00:06 GMT
+Allow: GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS
+Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+Connection: close
+

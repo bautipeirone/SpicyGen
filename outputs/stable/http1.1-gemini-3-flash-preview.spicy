@@ -1,0 +1,72 @@
+module HTTP_gemini;
+
+import spicy;
+
+const WhiteSpace = /[ \t]+/;
+const Token = /[!#$%&'*+\-.^_`|~0-9a-zA-Z]+/;
+
+public type Message = unit {
+    switch {
+        -> response: Response;
+        -> request: Request;
+    };
+};
+
+type Request = unit {
+    line: RequestLine;
+    headers: Header[];
+    : b"\r\n";
+    body: bytes &eod;
+};
+
+type Response = unit {
+    line: StatusLine;
+    headers: Header[];
+    : b"\r\n";
+    body: bytes &eod;
+};
+
+type RequestLine = unit {
+    method: Token;
+    : WhiteSpace;
+    uri: /[^ \t\r\n]+/;
+    : WhiteSpace;
+    version: /HTTP\/[0-9]+\.[0-9]+/;
+    : b"\r\n";
+};
+
+type StatusLine = unit {
+    version: /HTTP\/[0-9]+\.[0-9]+/;
+    : WhiteSpace;
+    code: /[0-9]{3}/;
+    : WhiteSpace;
+    reason: /[^\r\n]*/;
+    : b"\r\n";
+};
+
+type Header = unit {
+    name: Token;
+    : /:[ \t]*/;
+    value: bytes &until=b"\r\n";
+};
+
+type ChunkedBody = unit {
+    chunks: Chunk[];
+    last_chunk: LastChunk;
+    trailer: Header[];
+    : b"\r\n";
+};
+
+type Chunk = unit {
+    size: /[0-9a-fA-F]+/ &convert=$$.to_uint(16);
+    extension: /[^\r\n]*/;
+    : b"\r\n";
+    data: bytes &size=self.size;
+    : b"\r\n";
+};
+
+type LastChunk = unit {
+    : /0+/;
+    extension: /[^\r\n]*/;
+    : b"\r\n";
+};

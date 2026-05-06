@@ -1,0 +1,8 @@
+POST /users HTTP/1.1
+Host: example.com
+User-Agent: seed-client/1.0
+Content-Type: application/json
+Content-Length: 37
+Connection: close
+
+{"name":"Bob","email":"bob@example.com"}

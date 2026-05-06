@@ -48,7 +48,8 @@
   "http1.1": {
     "type": "text",
     "spec_type": "rfc",
-    "rfc_id": "2616"
+    "rfc_id": "2616",
+    "local_spec_file": "specs/http1.1-grammar.txt"
   },
   "icmpv4": {
     "type": "binary",
