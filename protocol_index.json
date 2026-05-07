@@ -61,6 +61,12 @@
     "spec_type": "rfc",
     "rfc_id": "4443"
   },
+  "ident": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "1413",
+    "local_spec_file": "specs/ident-grammar.txt"
+  },
   "ipv4": {
     "type": "binary",
     "spec_type": "rfc",
