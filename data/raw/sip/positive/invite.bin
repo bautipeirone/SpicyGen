@@ -4,6 +4,8 @@ From: sipp <sip:30@127.0.0.1>;tag=1
 To: <sip:33@127.0.0.1:5060>
 Call-ID: 1-670@127.0.0.1
 CSeq: 2 INVITE
+Allow: INVITE, ACK, CANCEL, OPTIONS, BYE, REFER, NOTIFY, MESSAGE
+Supported: replaces, timer, 100rel
 Contact: sip:30@127.0.0.1:5061
 Max-Forwards: 100
 Content-Type: application/sdp

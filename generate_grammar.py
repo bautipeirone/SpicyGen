@@ -2,12 +2,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.providers import get_autogen_config
-from src.tools.rfc import clean_rfc_text, retrieve_rfc_by_id
 from src.agent import run_refinement_loop
 from src.utils import load_file, read_config
 from src.logger import enable_runtime_log_file, logger
-from src.protocol import load_protocol, load_spec
-from typing import LiteralString
+from src.protocol import load_protocol, load_spec, ProtocolType
 from pathlib import Path
 import argparse
 import time
@@ -19,8 +17,6 @@ Make sure to capture all the fields relationships. Value constraints for fields 
 Use the tools provided to generate correct and complete grammars in this language for the RFC the user gives you as input.
 Retrieve any additional information you need from other RFCs using the provided tool, so the grammar is as complete as possible.
 """
-
-SPICY_CONTEXT_PATH = Path("./INSTRUCTIONS.md")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -37,7 +33,7 @@ def parse_args() -> argparse.Namespace:
         "--instructions-file",
         "-i",
         type=Path,
-        default=SPICY_CONTEXT_PATH,
+        default=None,
         help="Path to the instructions file that will be added to the prompt",
     )
     parser.add_argument(
@@ -81,6 +77,17 @@ def save_response(path: Path, response: str) -> None:
         raise SystemExit(f"Unable to write to {path}: {exc}") from exc
 
 
+def get_spicy_context_file(protocol_type: ProtocolType) -> Path:
+    match protocol_type:
+        case ProtocolType.TEXT:
+            instructions_path = Path("./prompts/TEXT.md")
+        case ProtocolType.BINARY:
+            instructions_path = Path("./prompts/BINARY.md")
+        case _:
+            raise ValueError(f"Unsupported protocol type: {protocol_type}")
+    return instructions_path
+
+
 def main() -> None:
     args = parse_args()
     enable_runtime_log_file(args.debug_dir)
@@ -96,9 +103,13 @@ def main() -> None:
         logger.error(f"Protocol '{args.protocol}' not found in index. Exiting.")
         exit(1)
 
-    spicy_context = load_file(args.instructions_file)
-    spec_content = load_spec(protocol)
+    instructions_file = args.instructions_file
+    if instructions_file is None:
+        instructions_file = get_spicy_context_file(protocol.type)
+        logger.debug(f"Using default spicy instructions file: {instructions_file}")
 
+    spicy_context = load_file(instructions_file)
+    spec_content = load_spec(protocol)
     if spec_content is None:
         logger.error(f"No specification content found for protocol '{protocol.name}'.")
         exit(1)

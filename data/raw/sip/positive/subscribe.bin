@@ -1,0 +1,13 @@
+SUBSCRIBE sip:bob@example.com SIP/2.0
+Via: SIP/2.0/UDP watcher.example.com;branch=z9hG4bKsub001
+Max-Forwards: 70
+From: Alice <sip:alice@example.com>;tag=sub-a1
+To: Bob <sip:bob@example.com>
+Call-ID: sub-001@example.com
+CSeq: 1 SUBSCRIBE
+Contact: <sip:alice@watcher.example.com>
+Event: presence
+Accept: application/pidf+xml
+Expires: 300
+Content-Length: 0
+

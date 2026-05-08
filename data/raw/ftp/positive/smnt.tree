@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    smnt: FTP_gemini::SmntCmd {
+      arg: /mount
+    }
+  }
+}

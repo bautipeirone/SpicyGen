@@ -1,0 +1,8 @@
+PUT /users/124 HTTP/1.1
+Host: example.com
+User-Agent: seed-client/1.0
+Content-Type: application/json
+Content-Length: 51
+Connection: close
+
+{"id":124,"name":"Robert","email":"bob@example.com"}

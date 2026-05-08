@@ -1,0 +1,9 @@
+SIP/2.0 401 Unauthorized
+Via: SIP/2.0/UDP client.example.com;branch=z9hG4bKreg001
+From: Alice <sip:alice@example.com>;tag=regtag01
+To: Alice <sip:alice@example.com>;tag=authsrv01
+Call-ID: reg-001@example.com
+CSeq: 1 REGISTER
+WWW-Authenticate: Digest realm="example.com", nonce="abcdef0123456789", algorithm=MD5, qop="auth"
+Content-Length: 0
+

@@ -1,0 +1,15 @@
+NOTIFY sip:alice@watcher.example.com SIP/2.0
+Via: SIP/2.0/UDP notifier.example.com;branch=z9hG4bKnot001
+Max-Forwards: 70
+From: Bob <sip:bob@example.com>;tag=sub-b1
+To: Alice <sip:alice@example.com>;tag=sub-a1
+Call-ID: sub-001@example.com
+CSeq: 2 NOTIFY
+Subscription-State: active;expires=300
+Event: message-summary
+Content-Type: application/simple-message-summary
+Content-Length: 87
+
+Messages-Waiting: yes
+Message-Account: sip:alice@example.com
+Voice-Message: 2/8 (0/2)

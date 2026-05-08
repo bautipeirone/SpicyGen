@@ -1,0 +1,8 @@
+IRC_gemini::Message {
+  command: WHO
+  params: [
+    IRC_gemini::Param {
+      middle: #rokymotion
+    }
+  ]
+}

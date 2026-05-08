@@ -1,0 +1,20 @@
+IRC_gemini::Message {
+  prefix: IRC_gemini::Prefix {
+    name: yaloki
+    user: IRC_gemini::UserPart {
+      user: n=yaloki
+    }
+    host: IRC_gemini::HostPart {
+      host: 156.185-64-87.adsl-dyn.isp.belgacom.be
+    }
+  }
+  command: PRIVMSG
+  params: [
+    IRC_gemini::Param {
+      middle: #amarok
+    }
+    IRC_gemini::Param {
+      trailing: +how do you mean
+    }
+  ]
+}

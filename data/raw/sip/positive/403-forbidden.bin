@@ -1,0 +1,9 @@
+SIP/2.0 403 Forbidden
+Via: SIP/2.0/UDP badclient.example.com;branch=z9hG4bKbad001
+From: Mallory <sip:mallory@example.net>;tag=bad-a1
+To: Bob <sip:bob@example.com>;tag=forbid01
+Call-ID: bad-001@example.net
+CSeq: 1 INVITE
+Warning: 399 proxy.example.com "Origin not authorized"
+Content-Length: 0
+

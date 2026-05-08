@@ -1,0 +1,16 @@
+IRC_gemini::Message {
+  prefix: IRC_gemini::Prefix {
+    name: sterling.freenode.net
+    user: IRC_gemini::UserPart {}
+    host: IRC_gemini::HostPart {}
+  }
+  command: 303
+  params: [
+    IRC_gemini::Param {
+      middle: vmlemon
+    }
+    IRC_gemini::Param {
+      trailing: SmileyG 
+    }
+  ]
+}

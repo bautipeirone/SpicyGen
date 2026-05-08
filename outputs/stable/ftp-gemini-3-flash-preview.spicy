@@ -1,0 +1,121 @@
+module FTP_gemini;
+
+import spicy;
+
+const WhiteSpace = /[ \t]+/;
+const CRLF = /\r\n/;
+
+public type Message = unit {
+    switch {
+        -> request: Request;
+        -> response: Response;
+        -> line: GenericLine;
+    };
+};
+
+type Request = unit {
+    switch {
+        -> user: UserCmd;
+        -> pass: PassCmd;
+        -> acct: AcctCmd;
+        -> cwd:  CwdCmd;
+        -> cdup: CdupCmd;
+        -> smnt: SmntCmd;
+        -> quit: QuitCmd;
+        -> rein: ReinCmd;
+        -> port_cmd: PortCmd;
+        -> pasv: PasvCmd;
+        -> type_cmd: TypeCmd;
+        -> stru: StruCmd;
+        -> mode: ModeCmd;
+        -> retr: RetrCmd;
+        -> stor: StorCmd;
+        -> stou: StouCmd;
+        -> appe: AppeCmd;
+        -> allo: AlloCmd;
+        -> rest: RestCmd;
+        -> rnfr: RnfrCmd;
+        -> rnto: RntoCmd;
+        -> abor: AborCmd;
+        -> dele: DeleCmd;
+        -> rmd:  RmdCmd;
+        -> mkd:  MkdCmd;
+        -> pwd:  PwdCmd;
+        -> list_cmd: ListCmd;
+        -> nlst: NlstCmd;
+        -> site: SiteCmd;
+        -> syst: SystCmd;
+        -> stat: StatCmd;
+        -> help: HelpCmd;
+        -> noop: NoopCmd;
+        -> unknown: UnknownCmd;
+    };
+};
+
+type UserCmd = unit { : /[uU][sS][eE][rR]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type PassCmd = unit { : /[pP][aA][sS][sS]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type AcctCmd = unit { : /[aA][cC][cC][tT]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type CwdCmd  = unit { : /[cC][wW][dD]/;     : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type CdupCmd = unit { : /[cC][dD][uU][pP]/; : CRLF; };
+type SmntCmd = unit { : /[sS][mM][nN][tT]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type QuitCmd = unit { : /[qQ][uU][iI][tT]/; : CRLF; };
+type ReinCmd = unit { : /[rR][eE][iI][nN]/; : CRLF; };
+type PortCmd = unit { : /[pP][oO][rR][tT]/; : WhiteSpace; h1: /[0-9]+/; : b","; h2: /[0-9]+/; : b","; h3: /[0-9]+/; : b","; h4: /[0-9]+/; : b","; p1: /[0-9]+/; : b","; p2: /[0-9]+/; : CRLF; };
+type PasvCmd = unit { : /[pP][aA][sS][vV]/; : CRLF; };
+
+type TypeForm = unit {
+    switch {
+        -> { : WhiteSpace; form_code: /[nNtTcC]/; }
+        -> : void;
+    };
+};
+
+type TypeCmd = unit {
+    : /[tT][yY][pP][eE]/;
+    : WhiteSpace;
+    type_code: /[aAeEiIlL]/;
+    switch (self.type_code) {
+        b"A" -> form_A: TypeForm;
+        b"a" -> form_a: TypeForm;
+        b"E" -> form_E: TypeForm;
+        b"e" -> form_e: TypeForm;
+        b"L" -> { : WhiteSpace; byte_size_L: /[0-9]+/; }
+        b"l" -> { : WhiteSpace; byte_size_l: /[0-9]+/; }
+        * -> : void;
+    };
+    : CRLF;
+};
+
+type StruCmd = unit { : /[sS][tT][rR][uU]/; : WhiteSpace; stru_code: /[fFrRpP]/; : CRLF; };
+type ModeCmd = unit { : /[mM][oO][dD][eE]/; : WhiteSpace; mode_code: /[sSbBcC]/; : CRLF; };
+type RetrCmd = unit { : /[rR][eE][tT][rR]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type StorCmd = unit { : /[sS][tT][oO][rR]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type StouCmd = unit { : /[sS][tT][oO][uU]/; : CRLF; };
+type AppeCmd = unit { : /[aA][pP][pP][eE]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type AlloCmd = unit { : /[aA][lL][lL][oO]/; : WhiteSpace; size: /[0-9]+/; switch { -> { : WhiteSpace; r_char: /[rR]/; : WhiteSpace; rec_size: /[0-9]+/; } -> : void; }; : CRLF; };
+type RestCmd = unit { : /[rR][eE][sS][tT]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type RnfrCmd = unit { : /[rR][nN][fF][rR]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type RntoCmd = unit { : /[rR][nN][tT][oO]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type AborCmd = unit { : /[aA][bB][oO][rR]/; : CRLF; };
+type DeleCmd = unit { : /[dD][eE][lL][eE]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type RmdCmd  = unit { : /[rR][mM][dD]/;     : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type MkdCmd  = unit { : /[mM][kK][dD]/;     : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type PwdCmd  = unit { : /[pP][wW][dD]/;     : CRLF; };
+type ListCmd = unit { : /[lL][iI][sS][tT]/; switch { -> { : WhiteSpace; arg: bytes &until=b"\r\n"; } -> : CRLF; }; };
+type NlstCmd = unit { : /[nN][lL][sS][tT]/; switch { -> { : WhiteSpace; arg: bytes &until=b"\r\n"; } -> : CRLF; }; };
+type SiteCmd = unit { : /[sS][iI][tT][eE]/; : WhiteSpace; arg: bytes &until=b"\r\n"; };
+type SystCmd = unit { : /[sS][yY][sS][tT]/; : CRLF; };
+type StatCmd = unit { : /[sS][tT][aA][tT]/; switch { -> { : WhiteSpace; arg: bytes &until=b"\r\n"; } -> : CRLF; }; };
+type HelpCmd = unit { : /[hH][eE][lL][pP]/; switch { -> { : WhiteSpace; arg: bytes &until=b"\r\n"; } -> : CRLF; }; };
+type NoopCmd = unit { : /[nN][oO][oO][pP]/; : CRLF; };
+type UnknownCmd = unit { verb: /[a-zA-Z]{1,4}/; : /[ ]*/; arg: bytes &until=b"\r\n"; };
+
+type Response = unit {
+    code: /[0-9]{3}/;
+    sep: /[- ]/;
+    text: bytes &until=b"\r\n";
+};
+
+type GenericLine = unit {
+    data: bytes &until=b"\r\n";
+};

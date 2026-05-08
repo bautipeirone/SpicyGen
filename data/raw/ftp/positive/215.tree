@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  response: FTP_gemini::Response {
+    code: 215
+    sep:  
+    text: UNIX Type: L8
+  }
+}

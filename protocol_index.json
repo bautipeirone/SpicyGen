@@ -34,6 +34,12 @@
     "spec_type": "rfc",
     "rfc_id": "6347"
   },
+  "ftp": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "959",
+    "local_spec_file": "specs/ftp.txt"
+  },
   "hap": {
     "type": "binary",
     "spec_type": "rfc",
@@ -42,7 +48,8 @@
   "http1.1": {
     "type": "text",
     "spec_type": "rfc",
-    "rfc_id": "2616"
+    "rfc_id": "2616",
+    "local_spec_file": "specs/http1.1-grammar.txt"
   },
   "icmpv4": {
     "type": "binary",
@@ -53,6 +60,12 @@
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "4443"
+  },
+  "ident": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "1413",
+    "local_spec_file": "specs/ident-grammar.txt"
   },
   "ipv4": {
     "type": "binary",
@@ -69,7 +82,8 @@
   "irc": {
     "type": "text",
     "spec_type": "rfc",
-    "rfc_id": "1459"
+    "rfc_id": "1459",
+    "local_spec_file": "specs/irc-grammar.txt"
   },
   "ldap": {
     "type": "",
@@ -79,7 +93,20 @@
   "rtsp": {
     "type": "text",
     "spec_type": "rfc",
-    "rfc_id": "2326"
+    "rfc_id": "2326",
+    "local_spec_file": "specs/rtsp.txt"
+  },
+  "sip": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "3261",
+    "local_spec_file": "specs/sip-grammar.txt"
+  },
+  "smtp": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "5321",
+    "local_spec_file": "specs/smtp-grammar.txt"
   },
   "spp": {
     "type": "binary",
@@ -96,6 +123,12 @@
     "spec_type": "rfc",
     "rfc_id": "793",
     "local_spec_file": "specs/tcp-header-format.txt"
+  },
+  "telnet": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "854",
+    "local_spec_file": "specs/telnet-grammar.txt"
   },
   "tftp": {
     "type": "binary",

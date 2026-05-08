@@ -1,0 +1,5 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    quit: FTP_gemini::QuitCmd {}
+  }
+}

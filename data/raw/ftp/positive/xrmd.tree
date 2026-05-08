@@ -1,0 +1,8 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    unknown: FTP_gemini::UnknownCmd {
+      verb: XRMD
+      arg: todeletetoo
+    }
+  }
+}

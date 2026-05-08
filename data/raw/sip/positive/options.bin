@@ -1,0 +1,10 @@
+OPTIONS sip:bob@example.com SIP/2.0
+Via: SIP/2.0/UDP scanner.example.com;branch=z9hG4bKopt001
+Max-Forwards: 70
+From: Probe <sip:probe@example.com>;tag=opt-tag
+To: Bob <sip:bob@example.com>
+Call-ID: opt-001@example.com
+CSeq: 1 OPTIONS
+Accept: application/sdp
+Content-Length: 0
+

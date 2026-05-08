@@ -1,0 +1,12 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    port_cmd: FTP_gemini::PortCmd {
+      h1: 127
+      h2: 0
+      h3: 0
+      h4: 1
+      p1: 152
+      p2: 193
+    }
+  }
+}

@@ -1,0 +1,14 @@
+IRC_gemini::Message {
+  command: ISON
+  params: [
+    IRC_gemini::Param {
+      middle: Thunfisch
+    }
+    IRC_gemini::Param {
+      middle: Smiley
+    }
+    IRC_gemini::Param {
+      middle: SmileyG
+    }
+  ]
+}

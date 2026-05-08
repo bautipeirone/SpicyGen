@@ -1,0 +1,227 @@
+module SMTP_gemini;
+
+import spicy;
+
+const WhiteSpace = /[ \t]+/;
+const CRLF = /\r\n/;
+const Domain = /[a-zA-Z0-9.-]+/;
+const ReplyCode = /[2-5][0-5][0-9]/;
+
+public type Message = unit {
+    switch {
+        -> command: Command;
+        -> reply: Reply;
+    };
+};
+
+type Command = unit {
+    switch {
+        -> ehlo: EHLO;
+        -> helo: HELO;
+        -> mail: MAIL;
+        -> rcpt: RCPT;
+        -> data_cmd: DATA_CMD;
+        -> rset: RSET;
+        -> vrfy: VRFY;
+        -> expn: EXPN;
+        -> help: HELP;
+        -> noop: NOOP;
+        -> quit: QUIT;
+    };
+};
+
+type EHLO = unit {
+    : /EHLO/i;
+    : WhiteSpace;
+    domain: DomainOrLiteral;
+    : CRLF;
+};
+
+type HELO = unit {
+    : /HELO/i;
+    : WhiteSpace;
+    domain: Domain;
+    : CRLF;
+};
+
+type MAIL = unit {
+    : /MAIL FROM:/i;
+    reverse_path: ReversePath;
+    switch {
+        -> params: Parameters;
+        -> : void;
+    };
+    : CRLF;
+};
+
+type RCPT = unit {
+    : /RCPT TO:/i;
+    recipient: Recipient;
+    switch {
+        -> params: Parameters;
+        -> : void;
+    };
+    : CRLF;
+};
+
+type DATA_CMD = unit {
+    : /DATA/i;
+    : CRLF;
+};
+
+type RSET = unit {
+    : /RSET/i;
+    : CRLF;
+};
+
+type VRFY = unit {
+    : /VRFY/i;
+    : WhiteSpace;
+    arg: String;
+    : CRLF;
+};
+
+type EXPN = unit {
+    : /EXPN/i;
+    : WhiteSpace;
+    arg: String;
+    : CRLF;
+};
+
+type HELP = unit {
+    : /HELP/i;
+    switch {
+        -> { : WhiteSpace; arg: String; }
+        -> : void;
+    };
+    : CRLF;
+};
+
+type NOOP = unit {
+    : /NOOP/i;
+    switch {
+        -> { : WhiteSpace; arg: String; }
+        -> : void;
+    };
+    : CRLF;
+};
+
+type QUIT = unit {
+    : /QUIT/i;
+    : CRLF;
+};
+
+type DomainOrLiteral = unit {
+    switch {
+        -> domain: Domain;
+        -> literal: AddressLiteral;
+    };
+};
+
+type AddressLiteral = unit {
+    : b"[";
+    content: /[^\]]+/;
+    : b"]";
+};
+
+type ReversePath = unit {
+    switch {
+        -> null: b"<>";
+        -> path: Path;
+    };
+};
+
+type Recipient = unit {
+    switch {
+        -> postmaster_domain: PostmasterDomain;
+        -> postmaster: /<Postmaster>/i;
+        -> path: Path;
+    };
+};
+
+type PostmasterDomain = unit {
+    : /<Postmaster@/i;
+    domain: Domain;
+    : b">";
+};
+
+type Path = unit {
+    : b"<";
+    switch {
+        -> { adl: AtDomainList; : b":"; }
+        -> : void;
+    };
+    mailbox: Mailbox;
+    : b">";
+};
+
+type AtDomainList = unit {
+    items: AtDomain[];
+};
+
+type AtDomain = unit {
+    : b"@";
+    domain: Domain;
+    switch {
+        -> : b",";
+        -> : void;
+    };
+};
+
+type Mailbox = unit {
+    local_part: LocalPart;
+    : b"@";
+    domain: DomainOrLiteral;
+};
+
+type LocalPart = unit {
+    switch {
+        -> quoted: QuotedString;
+        -> dot_string: /[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~.]+/;
+    };
+};
+
+type QuotedString = unit {
+    : b"\"";
+    content: /([^"\\]|\\.)*/;
+    : b"\"";
+};
+
+type String = unit {
+    switch {
+        -> quoted: QuotedString;
+        -> atom: /[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~]+/;
+    };
+};
+
+type Parameters = unit {
+    : WhiteSpace;
+    items: Parameter[];
+};
+
+type Parameter = unit {
+    keyword: /[a-zA-Z0-9-]+/;
+    switch {
+        -> { : b"="; value: /[^\s\r\n]+/; }
+        -> : void;
+    };
+    switch {
+        -> : WhiteSpace;
+        -> : void;
+    };
+};
+
+type Reply = unit {
+    lines: ReplyLine[];
+};
+
+type ReplyLine = unit {
+    code: ReplyCode;
+    sep: /[- ]/;
+    text: /[^\r\n]*/;
+    : CRLF;
+};
+
+type DataContent = unit {
+    content: bytes &until=b"\r\n.\r\n";
+};

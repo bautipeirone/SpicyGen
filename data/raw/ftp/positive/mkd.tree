@@ -1,0 +1,7 @@
+FTP_gemini::Message {
+  request: FTP_gemini::Request {
+    mkd: FTP_gemini::MkdCmd {
+      arg: todeletenow
+    }
+  }
+}

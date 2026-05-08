@@ -1,0 +1,65 @@
+module IDENT_GEMINI;
+
+import spicy;
+
+const WhiteSpace = /[ \t]*/;
+const AllWhiteSpace = /[ \t\r\n]*/;
+const Token = /[-a-zA-Z0-9!@#$%^&*()_=+.,<>\/?"'~`{}[\];]{1,64}/;
+const EOL = /\r?\n/;
+
+public type Message = unit {
+    : AllWhiteSpace;
+    server_port: /[0-9]+/;
+    : WhiteSpace;
+    : b",";
+    : WhiteSpace;
+    client_port: /[0-9]+/;
+    : WhiteSpace;
+    switch {
+        -> request: Request;
+        -> response: Response;
+    };
+};
+
+type Request = unit {
+    : EOL;
+};
+
+type Response = unit {
+    : b":";
+    : WhiteSpace;
+    resp_type: /USERID|ERROR/;
+    : WhiteSpace;
+    : b":";
+    : WhiteSpace;
+    switch (self.resp_type) {
+        b"USERID" -> userid: UserIDReply;
+        b"ERROR"  -> error: ErrorReply;
+    };
+};
+
+type UserIDReply = unit {
+    opsys: Token;
+    : WhiteSpace;
+    charset: CharsetPart;
+    : WhiteSpace;
+    : b":";
+    user_id: bytes &until=b"\n" &convert=$$.strip(spicy::Side::Right, b"\r");
+};
+
+type CharsetPart = unit {
+    switch {
+        -> {
+            : b",";
+            : WhiteSpace;
+            name: Token;
+        }
+        -> : void;
+    };
+};
+
+type ErrorReply = unit {
+    error_type: Token;
+    : WhiteSpace;
+    : EOL;
+};

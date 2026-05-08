@@ -1,0 +1,17 @@
+IRC_gemini::Message {
+  command: USER
+  params: [
+    IRC_gemini::Param {
+      middle: bautista
+    }
+    IRC_gemini::Param {
+      middle: 0
+    }
+    IRC_gemini::Param {
+      middle: *
+    }
+    IRC_gemini::Param {
+      trailing: Bautista Jose
+    }
+  ]
+}

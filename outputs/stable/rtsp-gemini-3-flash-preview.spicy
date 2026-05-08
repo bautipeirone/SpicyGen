@@ -1,0 +1,67 @@
+module RTSP_gemini;
+
+import spicy;
+
+const Token = /[^()<>@,;:\\"\/\[\]?={} \t\x00-\x1f\x7f]+/;
+const Method = /DESCRIBE|ANNOUNCE|GET_PARAMETER|OPTIONS|PAUSE|PLAY|RECORD|REDIRECT|SETUP|SET_PARAMETER|TEARDOWN|[^()<>@,;:\\"\/\[\]?={} \t\x00-\x1f\x7f]+/;
+const URI = /[^ \t\r\n]+/;
+const Version = /RTSP\/[0-9]+\.[0-9]+/;
+const StatusCode = /[0-9]{3}/;
+const ReasonPhrase = /[^\r\n]*/;
+const HeaderName = /[^()<>@,;:\\"\/\[\]?={} \t\x00-\x1f\x7f]+/;
+const WhiteSpace = /[ \t]+/;
+const NewLine = /\r?\n/;
+const Colon = /:[ \t]*/;
+
+type RequestLine = unit {
+    method: Method;
+    : WhiteSpace;
+    uri: URI;
+    : WhiteSpace;
+    version: Version;
+    : NewLine;
+};
+
+type StatusLine = unit {
+    version: Version;
+    : WhiteSpace;
+    code: StatusCode;
+    : WhiteSpace;
+    reason: ReasonPhrase;
+    : NewLine;
+};
+
+type Header = unit {
+    name: HeaderName;
+    : Colon;
+    value: bytes &until=b"\n";
+};
+
+type InterleavedData = unit {
+    : b"$";
+    channel: uint8;
+    length: uint16;
+    data: bytes &size=self.length;
+};
+
+type Request = unit {
+    line: RequestLine;
+    headers: Header[];
+    : NewLine;
+    message_body: bytes &eod;
+};
+
+type Response = unit {
+    line: StatusLine;
+    headers: Header[];
+    : NewLine;
+    message_body: bytes &eod;
+};
+
+public type Message = unit {
+    switch {
+        -> interleaved: InterleavedData;
+        -> request: Request;
+        -> response: Response;
+    };
+};

@@ -1,0 +1,8 @@
+PATCH /users/124 HTTP/1.1
+Host: example.com
+User-Agent: seed-client/1.0
+Content-Type: application/json-patch+json
+Content-Length: 49
+Connection: close
+
+[{"op":"replace","path":"/name","value":"Bobby"}]

@@ -1,0 +1,103 @@
+module SMTP_GEMINI;
+
+import spicy;
+
+const CRLF = b"\r\n";
+const SP = b" ";
+
+# Commands
+type EHLO = unit {
+    : b"EHLO";
+    : SP;
+    domain: bytes &until=b"\r\n";
+};
+
+type HELO = unit {
+    : b"HELO";
+    : SP;
+    domain: bytes &until=b"\r\n";
+};
+
+type MAIL = unit {
+    : b"MAIL FROM:";
+    path: bytes &until=b"\r\n";
+};
+
+type RCPT = unit {
+    : b"RCPT TO:";
+    path: bytes &until=b"\r\n";
+};
+
+type DATA = unit {
+    : b"DATA";
+    : CRLF;
+};
+
+type RSET = unit {
+    : b"RSET";
+    : CRLF;
+};
+
+type VRFY = unit {
+    : b"VRFY";
+    : SP;
+    arg: bytes &until=b"\r\n";
+};
+
+type EXPN = unit {
+    : b"EXPN";
+    : SP;
+    arg: bytes &until=b"\r\n";
+};
+
+type HELP = unit {
+    : b"HELP";
+    switch {
+        -> : SP;
+        -> : void;
+    };
+    arg: bytes &until=b"\r\n";
+};
+
+type NOOP = unit {
+    : b"NOOP";
+    switch {
+        -> : SP;
+        -> : void;
+    };
+    arg: bytes &until=b"\r\n";
+};
+
+type QUIT = unit {
+    : b"QUIT";
+    : CRLF;
+};
+
+type ReplyLine = unit {
+    code: bytes &size=3;
+    sep: bytes &size=1;
+    text: bytes &until=b"\r\n";
+};
+
+type SMTP_Command = unit {
+    switch {
+        -> ehlo: EHLO;
+        -> helo: HELO;
+        -> mail: MAIL;
+        -> rcpt: RCPT;
+        -> data: DATA;
+        -> rset: RSET;
+        -> vrfy: VRFY;
+        -> expn: EXPN;
+        -> help: HELP;
+        -> noop: NOOP;
+        -> quit: QUIT;
+    };
+};
+
+public type SMTP_Message = unit {
+    switch {
+        -> command: SMTP_Command;
+        -> reply: ReplyLine;
+    };
+};
