@@ -1,0 +1,49 @@
+module SIP_gpt;
+
+import spicy;
+
+const HeaderName = /[^:\r\n]+/;
+const OptionalWhiteSpace = /[ \t]*/;
+const CRLF = /\r\n/;
+const Digits3 = /[0-9]{3}/;
+const SIPVersion = /[Ss][Ii][Pp]\/[0-9]+\.[0-9]+/;
+const Method = /INVITE|ACK|OPTIONS|BYE|CANCEL|REGISTER|INFO|MESSAGE|NOTIFY|REFER|SUBSCRIBE|UPDATE|PRACK|PUBLISH/;
+const UriToken = /[^ \t\r\n]+/;
+const RestOfLine = /[^\r\n]*/;
+
+type RequestLine = unit {
+    method: Method;
+    : b" ";
+    request_uri: UriToken;
+    : b" ";
+    version: SIPVersion;
+    : CRLF;
+};
+
+type StatusLine = unit {
+    version: SIPVersion;
+    : b" ";
+    status_code: Digits3;
+    : b" ";
+    reason_phrase: bytes &until=b"\r\n";
+};
+
+type HeaderLine = unit {
+    name: HeaderName;
+    : OptionalWhiteSpace;
+    : b":";
+    : OptionalWhiteSpace;
+    value: RestOfLine;
+    : CRLF;
+};
+
+public type SIPMessage = unit {
+    leading_crlfs: CRLF[];
+    switch {
+        -> status_line: StatusLine;
+        -> request_line: RequestLine;
+    };
+    headers: HeaderLine[];
+    : CRLF;
+    body: bytes &eod;
+};
