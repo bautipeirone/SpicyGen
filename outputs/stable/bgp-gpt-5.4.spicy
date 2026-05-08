@@ -1,0 +1,146 @@
+module BGP_gpt;
+
+import spicy;
+
+type BGPMessageType = enum {
+    OPEN = 1,
+    UPDATE = 2,
+    NOTIFICATION = 3,
+    KEEPALIVE = 4,
+};
+
+type PathAttributeType = enum {
+    ORIGIN = 1,
+    AS_PATH = 2,
+    NEXT_HOP = 3,
+    MULTI_EXIT_DISC = 4,
+    LOCAL_PREF = 5,
+    ATOMIC_AGGREGATE = 6,
+    AGGREGATOR = 7,
+};
+
+type OriginValue = enum {
+    IGP = 0,
+    EGP = 1,
+    INCOMPLETE = 2,
+};
+
+type ASPathSegmentType = enum {
+    AS_SET = 1,
+    AS_SEQUENCE = 2,
+};
+
+type NotificationErrorCode = enum {
+    MESSAGE_HEADER_ERROR = 1,
+    OPEN_MESSAGE_ERROR = 2,
+    UPDATE_MESSAGE_ERROR = 3,
+    HOLD_TIMER_EXPIRED = 4,
+    FINITE_STATE_MACHINE_ERROR = 5,
+    CEASE = 6,
+};
+
+type IPPrefix = unit {
+    prefix_length: uint8;
+    prefix: bytes &size=(self.prefix_length + 7) / 8;
+};
+
+type OptionalParameter = unit {
+    parameter_type: uint8;
+    parameter_length: uint8;
+    parameter_value: bytes &size=self.parameter_length;
+};
+
+type OptionalParameters = unit(length: uint8) {
+    parameters: OptionalParameter[] &size=length;
+};
+
+type OpenMessage = unit(body_length: uint16) {
+    version: uint8;
+    my_autonomous_system: uint16;
+    hold_time: uint16 &convert=cast<interval>($$);
+    bgp_identifier: addr &ipv4;
+    optional_parameters_length: uint8;
+    optional_parameters: OptionalParameters(self.optional_parameters_length) if(self.optional_parameters_length > 0);
+};
+
+type WithdrawnRoutes = unit(length: uint16) {
+    prefixes: IPPrefix[] &size=length;
+};
+
+type NLRI = unit(length: uint16) {
+    prefixes: IPPrefix[] &size=length;
+};
+
+type ASPathSegment = unit {
+    segment_type: uint8 &convert=ASPathSegmentType($$);
+    segment_length: uint8;
+    as_numbers: uint16[self.segment_length];
+};
+
+type ASPathAttribute = unit(length: uint16) {
+    segments: ASPathSegment[] &size=length;
+};
+
+type AggregatorAttribute = unit {
+    as_number: uint16;
+    bgp_identifier: addr &ipv4;
+};
+
+type PathAttributeValue = unit(attribute_type_code: PathAttributeType, attribute_length: uint16) {
+    switch ( attribute_type_code ) {
+        PathAttributeType::ORIGIN -> origin: uint8 &convert=OriginValue($$);
+        PathAttributeType::AS_PATH -> as_path: ASPathAttribute(attribute_length);
+        PathAttributeType::NEXT_HOP -> next_hop: addr &ipv4;
+        PathAttributeType::MULTI_EXIT_DISC -> multi_exit_disc: uint32;
+        PathAttributeType::LOCAL_PREF -> local_pref: uint32;
+        PathAttributeType::ATOMIC_AGGREGATE -> atomic_aggregate: bytes &size=attribute_length;
+        PathAttributeType::AGGREGATOR -> aggregator: AggregatorAttribute;
+        * -> raw_value: bytes &size=attribute_length;
+    };
+};
+
+type PathAttribute = unit {
+    flags: bitfield(8) {
+        optional_flag: 0;
+        transitive: 1;
+        partial: 2;
+        extended_length: 3;
+        reserved: 4..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    attribute_type_code: uint8 &convert=PathAttributeType($$);
+    attribute_length8: uint8 if(self.flags.extended_length == 0);
+    attribute_value8: PathAttributeValue(self.attribute_type_code, self.attribute_length8) if(self.flags.extended_length == 0);
+    attribute_length16: uint16 if(self.flags.extended_length == 1);
+    attribute_value16: PathAttributeValue(self.attribute_type_code, self.attribute_length16) if(self.flags.extended_length == 1);
+};
+
+type PathAttributes = unit(length: uint16) {
+    attributes: PathAttribute[] &size=length;
+};
+
+type UpdateMessage = unit(body_length: uint16) {
+    withdrawn_routes_length: uint16;
+    withdrawn_routes: WithdrawnRoutes(self.withdrawn_routes_length) if(self.withdrawn_routes_length > 0);
+    total_path_attribute_length: uint16;
+    path_attributes: PathAttributes(self.total_path_attribute_length) if(self.total_path_attribute_length > 0);
+    nlri: NLRI(body_length - 4 - self.withdrawn_routes_length - self.total_path_attribute_length) if(body_length > 4 + self.withdrawn_routes_length + self.total_path_attribute_length);
+};
+
+type NotificationMessage = unit(body_length: uint16) {
+    error_code: uint8 &convert=NotificationErrorCode($$);
+    error_subcode: uint8;
+    data: bytes &size=body_length - 2;
+};
+
+public type BGP_Message = unit {
+    marker: bytes &size=16;
+    length: uint16;
+    message_type: uint8 &convert=BGPMessageType($$);
+    switch ( self.message_type ) {
+        BGPMessageType::OPEN -> open: OpenMessage(self.length - 19);
+        BGPMessageType::UPDATE -> update: UpdateMessage(self.length - 19);
+        BGPMessageType::NOTIFICATION -> notification: NotificationMessage(self.length - 19);
+        BGPMessageType::KEEPALIVE -> : void;
+        * -> payload: bytes &size=self.length - 19;
+    };
+};
