@@ -1,0 +1,8 @@
+module Test;
+
+const CRLF = /
+/;
+
+public type Main = unit {
+    test: CRLF[];
+};
