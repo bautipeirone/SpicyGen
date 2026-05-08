@@ -20,37 +20,46 @@ ANTHROPIC_API_KEY="anthropic_api_key"
 ## Usage
 The main script is `generate_grammar.py`. It is run like this:
 ```bash
-python generate_grammar.py --provider PROVIDER --model MODEL -o OUTPUT_FILE <rfc_file>
+python generate_grammar.py --model MODEL_ID -o OUTPUT_FILE <protocol>
 ```
-Provider is the LLM client that hosts the model. It can be one of the following: ollama, google, anthropic or openai.
-Necessary API keys required by each one have to be set. When using the python script, the RFC may not need to be specified,
-instead the RFC ID can be provided.
+The `MODEL_ID` must be one of the keys defined in `model_index.json` (e.g., `qwen3-coder` or `gemini-3.1-flash`).
+Necessary API keys required by the model's provider must be set in the `.env` file.
+The script also accepts optional parameters like `--config` to provide generation parameters, `--debug-dir` to save refinement steps, and `--metrics-file`.
 
 Another possibility to test many models along various protocols is to use the shell script.
 ```bash
-./benchmark.sh -m "ollama/qwen3-vl:235b-instruct-cloud ollama/gpt-oss:120b-cloud google/gemini-3-flash-preview"
-               -p "tftp dhcp http" --rfc-dir path_to_rfc_dir --output-dir path_to_output
+./benchmark.sh -m "qwen3-coder gemini-3.1-flash" -p "tftp dhcp http" --output-dir path_to_output
 ```
-This will look for RFCs with the pattern `path_to_rfc_dir/*-rfc.txt` and input it to each one of the models specified. It will also
-store the result and try to compile it with `spicyc` to test if the LLM produced a reasonable response or not.
-To keep track of each run, a README.md file is created in the output directory. The flag `--note` can be used to add a note to the run.
+This will run the grammar generator for each combination of the specified models and protocols. It will also try to compile the result with `spicyc` to test if the LLM produced a valid grammar.
+To keep track of each run, a `README.md` file is created in the output directory and metrics are aggregated. The flag `--note` can be used to add a note to the run, and `--debug` to save debug logs.
 
-## Spicy CLI Tools
-These tools may be handy when working with spicy to compile and test grammars.
-* `spicyc -c <file>`: output C++ code for file
-* `spicyc -j <file>`: generate and run parser
-* `spicy-build -o output <file>`: generate parser executable
-* `spicy-driver <file>`: read from stdin and inputs it to the parser.
-  Run with `-d` flag to avoid the compiler from optimizing out fields.
-* `spicy-dump <file>`: like `spicy-driver`, but outputs in pretty format.
-  With `-J` it outputs JSON.
+## Docker Usage
+You can use the provided `Dockerfile` to run the benchmark script in an isolated environment containing all the necessary dependencies.
 
-## Useful extra features (not in INSTRUCTIONS.md)
-The following features are not currently included in the `INSTRUCTIONS.md` prompt,
-but are written down here for future reference in case they are needed.
-* Contexts: allows for use of shared context between parsing parsers. This could
-  be used for request-response like protocol messages, which tend to share some
-  common values. 
-* Filters
-* On-the-fly Type Conversion
-* Hooks
+1. Build the Docker image:
+```bash
+docker build -t grammar-generator .
+```
+
+2. Run the image, providing your `.env` file and mounting an output directory to retrieve the results. You can pass arguments directly to `benchmark.sh`:
+```bash
+docker run --rm --env-file .env -v $(pwd)/outputs:/app/outputs grammar-generator -m "gemini-3.1-flash" -p "dhcp dns"
+```
+
+
+## Adding Models and Protocols
+To extend the program's capabilities, you can easily add new LLMs or new protocols by updating the respective index files:
+
+### Adding a Model (`model_index.json`)
+Add a new key with the model's identifier. Required fields include:
+- `name`: The exact model name expected by the provider API.
+- `provider`: The LLM provider (e.g., `google`, `ollama`, `openai`, `anthropic`).
+- `context-window`: The maximum context size for the model.
+- `cutoff-date` / `price`: Optional metadata for tracking.
+
+### Adding a Protocol (`protocol_index.json`)
+Add a new key with the protocol's short name. Required fields include:
+- `type`: The type of protocol (`binary`, `text`).
+- `spec_type`: The origin of the specification (e.g., `rfc` or `bluebook`).
+- `rfc_id`: The RFC number (if `spec_type` is `rfc`).
+- `local_spec_file`: (Optional) Path to a specific local text file to use instead of fetching an RFC.
