@@ -1,4 +1,6 @@
-module TFTP;
+module TFTP_GEMINI;
+
+import spicy;
 
 type Opcode = enum {
     RRQ = 1,
@@ -19,16 +21,13 @@ type ErrorCode = enum {
     NoSuchUser = 7
 };
 
-public type Packet = unit {
+public type TFTP_Packet = unit {
     opcode: uint16 &convert=Opcode($$);
 
     switch (self.opcode) {
-        Opcode::RRQ,
-        Opcode::WRQ -> {
+        Opcode::RRQ, Opcode::WRQ -> {
             filename: bytes &until=b"\0";
-            : b"\0";
             mode: bytes &until=b"\0";
-            : b"\0";
         }
         Opcode::DATA -> {
             block_number: uint16;
@@ -40,7 +39,6 @@ public type Packet = unit {
         Opcode::ERROR -> {
             error_code: uint16 &convert=ErrorCode($$);
             error_message: bytes &until=b"\0";
-            : b"\0";
         }
     };
 };
