@@ -1,0 +1,61 @@
+module SPACE_PACKET_PROTOCOL_gpt;
+
+import spicy;
+
+type PacketType = enum {
+    Telemetry = 0,
+    Telecommand = 1,
+};
+
+type SequenceFlags = enum {
+    ContinuationSegment = 0,
+    FirstSegment = 1,
+    LastSegment = 2,
+    Unsegmented = 3,
+};
+
+type PacketIdentificationField = unit {
+    bits: bitfield(16) {
+        packet_version_number: 0..2;
+        packet_type: 3 &convert=PacketType($$);
+        secondary_header_flag: 4;
+        apid: 5..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type PacketSequenceControlField = unit {
+    bits: bitfield(16) {
+        sequence_flags: 0..1 &convert=SequenceFlags($$);
+        packet_sequence_count_or_name: 2..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type PacketPrimaryHeader = unit {
+    packet_identification: PacketIdentificationField;
+    packet_sequence_control: PacketSequenceControlField;
+    packet_data_length: uint16;
+};
+
+type PacketSecondaryHeader = unit {
+    data: bytes &eod;
+};
+
+type UserDataField = unit {
+    data: bytes &eod;
+};
+
+type PacketDataFieldWithoutSecondary = unit {
+    user_data_field: UserDataField;
+};
+
+type PacketDataFieldWithSecondary = unit {
+    packet_secondary_header_and_user_data: bytes &eod;
+};
+
+public type SpacePacket = unit {
+    primary_header: PacketPrimaryHeader;
+    switch ( self.primary_header.packet_identification.bits.secondary_header_flag ) {
+        0 -> packet_data_field_without_secondary: PacketDataFieldWithoutSecondary &size=(self.primary_header.packet_data_length + 1);
+        1 -> packet_data_field_with_secondary: PacketDataFieldWithSecondary &size=(self.primary_header.packet_data_length + 1);
+    };
+};
