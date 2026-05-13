@@ -1,0 +1,3759 @@
+TC SPACE DATA LINK PROTOCOL 
+1.6.3  CONVENTIONS 
+In this document, the following convention is used to identify each bit in an N-bit field.  The 
+first  bit in  the field  to  be  transmitted  (i.e., the most left justified when drawing a figure) is 
+defined  to  be  ‘Bit  0’;  the  following  bit  is  defined  to  be  ‘Bit  1’  and  so  on  up  to  ‘Bit  N-1’.  
+When the field is used to express a binary value (such as a counter), the Most Significant Bit 
+(MSB) shall be the first transmitted bit of the field, i.e., ‘Bit 0’ (see figure 1-1). 
+
+BIT 0
+
+BIT N-1
+
+N-BIT DATA FIELD
+
+FIRST BIT TRANSMITTED = MSB
+
+In accordance with standard data-communications practice, data fields are often grouped into 
+eight-bit  ‘words’  which  conform  to  the  above  convention.    Throughout  this  Recommended 
+Standard, such an eight-bit word is called an ‘octet’. 
+
+The numbering for octets within a data structure starts with zero. 
+
+By CCSDS convention, all ‘spare’ bits shall be permanently set to ‘0’. 
+
+4  PROTOCOL SPECIFICATION WITHOUT SDLS OPTION 
+
+NOTE  –  This section specifies the protocol data unit and the procedures of the TC Space 
+Data  Link  Protocol  without  support  for  the  SDLS  protocol.  Section  6  specifies 
+the protocol with the SDLS option. 
+
+4.1  PROTOCOL DATA UNIT (TC TRANSFER FRAME) 
+
+4.1.1  TC TRANSFER FRAME 
+
+A  TC  Transfer  Frame  shall  encompass  the  major  fields,  positioned  contiguously,  in  the 
+following sequence: 
+
+a)  Transfer Frame Header (5 octets, mandatory); 
+
+b)  Transfer Frame Data Field (up to 1019 or 1017 octets, mandatory); 
+
+c)  Frame Error Control Field (2 octets, optional). 
+
+NOTES 
+
+The TC Transfer Frame is the protocol data unit transmitted from the sending end to 
+the  receiving  end  by  the  TC  Space  Data  Link  Protocol.    In  this  Recommended 
+Standard,  the  TC  Transfer  Frame  is  also  called  the  Transfer  Frame  or  Frame  for 
+simplicity. 
+
+The  maximum  Transfer  Frame  length  allowed  by  a  particular  spacecraft  or  ground 
+implementation  on  a  particular  Virtual  Channel  may  be  less  than  the  maximum 
+specified here. 
+
+4.1.2  TRANSFER FRAME PRIMARY HEADER 
+4.1.2.1  General 
+The Transfer Frame Primary Header is mandatory and shall consist of eight fields, positioned 
+contiguously, in the following sequence: 
+a)  Transfer Frame Version Number (2 bits, mandatory); 
+b)  Bypass Flag (1 bit, mandatory); 
+c)  Control Command Flag (1 bit, mandatory); 
+d)  Reserved Spare (2 bits, mandatory); 
+e)  Spacecraft Identifier (10 bits, mandatory); 
+f)  Virtual Channel Identifier (6 bits, mandatory); 
+g)  Frame Length (10 bits, mandatory); 
+h)  Frame Sequence Number (8 bits, mandatory). 
+
+4.1.2.2  Transfer Frame Version Number 
+4.1.2.2.1  Bits 0–1 of the Transfer Frame Primary Header shall contain the (binary encoded) 
+Transfer Frame Version Number. 
+4.1.2.2.2  This  2-bit  field  shall  identify  the  data  unit  as  a  Transfer  Frame  defined  by  this 
+Recommended Standard and shall be set to ‘00’. 
+NOTE  –  This  Recommended  Standard  defines  the  TC  Version  1 Asynchronous  Transfer Frame, whose binary encoded Version Number is ‘00’. 
+4.1.2.3  Bypass and Control Command Flags 
+4.1.2.3.1  Bypass Flag 
+4.1.2.3.1.1  Bit 2 of the Transfer Frame Primary Header shall contain the Bypass Flag. 
+4.1.2.3.1.2  The  single-bit  Bypass  Flag  shall  be  used  to  control  the  application  of  Frame  Acceptance Checks by the receiving end: 
+a)  setting the Bypass Flag to value ‘0’ shall specify that this Transfer Frame is a Type-A 
+Transfer Frame, and acceptance of this Transfer Frame by the receiving end shall be 
+subject to the normal Frame Acceptance Checks of the FARM; 
+b)  setting the Bypass Flag to value ‘1’ shall specify that this Transfer Frame is a Type-B 
+Transfer  Frame,  and  the  Frame  Acceptance  Checks  of  the  FARM  by  the  receiving 
+end shall be bypassed. 
+
+NOTES 
+The Frame Acceptance and Reporting Mechanism (FARM) associated with the COP 
+can be made to operate in a normal ‘Acceptance’ mode (for Type-A Transfer Frames) 
+or  a  ‘Bypass’  mode  (for  Type-B  Transfer  Frames),  according  to  the  setting  of  the 
+Bypass Flag. 
+
+All Transfer Frames received by the receiving end first undergo a basic standard set 
+of Frame Validation Checks, which are applied regardless of the setting of the Bypass 
+Flag (see 4.4.9.3). 
+
+4.1.2.3.2  Control Command Flag 
+4.1.2.3.2.1  Bit 3 of the Transfer Frame Primary Header shall contain the Control Command Flag. 
+4.1.2.3.2.2  The single-bit Control Command Flag shall be used to specify whether the Data 
+Field of the Transfer Frame is conveying Control Commands (Type-C) or Data (Type-D): 
+a) setting the Control Command Flag to value ‘0’ shall indicate that the Transfer Frame Data Field contains a Frame Data Unit (FDU) (Type-D); 
+b) setting the Control Command Flag to value ‘1’ shall indicate that the Transfer Frame Data Field contains control information (Type-C). 
+
+NOTE  –  In the C mode, the Transfer Frame Data Field conveys control information used 
+to set the parameters of the FARM to the proper configuration to accept data.  In 
+the D mode, the Transfer Frame Data Field contains a Frame Data Unit. 
+
+4.1.2.3.3  Combined States of the Bypass Flag and Control Command Flag 
+
+The combined states of the Bypass Flag and Control Command Flag shall be interpreted by the receiving end as shown in table 4-1. 
+
+Bypass 
+Flag 
+
+Control 
+Command 
+Flag 
+
+Interpretation 
+
+0 - 0: Type-AD.    Transfer  Frame  Data  Field  carries  a  Frame 
+Data  Unit,  subject  to  Frame  Acceptance  Checks  under 
+control of the FARM. These Frames use the Sequence-
+Controlled (or AD) Service of the COP. 
+
+0 - 1: Reserved for future application. 
+
+1 - 0: Type-BD.  Transfer  Frame  Data  Field  carries  a  Frame 
+Data  Unit,  with  Frame  Acceptance  Checks  bypassed 
+under  control  of  the  FARM.    These  Frames  use  the 
+Expedited (or BD) Service of the COP. 
+
+1 - 1: Type-BC.  Transfer  Frame  Data  Field  carries  Control 
+Commands,  with  Frame  Acceptance  Checks  bypassed 
+under  control  of  the  FARM.    These  Frames  control  the 
+Sequence-Controlled Service of the COP. 
+
+4.1.2.4  Reserved Spare 
+4.1.2.4.1  Bits 4–5 of the Transfer Frame Primary Header shall contain the Reserved Spare. 
+4.1.2.4.2  These two bits are reserved for future application and shall be set to ‘00’. 
+4.1.2.5  Spacecraft Identifier 
+4.1.2.5.1  Bits  6–15  of  the  Transfer  Frame  Primary  Header  shall  contain  the  Spacecraft Identifier (SCID). 
+4.1.2.5.2  The  Spacecraft  Identifier  is  assigned  by  the  CCSDS  and  shall  provide  the identification of the spacecraft associated with the data contained in the Transfer Frame. 
+4.1.2.5.3  The Spacecraft Identifier shall be static throughout all Mission Phases. 
+
+4.1.2.6  Virtual Channel Identifier 
+
+4.1.2.6.1  Bits  16–21  of  the  Transfer  Frame  Primary  Header  shall  contain  the  Virtual 
+Channel Identifier (VCID). 
+
+4.1.2.6.2  The Virtual Channel Identifier shall be used to identify the Virtual Channel. 
+
+NOTE  –  There  are  no  restrictions  on  the  selection  of  Virtual  Channel  Identifiers.    In 
+
+particular, Virtual Channels are not required to be numbered consecutively. 
+
+4.1.2.7  Frame Length 
+
+4.1.2.7.1  Bits 22–31 of the Transfer Frame Primary Header shall contain the Frame Length. 
+
+4.1.2.7.2  This 10-bit field shall contain a length count C which equals one fewer than the 
+total octets in the Transfer Frame. 
+
+4.1.2.7.3  The  count  shall  be  measured  from  the  first  bit  of  the  Transfer  Frame  Primary 
+Header to the last bit  of the  Frame Error Control Field (if present), or to the last bit of the 
+Transfer Frame Data Field (if the Frame Error Control Field is omitted). 
+
+NOTES 
+
+1 
+
+The length count C is expressed as: 
+
+C = (Total Number of Octets in the Transfer Frame) – 1 
+
+2 
+
+The size of this field limits the maximum length of a Transfer Frame to 1024 octets. 
+
+4.1.2.8  Frame Sequence Number 
+
+Bits 32–39 of the Transfer Frame Primary Header shall contain the Frame Sequence Number, 
+N(S). 
+
+NOTES 
+
+1 
+
+2 
+
+3 
+
+The  procedure  for  assigning  the  Frame  Sequence  Number  to  Transfer  Frames  is 
+defined in reference [4]. 
+
+The  Frame  Sequence  Number  enables  the  FARM  to  check  the  sequentiality  of 
+incoming Type-A Transfer Frames.  The Frame Sequence Number is Virtual Channel 
+dependent; i.e., this protocol maintains a separate Frame Sequence Number for each 
+of the Virtual Channels. 
+
+The COP does not use this field of Type-B Transfer Frames; in this case the contents 
+of the Frame Sequence Number field is set to ‘all zeroes’ by COP. 
+
+ 
+
+4.1.3  TRANSFER FRAME DATA FIELD 
+
+4.1.3.1  General 
+
+4.1.3.1.1  The  Transfer  Frame  Data  Field  shall  follow,  without  gap,  the  Transfer  Frame 
+Primary Header. 
+
+4.1.3.1.2  The Transfer Frame Data Field, which shall contain an integral number of octets, 
+may vary in length up to a maximum of 1019 octets (1017 octets if the Frame Error Control 
+Field is present). 
+
+4.1.3.1.3  The Transfer Frame Data Field shall contain either an integral number of octets of 
+data  corresponding  to  one  Frame  Data  Unit  (for  a  Type-D  Transfer  Frame)  or  an  integral 
+number of octets of Control Command information (for a Type-C Transfer Frame). 
+
+4.1.3.2  Frame Data Unit 
+
+4.1.3.2.1  General 
+
+4.1.3.2.1.1  A Frame Data Unit shall consist of either 
+
+a)  an integral number of User Data octets;  or 
+
+b)  a Segment Header followed by an integral number of User Data octets, if the Segment 
+
+Header is used on the Virtual Channel. 
+
+4.1.3.2.1.2 
+shall consist of one of the following: 
+
+If the Segment Header is present, the User Data contained in a Frame Data Unit 
+
+a)  a complete Packet; 
+
+b)  multiple Packets; 
+
+c)  a portion of a Packet; 
+
+d)  a complete MAP_SDU; 
+
+e)  a portion of a MAP_SDU. 
+
+4.1.3.2.1.3 
+Unit shall consist of one of the following: 
+
+If the Segment Header is not present, the User Data contained in a Frame Data 
+
+a)  a complete Packet; 
+
+b)  multiple Packets; 
+
+c)  a complete VCA_SDU. 
+
+4.1.3.2.1.4  The Segment Header is required for any Virtual Channel which has more than 
+one  MAP  or  which  transfers  service  data  units  larger  than  permitted  in  a  single  Transfer 
+
+
+Frame.  Its use is optional otherwise, except that if it is used in any Transfer Frame carried on 
+a  Virtual  Channel,  it  must  be  used  for  all  Transfer  Frames  carrying  Frame  Data  Units  (not 
+Control Commands) on that Virtual Channel. 
+
+NOTE  –  A Frame Data Unit that has a Segment Header is called a Segment. 
+
+4.1.3.2.2  Segment Header 
+
+4.1.3.2.2.1  General 
+
+4.1.3.2.2.1.1 
+Primary Header. 
+
+If present, the Segment Header shall follow, without gap, the Transfer Frame 
+
+4.1.3.2.2.1.2  The Segment Header is optional;  its presence or absence shall be established 
+by management for each Virtual Channel. 
+
+4.1.3.2.2.1.3  The Segment Header must not be present in Transfer Frames carrying Control 
+Commands. 
+
+4.1.3.2.2.1.4  The Segment Header shall contain the following fields: 
+
+a)  Sequence Flags (2 bits, mandatory); 
+
+b)  Multiplexer Access Point (MAP) Identifier (6 bits, mandatory). 
+
+NOTE  –  The format of the Segment Header is shown in figure 4-3. 
+
+SEGMENT HEADER (1 octet)
+
+SEQUENCE
+FLAGS
+
+MULTIPLEXER
+ACCESS POINT
+(MAP) ID
+
+2 bits
+
+6 bits
+
+Figure 4-3:  Segment Header 
+
+4.1.3.2.2.2  Sequence Flags 
+
+4.1.3.2.2.2.1  Bits 0–1 of the Segment Header shall contain the Sequence Flags. 
+
+ 
+
+NOTE  –  This two-bit field delimits the service data unit provided by the user by indicating 
+the sequential position of the User Data contained in the Frame Data Unit relative 
+to the service data unit of which the User Data is a part. 
+
+4.1.3.2.2.2.2  The Sequence Flags shall be interpreted as shown in table 4-2. 
+
+Table 4-2:  Interpretation of the Sequence Flags 
+
+Bit 0 
+
+Bit 1 
+
+Interpretation 
+
+0 
+
+0 
+
+1 
+
+1 
+
+1 
+
+0 
+
+0 
+
+1 
+
+First portion of service data unit on one MAP 
+
+Continuing portion of service data unit on one MAP 
+
+Last portion of service data unit on one MAP 
+
+No  segmentation  (one  complete  service  data  unit  or 
+multiple Packets) 
+
+4.1.3.2.2.3  Multiplexer Access Point Identifier 
+
+4.1.3.2.2.3.1  Bits  2–7  of  the  Segment  Header  shall  contain  the  Multiplexer  Access  Point 
+Identifier (MAP ID). 
+
+NOTE  –  The  MAP  Identifier  provides  the  identification  of  the  MAP  Channel  within  a 
+
+Virtual Channel. 
+
+4.1.3.2.2.3.2 
+If  multiple  MAPs  are  not  used  on  a  particular  Virtual  Channel,  but  the 
+Segment  Header  is  otherwise  required  to  be  present,  the  MAP  Identifier  shall  be  set  to  a 
+constant value for all Frame Data Units which are placed on that Virtual Channel. 
+
+NOTE  –  There  are  no  restrictions  on  the  selection  of  MAP  Identifiers.    In  particular, 
+
+MAPs are not required to be numbered consecutively. 
+
+4.1.3.3  Control Commands 
+
+4.1.3.3.1  General 
+
+Two Control Commands are defined: Unlock and Set V(R);  the action to be taken when the 
+FARM receives one of these Control Commands is defined in reference [4]. 
+
+
+4.1.3.3.2  Unlock 
+
+The Unlock Control Command shall consist of a single octet containing ‘all zeroes’. 
+
+4.1.3.3.3  Set V(R) 
+
+The Set V(R) Control Command shall consist of three octets with the following values: 
+
+10000010   00000000   XXXXXXXX 
+
+  where  XXXXXXXX 
+
+the 
+Receiver_Frame_Sequence_Number, V(R).  This octet should therefore be set to the 
+Sequence Number that will be put into the Header of the next Type-A Transfer Frame 
+to be transmitted on that Virtual Channel. 
+
+the  FARM  should  set 
+
+the  value 
+
+to  which 
+
+is 
+
+4.1.3.3.4  Other Bit Combinations 
+
+All  other  bit  combinations  for  Control  Commands  are  reserved  by  the  CCSDS  for  future 
+application. 
+
+4.1.4  FRAME ERROR CONTROL FIELD 
+
+4.1.4.1  General 
+
+4.1.4.1.1  The  Frame  Error  Control  Field  is  optional;  its  presence  or  absence  shall  be 
+established by management. 
+
+4.1.4.1.2 
+without gap, the Transfer Frame Data Field. 
+
+If  present,  the  Frame  Error  Control  Field  shall  occupy  the two octets  following, 
+
+4.1.4.1.3 
+transmitted within the same Physical Channel throughout a Mission Phase. 
+
+If present, the Frame Error Control Field shall occur within every Transfer Frame 
+
+NOTES 
+
+1 
+
+2 
+
+The  purpose  of  this  field  is  to  provide  a  capability  for  detecting  errors  which  may 
+have  been  introduced  into  the  Transfer  Frame  during  the  transmission  and  data 
+handling process. 
+
+Whether this field should be used on a particular Physical Channel will be determined 
+based  on  the  mission  requirements  for  data  quality  and  the  selected  options  for  the 
+underlying Channel Coding Sublayer. 
+
+4.1.4.2  Frame Error Control Field Encoding Procedure 
+
+4.1.4.2.1  The  Frame  Error  Control  Field  is  computed  by  applying  Cyclic  Redundancy 
+Check (CRC) techniques.  The Frame Error Control Field Encoding Procedure shall accept 
+
+ 
+
+an  (n–16)-bit  Transfer  Frame,  excluding  the  Frame  Error  Control  Field,  and  generate  a 
+systematic  binary  (n,n–16)  block  code  by  appending  a  16-bit  Frame  Error  Control Field as 
+the final 16 bits of the codeblock, where n is the length of the Transfer Frame. 
+
+NOTE  –  The Bit Numbering Convention as specified in 1.6.2 is applicable below. 
+
+4.1.4.2.2  The equation for the contents of the Frame Error Control Field (FECF) is: 
+
+C
+o
+r
+.
+
+1
+
+FECF  =  [(X16 ∙ M(X)) + (X(n-16) ∙ L(X))] modulo G(X) 
+
+=  P0 ∙ X15  + P1 ∙ X14 + P2 ∙ X13 + …  + P14 ∙ X1 + P15 ∙ X0 
+
+where 
+
+all arithmetic is modulo 2; 
+
+FECF is the 16-bit Frame Error Control Field with the first bit transferred being the 
+most significant bit P0 taken as the coefficient of the highest power of X; 
+
+n is the number of bits in the encoded message; 
+
+M(X) is the (n-16)-bit information message to be encoded expressed as a polynomial 
+with binary coefficients, with the first bit transferred being the most significant bit M0 
+taken as the coefficient of the highest power of X; 
+
+L(X) is the presetting polynomial given by 
+
+15
+L(X) = ∑
+i=0
+
+ Xi ; 
+
+G(X) is the generating polynomial given by 
+
+  G(X) = X16 + X12 + X5 + 1. 
+
+NOTES 
+
+1 
+
+2 
+
+The X(n-16) ∙ L(X) term has the effect of presetting the shift register to all ‘1’ state prior 
+to encoding. 
+
+A possible FECF generator implementation is shown in figure 4-4.  For each frame, 
+the shift register cells are initialized to ‘1’.  The ganged switch is in position 1 while 
+the information bits are being transferred and in position 2 for the sixteen FECF bits. 
+
+INFORMATION BITS     M
+0
+
+M
+
+n-17
+
+(M
+
+0
+
+ transferred first)
+
+CODED
+DATA
+OUTPUT
+
+(1)
+
+(2)
+
+(1)
+
+(2)
+
+ZERO
+
+P
+
+15
+
+P
+
+14
+
+P
+
+13
+
+P
+
+12
+
+P
+
+11
+
+0
+
+X
+
+1
+
+X
+
+2
+
+X
+
+3
+
+X
+
+4
+
+X
+
+P
+
+10
+
+5
+
+X
+
+P
+
+9
+
+6
+
+X
+
+P
+
+8
+
+7
+
+X
+
+P
+
+7
+
+8
+
+X
+
+P
+
+6
+
+9
+
+X
+
+P
+
+5
+
+P
+
+4
+
+P
+
+3
+
+P
+
+2
+
+P
+
+1
+
+P
+
+0
+
+10
+
+X
+
+11
+
+X
+
+12
+
+X
+
+13
+
+X
+
+14
+
+X
+
+15
+
+X
+
+Figure 4-4:  Logic Diagram of the Encoder 
+
+4.1.4.3  Frame Error Control Field Decoding Procedure 
+
+The error detection syndrome, S(X), is given by 
+
+S(X) = [(X16 ∙ C*(X)) + (Xn ∙ L(X))] modulo G(X) 
+
+where 
+
+  C*(X) is the received block, including the Frame Error Control Field, in polynomial 
+form,  with  the  first  bit  transferred  being  the  most  significant  bit  C0*  taken  as  the 
+coefficient of the highest power of X; and 
+
+S(X) is the syndrome polynomial which will be zero if no error is detected and non-
+zero if an error is detected, with the most significant bit S0 taken as the coefficient of 
+the highest power of X. 
+
+The received block C*(X) equals the transmitted codeblock C(X) plus (modulo two) the n-bit 
+error block E(X), C*(X) = C(X) + E(X), where both are expressed as polynomials of the same 
+form, i.e., with the most significant bit C0 or E0 taken as the binary coefficient of the highest 
+power of X. 
+
+NOTE  –  A possible syndrome polynomial generator implementation is shown in figure 4-5.  
+For each frame,  the shift register cells are initialized to ‘1’. The frame includes 
+n-bits, i.e., (n-16) information message bits plus the 16 bits of the FECF. All the 
+n  bits  of  the  frame  are  clocked  into  the  input  and  then  the  storage  stages  are 
+examined. For an error-free block, the contents of the shift register cells will be 
+‘zero’. A non-zero content indicates an erroneous block. 
+
+ 
+ 
+ 
+
+S
+
+15
+
+S
+
+14
+
+S
+
+13
+
+S
+
+12
+
+0
+
+X
+
+1
+
+X
+
+X2
+
+3
+
+X
+
+S
+
+11
+
+4
+
+X
+
+S
+
+10
+
+X5
+
+S9
+
+6
+
+X
+
+S
+
+8
+
+7
+
+X
+
+S
+
+7
+
+X8
+
+S6
+
+X9
+
+S
+
+5
+
+X10
+
+S4
+
+X11
+
+S
+
+3
+
+S
+
+2
+
+S
+
+1
+
+S
+
+0
+
+X12
+
+13
+
+X
+
+14
+
+X
+
+15
+
+X
+
+FRAME BITS     C
+(C0* transferred first)
+
+0*
+
+C
+
+n-1*
+
+Figure 4-5:  Logic Diagram of the Decoder 
+
+4.2  PROTOCOL DATA UNIT (CLCW) 
+
+4.2.1  COMMUNICATIONS LINK CONTROL WORD 
+
+4.2.1.1  General 
+
+4.2.1.1.1  The Communications Link Control Word (CLCW), which is the protocol data unit 
+transmitted from the receiving end to the sending end, shall provide the mechanism by which 
+the FARM at the receiving end reports the status of frame acceptance to the Frame Operation 
+Procedure (FOP) at the sending end. 
+
+NOTES 
+
+1 
+
+2 
+
+3 
+
+The controlling specification for how the CLCW is used within the COP is contained 
+in reference [4]. 
+
+CLCWs are usually carried in the Operational Control Field of TM or AOS Transfer 
+Frames  (references  [C6]  and  [C7])  using  the  MC_OCF  or  VC_OCF  Service.  This 
+Recommended  Standard  does  not  specify  the  interfaces  and  methods  by  which 
+CLCWs are delivered to the FOP by those services. 
+
+The  CLCW  is  the  only  reporting  mechanism  for  this  protocol.    Although  it  is  not 
+necessary  that  the  CLCW  reporting  rate  (from  the  receiving  end  to  the  sending  end) 
+match  the  Transfer  Frame  transfer  rate  (from  the  sending  end  to  the  receiving  end), 
+some minimum CLCW sampling rate is necessary for the proper operation of the COP. 
+
+4.2.1.1.2  The  CLCW  shall  consist  of  ten  fields,  positioned  contiguously,  in  the  following 
+sequence: 
+
+a)  Control Word Type (1 bit, mandatory); 
+
+b)  CLCW Version Number (2 bits, mandatory); 
+
+c)  Status Field (3 bits, mandatory); 
+
+ 
+
+d)  COP in Effect (2 bits, mandatory); 
+
+e)  Virtual Channel Identification (6 bits, mandatory); 
+
+f)  Reserved Spare (2 bits, mandatory); 
+
+g)  Flags (5 bits, mandatory); 
+
+h)  FARM-B Counter (2 bits, mandatory); 
+
+i)  Reserved Spare (1 bit, mandatory); 
+
+j)  Report Value (8 bits, mandatory). 
+
+NOTE  –  The structural components of the CLCW are shown in figure 4-6. 
+
+CONTROL
+WORD
+TYPE
+‘0’
+
+CLCW
+VERSION
+NUMBER
+‘00’
+
+STATUS
+FIELD
+
+COP
+IN
+EFFECT
+
+VIRTUAL
+CHANNEL
+IDENTIFICATION
+
+RSVD.
+SPARE
+
+1
+
+2
+
+3
+
+2
+
+6
+
+2
+
+(ALWAYS ‘0’ FOR CLCW)
+
+FLAGS
+
+NO
+RF
+AVAIL
+
+NO
+BIT
+LOCK
+
+LOCK-
+OUT
+
+WAIT
+
+RETRANSMIT
+
+FARM-B
+COUNTER
+
+RSVD.
+SPARE
+
+REPORT
+VALUE
+
+1
+
+1
+
+1
+
+1
+
+1
+
+2
+
+1
+
+8
+
+Figure 4-6:  Communications Link Control Word 
+
+4.2.1.2  Control Word Type 
+
+4.2.1.2.1  Bit 0 of the CLCW shall contain the Control Word Type. 
+
+NOTE  –  This field is used to distinguish the CLCW from another type of report that may be 
+alternatively  contained  in  the  field  that  carries  the  CLCW  (e.g.,  the  Operational 
+Control Field of TM or AOS Transfer Frames (references [C6] and [C7]). 
+
+4.2.1.2.2  This one-bit field shall be set to ‘0’. 
+
+ 
+
+4.2.1.3  CLCW Version Number 
+
+4.2.1.3.1  Bits  1-2  of  the  CLCW  shall  contain  the  (Binary  Encoded)  CLCW  Version 
+Number. 
+
+4.2.1.3.2  This two-bit field shall be set to ‘00’. 
+
+NOTE  –  The CLCW Version Number is included to provide future growth flexibility.  At 
+present  a  single  ‘Version-1’  CLCW,  whose  binary  encoded  Version  Number  is 
+‘00’, is defined in this Recommended Standard. 
+
+4.2.1.4  Status Field 
+
+Bits 3-5 of the CLCW shall contain the Status Field. 
+
+NOTES 
+
+1 
+
+2 
+
+Application of the Status Field is mission-specified. 
+
+The  Status  Field  may  be  used  by  Agencies  for  local  enhancements  to  operations  of 
+this protocol and is not part of the COP. 
+
+4.2.1.5  COP in Effect 
+
+4.2.1.5.1  Bits 6-7 of the CLCW shall contain the COP in Effect parameter and shall be used 
+to indicate the COP that is being used. 
+
+4.2.1.5.2  For COP-1, this two-bit field shall be set to ‘01’. 
+
+NOTE  –  At present a single COP, COP-1, is defined in this Recommended Standard. 
+
+4.2.1.6  Virtual Channel Identification 
+
+Bits  8-13  of  the  CLCW  shall  contain  the  Virtual  Channel  Identifier  of  the  Virtual  Channel 
+with which this report is associated. 
+
+NOTE  –  Each Virtual Channel in use has its own CLCW reporting activated. 
+
+4.2.1.7  Reserved Spare 
+
+4.2.1.7.1  Bits 14-15 of the CLCW shall contain the Reserved Spare. 
+
+4.2.1.7.2  These two bits are reserved by CCSDS for future application and shall be set to ‘00’. 
+
+
+4.2.1.8  Flags 
+
+4.2.1.8.1  General 
+
+Bits 16-20 of the CLCW shall contain the Flags specified in the following subsections. 
+
+4.2.1.8.2  No RF Available Flag 
+
+4.2.1.8.2.1  Bit 16 of the CLCW shall contain the No RF Available Flag. 
+
+4.2.1.8.2.2  The  No  RF  Available  Flag  shall  provide  a  logical  indication  of  the  ‘ready’ 
+status  of  the  radio  frequency  (RF)  elements  within  the  space  link  provided  by the Physical 
+Layer. 
+
+NOTE  –  Precise definition of the set of physical states which must each be in the ‘ready’ 
+condition  before  communication  is  possible  is  mission-specified.    For  example, 
+the  flag  can  represent  a  logical  sum  of  the  overall  ready  status  of  components 
+such as the RF transponder and the demodulator. 
+
+4.2.1.8.2.3  A  setting  of  ‘0’  in  the  No  RF Available  Flag  shall  indicate  that  the  Physical 
+Layer is Available (i.e., any Transfer Frame will be received and processed by the Physical 
+Layer and passed on to this protocol if correct). 
+
+4.2.1.8.2.4  A  setting  of  ‘1’  in  the  No  RF Available  Flag  shall  indicate  that  the  Physical 
+Layer  is  not  available  and  that  Transfer  Frames  cannot  be  transferred  without  corrective 
+action within the Physical Layer. 
+
+4.2.1.8.2.5  The single No RF Available Flag shall apply to all Virtual Channels and shall be 
+updated whenever a change is signaled by the Physical Layer. 
+
+NOTE  –  This field may be used by Agencies for local enhancements to operations of this 
+
+protocol and is not part of the COP. 
+
+4.2.1.8.3  No Bit Lock Flag 
+
+4.2.1.8.3.1  Bit 17 of the CLCW shall contain the No Bit Lock Flag. 
+
+NOTES 
+
+1 
+
+The No Bit Lock Flag is an optional, mission-specific engineering measurement that 
+provides  a  performance  quality  indicator  that  indicates  specifically  whether  the 
+Physical  Layer  is  working  normally  by  having  enough  signal  energy  to  achieve  bit 
+synchronization with the received data stream. 
+
+
+2 
+
+Failure to achieve bit lock may indicate that the Physical Layer is operating at a non-
+nominal  performance  level  and  that  the  Transfer  Frame  rejection  rate  may  be 
+correspondingly abnormally high. 
+
+4.2.1.8.3.2  Use of the No Bit Lock Flag is optional; if used, 
+
+a)  ‘0’ shall indicate bit lock has been achieved; 
+
+b)  ‘1’ shall indicate bit lock has not been achieved. 
+
+4.2.1.8.3.3  The  single  No  Bit  Lock  Flag  shall  apply  to  all  Virtual  Channels  and  shall  be 
+updated whenever a change is signaled by the Physical Layer. 
+
+4.2.1.8.3.4 
+
+If the No Bit Lock Flag is not used, it shall be set permanently to ‘0’. 
+
+NOTE  –  This field may be used by Agencies for local enhancements to operations of this 
+
+protocol and is not part of the COP. 
+
+4.2.1.8.4  Lockout Flag 
+
+4.2.1.8.4.1  Bit 18 of the CLCW shall contain the Lockout Flag. 
+
+4.2.1.8.4.2  The Lockout Flag shall be used to indicate the Lockout status of the FARM of a 
+particular Virtual Channel. 
+
+4.2.1.8.4.3  A setting of ‘1’ in the Lockout Flag shall indicate Lockout. 
+
+NOTE  –  Lockout  occurs  whenever  a  Type-A  Transfer  Frame  that  violates  certain  Frame 
+Acceptance Checks is received on a particular Virtual Channel.  Once the FARM 
+is  in  Lockout,  all  subsequent  Type-A  Transfer  Frames  will  be  rejected  by  the 
+FARM until the condition is cleared. 
+
+4.2.1.8.4.4  A  setting  of  ‘0’  in  the  Lockout  Flag  shall  indicate  that  the  FARM  is  not  in 
+Lockout. 
+
+4.2.1.8.4.5  Separate Lockout Flags shall be maintained for each Virtual Channel. 
+
+NOTE  –  The precise specifications for use of the Lockout Flag are contained in reference [4]. 
+
+4.2.1.8.5  Wait Flag 
+
+4.2.1.8.5.1  Bit 19 of the CLCW shall contain the Wait Flag. 
+
+4.2.1.8.5.2  The Wait Flag shall be used to indicate that the receiving end is unable to accept 
+data for processing on a particular Virtual Channel. 
+
+
+NOTE  –  An inability to accept data could be caused by temporary lack of storage and/or 
+
+processing resources in the receiving end of this protocol or higher layers. 
+
+4.2.1.8.5.3  A  setting  of  ‘1’  (i.e.,  Wait)  in  the  Wait  Flag  for  a  particular  Virtual  Channel 
+shall  indicate  that  all  further  Type-A  Transfer  Frames  on  that  Virtual  Channel  will  be 
+rejected by the FARM until the condition is cleared. 
+
+4.2.1.8.5.4  A  setting  of  ‘0’  (i.e.,  Do  Not  Wait)  in  the  Wait  Flag  shall  indicate  that  the 
+receiving end is able to accept and process incoming Type-A Transfer Frames. 
+
+4.2.1.8.5.5  Separate Wait Flags shall be maintained for each Virtual Channel. 
+
+NOTE  –  The precise specifications for use of the Wait Flag are contained in reference [4]. 
+
+4.2.1.8.6  Retransmit Flag 
+
+4.2.1.8.6.1  Bit 20 of the CLCW shall contain the Retransmit Flag. 
+
+NOTE  –  The  Retransmit  Flag  is  used  to  speed  the  operation  of  the  COP  by  providing 
+immediate  indication  to  the  FOP  at  the  sending  end  that  retransmission  is 
+necessary. 
+
+4.2.1.8.6.2  A setting of ‘1’ in the Retransmit Flag shall indicate that one or more Type-A 
+Transfer Frames on a particular Virtual Channel have been rejected or found missing by the 
+FARM and therefore retransmission is required. 
+
+4.2.1.8.6.3  A  setting  of  ‘0’  in  the  Retransmit  Flag  shall  indicate  that  there  are  no 
+outstanding  Type-A  Transfer  Frame  rejections  in  the  sequence  received  so  far,  and  thus 
+retransmissions are not required. 
+
+4.2.1.8.6.4  Separate Retransmit Flags shall be maintained for each Virtual Channel. 
+
+NOTE  –  The  precise  specifications  for  use  of  the  Retransmit  Flag  are  contained  in 
+
+reference [4]. 
+
+4.2.1.9  FARM-B Counter 
+
+4.2.1.9.1  Bits 21-22 of the CLCW shall contain the FARM-B Counter. 
+
+4.2.1.9.2  Separate FARM-B Counters shall be maintained for each Virtual Channel. 
+
+NOTE  –  This  2-bit  field  contains  the  two  least  significant  bits  of  a  FARM-B  Counter.  
+This  counter  is  maintained  within  the  FARM  and  increments  once  each  time  a 
+Type-B  Transfer  Frame  is  accepted  in  Bypass  mode  on  a  particular  Virtual 
+Channel.    The  field  supports  the  verification  that  Type-B  Transfer  Frames 
+(Control or User Data) were accepted by the receiving end. 
+
+
+4.2.1.10  Reserved Spare 
+
+4.2.1.10.1  Bit 23 of the CLCW shall contain the Reserved Spare. 
+
+4.2.1.10.2  This bit is reserved by CCSDS for future application and shall be set to ‘0’. 
+
+4.2.1.11  Report Value 
+
+4.2.1.11.1  Bits 24-31 of the CLCW shall contain the Report Value. 
+
+4.2.1.11.2  Separate Report Values shall be maintained for each Virtual Channel. 
+
+NOTE  –  This  8-bit  field  contains  the  value  of  the  Next  Expected  Frame  Sequence 
+FARM’s 
+Number,  N(R),  which 
+Receiver_Frame_Sequence_Number,  V(R). 
+  The  FARM  V(R)  counter 
+increments once each time a Type-AD Transfer Frame is accepted on a particular 
+Virtual  Channel.    The  precise  specifications  for  use  of  the  Report  Value  are 
+contained in reference [4]. 
+
+value 
+
+equal 
+
+the 
+
+of 
+
+to 
+
+is 
+
+4.3  PROTOCOL PROCEDURES AT THE SENDING END 
+
+NOTE  –  This subsection describes procedures at the sending end associated with each of 
+the functions shown in figure 4-7.  In the figure, data flows from top to bottom.  
+The figure identifies data-handling functions performed by the protocol entity at 
+the  sending  end,  and  shows  logical  relationships  among  these  functions.    This 
+figure is not intended to imply any hardware or software configuration in a real 
+system.  Depending on the services actually used for a real system, not all of the 
+functions may be present in the protocol entity.  The procedures described in this 
+subsection  are  defined  in  an  abstract  sense  and  are  not  intended  to  imply  any 
+particular implementation approach of a protocol entity. 
+
+
+MAP
+Packet
+Service
+
+MAP
+Access
+Service
+
+MAP Packet
+Processing
+
+MAP
+Generation
+
+COP Mgmt.
+Service
+
+VC Packet
+Service
+
+VC Access
+Service
+
+Segmen-
+tation
+Sublayer
+
+Transfer
+Sublayer
+
+MAP Multiplexing
+
+VC Packet
+Processing
+
+Virtual Channel Generation
+
+Virtual Channel Multiplexing
+
+Master Channel Multiplexing
+
+All Frames Generation
+
+VC Frame
+Service
+
+MC Frame
+Service
+
+Figure 4-7:  Internal Organization of Protocol Entity (Sending End) 
+
+4.3.1  MAP PACKET PROCESSING FUNCTION 
+
+4.3.1.1  The  MAP  Packet  Processing  Function  shall  be  used  to  transfer  variable-length 
+Packets in the Data Field of Transfer Frames  (i.e., in Frame Data Units) of a MAP Channel. 
+
+NOTE  –  There  is  an  instance  of  the  MAP  Packet  Processing  Function  for  each  MAP 
+
+Channel that carries Packets. 
+
+4.3.1.2 
+If  the  Packet  to  be  transferred  exceeds  a  predetermined  length,  the  MAP  Packet 
+Processing  Function  shall  divide  it  into  portions  that  are  compatible  with  insertion  into the 
+Frame Data Unit and attach a Segment Header to each portion, forming Frame Data Units. 
+
+4.3.1.3  The first octet of the Packet shall appear, without gap, after the Segment Header of 
+the first corresponding Frame Data Unit. 
+
+4.3.1.4  The  Frame  Data  Units  containing  the  first  and  continuing  portions  of  the  Packet 
+may each have a length equal to the maximum allowable length of the Frame Data Unit on 
+that particular MAP Channel. 
+
+4.3.1.5  The  Frame  Data  Unit  containing  the  last  portion  of  the  Packet  shall  contain  the 
+Segment Header and the residue of the Packet. 
+
+4.3.1.6  The portions of a Packet shall be transferred in consecutive Transfer Frames of the 
+MAP Channel without being interlaced with any other Packets or portions in the same MAP 
+Channel. 
+
+ 
+
+4.3.1.7 
+Header is generated and attached to the Packet, forming a Frame Data Unit. 
+
+If the Packet to be transferred does not exceed a predetermined length, a Segment 
+
+4.3.1.8 
+
+If blocking of Packets is permitted on a particular MAP Channel, then: 
+
+a)  multiple  complete  Packets  may  be  placed  into  a  Frame  Data  Unit  with  a  single 
+
+Segment Header preceding them; 
+
+b)  the  blocked  Packets  plus  the  Segment  Header  must  fit  within  the  maximum  size 
+
+Frame Data Unit permitted for the MAP Channel. 
+
+4.3.1.9 
+If Packets of multiple versions are to be transferred on a MAP Channel, Packets of 
+these versions are multiplexed into a contiguous string of Packets before they are placed in 
+Frame Data Units. 
+
+NOTES 
+
+1 
+
+2 
+
+An abstract model of the MAP Packet Processing Function is illustrated in figure 4-8. 
+
+Figure  4-9  shows  how  Packets  assigned  to  one  MAP  are  segmented  or  blocked  to 
+form Frame Data Units. 
+
+Packet Service
+User with PVN m
+
+Packet Service
+User with PVN n
+
+Packets
+
+Packets
+
+MAP Packet
+Processing
+Function for
+a MAP
+Channel
+
+Generation of Segment Header and
+Construction of Frame Data Units
+
+Frame Data Units
+
+MAP Multiplexing Function
+
+Figure 4-8:  Abstract Model of MAP Packet Processing Function 
+
+PACKET
+
+PACKET
+
+PACKET
+
+BLOCKING
+
+SEGMENTATION
+
+SEG
+HDR
+
+SEG
+HDR
+
+SEG
+HDR
+
+FRAME DATA UNIT
+
+FRAME DATA UNIT
+
+FRAME DATA UNIT
+
+Figure 4-9:  Example of MAP Packet Processing Procedures 
+
+ 
+ 
+
+4.3.2  MAP GENERATION FUNCTION 
+
+4.3.2.1  The  MAP  Generation  Function  shall  be  used  to  transfer  variable-length  user-
+defined service data units (MAP_SDUs) in the Data Field of Transfer Frames  (i.e., in Frame 
+Data Units) of a MAP Channel. 
+
+NOTE  –  There is an instance of the MAP Generation Function for each MAP Channel that 
+
+carries MAP_SDUs. 
+
+If  the  MAP_SDU  to  be  transferred  exceeds  a  predetermined  length,  the  MAP 
+4.3.2.2 
+Generation  Function shall divide it into portions that are compatible with insertion into the 
+Frame Data Unit and attach a Segment Header to each portion, forming Frame Data Units. 
+
+4.3.2.3  The  first  octet  of  the  MAP_SDU  shall  appear,  without  gap,  after  the  Segment 
+Header of the first corresponding Frame Data Unit. 
+
+4.3.2.4  The  Frame  Data  Units  containing  the  first  and  continuing  portions  of  the 
+MAP_SDU  may  each  have  a  length  equal  to  the  maximum  allowable  length  of  the  Frame 
+Data Unit on that particular MAP Channel. 
+
+4.3.2.5  The Frame Data Unit containing the last portion of the MAP_SDU shall contain the 
+Segment Header and the residue of the MAP_SDU. 
+
+4.3.2.6  The portions of a MAP_SDU shall be transferred in consecutive Transfer Frames of 
+the  MAP  Channel  without  being  interlaced  with  any  other  MAP_SDUs  or  portions  in  the 
+same MAP Channel. 
+
+4.3.2.7 
+If  the  MAP_SDU  to  be  transferred  does  not  exceed  a  predetermined  length,  a 
+Segment  Header  shall  be  generated  and  attached  to  the  MAP_SDU,  forming  a  Frame  Data 
+Unit. 
+
+NOTES 
+
+1 
+
+2 
+
+An abstract model of the MAP Generation Function is illustrated in figure 4-10. 
+
+Figure  4-11  shows  how  MAP_SDUs  assigned  to  one  MAP  are  processed  to  form 
+Frame Data Units. 
+
+
+MAP
+Generation
+Function for
+a MAP
+Channel
+
+MAPA
+Service User
+
+MAP_SDUs
+
+Generation of Segment Header and
+Construction of Frame Data Units
+
+Frame Data Units
+
+MAPMultiplexing Function
+
+Figure 4-10:  Abstract Model of MAP Generation Function 
+
+MAP_SDU
+
+MAP_SDU
+
+SEGMENTATION
+
+SEG
+HDR
+
+SEG
+HDR
+
+SEG
+HDR
+
+FRAME DATA UNIT
+
+FRAME DATA UNIT
+
+FRAME DATA UNIT
+
+Figure 4-11:  Example of MAP Generation Procedures 
+
+4.3.3  MAP MULTIPLEXING FUNCTION 
+
+4.3.3.1  The MAP Multiplexing Function shall be used to multiplex Frame Data Units (each 
+containing a Segment Header) of different MAP Channels of a Virtual Channel. 
+
+NOTE  –  There is an instance of the MAP Multiplexing Function for each Virtual Channel 
+
+that has multiple MAP Channels. 
+
+4.3.3.2  The  MAP  Multiplexing  Function  shall  multiplex  Frame  Data  Units  received  from 
+the instances of the MAP Packet Processing and/or MAP Generation Functions and put them 
+into a queue of Frame Data Units in an appropriate order set by management. 
+
+4.3.3.3  The algorithm to be used to order the Frame Data Units is not specified by CCSDS, 
+but shall be defined by project organizations considering factors such as priority, release rate, 
+isochronous timing requirements, etc. 
+
+NOTE  –  An abstract model of the MAP Multiplexing Function is illustrated in figure 4-12. 
+
+ 
+ 
+
+MAP Packet
+Proc.  Function
+
+MAP Generation
+Function
+
+Frame Data Units
+
+Frame Data Units
+
+MAP
+Multiplexing
+Function for
+a Virtual
+Channel
+
+Multiplexing
+
+Frame Data Units
+
+Virtual Channel Generation Function
+
+Figure 4-12:  Abstract Model of MAP Multiplexing Function 
+
+4.3.4  VC PACKET PROCESSING FUNCTION 
+
+4.3.4.1  The  VC  Packet  Processing  Function  shall  be  used  to  transfer  variable-length 
+Packets in the Data Field of Transfer Frames (i.e., in Frame Data Units) of a Virtual Channel. 
+
+NOTE  –  There  is  an  instance  of  the  VC  Packet  Processing  Function  for  each  Virtual 
+
+Channel that carries Packets. 
+
+4.3.4.2  The  VC  Packet  Processing  Function  shall  generate  Frame  Data  Units,  each 
+containing one or multiple complete Packets (without a Segment Header). 
+
+4.3.4.3 
+
+If blocking of Packets is permitted on a particular Virtual Channel, 
+
+a)  multiple complete Packets may be placed into a Frame Data Unit; 
+
+b)  the blocked Packets must fit within the maximum size Frame Data Unit permitted for 
+
+the Virtual Channel. 
+
+4.3.4.4 
+If Packets of multiple versions are to be transferred on a Virtual Channel, Packets 
+of  these  versions  shall  be  multiplexed  into  a  contiguous  string  of  Packets  before  they  are 
+placed in Frame Data Units. 
+
+NOTES 
+
+1 
+
+2 
+
+An abstract model of the VC Packet Processing Function is illustrated in figure 4-13. 
+
+Figure  4-14  shows  how  Packets  assigned  to  one  Virtual  Channel  are  processed  to 
+form Frame Data Units. 
+
+ 
+
+VC Packet
+Processing
+Function for
+a Virtual
+Channel
+
+Packet Service
+User with PVN m
+
+Packet Service
+User with PVN n
+
+Packets
+
+Packets
+
+Construction of Frame Data Units
+
+Frame Data Units
+
+Virtual Channel Generation Function
+
+Figure 4-13:  Abstract Model of VC Packet Processing Function 
+
+PACKET
+
+PACKET
+
+PACKET
+
+PACKET
+
+BLOCKING
+
+FRAME DATA UNIT
+
+FRAME DATA UNIT
+
+FRAME DATA UNIT
+
+Figure 4-14:  Example of VC Packet Processing Procedures 
+
+4.3.5  VIRTUAL CHANNEL GENERATION FUNCTION 
+
+NOTE  –  The Virtual Channel Generation Function is the ‘heart’ of this protocol.  It builds 
+Transfer Frames and performs most of the operations required to move service data 
+units reliably from the sending end to the receiving end of the protocol.  There is an 
+instance of the Virtual Channel Generation Function for each Virtual Channel. 
+
+4.3.5.1  General 
+
+The Virtual Channel Generation Function shall perform the following three procedures in the 
+following order: 
+
+a)  the Frame Initialization Procedure;  
+
+b)  the  Frame  Operation  Procedure  (FOP-1),  which  is  a  sub-procedure  of  the 
+
+Communications Operation Procedure (COP-1); and 
+
+c)  the Frame Finalization Procedure. 
+
+ 
+ 
+
+4.3.5.2  Frame Initialization Procedure 
+
+The  Frame  Initialization  Procedure  shall  accept  Frame  Data  Units  (FDUs)  from  the  MAP 
+Multiplexing  Function,  the  VC  Packet  Processing  Function,  or  a  VCA  Service  User  (one 
+VCA_SDU is treated as one FDU) and generate a partially complete TC transfer frame that 
+includes a Transfer Frame Primary Header and a Transfer Frame Data Field. 
+
+NOTE  –  Only a few (static) fields of the Transfer Frame Primary Header are filled in by 
+
+this procedure.  
+
+4.3.5.3  FOP-1 Procedure 
+
+4.3.5.3.1  The FOP shall control transmission and retransmission of FDUs by examining the 
+report contained in the CLCWs and generate Control Commands. 
+
+4.3.5.3.2  The FOP shall also accept Directives from a COP Management Service User. 
+
+NOTE  –  The detailed specification of the FOP is given in reference [4]. 
+
+4.3.5.4  The Frame Finalization Procedure 
+
+The  Frame  Finalization  Procedure  shall  fill  in  the  values  of  the  remainder  of  the  transfer 
+frame fields by completing the Transfer Frame Primary Header of each Frame Data Unit or 
+Control  Command  by  adding  the  value  delivered  by  the  FOP-1  (i.e.,  Frame  Sequence 
+Number). 
+
+NOTE  –  An  abstract  model  of  the  Virtual  Channel  Generation  Function  is  illustrated  in 
+
+figure 4-15. 
+
+Only one of these three entities exists for a Virtual Channel
+
+MAP Mux.
+Function
+
+VC Packet  Proc.
+Function
+
+VCA
+Service User
+
+COP Mgmt.
+Service User
+
+Frame Data
+Units
+
+Frame Data
+Units
+
+VCA_SDUs
+
+Directives
+
+Virtual
+Channel
+Generation
+Function for
+a Virtual
+Channel
+
+Frame Initialization Procedure, Frame Operation Procedure,
+and Frame Finalization Procedure
+
+VC Frames
+
+Virtual Channel Multiplexing Function
+
+Figure 4-15:  Abstract Model of Virtual Channel Generation Function 
+
+ 
+
+4.3.6  VIRTUAL CHANNEL MULTIPLEXING FUNCTION 
+
+4.3.6.1  The  Virtual  Channel  Multiplexing  Function  shall  be  used  to  multiplex  Transfer 
+Frames from different Virtual Channels on a Master Channel. 
+
+NOTE  –  There  is  an  instance  of  the  Virtual  Channel  Multiplexing  Function  for  each 
+
+Master Channel that has multiple Virtual Channels. 
+
+4.3.6.2  The  Virtual  Channel  Multiplexing  Function  shall  multiplex  Transfer  Frames 
+received from the instances of the Virtual Channel Generation Function and, if present, the 
+Virtual Channel Frame Service users, in an appropriate order set by management. 
+
+NOTE  –  The  Virtual  Channel  Multiplexing  Function  may  put  the  multiplexed  Transfer 
+
+Frames into a queue. 
+
+4.3.6.3  The algorithm to be used to order the Transfer Frames is not specified by CCSDS, 
+but shall be defined by project organizations considering factors such as priority, release rate, 
+isochronous timing requirements, etc. 
+
+NOTE  –  An abstract model of the Virtual Channel Multiplexing Function is illustrated in 
+
+figure 4-16. 
+
+VC Generation
+Function
+
+VC Frame
+Service User
+
+VC Frames
+
+VC Frames
+
+Virtual
+Channel
+Multiplexing
+Function for
+a Master
+Channel
+
+Multiplexing
+
+MC Frames
+
+Master Channel Multiplexing Function
+
+Figure 4-16:  Abstract Model of Virtual Channel Multiplexing Function 
+
+4.3.7  MASTER CHANNEL MULTIPLEXING FUNCTION 
+
+4.3.7.1  The  Master  Channel  Multiplexing  Function  shall  be  used  to  multiplex  Transfer 
+Frames from different Master Channels on a Physical Channel. 
+
+NOTE  –  There  is  an  instance  of  the  Master  Channel  Multiplexing  Function  for  each 
+
+Physical Channel that has multiple Master Channels. 
+
+ 
+
+4.3.7.2  The  Master  Channel  Multiplexing  Function  shall  multiplex  Transfer  Frames 
+received from the instances of the Virtual Channel Multiplexing Function and, if present, the 
+Master Channel Frame Service users, and shall put them into a queue of Transfer Frames in 
+an appropriate order set by management. 
+
+4.3.7.3  The algorithm to be used to order the Transfer Frames is not specified by CCSDS, 
+but shall be defined by project organizations considering factors such as priority, release rate, 
+isochronous timing requirements, etc. 
+
+NOTE  –  An abstract model of the Master Channel Multiplexing Function is illustrated in 
+
+figure 4-17. 
+
+VC Multiplexing
+Function
+
+MC Frame
+Service User
+
+MC Frames
+
+MC Frames
+
+Master
+Channel
+Multiplexing
+Function for
+a Physical
+Channel
+
+Multiplexing
+
+All Frames
+
+All Frames Generation Function
+
+Figure 4-17:  Abstract Model of Master Channel Multiplexing Function 
+
+4.3.8  ALL FRAMES GENERATION FUNCTION 
+
+4.3.8.1  The  All  Frames  Generation  Function  shall  be  used  to  perform  error  control 
+encoding  defined  by  this  Recommended  Standard  and  to  deliver  Transfer  Frames  at  an 
+appropriate rate to the Channel Coding Sublayer. 
+
+NOTE  –  There  is  an  instance  of  the  All  Frames  Generation  Function  for  each  Physical 
+
+Channel. 
+
+4.3.8.2 
+
+If the Frame Error Control Field is present, then: 
+
+a)  check bits shall be generated using the encoding procedure described in 4.1.4.2 and 
+
+inserted into the Transfer Frame Trailer; 
+
+b)  the Frame Error Control Field shall be present in all the Transfer Frames transmitted 
+
+in a particular Physical Channel. 
+
+ 
+
+4.3.8.3  The  All  Frames  Generation  Function  shall  deliver  data  units  to  the  underlying 
+Channel Coding Sublayer. 
+
+4.3.8.4  Each data unit delivered by the All Frames Generation Function shall consist of one 
+or more Transfer Frames in accordance with parameters set by management. 
+
+4.3.8.5 
+In  accordance  with  parameters  set  by  management,  the  All  Frames  Generation 
+Function  may  request  the  Synchronization  and  Channel  Coding  Sublayer  to  perform 
+systematic retransmissions of a data unit as described in 2.4.2, unless the data unit contains 
+one or more frames carrying service data on the Type-B Service (i.e., type BD frames). 
+
+4.3.8.6  The All Frames Generation Function shall deliver data units at a rate specified by 
+management. 
+
+NOTES 
+
+1 
+
+2 
+
+3 
+
+When systematic retransmissions of a data unit are requested, the improved reception 
+probabilities  from  the  retransmissions  are  increased  if  the  data  unit  consists  of  a 
+single Transfer Frame. 
+
+When systematic retransmissions of a data unit are requested, the additional delay for 
+the retransmissions can be taken into account when deciding the delivery time for the 
+following data unit. 
+
+An abstract model of the All Frames Generation Function is illustrated in figure 4-18. 
+
+MC Multiplexing
+Function
+
+All Frames
+
+All Frames
+Generation
+Function for
+a Physical
+Channel
+
+Error Control Encoding and Delivery of Transfer Frames
+
+All Frames
+
+Coding Sublayer
+
+Figure 4-18:  Abstract Model of All Frames Generation Function 
+
+ 
+
+4.4  PROTOCOL PROCEDURES AT THE RECEIVING END 
+
+NOTE  –  This subsection describes procedures at the receiving end associated with each of 
+the functions shown in figure 4-19.  In the figure, data flows from bottom to top. 
+The figure identifies data-handling functions performed by the protocol entity at 
+the  receiving  end  and  shows  logical  relationships  among  these  functions.    This 
+figure is not intended to imply any hardware or software configuration in a real 
+system.  Depending on the services actually used for a real system, not all of the 
+functions may be present in the protocol entity.  The procedures described in this 
+subsection  are  defined  in  an  abstract  sense  and  are  not  intended  to  imply  any 
+particular implementation approach of a protocol entity. 
+
+Segmen-
+tation
+Sublayer
+
+Transfer
+Sublayer
+
+VC Packet
+Service
+
+VC Access
+Service
+
+VC Frame
+Service
+
+MC Frame
+Service
+
+MAP
+Packet
+Service
+
+MAP
+Access
+Service
+
+MAP Packet
+Extraction
+
+MAP
+Reception
+
+MAP Demultiplexing
+
+VC Packet
+Extraction
+
+Virtual Channel Reception
+
+Virtual Channel Demultiplexing
+
+Master Channel Demultiplexing
+
+All Frames Reception
+
+Figure 4-19:  Internal Organization of Protocol Entity (Receiving End) 
+
+4.4.1  MAP PACKET EXTRACTION FUNCTION 
+
+4.4.1.1  The  MAP  Packet  Extraction  Function  shall  be  used  to  extract  variable-length 
+Packets from Frame Data Units on a MAP Channel. 
+
+NOTE  –  There  is  an  instance  of  the  MAP  Packet  Extraction  Function  for  each  MAP 
+
+Channel that carries Packets. 
+
+4.4.1.2  The MAP Packet Extraction Function shall extract Packets from Frame Data Units 
+received from the MAP Demultiplexing Function. 
+
+ 
+
+4.4.1.3  Original Packets shall be extracted and reconstructed from Frame Data Units using 
+the  Sequence  Flag  of  the  Segment  Header  of  each  Frame  Data  Unit  and,  if  blocking  of 
+Packets is permitted, the length field of each Packet. 
+
+4.4.1.4  Extracted  Packets  shall  be  delivered  to  the  users  on  the  basis  of  the  PVN  in  their 
+header. 
+
+4.4.1.5 
+
+Incomplete Packets are not required to be delivered in cross support situations. 
+
+NOTE  –  An abstract model of the MAP Packet Extraction Function is illustrated in figure 4-20. 
+
+Packet Service
+User with PVN m
+
+Packet Service
+User with PVN n
+
+Packets
+
+Packets
+
+MAP Packet
+Extraction
+Function for
+a MAP
+Channel
+
+Demultiplexing and Extraction of
+Packets
+
+Frame Data Units
+
+MAP Demultiplexing Function
+
+Figure 4-20:  Abstract Model of MAP Packet Extraction Function 
+
+4.4.2  MAP RECEPTION FUNCTION 
+
+4.4.2.1  The MAP Reception Function shall be used to extract variable-length service data 
+units (MAP_SDUs) from Frame Data Units on a MAP Channel. 
+
+NOTE  –  There is an instance of the MAP Reception Function for each MAP Channel that 
+
+carries MAP_SDUs. 
+
+4.4.2.2  The  MAP  Reception  Function  shall  extract  MAP_SDUs  from  Frame  Data  Units 
+received from the MAP Demultiplexing Function. 
+
+4.4.2.3  Original MAP_SDUs shall  be extracted and reconstructed from Frame Data Units 
+using the Sequence Flag of the Segment Header of each Frame Data Unit. 
+
+4.4.2.4  Extracted MAP_SDUs shall be delivered to the user. 
+
+NOTE  –  An abstract model of the MAP Reception Function is illustrated in figure 4-21. 
+
+ 
+
+MAP
+Reception
+Function for
+a MAP
+Channel
+
+MAPA
+Service User
+
+MAP_SDUs
+
+Extraction of MAP_SDUs
+
+Frame Data Units
+
+MAP Demultiplexing Function
+
+Figure 4-21:  Abstract Model of MAP Reception Function 
+
+4.4.3  MAP DEMULTIPLEXING FUNCTION 
+
+4.4.3.1  The MAP Demultiplexing Function shall be used to demultiplex Frame Data Units 
+from different MAP Channels on a Virtual Channel. 
+
+NOTE  –  There  is  an  instance  of  the  MAP  Demultiplexing  Function  for  each  Virtual 
+
+Channel that has multiple MAP Channels. 
+
+4.4.3.2  The  MAP  Demultiplexing  Function  shall  examine  the  MAP  ID  in  the  Segment 
+Header of the incoming Frame Data Units and shall route them to the instances of the MAP 
+Packet Extraction and/or MAP Reception Functions. 
+
+4.4.3.3  Frame Data Units with an invalid MAP ID shall be discarded. 
+
+NOTE  –  An abstract model of the MAP Demultiplexing Function is illustrated in figure 4-22. 
+
+MAP Packet
+Extr.  Function
+
+MAP Reception
+Function
+
+Frame Data Units
+
+Frame Data Units
+
+MAP
+Demultiplexing
+Function for a
+Virtual Channel
+
+Demultiplexing
+
+Frame Data Units
+
+Virtual Channel Reception Function
+
+Figure 4-22:  Abstract Model of MAP Demultiplexing Function 
+
+ 
+ 
+
+4.4.4  VC PACKET EXTRACTION FUNCTION 
+
+4.4.4.1  The VC Packet Extraction Function shall be used to extract variable-length Packets 
+from the Frame Data Units on a Virtual Channel. 
+
+NOTE  –  There  is  an  instance  of  the  VC  Packet  Extraction  Function  for  each  Virtual 
+
+Channel that carries Packets. 
+
+4.4.4.2  The  VC  Packet  Extraction  Function  shall  extract  Packets  from  Frame  Data  Units 
+received from the Virtual Channel Reception Function. 
+
+4.4.4.3 
+Units using the length field of each Packet. 
+
+If  blocking  of  Packets  is  permitted,  Packets  shall  be  extracted  from  Frame  Data 
+
+4.4.4.4  Extracted  Packets  shall  be  delivered  to  the  users  on  the  basis  of  the  PVN  in  their 
+header. 
+
+NOTE  –  An abstract model of the VC Packet Extraction Function is illustrated in figure 4-23. 
+
+Packet Service
+User with PVN m
+
+Packet Service
+User with PVN n
+
+Packets
+
+Packets
+
+VC Packet
+Extraction
+Function for
+a Virtual
+Channel
+
+Extraction of Packets
+
+Frame Data Units
+
+Virtual Channel Reception Function
+
+Figure 4-23:  Abstract Model of VC Packet Extraction Function 
+
+4.4.5  VIRTUAL CHANNEL RECEPTION FUNCTION 
+
+4.4.5.1  The Virtual Channel Reception Function shall perform the Frame Acceptance and 
+Reporting Mechanism (FARM), which is a sub-procedure of the Communications Operation 
+Procedure (COP). 
+
+4.4.5.2  Thereafter, the Frame Delivery Function (4.4.6) shall deliver Frame Data Units to 
+either the MAP Demultiplexing Function or VC Packet Extraction function or VCA Service 
+User. 
+
+NOTE  –  There is an instance of the Virtual Channel Reception Function for each Virtual 
+
+Channel. 
+
+ 
+
+4.4.5.3  The FARM shall examine the Primary Header of the incoming Transfer Frames  in 
+order to 
+
+a)  perform Frame Acceptance Checks against Type-AD Transfer Frames; 
+
+b)  execute Control Commands whenType-BC Transfer Frames are received; and  
+
+c)  generate parameters to be transferred back to the sending end with CLCWs. 
+
+4.4.6  FRAME DELIVERY FUNCTION 
+
+4.4.6.1  Frame  Data  Units  extracted  from  Type-AD  Transfer  Frames  shall  be  delivered  to 
+their users (or Functions) only if they have passed the Frame Acceptance Checks. 
+
+4.4.6.2  Frame  Data  Units  extracted  from  Type-BD  Transfer  Frames  shall  be  delivered  to 
+their users (or Functions) immediately. 
+
+NOTES 
+
+1 
+
+2 
+
+The detailed specification of the FARM is given in reference [4]. 
+
+An  abstract  model  of  the  Virtual  Channel  Reception  Function  is  illustrated  in 
+figure 4-24. 
+
+Only one of these three entities exists for a Virtual Channel
+
+MAP Demux.
+Function
+
+VC Packet  Extr.
+Function
+
+VCA
+Service User
+
+Frame Data
+Units
+
+Frame Data
+Units
+
+VCA_SDUs
+
+Virtual
+Channel
+Reception
+Function for a
+Virtual
+Channel
+
+Frame Acceptance and Reporting
+Mechanism  (FARM)
+
+VC Frames
+
+Virtual Channel Demultiplexing Function
+
+Figure 4-24:  Abstract Model of Virtual Channel Reception Function 
+
+4.4.7  VIRTUAL CHANNEL DEMULTIPLEXING FUNCTION 
+
+4.4.7.1  The Virtual Channel Demultiplexing Function shall be used to demultiplex Transfer 
+Frames of different Virtual Channels on a Master Channel. 
+
+ 
+
+NOTE  –  There  is  an  instance  of  the  Virtual  Channel  Demultiplexing  Function  for  each 
+
+Master Channel that has multiple Virtual Channels. 
+
+4.4.7.2  The  Virtual  Channel  Demultiplexing  Function  shall  examine  the  VCID  in  the 
+incoming  stream  of  Transfer  Frames  and  shall  route  them  to  the  instances  of  the  Virtual 
+Channel Reception Function and, if present, to the Virtual Channel Frame Service users. 
+
+4.4.7.3  Transfer Frames with an invalid VCID shall be discarded. 
+
+NOTE  –  An abstract model of the Virtual Channel Demultiplexing Function is illustrated 
+
+in figure 4-25. 
+
+VC Reception
+Function
+
+VC Frame
+Service User
+
+VC Frames
+
+VC Frames
+
+Virtual Channel
+Demultiplexing
+Function for a
+Master Channel
+
+Demultiplexing
+
+MC Frames
+
+Master Channel Demultiplexing Function
+
+Figure 4-25:  Abstract Model of Virtual Channel Demultiplexing Function 
+
+4.4.8  MASTER CHANNEL DEMULTIPLEXING FUNCTION 
+
+4.4.8.1  The Master Channel Demultiplexing Function shall be used to demultiplex Transfer 
+Frames from different Master Channels on a Physical Channel. 
+
+NOTE  –  There  is  an  instance  of  the  Master  Channel  Demultiplexing  Function  for  each 
+
+Physical Channel that has multiple Master Channels. 
+
+4.4.8.2  The  Master  Channel  Demultiplexing  Function  shall  examine  the  MCID  in  the 
+incoming stream of Transfer Frames and route them to the instances of the Virtual Channel 
+Demultiplexing Function and, if present, to the Master Channel Frame Service users. 
+
+NOTE  –  An abstract model of the Master Channel Demultiplexing Function is illustrated 
+
+in figure 4-26. 
+
+ 
+
+VC Demux.
+Function
+
+MC Frame
+Service User
+
+MC Frames
+
+MC Frames
+
+Master Channel
+Demultiplexing
+Function for a
+Physical
+Channel
+
+Demultiplexing
+
+All Frames
+
+All Frames Reception Function
+
+Figure 4-26:  Abstract Model of Master Channel Demultiplexing Function 
+
+4.4.9  ALL FRAMES RECEPTION FUNCTION 
+
+4.4.9.1  General 
+
+4.4.9.1.1  The All Frames Reception Function shall be used to reconstitute Transfer Frames 
+from  the  data  stream  provided  by  the  Channel  Coding  Sublayer  and  to  perform  checks  to 
+determine whether the reconstituted Transfer Frames are valid or not. 
+
+NOTE  –  There  is  an  instance  of  the  All  Frame  Reception  Function  for  each  Physical 
+
+Channel. 
+
+4.4.9.1.2  The All Frames Reception Function shall perform two procedures: 
+
+a)  Frame Delimiting and Fill Removal Procedure; and 
+
+b)  Frame Validation Check Procedure, in this order. 
+
+4.4.9.1.3  The  Frame  Delimiting  and  Fill  Removal  Procedure  shall  be  used  to  reconstitute 
+Transfer  Frames  from  the  data  stream  provided  by  the  Channel  Coding  Sublayer  and  to 
+remove any Fill Data transferred from the Channel Coding Sublayer. 
+
+4.4.9.1.4  The Frame Validation Check Procedure shall be used to perform standard Frame 
+Validation  Checks  on  all  Transfer  Frames  reconstituted  by  the  Frame  Delimiting  and  Fill 
+Removal Procedure. 
+
+NOTE  –  An abstract model of the All Frames Reception Function is illustrated in figure 4-27. 
+
+ 
+
+All Frames
+Reception
+Function for
+a Physical
+Channel
+
+MC Demux.
+Function
+
+All Frames
+
+Frame Delimiting/Fill Removal and
+Frame Validation Checks
+
+All Frames
+
+Coding Sublayer
+
+Figure 4-27:  Abstract Model of All Frames Reception Function 
+
+4.4.9.2  Frame Delimiting and Fill Removal Procedure 
+
+4.4.9.2.1  The Channel Coding and Synchronization Recommended Standard (reference [3]) 
+shall  be  used  as  the  specification  for the Channel Coding  Sublayer  immediately  below this 
+protocol. 
+
+4.4.9.2.2  At  the  sending  end,  the  TC  Space  Data  Link  Protocol  shall  pass  one  or  more 
+Transfer Frames to the Channel Coding Sublayer. 
+
+NOTE  –  The Channel Coding Sublayer encodes the Transfer Frames to protect them from 
+errors that may be introduced as they are transmitted through the space link.  Fill 
+Data may have to be inserted by the Channel Coding Sublayer to ensure correct 
+transmission of all valid data. 
+
+4.4.9.2.3  The  receiving  end  of  this  protocol  shall  receive  as  an  input  from  the  Channel 
+Coding  Sublayer  a  series  of  data  octets,  corresponding  to  the  decoded  Transfer  Frame(s), 
+which have been declared ‘clean’ by the Channel Coding Sublayer insofar as they contain no 
+detected errors. 
+
+NOTE  –  The  Channel  Coding  Sublayer  provides  a  ‘Data  Start’  signal  to  this  protocol, 
+indicating  that  data  are  being  transferred.    The  Data  Start  signal  is  set  to  ‘true’ 
+while the Channel Coding Sublayer is in the process of actively transferring data 
+octets.  Since the first octet transferred after Data Start goes ‘true’ corresponds to 
+the first octet of the first Transfer Frame, this Procedure may delimit this Transfer 
+Frame—and  each  of  any  successive  Transfer  Frames—by  reading  the  Frame 
+Length field in the first Transfer Frame Header, and then successively reading the 
+Frame  Length  field  in  each  subsequent  Header.    The  Data  Start  signal  is  set  to 
+‘false’  (indicating  ‘Data  Stop’)  when  the  Channel  Coding  Sublayer  stops 
+transferring  octets  because  of  a  decoder  failure  or  channel  deactivation.  
+Decoding  failure  may  be  caused  by  the  normal  end  of  the  transmitted  Transfer 
+Frame(s), or by a genuine channel-induced error. 
+
+ 
+
+4.4.9.2.4 
+If one or more valid Frame Length fields are detected by this Procedure and the 
+number of octets received when the Data Stop condition occurs equals the number of octets 
+specified by the Frame Length(s), then each Transfer Frame shall be passed on to the Frame 
+Validation Check Procedure (see 4.4.9.3) as it is delimited. 
+
+If  a  valid  Frame  Length  field  is  detected  by  this  Procedure  but  the  number  of 
+4.4.9.2.5 
+octets  received  when  the  Data  Stop  condition  occurs  is  fewer  than  the  number  of  octets 
+specified by that Frame Length, then all those octets shall be discarded. 
+
+NOTE  –  Receipt  of  fewer  octets  than  specified  in  Frame  Length  field  indicates  that  a 
+failure  has  occurred,  possibly  resulting  from  a  channel  error  detected  during 
+reception of the data stream within the Channel Coding Sublayer. 
+
+If  a  valid  Frame  Length  field  is  detected  by  this  procedure  but  the  number  of 
+4.4.9.2.6 
+octets  received  when  the  Data  Stop  condition  occurs  is  greater  than  the  number  of  octets 
+specified by that Frame Length, the procedure shall 
+
+a)  assume  that  the  octets  following  the  final  expected  octet  of  the  frame  are  Fill  Data 
+appended  by  the  sending  end  of  the  Channel  Coding  Sublayer  to  complete  the  last 
+Codeblock (see reference [3]); 
+
+b)  discard that Fill Data; 
+
+c)  pass the Frame to the Frame Validation Check Procedure (see 4.4.9.3). 
+
+NOTES 
+
+1 
+
+2 
+
+Because  the  receiving  end  of  the  Channel  Coding  Sublayer  cannot  distinguish 
+between valid data and Fill Data, the Fill Data must be stripped by this protocol. 
+
+The characteristics of the present Codeblock structure are such that no more than six 
+octets of Fill Data can occur.  If fewer than five trailing octets of Fill Data are present, 
+then  they  cannot  possibly  form  a  Transfer  Frame  Header,  and  they  will  be 
+immediately  discarded  by  this  Procedure.    If  five  or  six  trailing  octets  of  Fill  Data 
+exist, this procedure might attempt to interpret the Fill Data as a new Transfer Frame 
+Header; however, the subsequent Frame Validation Checks (see 4.4.9.3) will prevent 
+this  from  happening  because  the  Fill  pattern  of  ‘01010101’  appearing  in  each  octet 
+will  violate  at  least  one  of  the  validation  tests;  in  particular,  this  pattern  appearing 
+where  the  Frame  Length  field  might  be  expected  will  indicate  a  frame  length  that 
+exceeds the number of octets received from the Channel Coding Sublayer, thus failing 
+a test and causing the trailing five or six octets to be discarded. 
+
+3 
+
+After each Transfer Frame is reconstituted by the Frame Delimiting and Fill Removal 
+Procedure, it will next be subjected to a set of standard tests called Frame Validation 
+Checks. 
+
+
+4.4.9.3  Frame Validation Check Procedure 
+
+4.4.9.3.1  The  Frame Validation Checks shall be  applied to all  incoming  Transfer Frames, 
+regardless of whether they are Type-A or Type-B. 
+
+4.4.9.3.2  Failure  to  pass  any  test  within  the  Frame  Validation  Checks  shall  cause  the 
+Transfer Frame to be rejected (discarded). 
+
+4.4.9.3.3  The Frame Validation Checks shall consist of the following tests: 
+
+a)  The Transfer Frame must have an expected Transfer Frame Version Number. 
+
+b)  The Transfer Frame must have one of the expected MCIDs (Transfer Frame Version 
+
+Number and Spacecraft IDs). 
+
+c)  The Transfer Frame Header must not contain any values which are not consistent with 
+
+the implemented features for that spacecraft. 
+
+d)  The value of the Frame Length must be consistent with the number of octets that are 
+
+present. 
+
+e)  If  the  Frame  Error  Control  Field  is  present,  the  recomputed  CRC  value  for  the 
+
+Transfer Frame must match the content of the Frame Error Control Field. 
+
+ 
+
+5  MANAGED PARAMETERS WITHOUT SDLS OPTION 
+
+NOTES 
+
+1 
+
+2 
+
+3 
+
+In  order  to  conserve  bandwidth  on  the  space  link,  some  parameters  associated  with 
+the  TC  Space  Data  Link  Protocol  are  handled  by  management  rather  than  by  inline 
+communications protocol.  The managed parameters are those which tend to be static 
+for 
+time,  and  whose  change  generally  signifies  a  major 
+reconfiguration of the protocol entities associated with a particular mission.  Through 
+the  use  of  a  management  system,  management  conveys  the  required  information  to 
+the protocol entities. 
+
+long  periods  of 
+
+In this section, the managed parameters used by the TC Space Data Link Protocol are 
+listed for each of the Channels and for Packet transfer.  These parameters are defined 
+in an abstract sense and are not intended to imply any particular implementation of a 
+management system. 
+
+This  section  specifies  managed  parameters  for  the  TC  Space  Data  Link  Protocol 
+without support for the SDLS protocol.  Additional managed parameters for the TC 
+Space Data Link Protocol with the SDLS option are specified in 6.6. 
+
+5.1  MANAGED PARAMETERS FOR A PHYSICAL CHANNEL 
+
+The managed parameters associated with a Physical Channel shall conform to the definitions 
+in table 5-1. 
+
+Table 5-1:  Managed Parameters for a Physical Channel 
+
+Managed Parameter 
+
+Allowed Values 
+
+Physical Channel Name 
+Maximum Transfer Frame Length (octets) 
+Transfer Frame Version Number 
+Valid Spacecraft IDs 
+MC Multiplexing Scheme 
+Presence of Frame Error Control 
+Maximum Number of Transfer Frames Given to the 
+Coding Sublayer as a Single Data Unit 
+Maximum Length of Data Unit Given to the Coding 
+Sublayer 
+Maximum Bit Rate Accepted by the Coding Sublayer 
+Maximum value for the Repetitions parameter to the 
+Coding Sublayer 
+
+Character String 
+Integer 
+1 
+Set of Integers 
+Mission Specific 
+Present, Absent 
+Integer 
+
+Integer 
+
+Real number/second 
+Integer 
+
+
+5.2  MANAGED PARAMETERS FOR A MASTER CHANNEL 
+
+The managed parameters associated with a Master Channel shall conform to the definitions 
+in table 5-2. 
+
+Table 5-2:  Managed Parameters for a Master Channel 
+
+Managed Parameter 
+
+Allowed Values 
+
+Maximum Transfer Frame Length (octets) 
+
+Integer (up to 1024) 
+
+Spacecraft ID 
+
+Valid VCIDs 
+
+Integer 
+
+Set of Integers (from 0 to 63) 
+
+VC Multiplexing Scheme 
+
+Mission Specific 
+
+NOTE  –  The  value  of  the  Transfer  Frame  Version  Number  is  the  same  for  all 
+
+Transfer Frames on a Physical Channel. 
+
+5.3  MANAGED PARAMETERS FOR A VIRTUAL CHANNEL 
+
+The managed parameters associated with a Virtual Channel shall conform to the definitions 
+in table 5-3. 
+
+NOTE  –  The managed parameters associated with the COP are listed in reference [4]. 
+
+
+Table 5-3:  Managed Parameters for a Virtual Channel 
+
+Managed Parameter 
+
+Allowed Values 
+
+Maximum Transfer Frame Length (octets) 
+
+Integer (up to 1024) 
+
+Spacecraft ID 
+
+VCID 
+
+COP in Effect 
+
+CLCW Version Number 
+
+CLCW Reporting Rate 
+
+Presence of Segment Header 
+
+Integer 
+
+0, 1, …, 63 
+
+1 
+
+1 
+
+Real number/Second 
+
+Present, Absent 
+
+Data Field Content (if Segment Header is absent) 
+
+Packets, VCA_SDU 
+
+Valid MAP IDs (if Segment Header is present) 
+
+MAP Multiplexing Scheme (if Segment Header is 
+present) 
+
+Set of integers (from 0 to 
+63) 
+
+Mission Specific 
+
+Blocking  (if Segment Header is absent and Data Field 
+Content is Packets) 
+
+Permitted, Prohibited 
+
+Value for the Repetitions parameter to the Coding 
+Sublayer when transferring frames carrying service data 
+on the Type-A Service 
+
+Value for the Repetitions parameter to the Coding 
+Sublayer when transferring frames carrying COP control 
+commands 
+
+Integer 
+
+Integer 
+
+NOTE  –  The  value  of  the  Transfer  Frame  Version  Number  is  the  same  for  all 
+
+Transfer Frames on a Physical Channel. 
+
+
+5.4  MANAGED PARAMETERS FOR A MAP CHANNEL 
+
+The managed parameters associated with a MAP Channel shall conform to the definitions in 
+table 5-4. 
+
+Table 5-4:  Managed Parameters for a MAP Channel 
+
+Managed Parameter 
+
+Allowed Values 
+
+Maximum Frame Data Unit Length (octets) 
+Spacecraft ID 
+VCID 
+MAP ID 
+Data Field Content 
+Blocking  (if Data Field Content is Packets) 
+Segmentation 
+Maximum MAP_SDU Length (octet) (if the MAP permits 
+Segmentation) 
+NOTE  –  The  value  of  the  Transfer  Frame  Version  Number  is  the  same  for  all  Transfer 
+
+Integer (up to 1019) 
+Integer 
+0, 1, …, 63 
+0, 1, …, 63 
+Packets, MAP_SDU 
+Permitted, Prohibited 
+Permitted, Prohibited 
+Integer 
+
+Frames on a Physical Channel. 
+
+5.5  MANAGED PARAMETERS FOR PACKET TRANSFER 
+
+The managed parameters associated with a Virtual or MAP Channel used for the VC or MAP 
+Packet Service shall conform to the definitions in table 5-5. 
+
+Table 5-5:  Managed Parameters for Packet Transfer 
+
+Managed Parameter 
+
+Valid PVNs 
+
+Maximum Packet Length (octets) 
+Whether incomplete Packets are required to be delivered 
+to the user at the receiving end 
+
+Allowed Values 
+
+Set of Integers (see 
+reference  [5]) 
+Integer 
+Required, Not required 
+
+ 
+
+6  PROTOCOL SPECIFICATION WITH SDLS OPTION 
+
+6.1  OVERVIEW 
+
+This section specifies the protocol data unit and the procedures of the TC Space Data Link 
+Protocol  with  support  for  the  SDLS  protocol  (reference  [7]).  If  the  TC  Space  Data  Link 
+protocol entity supports SDLS, it has managed parameters for each Virtual Channel or each 
+MAP  to  indicate  whether  SDLS  is  in  use  for  that  channel  (see  6.6).  Section  4  contains  the 
+specification of the protocol without the SDLS option. 
+
+6.2  USE OF SDLS PROTOCOL 
+
+If SDLS as defined in reference [7] is required over the TC space data link, then the SDLS 
+protocol shall be used. 
+
+NOTE  –  The  SDLS  protocol  provides  a  security  header  and  trailer  along  with  associated 
+procedures that may be used with the TC Space Data Link Protocol to provide data 
+authentication and data confidentiality at the Data Link Layer. 
+
+6.3  TC TRANSFER FRAME WITH SDLS 
+
+6.3.1  OVERVIEW 
+
+Additional  fields  are  defined  for  a  TC  Transfer  Frame  to  support  the  use  of  the  SDLS 
+security features in the frame. This subsection specifies the TC Transfer Frames on a Virtual 
+Channel or MAP that is using SDLS. 
+
+The  use  of  SDLS  can  vary  between  Virtual  Channels  and  between  MAPs  on  a  Virtual 
+Channel, and the use is indicated by managed parameters (see 6.6). If a Virtual Channel or 
+MAP is not using SDLS, then the frames are as specified in 4.1. 
+
+There  are  two  fields  for  the  SDLS  protocol:  a  Security  Header  and a Security  Trailer. In a 
+Type-D  frame,  these  fields  are  placed  before  and  after  the  Transfer  Frame  Data  Field,  and 
+they  reduce  the  maximum  length  of  the  Transfer  Frame  Data  Field  compared  to  a  frame 
+without SDLS. 
+
+Type-C frames do not have the Security Header and Security Trailer. The Control Command 
+Flag in the Transfer Frame Primary Header distinguishes between a Type-D frame carrying 
+Data and a Type-C frame carrying Control Commands (see 4.1.2.3.2). 
+
+For a frame on a Virtual Channel where Segment Headers are present, the Security Header is 
+placed between the Segment Header and the User Data field of the Segment. Figures 6-1 and 
+6-2 show the fields for frames with and without Segment Headers. 
+
+If the Segment Header is present then it is present in all frames for the Virtual Channel. 
+
+
+TC TRANSFER FRAME
+
+TRANSFER FRAME DATA FIELD
+
+USER DATA
+
+FRAME
+ERROR
+CONTROL
+FIELD
+(Optional)
+
+Varies
+
+2 octets
+
+TRANSFER FRAME DATA FIELD
+
+SECURITY
+HEADER
+
+USER DATA
+
+SECURITY
+TRAILER
+(Optional)
+
+FRAME
+ERROR
+CONTROL
+FIELD
+(Optional)
+
+TRANSFER
+FRAME
+PRIMARY
+HEADER
+
+5 octets
+
+TRANSFER
+FRAME
+PRIMARY
+HEADER
+
+R
+E
+D
+A
+E
+H
+T
+N
+E
+M
+G
+E
+S
+
+R
+E
+D
+A
+E
+H
+T
+N
+E
+M
+G
+E
+S
+
+5 octets
+
+Varies
+
+2 octets
+
+TC TRANSFER FRAME WITH SDLS
+
+Figure 6-1:  SDLS Fields in a Type-D Transfer Frame with a Segment Header 
+
+TC TRANSFER FRAME
+
+TRANSFER FRAME DATA FIELD
+
+USER DATA
+
+TRANSFER
+FRAME
+PRIMARY
+HEADER
+
+FRAME
+ERROR
+CONTROL
+FIELD
+(Optional)
+
+5 octets
+
+Varies
+
+2 octets
+
+TRANSFER FRAME DATA FIELD
+
+SECURITY
+HEADER
+
+TRANSFER
+FRAME
+PRIMARY
+HEADER
+
+USER DATA
+
+SECURITY
+TRAILER
+(Optional)
+
+FRAME
+ERROR
+CONTROL
+FIELD
+(Optional)
+
+5 octets
+
+Varies
+
+2 octets
+
+TC TRANSFER FRAME WITH SDLS
+
+Figure 6-2:  SDLS Fields in a Type-D Transfer Frame without a Segment Header 
+
+ 
+ 
+ 
+ 
+
+6.3.2  TRANSFER FRAME PRIMARY HEADER IN A FRAME WITH SDLS 
+
+The  Transfer  Frame  Primary  Header  for  a  frame  with  SDLS  shall  conform  to  the 
+specifications of 4.1.2. 
+
+NOTE  –  The Transfer Frame Primary Header is the same for a frame without SDLS and a 
+
+frame with SDLS. 
+
+6.3.3  SEGMENT HEADER IN A FRAME WITH SDLS 
+
+The Segment Header for a frame with SDLS shall conform to the specifications of 4.1.3.2.1.4 
+(requirements  for  the  presence  of  the  Segment  Header)  and  4.1.3.2.2  (requirements  for  the 
+position and contents of the Segment Header). 
+
+NOTES 
+
+1 
+
+2 
+
+The Segment Header is the same for a frame without SDLS and a frame with SDLS. 
+
+The presence of the Segment Header is a managed parameter of the Virtual Channel 
+(see 5.3). 
+
+6.3.4  SECURITY HEADER 
+
+If the Control Command Flag in the Transfer Frame Primary Header indicates that 
+6.3.4.1 
+the Transfer Frame Data Field contains control information, the Security Header shall not be 
+present in the Transfer Frame. 
+
+NOTE  –  SDLS is not used for frames carrying control information (Type-C frames). 
+
+6.3.4.2 
+If present, the Security Header shall follow, without gap, the Segment Header if a 
+Segment Header is present, or the Transfer Frame Primary Header if a Segment Header is not 
+present. 
+
+NOTES 
+
+1 
+
+2 
+
+3 
+
+The requirements for the length and contents of the Security Header are in reference [7]. 
+
+For a Transfer Frame with a Segment Header, the presence of the Security Header in 
+Type-D frames is a managed parameter of the MAP. For a Transfer Frame without a 
+Segment Header, the presence of the Security Header in Type-D frames is a managed 
+parameter of the Virtual Channel. If the Security Header is not present, then SDLS is 
+not  in  use  on  the  MAP  or  Virtual  Channel  and  the  Transfer  Frame  has  the  format 
+specified in 4.1. 
+
+The length of the Security Header is an integral number of octets and is a managed 
+parameter of the MAP or Virtual Channel. 
+
+
+6.3.5  TRANSFER FRAME DATA FIELD IN A FRAME WITH SDLS 
+
+6.3.5.1 
+
+In a Transfer Frame with SDLS, the Transfer Frame Data Field shall 
+
+a)  follow, without gap, the Security Header; 
+
+b)  contain  an  integral  number  of  octets,  which  may  vary  in  length  up  to  a  maximum 
+
+number of octets equal to 1024 minus 
+
+– 
+
+– 
+
+the lengths of the Transfer Frame Primary Header and of the Security Header; 
+
+the lengths of the Segment Header, of the Security Trailer, and of the Frame Error 
+Control Field, if any of these are present. 
+
+In  a  Transfer  Frame  with  SDLS  and  with  a  Segment  Header,  the  Transfer  Frame 
+6.3.5.2 
+Data  Field  shall  contain  the  User  Data  of  the  Segment  whose  Segment  Header  is  in  the 
+Segment Header field of the frame. 
+
+NOTES 
+
+1 
+
+2 
+
+In  this  case,  the  Frame  Data  Unit  consists  of  a  Segment.  The  Security  Header 
+separates the Segment Header from the rest of the Segment as shown in figure 6-1. 
+
+Segment User Data is defined in 4.1.3.2.1.2. 
+
+6.3.5.3 
+Data Field shall contain a Frame Data Unit consisting of User Data as defined in 4.1.3.2.1.3. 
+
+In a Transfer Frame with SDLS and without a Segment Header, the Transfer Frame 
+
+NOTE  –  This case is shown in figure 6-2. 
+
+6.3.6  SECURITY TRAILER 
+
+6.3.6.1 
+If the Control Command Flag in the Transfer Frame Primary Header indicates that 
+the Transfer Frame Data Field contains control information, the Security Trailer shall not be 
+present in the Transfer Frame. 
+
+NOTE  –  SDLS is not used for frames carrying control information (Type-C frames). 
+
+If present, the Security Trailer shall follow, without gap, the Transfer Frame Data 
+
+6.3.6.2 
+Field. 
+
+NOTES 
+
+1 
+
+2 
+
+The requirements for the length and contents of the Security Trailer are in reference [7]. 
+
+The Security Trailer is optional in a TC Transfer Frame with SDLS. For a Transfer 
+Frame with a Segment Header, the presence of the Security Trailer in Type-D frames 
+is  a  managed  parameter  of  the  MAP.  For  a  Transfer  Frame  without  a  Segment 
+
+
+Header,  the  presence  of  the  Security  Header  in  Type-D  frames  is  a  managed 
+parameter of the Virtual Channel. 
+
+3 
+
+The  length  of  the  Security  Trailer  is  an  integral  number  of  octets and  is a managed 
+parameter of the MAP or Virtual Channel. 
+
+6.3.7  FRAME ERROR CONTROL FIELD IN A FRAME WITH SDLS 
+
+In a Transfer Frame with SDLS, the Frame Error Control Field, if present, shall occupy the 
+two  octets  following,  without  gap,  the  Security  Trailer  if  the  Security  Trailer  is  present,  or 
+the Transfer Frame Data Field if a Security Trailer is not present. 
+
+The Frame Error Control Field of a frame with SDLS shall conform to the specifications of 
+4.1.4.1.1, 4.1.4.1.3, 4.1.4.2, and 4.1.4.3. 
+
+6.4  SENDING-END PROTOCOL PROCEDURES WITH SDLS 
+
+6.4.1  OVERVIEW 
+
+When a secure TC link is required, the TC Space Data Link Protocol supports the use of the 
+SDLS  protocol.  In  this  case,  the  TC  Space  Data  Link  Protocol  contains  differences  in  the 
+sending-end procedures compared to the procedures described in 4.3. This subsection defines 
+those differences. 
+
+6.4.2  ORDER OF PROCESSING BETWEEN TC, COP-1, AND SDLS PROTOCOLS 
+
+6.4.2.1  Virtual Channel Generation Function 
+
+In  the  Virtual  Channel  Generation  Function  at  the  sending  end  the  order  of  processing 
+between the functions of the TC, COP-1, and SDLS protocols shall occur as follows: 
+
+a)  the Frame Initialization Procedure including SDLS; 
+
+b)  the SDLS ApplySecurity Function; 
+
+c)  the  Frame  Operation  Procedure  (FOP-1),  which  is  a  sub-procedure  of  the 
+Communications  Operation  Procedure  (COP-1)  and  an  integral  part  of  the  Virtual 
+Channel Generation Function (final step of processing by the function); 
+
+d)  the Frame Finalization Procedure including SDLS. 
+
+
+6.4.2.2  Discussion 
+
+For completeness, figure 6-3 shows the order of processing between TC, COP-1, and SDLS 
+functions  at  both  the  sending  and  receiving  ends  in  the  context  of  the  lower  layers  of  the 
+CCSDS protocol stack.  In addition, in table 6-1, a reference is provided to the section within 
+each applicable CCSDS document per numbered step in the figure. The detailed processing 
+of the Virtual Channel Generation Function under the SDLS option differs from that of 4.3.5. 
+
+6.4.2.3  Frame Initialization Procedure Including SDLS 
+
+6.4.2.3.1  The Frame Initialization Procedure (4.3.5.2) shall be applied. 
+
+6.4.2.3.2  A  Security  Header  field  and,  if  in  use  (see  6.6),  a  Security  Trailer  field,  whose 
+values at this point are not yet known, shall be added to the partially complete TC transfer 
+frame. 
+
+6.4.2.4  SDLS ApplySecurity Function 
+
+6.4.2.4.1  The SDLS ApplySecurity Function (reference [7]) shall be called to process a TC 
+Transfer Frame to apply security features to the frame. 
+
+6.4.2.4.2  The  input  parameters  of  the  function  shall  include  the  partially  formatted  frame 
+and the identifiers of the Virtual Channel and the MAP channel. 
+
+NOTE  –  When the function is called, SDLS applies encryption and/or authentication to the 
+data in the frame. The way the Transfer Frame data is passed between the Virtual 
+is 
+Channel  Generation  Function  and 
+implementation dependent. Reference [7] defines which transfer frame data fields 
+apply for this function. 
+
+the  SDLS  ApplySecurity  Function 
+
+6.4.2.5  FOP-1 Procedure 
+
+If COP-1 is used, the FOP-1 Procedure specified in reference [4] shall be applied. 
+
+6.4.2.6  Frame Finalization Procedure Including SDLS 
+
+6.4.2.6.1  The Frame Finalization Procedure (4.3.5.4) shall be applied. 
+
+6.4.2.6.2  The values provided by the SDLS ApplySecurity Function shall be inserted into the 
+Security Header and, if in use (see 6.6), Security Trailer within the Transfer Frame. 
+
+
+Interfaces and Order of Processing between RF&M, C&S, and Data Link Protocol Sublayer (SDLP, COP-1, and SDLS) Protocols
+
+r
+e
+y
+a
+l
+b
+u
+S
+
+l
+
+o
+c
+o
+t
+o
+r
+P
+k
+n
+L
+a
+t
+a
+D
+
+i
+
+P
+L
+D
+S
+
+S
+L
+D
+S
+
+1
+-
+P
+O
+C
+
+S
+&
+C
+
+M
+&
+F
+R
+
+Sending end
+
+4
+
+5
+
+6
+
+VC
+Generation
+
+VC
+Mux
+
+MC
+Mux
+
+All
+Frames
+Gen
+
+1
+
+2
+
+Apply
+Security
+
+Return
+link
+OCF
+
+3
+
+FOP-1
+
+Return
+link
+OCF
+
+Receiving end
+
+11
+
+12
+
+13
+
+14
+
+All
+F
+Frames
+Rec
+
+MC
+De-
+mux
+
+VC
+De-
+mux
+
+VC
+Reception
+
+17
+
+Process
+Security
+
+18
+
+FSR
+
+15
+
+FARM-1
+
+16
+
+CLCW
+
+NOTE: Processing order of encoding & randomization depends on the coding scheme.
+
+7
+
+Encode &
+randomize
+
+10
+
+De-randomize
+& decode
+
+8
+
+Mod
+
+9
+
+De-
+mod
+
+Time
+
+Legend:
+
+Primary functional flow across Data Link and Physical Layer protocols
+(Optional) Function calls within the Data Link Protocol sublayer
+(Optional) Operational Control Field return link data flow from receiving end to sending end
+
+Figure 6-3:  Order of Processing between TC, COP-1, and SDLS Functions  
+
+Table 6-1:  CCSDS Order of Processing for Telecommand User Data Frames Using 
+
+SDLS (Sequential with Figure 6 3) 
+
+Numbered Step in Figure 6-3 
+
+On the Ground (sending end): 
+
+1.  Virtual Channel Generation Function with SDLS 
+
+Frame Initialization Procedure including SDLS (Virtual Channel 
+Generation function) 
+
+2.  SDLS ApplySecurity Function  
+
+Encrypt only the Transfer Frame Data Field (if Encryption or 
+Authenticated Encryption selected) 
+
+Populate the Security Header and the optional Security Trailer with the 
+computed MAC (if Authentication or Authenticated Encryption 
+selected) 
+
+3.  FOP-1 (Frame Operation Procedure)   
+
+Frame Finalization Procedure including SDLS (Virtual Channel 
+Generation function) 
+
+4.  Virtual Channel Multiplexing Function 
+
+5.  Master Channel Multiplexing Function 
+
+6.  All Frames Generation Function 
+
+Compute and add CRC to FECF 
+
+CCSDS 
+Document 
+
+Section 
+Referenced 
+
+This document  6.4.2.1 
+
+This document  6.4.2.3 
+
+This document  6.4.2.4 
+
+355.0-B-1 
+
+4.2.3.3 
+
+355.0-B-1 
+
+4.2.3.4 
+
+This document  6.4.2.5 
+
+This document  6.4.2.6 
+
+This document  4.3.6 
+
+This document  4.3.7 
+
+This document  4.3.8 
+
+This document  4.3.8.2 
+
+ 
+ 
+ 
+ 
+
+Numbered Step in Figure 6-3 
+
+CCSDS 
+Document 
+
+7.  Encode and Randomize the Transfer Frame (When BCH encoding, 
+
+231.0-B-3 
+
+Randomization is done first; the opposite for LDPC) 
+
+Section 
+Referenced 
+Section 3 (BCH) 
+or 4 (LDPC) and 
+section 6 
+
+8.  Modulate onto Subcarrier/Carrier and transmit 
+
+401.0-B-31 
+
+2.2 
+
+On the Spacecraft (receiving end): 
+
+9.  Receive and Demodulate 
+
+401.0-B-31 
+
+2.2 
+
+10. Derandomize and Decode the Transfer Frame (Note the order is 
+
+231.0-B-3 
+
+6.3, 3.5 or 4.5 
+
+dependent upon the coding scheme) 
+
+11.  All Frames Reception Function with SDLS 
+
+Frame Delimiting and Fill Removal Procedure (invalid code blocks 
+reported by C&S sublayer    + fill removal ) 
+
+This document  6.5.10 
+This document  4.4.9.2 
+
+Frame Validation Check Procedure (includes optional CRC) 
+
+This document  4.4.9.3 
+
+12.  Master Channel Demultiplexing Function 
+
+13.  Virtual Channel Demultiplexing Function 
+
+14.  Virtual Channel Reception Function  
+
+This document  4.4.8 
+
+This document  4.4.7 
+
+This document  4.4.5 
+
+15.  FARM-1 (Frame Acceptance and Reporting Mechanism, subprocedure 
+
+This document  4.4.5.3 
+
+of the COP-1) 
+
+16.  CLCW appears within either TM, AOS, or USLP OCF Field  
+
+This document  4.4.5.3 
+
+17.  SDLS ProcessSecurity Function  
+
+Validate the MAC, if invalid, report security error in Frame Status 
+Report placed into the OCF in telemetry frame (if Authentication or 
+Authenticated Encryption selected) 
+
+This document  6.5.2.1 b) 
+
+355.0-B-1 
+
+4.2.4.4 
+
+Decrypt the Transfer Frame Data Field (if Encryption or Authenticated 
+Encryption selected) 
+
+355.0-B-1 
+
+4.2.4.5 
+
+18.  SDLS FSR (Frame Status Report) appears within either TM, AOS, or 
+
+USLP OCF Field 
+
+Thereafter, Frame Data Units provided to on-board processing (i.e., 
+perform VC Packet Extraction function or MAP Demultiplexing function or 
+VCA Service User)  
+
+132.0-B-3 
+732.0-B-3 
+732.1-B-2 
+
+N/A 
+
+4.1.5.5 
+4.1.5.5 
+4.1.5.2.2 
+
+N/A 
+
+6.4.3  MAP PACKET PROCESSING FUNCTION WITH SDLS 
+
+The MAP Packet Processing Function of a TC protocol entity that supports SDLS shall 
+
+a)  apply the Transfer Frame Data Field specification in 6.3.5 to determine the maximum 
+
+allowable length of the User Data fields of the Segments that it generates; 
+
+b)  conform to the specifications of 4.3.1. 
+
+6.4.4  MAP GENERATION FUNCTION WITH SDLS 
+
+The MAP Generation Function of a TC protocol entity that supports SDLS shall 
+
+
+a)  apply the Transfer Frame Data Field specification in 6.3.5 to determine the maximum 
+
+allowable length of the User Data fields of the Segments that it generates; 
+
+b)  conform to the specifications of 4.3.2. 
+
+6.4.5  MAP MULTIPLEXING FUNCTION WITH SDLS 
+
+The MAP Multiplexing Function of a TC protocol entity that supports SDLS shall conform 
+to the specifications of 4.3.3. 
+
+6.4.6  VC PACKET PROCESSING FUNCTION WITH SDLS 
+
+The VC Packet Processing Function of a TC protocol entity that supports SDLS shall 
+
+a)  apply the Transfer Frame Data Field specification in 6.3.5 to determine the maximum 
+
+allowable length of the Frame Data Units that it generates; 
+
+b)  conform to the specifications of 4.3.4. 
+
+6.4.7  VIRTUAL CHANNEL GENERATION FUNCTION WITH SDLS 
+
+6.4.7.1  Discussion 
+
+There can be security configurations where, for example, the physical location of the security 
+processing is not the same for all Virtual Channels, at the sending end or at the receiving end. 
+This  case  is  supported  by  the  order  of  processing  within  the  Virtual  Channel  Generation 
+Function.  However,  the  use  of  multiple  Virtual  Channels  sharing  an  SDLS  Security 
+Association is not supported. 
+
+6.4.7.2  Field Lengths and Positions 
+
+When assembling a Type-D Transfer Frame on a Virtual Channel or MAP that uses SDLS, 
+the Virtual Channel Generation Function shall 
+
+a)  apply the Transfer Frame specification in 6.3 to determine the lengths and positions 
+
+of the fields in the Transfer Frame; 
+
+b)  conform to the specifications of 4.3.5. 
+
+NOTES 
+
+1 
+
+The  lengths  of  the  Security  Header  and  Security  Trailer  are  managed  parameters of 
+the Virtual Channel or MAP (see 6.6). 
+
+
+2 
+
+3 
+
+The  Virtual  Channel  Generation  Function  contains  the  interface  to  the  SDLS 
+protocol.    In  this  case,  it  calls  the  SDLS  ApplySecurity  function  for  the  Type-D 
+Transfer Frames that it assembles for Virtual Channels or MAPs that use SDLS. 
+
+The order of processing for the Virtual Channel Generation Function of a TC protocol 
+entity that supports SDLS is specified in 6.4.2. 
+
+6.4.8  VIRTUAL CHANNEL MULTIPLEXING FUNCTION WITH SDLS 
+
+The Virtual Channel Multiplexing Function of a TC protocol entity that supports SDLS shall 
+conform to the specifications of 4.3.6. 
+
+6.4.9  MASTER CHANNEL MULTIPLEXING FUNCTION WITH SDLS 
+
+The Master Channel Multiplexing Function of a TC protocol entity that supports SDLS shall 
+conform to the specifications of 4.3.7. 
+
+6.4.10  ALL FRAMES GENERATION FUNCTION WITH SDLS 
+
+The  All  Frames  Generation  Function  of  a  TC  protocol  entity  that  supports  SDLS  shall 
+conform to the specifications of 4.3.8. 
+
+6.5  RECEIVING-END PROTOCOL PROCEDURES WITH SDLS 
+
+6.5.1  OVERVIEW 
+
+When a secure TC link is required, the TC Space Data Link Protocol supports the use of the 
+SDLS  protocol.  In  this  case,  the  TC  Space  Data  Link  Protocol  contains  differences  in  the 
+receiving-end  procedures  compared  to  the  procedures  described  in  4.4.  This  subsection 
+defines those differences. 
+
+6.5.2  ORDER OF PROCESSING BETWEEN TC, COP-1, AND SDLS PROTOCOLS 
+
+6.5.2.1  Virtual Channel Reception Function 
+
+The order of processing between the functions of the TC, COP-1, and SDLS protocols shall 
+occur as follows in the Virtual Channel Reception Function at the receiving end: 
+
+a)  the  Frame  Acceptance  and  Reporting  Mechanism  (FARM-1),  which  is  a  sub-
+procedure of the Communications Operation Procedure (COP-1) and an integral part 
+of the Virtual Channel Reception Function; 
+
+C
+o
+r
+.
+
+1
+
+b)  the SDLS ProcessSecurity Function; 
+
+c)  the Virtual Channel Reception Function (final step of processing by the function). 
+
+ 
+ 
+ 
+
+1
+
+.
+r
+o
+C
+
+6.5.2.2  Discussion 
+
+Figure  6-3  above  shows  the  order  of  processing  between  TC,  COP-1,  and  SDLS  protocol 
+functions at  both  the sending and  receiving  ends.  The  receiving side functional flow of the 
+diagram proceeds as follows: 
+
+All Frames Reception Function 
+
+–  The  All  Frames  Reception  Function  is  the  first  procedure  that  receives  valid  octets 
+from  the  Channel  Coding  Sublayer.  A  decoding  failure  will  cause  the  Frame 
+Delimiting and Fill Removal Procedure within the All Frames Reception Function to 
+discard all the transfer frames contained within a CLTU. 
+
+–  The  Frame  Validation  Check  Procedure  within  the  All  Frames  Reception  Function 
+includes the check of the FECF, if it is present. A transfer frame that fails any of these 
+checks is discarded. 
+
+Virtual Channel Reception Function 
+
+–  FARM-1 function: The FARM-1 specified in reference [4] uses the Frame Sequence 
+Number in the Primary Header of an incoming Type-A Transfer Frame to perform the 
+Frame  Acceptance  Checks.  If  the  checks  indicate  that  the  frame  is out  of sequence, 
+FARM-1 discards the frame. 
+
+–  SDLS ProcessSecurity function: Depending on the security features in use, the SDLS 
+ProcessSecurity function specified in reference [7] can verify the authenticity of the 
+frame, and it can decrypt the contents of the Transfer Frame Data Field. Any errors 
+detected  by the SDLS ProcessSecurity  Function are  reported to  the  Virtual Channel 
+Reception Function. The way that Transfer Frame data is passed between the Virtual 
+is 
+Channel  Reception  Function  and 
+implementation dependent. 
+
+the  SDLS  ProcessSecurity  Function 
+
+If  the  SDLS ProcessSecurity  Function does not  report  an  error, the Virtual  Channel 
+Reception Function extracts the Frame Data Unit from the frame and delivers it to its 
+user (or Function). If the SDLS ProcessSecurity Function reports an error, the Virtual 
+Channel Reception Function discards the frame; in this case, the optional Verification 
+Status  Code  parameter  can  be  used  to  inform  the  user  of  the  relevant  service.  (See 
+3.3.2.10, 3.4.2.9, 3.5.2.8, and 3.6.2.7.) 
+
+NOTE  –  If  authentication  is  used,  and  whenever  retransmission  of  Type-AD  Transfer 
+Frames  is  required  in  a  series  of  frames  that  originally  included  both  Type-AD 
+and Type-BD frames, then the SDLS ProcessSecurity Anti-Replay function will 
+reject  any  retransmitted  frames,  based  upon  their  lower  anti-replay  sequence 
+count in comparison to the Type-BD anti-replay sequence count (falsely labelling 
+them  as  SDLS  security  failures).  Therefore,  mixing  Type-AD  and  Type-BD 
+frames on the same VC secured by SDLS is generally not advised unless Type-
+BD frames are sent only after all Type-AD frames have been accepted on board. 
+
+ 
+ 
+ 
+
+6.5.3  MAP PACKET EXTRACTION FUNCTION WITH SDLS 
+
+The MAP Packet Extraction Function of a TC protocol entity that supports SDLS shall 
+
+a)  apply the Transfer Frame Data Field specification in 6.3.5 to determine the maximum 
+
+expected length of the User Data fields of the Segments that it receives; 
+
+b)  conform to the specifications of 4.4.1. 
+
+6.5.4  MAP RECEPTION FUNCTION WITH SDLS 
+
+The MAP Reception Function of a TC protocol entity that supports SDLS shall 
+
+a)  apply the Transfer Frame Data Field specification in 6.3.5 to determine the maximum 
+
+expected length of the User Data fields of the Segments that it receives; 
+
+b)  conform to the specifications of 4.4.2. 
+
+6.5.5  MAP DEMULTIPLEXING FUNCTION WITH SDLS 
+
+The  MAP  Demultiplexing  Function  of  a  TC  protocol  entity  that  supports  SDLS  shall 
+conform to the specifications of 4.4.3. 
+
+6.5.6  VC PACKET EXTRACTION FUNCTION WITH SDLS 
+
+The VC Packet Extraction Function of a TC protocol entity that supports SDLS shall 
+
+a)  apply the Transfer Frame Data Field specification in 6.3.5 to determine the maximum 
+
+expected length of the Frame Data Units that it receives; 
+
+b)  conform to the specifications of 4.4.4. 
+
+6.5.7  VIRTUAL CHANNEL RECEPTION FUNCTION WITH SDLS 
+
+When handling a Type-D Transfer Frame on a Virtual Channel or MAP that uses SDLS, the 
+Virtual Channel Reception Function shall 
+
+a)  apply the Transfer Frame specification in 6.3 to determine the lengths and positions 
+
+of the fields in the Transfer Frame; 
+
+b)  conform to the specifications of 4.4.5. 
+
+NOTES 
+
+1 
+
+The  lengths  of  the  Security  Header  and  Security  Trailer  are  managed  parameters of 
+the Virtual Channel or MAP (see 6.6). 
+
+
+2 
+
+The Virtual Channel Reception Function contains the interface to the SDLS protocol.  
+In  this  case,  it  calls  the  SDLS  ProcessSecurity  function  for  the  Type-D  Transfer 
+Frames that it handles for Virtual Channels or MAPs that use SDLS. 
+
+6.5.8  VIRTUAL CHANNEL DEMULTIPLEXING FUNCTION WITH SDLS 
+
+The  Virtual  Channel  Demultiplexing  Function  of  a  TC  protocol  entity  that  supports  SDLS 
+shall conform to the specifications of 4.4.7. 
+
+6.5.9  MASTER CHANNEL DEMULTIPLEXING FUNCTION WITH SDLS 
+
+The  Master  Channel  Demultiplexing  Function  of  a  TC  protocol  entity  that  supports  SDLS 
+shall conform to the specifications of 4.4.8. 
+
+6.5.10  ALL FRAMES RECEPTION FUNCTION WITH SDLS 
+
+The  All  Frames  Reception  Function  of  a  TC  protocol  entity  that  supports  SDLS  shall 
+conform to the specifications of 4.4.9. 
+
+6.6  ADDITIONAL MANAGED PARAMETERS FOR SDLS 
+
+6.6.1  The managed parameters associated with a Virtual Channel without Segment Headers 
+when  the  TC  Space  Data  Link  Protocol  supports  the  SDLS  protocol  shall  conform  to  the 
+definitions in table 5-3 and the additional definitions in table 6-2. 
+
+Table 6-2:  Additional Managed Parameters for a Virtual Channel without Segment 
+Headers When TC Space Data Link Protocol Supports SDLS 
+
+Managed Parameter 
+Presence of Space Data Link Security Header  
+Presence of Space Data Link Security Trailer  
+Length of Space Data Link Security Header (octets)  
+Length of Space Data Link Security Trailer (octets) 
+NOTES 
+1 
+2 
+
+Allowed Values 
+Present / Absent  
+Present / Absent  
+Integer 
+Integer 
+
+If the Security Header is present, then SDLS is in use for the Virtual Channel. 
+The valid lengths for the Security Header and Security Trailer are specified in 
+reference [7]. 
+
+6.6.2  The  managed  parameters  associated  with  a  MAP  when  the  TC  Space  Data  Link 
+Protocol  supports  the  SDLS  protocol  shall  conform  to  the  definitions  in  table  5-4  and  the 
+additional definitions in table 6-3. 
+
+
+Table 6-3:  Additional Managed Parameters for a MAP When TC Space Data Link 
+
+Protocol Supports SDLS 
+
+Managed Parameter 
+Presence of Space Data Link Security Header 
+Presence of Space Data Link Security Trailer 
+Length of Space Data Link Security Header (octets)  
+Length of Space Data Link Security Trailer (octets) 
+NOTES 
+1 
+2 
+
+Allowed Values 
+Present / Absent 
+Present / Absent 
+Integer 
+Integer 
+
+If the Security Header is present then SDLS is in use for the MAP. 
+The valid lengths for the Security Header and Security Trailer are specified in 
+reference [7].

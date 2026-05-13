@@ -1,0 +1,91 @@
+module TC_SPACE_DATA_LINK_PROTOCOL_gpt;
+
+import spicy;
+
+type TransferFramePrimaryHeader = unit {
+    flags: bitfield(32) {
+        version_number: 0..1;
+        bypass_flag: 2;
+        control_command_flag: 3;
+        reserved_spare: 4..5;
+        spacecraft_identifier: 6..15;
+        virtual_channel_identifier: 16..21;
+        frame_length: 22..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    frame_sequence_number: uint8;
+};
+
+type SegmentHeader = unit {
+    fields: bitfield(8) {
+        sequence_flags: 0..1;
+        map_identifier: 2..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type ControlCommandDataField = unit(data_size: uint64) {
+    first_octet: uint8;
+    switch ( self.first_octet ) {
+        0 -> : void;
+        130 -> {
+            second_octet: uint8;
+            receiver_frame_sequence_number: uint8;
+        }
+        * -> remaining_command_data: bytes &size=(data_size - 1);
+    };
+};
+
+type TypeCDataField = unit(data_size: uint64) {
+    control_command: ControlCommandDataField(data_size);
+};
+
+type TypeDDataField = unit(data_size: uint64, segment_header_present: bool, security_header_length: uint64, security_trailer_length: uint64) {
+    segment_header: SegmentHeader if ( segment_header_present );
+    security_header: bytes &size=security_header_length if ( security_header_length > 0 );
+    user_data: bytes &size=(data_size - (segment_header_present ? 1 : 0) - security_header_length - security_trailer_length);
+    security_trailer: bytes &size=security_trailer_length if ( security_trailer_length > 0 );
+};
+
+type TransferFrameDataField = unit(data_size: uint64, control_command_flag: uint64, segment_header_present: bool, security_header_length: uint64, security_trailer_length: uint64) {
+    switch ( control_command_flag ) {
+        1 -> type_c_data_field: TypeCDataField(data_size);
+        * -> type_d_data_field: TypeDDataField(data_size, segment_header_present, security_header_length, security_trailer_length);
+    };
+};
+
+type FrameErrorControlField = unit {
+    fecf: uint16;
+};
+
+type TransferFrame = unit(segment_header_present: bool, frame_error_control_field_present: bool, security_header_length: uint64, security_trailer_length: uint64) {
+    primary_header: TransferFramePrimaryHeader;
+    data_field: TransferFrameDataField(self.primary_header.flags.frame_length + 1 - 5 - (frame_error_control_field_present ? 2 : 0), self.primary_header.flags.control_command_flag, segment_header_present, self.primary_header.flags.control_command_flag == 1 ? 0 : security_header_length, self.primary_header.flags.control_command_flag == 1 ? 0 : security_trailer_length);
+    frame_error_control_field: FrameErrorControlField if ( frame_error_control_field_present );
+};
+
+type CLCW = unit {
+    word1: bitfield(16) {
+        control_word_type: 0;
+        clcw_version_number: 1..2;
+        status_field: 3..5;
+        cop_in_effect: 6..7;
+        virtual_channel_identification: 8..13;
+        reserved_spare_1: 14..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+    word2: bitfield(16) {
+        no_rf_available: 0;
+        no_bit_lock: 1;
+        lockout: 2;
+        wait: 3;
+        retransmit: 4;
+        farm_b_counter: 5..6;
+        reserved_spare_2: 7;
+        report_value: 8..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+public type TC_SPACE_DATA_LINK_PROTOCOL = unit(segment_header_present: bool, frame_error_control_field_present: bool, security_header_length: uint64, security_trailer_length: uint64, parse_clcw: bool) {
+    switch ( parse_clcw ) {
+        True -> clcw: CLCW;
+        False -> transfer_frame: TransferFrame(segment_header_present, frame_error_control_field_present, security_header_length, security_trailer_length);
+    };
+};

@@ -1,0 +1,91 @@
+module TC_SPACE_DATA_LINK_PROTOCOL_gemini;
+
+import spicy;
+
+public type TC_SpaceDataLink_PDU = unit(is_return_link: bool = False, has_fecf: bool = False, has_segment_header: bool = False, has_sdls: bool = False, sdls_header_len: uint16 = 0, sdls_trailer_len: uint16 = 0) {
+    switch (is_return_link) {
+        True  -> clcw: CLCW;
+        False -> tc_frame: TC_TransferFrame(has_fecf, has_segment_header, has_sdls, sdls_header_len, sdls_trailer_len);
+    };
+};
+
+type PrimaryHeader = unit {
+    fields: bitfield(32) {
+        version: 0..1;
+        bypass_flag: 2;
+        control_command_flag: 3;
+        reserved_spare: 4..5;
+        scid: 6..15;
+        vcid: 16..21;
+        frame_length: 22..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    seq_num: uint8;
+};
+
+type SegmentHeader = unit {
+    fields: bitfield(8) {
+        sequence_flags: 0..1;
+        map_id: 2..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type TC_TransferFrame = unit(has_fecf: bool, has_segment_header: bool, has_sdls: bool, sdls_header_len: uint16, sdls_trailer_len: uint16) {
+    header: PrimaryHeader;
+
+    data: DataField(self.header.fields.control_command_flag, 
+                    cast<uint16>(self.header.fields.frame_length + 1 - 5 - (has_fecf ? 2 : 0)), 
+                    has_segment_header, has_sdls, sdls_header_len, sdls_trailer_len);
+
+    fecf: uint16 if (has_fecf);
+};
+
+type DataField = unit(control_flag: uint64, d_len: uint16, has_seg: bool, has_sdls: bool, s_h_len: uint16, s_t_len: uint16) {
+    switch (control_flag) {
+        0 -> type_d: TypeD_Data(d_len, has_seg, has_sdls, s_h_len, s_t_len);
+        1 -> type_c: TypeC_Data &size=d_len;
+    };
+};
+
+type TypeD_Data = unit(d_len: uint16, has_seg: bool, has_sdls: bool, s_h_len: uint16, s_t_len: uint16) {
+    segment_header: SegmentHeader if (has_seg);
+    security_header: bytes &size=s_h_len if (has_sdls);
+    user_data: bytes &size=(d_len - (has_seg ? 1 : 0) - s_h_len - s_t_len);
+    security_trailer: bytes &size=s_t_len if (has_sdls);
+};
+
+type TypeC_Data = unit {
+    commands: ControlCommand[] &eod;
+};
+
+type ControlCommand = unit {
+    opcode: uint8;
+    switch (self.opcode) {
+        0x00 -> unlock: void;
+        0x82 -> set_vr: SetVR_Remainder;
+        *    -> unknown: void;
+    };
+};
+
+type SetVR_Remainder = unit {
+    reserved: uint8;
+    vr_value: uint8;
+};
+
+type CLCW = unit {
+    fields: bitfield(32) {
+        control_word_type: 0;
+        clcw_version_number: 1..2;
+        status_field: 3..5;
+        cop_in_effect: 6..7;
+        vcid: 8..13;
+        reserved_spare_1: 14..15;
+        no_rf_available: 16;
+        no_bit_lock: 17;
+        lockout: 18;
+        wait: 19;
+        retransmit: 20;
+        farm_b_counter: 21..22;
+        reserved_spare_2: 23;
+        report_value: 24..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
