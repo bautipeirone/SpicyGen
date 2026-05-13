@@ -1,0 +1,69 @@
+module TMTransferFrame_gpt;
+
+import spicy;
+
+type TransferFramePrimaryHeader = unit {
+    mcid: bitfield(16) {
+        transfer_frame_version_number: 0..1;
+        spacecraft_id: 2..11;
+        virtual_channel_id: 12..14;
+        ocf_flag: 15;
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    master_channel_frame_count: uint8;
+    virtual_channel_frame_count: uint8;
+
+    transfer_frame_data_field_status: bitfield(16) {
+        transfer_frame_secondary_header_flag: 0;
+        synchronization_flag: 1;
+        packet_order_flag: 2;
+        segment_length_identifier: 3..4;
+        first_header_pointer: 5..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type TransferFrameSecondaryHeader = unit {
+    identification: bitfield(8) {
+        transfer_frame_secondary_header_version_number: 0..1;
+        transfer_frame_secondary_header_length: 2..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    data_field: bytes &size=self.identification.transfer_frame_secondary_header_length;
+};
+
+type SecurityHeader = unit(length: uint64) {
+    data: bytes &size=length;
+};
+
+type SecurityTrailer = unit(length: uint64) {
+    data: bytes &size=length;
+};
+
+type OperationalControlField = unit {
+    contents: bitfield(32) {
+        type_flag: 0;
+        report_flag: 1;
+        report_value: 2..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type FrameErrorControlField = unit {
+    frame_error_control_field: uint16;
+};
+
+public type TMTransferFrame = unit(
+    transfer_frame_length: uint64,
+    security_header_length: uint64,
+    security_trailer_length: uint64,
+    has_frame_error_control_field: bool
+) {
+    primary_header: TransferFramePrimaryHeader;
+    secondary_header: TransferFrameSecondaryHeader if (self.primary_header.transfer_frame_data_field_status.transfer_frame_secondary_header_flag == 1);
+    security_header: SecurityHeader(security_header_length) if (security_header_length > 0);
+
+    data_field: bytes &size=(transfer_frame_length - 6 - (self.primary_header.transfer_frame_data_field_status.transfer_frame_secondary_header_flag == 1 ? (1 + self.secondary_header.identification.transfer_frame_secondary_header_length) : 0) - security_header_length - security_trailer_length - (self.primary_header.mcid.ocf_flag == 1 ? 4 : 0) - (has_frame_error_control_field ? 2 : 0));
+
+    security_trailer: SecurityTrailer(security_trailer_length) if (security_trailer_length > 0);
+    operational_control_field: OperationalControlField if (self.primary_header.mcid.ocf_flag == 1);
+    frame_error_control_field: FrameErrorControlField if (has_frame_error_control_field);
+};
