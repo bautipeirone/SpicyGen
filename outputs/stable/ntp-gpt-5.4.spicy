@@ -1,0 +1,54 @@
+module NTPv4_gpt;
+
+import spicy;
+
+type LeapIndicator = enum {
+    NoWarning = 0,
+    LastMinute61 = 1,
+    LastMinute59 = 2,
+    Unknown = 3,
+};
+
+type PacketMode = enum {
+    Reserved = 0,
+    SymmetricActive = 1,
+    SymmetricPassive = 2,
+    Client = 3,
+    Server = 4,
+    Broadcast = 5,
+    ControlMessage = 6,
+    PrivateUse = 7,
+};
+
+type NTPShort = unit {
+    seconds: uint16;
+    fraction: uint16;
+};
+
+type NTPTimestamp = unit {
+    seconds: uint32;
+    fraction: uint32;
+};
+
+type HeaderFlags = unit {
+    bits: bitfield(8) {
+        leap: 0..1 &convert=LeapIndicator($$);
+        version: 2..4;
+        mode: 5..7 &convert=PacketMode($$);
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+public type NTPv4 = unit {
+    flags: HeaderFlags;
+    stratum: uint8;
+    poll: int8;
+    precision: int8;
+    rootdelay: NTPShort;
+    rootdisp: NTPShort;
+    refid: bytes &size=4;
+    reftime: NTPTimestamp;
+    org: NTPTimestamp;
+    rec: NTPTimestamp;
+    xmt: NTPTimestamp;
+    trailing_data: bytes &eod;
+};

@@ -1,0 +1,40 @@
+module NTP_gemini;
+
+import spicy;
+
+public type NTPPacket = unit {
+    header: Header;
+    
+    # The RFC states: "The NTP packet header consists of an integral number of 32-bit (4 octet) words...
+    # The packet format consists of three components: the header itself, one or more optional extension fields,
+    # and an optional message authentication code (MAC)."
+    # Since we don't have a total length field, we use &eod to consume the rest.
+    # This is a simplification.
+    
+    body: bytes &eod;
+};
+
+type Header = unit {
+    f1: bitfield(32) {
+        li: 0..1;
+        vn: 2..4;
+        mode: 5..7;
+        stratum: 8..15;
+        poll: 16..23;
+        precision: 24..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    
+    root_delay: uint32;
+    root_dispersion: uint32;
+    reference_id: uint32;
+    
+    reference_timestamp: Timestamp64;
+    origin_timestamp: Timestamp64;
+    receive_timestamp: Timestamp64;
+    transmit_timestamp: Timestamp64;
+};
+
+type Timestamp64 = unit {
+    seconds: uint32;
+    fraction: uint32;
+};

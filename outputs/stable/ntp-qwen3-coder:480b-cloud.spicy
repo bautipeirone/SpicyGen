@@ -1,0 +1,94 @@
+module NTP_qwen3;
+
+import spicy;
+
+type LeapIndicator = enum {
+    NoWarning = 0,
+    LastMinute61Seconds = 1,
+    LastMinute59Seconds = 2,
+    ClockUnsynchronized = 3
+};
+
+type Mode = enum {
+    Reserved0 = 0,
+    SymmetricActive = 1,
+    SymmetricPassive = 2,
+    Client = 3,
+    Server = 4,
+    Broadcast = 5,
+    ControlMessage = 6,
+    Reserved7 = 7
+};
+
+type Stratum = enum {
+    Unspecified = 0,
+    PrimaryServer = 1,
+    SecondaryServer2 = 2,
+    SecondaryServer3 = 3,
+    SecondaryServer4 = 4,
+    SecondaryServer5 = 5,
+    SecondaryServer6 = 6,
+    SecondaryServer7 = 7,
+    SecondaryServer8 = 8,
+    SecondaryServer9 = 9,
+    SecondaryServer10 = 10,
+    SecondaryServer11 = 11,
+    SecondaryServer12 = 12,
+    SecondaryServer13 = 13,
+    SecondaryServer14 = 14,
+    SecondaryServer15 = 15,
+    Unsynchronized = 16,
+    Reserved17 = 17
+    # Values 17-255 are reserved
+};
+
+# NTP timestamp format (64-bit)
+type NTPTimestamp = unit {
+    seconds: uint32;
+    fraction: uint32;
+};
+
+# NTP short format (32-bit)
+type NTPShortFormat = unit {
+    seconds: uint16;
+    fraction: uint16;
+};
+
+# Extension field format
+type ExtensionField = unit {
+    field_type: uint16;
+    length: uint16;
+    value: bytes &size=self.length - 4; # Subtract 4 for the header fields
+    padding: bytes &size=((4 - (self.length % 4)) % 4); # Pad to 4-byte boundary
+};
+
+# MAC (Message Authentication Code)
+type MAC = unit {
+    keyid: uint32;
+    dgst: bytes &size=16; # 128-bit MD5 hash
+};
+
+# Main NTP packet
+public type NTPPacket = unit {
+    # First word: LI, VN, Mode, Stratum, Poll, Precision
+    header_word1: bitfield(32) {
+        leap: 0..1 &convert=LeapIndicator($$);
+        version: 2..4;
+        mode: 5..7 &convert=Mode($$);
+        stratum: 8..15 &convert=Stratum($$);
+        poll: 16..23;
+        precision: 24..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    
+    rootdelay: NTPShortFormat;
+    rootdisp: NTPShortFormat;
+    refid: uint32;
+    reftime: NTPTimestamp;
+    org: NTPTimestamp;
+    rec: NTPTimestamp;
+    xmt: NTPTimestamp;
+    
+    # Optional extension fields and MAC
+    # We'll handle these as remaining bytes for now
+    extension_fields_and_mac: bytes &eod;
+};

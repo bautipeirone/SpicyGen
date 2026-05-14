@@ -1,0 +1,44 @@
+module NTP_gemini;
+
+import spicy;
+
+type ShortFormat = unit {
+    seconds: uint16;
+    fraction: uint16;
+};
+
+type TimestampFormat = unit {
+    seconds: uint32;
+    fraction: uint32;
+};
+
+type ExtensionField = unit {
+    field_type: uint16;
+    len: uint16;
+    value: bytes &size=(self.len - 4);
+};
+
+type MAC = unit {
+    key_id: uint32;
+    digest: bytes &eod;
+};
+
+public type Packet = unit {
+    li_vn_mode: bitfield(8) {
+        li: 0..1;
+        vn: 2..4;
+        mode: 5..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    stratum: uint8;
+    poll: int8;
+    precision: int8;
+    root_delay: ShortFormat;
+    root_dispersion: ShortFormat;
+    ref_id: bytes &size=4;
+    ref_timestamp: TimestampFormat;
+    origin_timestamp: TimestampFormat;
+    receive_timestamp: TimestampFormat;
+    transmit_timestamp: TimestampFormat;
+    
+    extensions_and_mac: bytes &eod;
+};
