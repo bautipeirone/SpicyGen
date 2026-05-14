@@ -1,0 +1,143 @@
+module BABEL_gemini;
+
+import spicy;
+
+public type Packet = unit {
+    header: Header;
+    body: TLV[] &size=self.header.body_length;
+    trailer: TLV[] &eod;
+};
+
+type Header = unit {
+    magic: uint8;
+    version: uint8;
+    body_length: uint16;
+};
+
+type TLV = unit {
+    type_value: uint8;
+    switch ( self.type_value ) {
+        0 -> : void; # Pad1
+        1 -> padn: PadN;
+        2 -> ack_request: AckRequest;
+        3 -> ack: Ack;
+        4 -> hello: Hello;
+        5 -> ihu: IHU;
+        6 -> router_id: RouterId;
+        7 -> next_hop: NextHop;
+        8 -> update: Update;
+        9 -> route_request: RouteRequest;
+        10 -> seqno_request: SeqnoRequest;
+        * -> unknown: UnknownTLV;
+    };
+};
+
+type PadN = unit {
+    len: uint8;
+    mbz: bytes &size=self.len;
+};
+
+type AckRequest = unit {
+    len: uint8;
+    : uint16; # Reserved
+    opaque: uint16;
+    interval_value: uint16 &convert=cast<interval>($$ / 100.0);
+    subtlvs: SubTLV[] &size=(self.len > 6 ? self.len - 6 : 0);
+};
+
+type Ack = unit {
+    len: uint8;
+    opaque: uint16;
+    subtlvs: SubTLV[] &size=(self.len > 2 ? self.len - 2 : 0);
+};
+
+type Hello = unit {
+    len: uint8;
+    flags: bitfield(16) {
+        unicast: 0;
+    } &bit-order=spicy::BitOrder::MSB0;
+    seqno: uint16;
+    interval_value: uint16 &convert=cast<interval>($$ / 100.0);
+    subtlvs: SubTLV[] &size=(self.len > 6 ? self.len - 6 : 0);
+};
+
+type IHU = unit {
+    len: uint8;
+    ae: uint8;
+    : uint8; # Reserved
+    rxcost: uint16;
+    interval_value: uint16 &convert=cast<interval>($$ / 100.0);
+    
+    address: bytes &size=(self.ae == 1 ? 4 : (self.ae == 2 ? 16 : (self.ae == 3 ? 8 : 0)));
+    
+    subtlvs: SubTLV[] &size=(self.len > (6 + (self.ae == 1 ? 4 : (self.ae == 2 ? 16 : (self.ae == 3 ? 8 : 0)))) ? self.len - (6 + (self.ae == 1 ? 4 : (self.ae == 2 ? 16 : (self.ae == 3 ? 8 : 0)))) : 0);
+};
+
+type RouterId = unit {
+    len: uint8;
+    : uint16; # Reserved
+    router_id: bytes &size=8;
+    subtlvs: SubTLV[] &size=(self.len > 10 ? self.len - 10 : 0);
+};
+
+type NextHop = unit {
+    len: uint8;
+    ae: uint8;
+    : uint8; # Reserved
+    next_hop: bytes &size=(self.ae == 1 ? 4 : (self.ae == 2 ? 16 : (self.ae == 3 ? 8 : 0)));
+    subtlvs: SubTLV[] &size=(self.len > (2 + (self.ae == 1 ? 4 : (self.ae == 2 ? 16 : (self.ae == 3 ? 8 : 0)))) ? self.len - (2 + (self.ae == 1 ? 4 : (self.ae == 2 ? 16 : (self.ae == 3 ? 8 : 0)))) : 0);
+};
+
+type Update = unit {
+    len: uint8;
+    ae: uint8;
+    flags: bitfield(8) {
+        p: 0;
+        r: 1;
+    } &bit-order=spicy::BitOrder::MSB0;
+    plen: uint8;
+    omitted: uint8;
+    interval_value: uint16 &convert=cast<interval>($$ / 100.0);
+    seqno: uint16;
+    metric: uint16;
+    
+    prefix: bytes &size=((self.plen + 7) / 8 >= self.omitted ? (self.plen + 7) / 8 - self.omitted : 0);
+    
+    subtlvs: SubTLV[] &size=(self.len > (10 + ((self.plen + 7) / 8 >= self.omitted ? (self.plen + 7) / 8 - self.omitted : 0)) ? self.len - (10 + ((self.plen + 7) / 8 >= self.omitted ? (self.plen + 7) / 8 - self.omitted : 0)) : 0);
+};
+
+type RouteRequest = unit {
+    len: uint8;
+    ae: uint8;
+    plen: uint8;
+    prefix: bytes &size=(self.ae == 0 ? 0 : (self.plen + 7) / 8);
+    subtlvs: SubTLV[] &size=(self.len > (2 + (self.ae == 0 ? 0 : (self.plen + 7) / 8)) ? self.len - (2 + (self.ae == 0 ? 0 : (self.plen + 7) / 8)) : 0);
+};
+
+type SeqnoRequest = unit {
+    len: uint8;
+    ae: uint8;
+    plen: uint8;
+    seqno: uint16;
+    hop_count: uint8;
+    : uint8; # Reserved
+    router_id: bytes &size=8;
+    prefix: bytes &size=(self.plen + 7) / 8;
+    subtlvs: SubTLV[] &size=(self.len > (14 + (self.plen + 7) / 8) ? self.len - (14 + (self.plen + 7) / 8) : 0);
+};
+
+type UnknownTLV = unit {
+    len: uint8;
+    data: bytes &size=self.len;
+};
+
+type SubTLV = unit {
+    type_value: uint8;
+    switch ( self.type_value ) {
+        0 -> : void; # Pad1
+        * -> {
+            len: uint8;
+            body: bytes &size=self.len;
+        }
+    };
+};

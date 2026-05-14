@@ -1,0 +1,90 @@
+module Babel_gemini;
+
+import spicy;
+
+public type BabelPacket = unit {
+    magic: uint8 &requires=($$ == 42);
+    version: uint8 &requires=($$ == 2);
+    body_length: uint16;
+    body: bytes &size=self.body_length;
+    trailer: bytes &eod;
+};
+
+type SubTLV = unit {
+    type_val: uint8;
+    length: uint8;
+    body: bytes &size=self.length;
+};
+
+type TLV = unit {
+    type_val: uint8;
+    length: uint8;
+    body: bytes &size=self.length;
+    sub_tlvs: SubTLV[];
+};
+
+type RouterId = unit {
+    id: bytes &size=8;
+};
+
+type UpdateTLV = unit {
+    ae: uint8;
+    flags: uint8;
+    plen: uint8;
+    omitted: uint8;
+    interval_value: uint16 &convert=cast<interval>($$);
+    seqno: uint16;
+    metric: uint16;
+    prefix: bytes &size=((self.plen + 7) / 8 - self.omitted);
+};
+
+type HelloTLV = unit {
+    flags: uint16;
+    seqno: uint16;
+    interval_value: uint16 &convert=cast<interval>($$);
+};
+
+type IHUTLV = unit {
+    ae: uint8;
+    reserved: uint8;
+    rxcost: uint16;
+    interval_value: uint16 &convert=cast<interval>($$);
+    address: bytes &size=(self.ae == 1 ? 4 : (self.ae == 3 ? 8 : 0));
+};
+
+type RouterIdTLV = unit {
+    reserved: uint16;
+    router_id: RouterId;
+};
+
+type NextHopTLV = unit {
+    ae: uint8;
+    reserved: uint8;
+    next_hop: bytes &size=(self.ae == 1 ? 4 : (self.ae == 2 ? 16 : 8));
+};
+
+type AckRequestTLV = unit {
+    reserved: uint16;
+    opaque: uint16;
+    interval_value: uint16 &convert=cast<interval>($$);
+};
+
+type AckTLV = unit {
+    opaque: uint16;
+};
+
+type RouteRequestTLV = unit {
+    ae: uint8;
+    plen: uint8;
+    prefix: bytes &size=((self.plen + 7) / 8);
+};
+
+type SeqnoRequestTLV = unit {
+    ae: uint8;
+    plen: uint8;
+    seqno: uint16;
+    hop_count: uint8;
+    reserved: uint8;
+    router_id: RouterId;
+    prefix: bytes &size=((self.plen + 7) / 8);
+};

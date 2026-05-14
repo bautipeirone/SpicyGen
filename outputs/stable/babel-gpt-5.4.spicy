@@ -1,0 +1,146 @@
+module Babel_gpt;
+
+import spicy;
+
+type AE = enum {
+    Wildcard = 0,
+    IPv4 = 1,
+    IPv6 = 2,
+    IPv6LinkLocal = 3,
+};
+
+type TlvType = enum {
+    Pad1 = 0,
+    PadN = 1,
+    AckReq = 2,
+    Ack = 3,
+    Hello = 4,
+    IHU = 5,
+    RouterId = 6,
+    NextHop = 7,
+    Update = 8,
+    RouteRequest = 9,
+    SeqnoRequest = 10,
+};
+
+type SubTLV = unit {
+    stype: uint8;
+    switch ( self.stype ) {
+        0 -> : void;
+        * -> {
+            slength: uint8;
+            body: bytes &size=self.slength;
+        }
+    };
+};
+
+type PadNBody = unit {
+    length: uint8;
+    mbz: bytes &size=self.length;
+};
+
+type AckRequestBody = unit {
+    length: uint8;
+    reserved: uint16;
+    opaque: uint16;
+    interval_cs: uint16;
+    subtlvs: SubTLV[] &size=(self.length - 6);
+};
+
+type AckBody = unit {
+    length: uint8;
+    opaque: uint16;
+    subtlvs: SubTLV[] &size=(self.length - 2);
+};
+
+type HelloBody = unit {
+    length: uint8;
+    flags: uint16;
+    seqno: uint16;
+    interval_cs: uint16;
+    subtlvs: SubTLV[] &size=(self.length - 6);
+};
+
+type IHUBody = unit {
+    length: uint8;
+    ae: uint8 &convert=AE($$);
+    reserved: uint8;
+    rxcost: uint16;
+    interval_cs: uint16;
+    remainder: bytes &size=(self.length - 6);
+};
+
+type RouterIdBody = unit {
+    length: uint8;
+    reserved: uint16;
+    router_id: bytes &size=8;
+    subtlvs: SubTLV[] &size=(self.length - 10);
+};
+
+type NextHopBody = unit {
+    length: uint8;
+    ae: uint8 &convert=AE($$);
+    reserved: uint8;
+    remainder: bytes &size=(self.length - 2);
+};
+
+type UpdateBody = unit {
+    length: uint8;
+    ae: uint8 &convert=AE($$);
+    flags: uint8;
+    plen: uint8;
+    omitted: uint8;
+    interval_cs: uint16;
+    seqno: uint16;
+    metric: uint16;
+    remainder: bytes &size=(self.length - 10);
+};
+
+type RouteRequestBody = unit {
+    length: uint8;
+    ae: uint8 &convert=AE($$);
+    plen: uint8;
+    remainder: bytes &size=(self.length - 2);
+};
+
+type SeqnoRequestBody = unit {
+    length: uint8;
+    ae: uint8 &convert=AE($$);
+    plen: uint8;
+    seqno: uint16;
+    hop_count: uint8;
+    reserved: uint8;
+    router_id: bytes &size=8;
+    remainder: bytes &size=(self.length - 14);
+};
+
+type UnknownBody = unit {
+    length: uint8;
+    payload: bytes &size=self.length;
+};
+
+type TLV = unit {
+    tlv_type: uint8 &convert=TlvType($$);
+    switch ( self.tlv_type ) {
+        TlvType::Pad1 -> : void;
+        TlvType::PadN -> padn: PadNBody;
+        TlvType::AckReq -> ack_request: AckRequestBody;
+        TlvType::Ack -> ack: AckBody;
+        TlvType::Hello -> hello: HelloBody;
+        TlvType::IHU -> ihu: IHUBody;
+        TlvType::RouterId -> router_id: RouterIdBody;
+        TlvType::NextHop -> next_hop: NextHopBody;
+        TlvType::Update -> update: UpdateBody;
+        TlvType::RouteRequest -> route_request: RouteRequestBody;
+        TlvType::SeqnoRequest -> seqno_request: SeqnoRequestBody;
+        * -> unknown: UnknownBody;
+    };
+};
+
+public type BabelPacket = unit {
+    magic: uint8;
+    version: uint8;
+    body_length: uint16;
+    body: TLV[] &size=self.body_length;
+    trailer: TLV[] &eod;
+};

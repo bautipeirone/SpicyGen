@@ -1,0 +1,156 @@
+module BABEL_qwen3;
+
+import spicy;
+
+type AddressEncoding = enum {
+    Wildcard = 0,
+    IPv4 = 1,
+    IPv6 = 2,
+    LinkLocalIPv6 = 3,
+};
+
+type TLVType = enum {
+    Pad1 = 0,
+    PadN = 1,
+    AckReq = 2,
+    Ack = 3,
+    Hello = 4,
+    IHU = 5,
+    RouterId = 6,
+    NextHop = 7,
+    Update = 8,
+    RouteRequest = 9,
+    SeqnoRequest = 10,
+};
+
+public type BabelPacket = unit {
+    magic: uint8;
+    version: uint8;
+    body_length: uint16;
+    body: TLV[] &size=self.body_length;
+    : bytes &eod;
+};
+
+type TLV = unit {
+    type_value: uint8;
+    length: uint8;
+    body: bytes &size=self.length;
+};
+
+type Pad1 = unit {
+    : b"\x00";
+};
+
+type PadN = unit {
+    : b"\x01";
+    length: uint8;
+    mbz: bytes &size=self.length;
+};
+
+type AckReq = unit {
+    : b"\x02";
+    length: uint8;
+    reserved: uint16;
+    opaque: uint16;
+    interval_value: uint16;
+};
+
+type Ack = unit {
+    : b"\x03";
+    length: uint8;
+    opaque: uint16;
+};
+
+type Hello = unit {
+    : b"\x04";
+    length: uint8;
+    reserved: uint16;
+    seqno: uint16;
+    interval_value: uint16;
+};
+
+type IHU = unit {
+    : b"\x05";
+    length: uint8;
+    ae: uint8 &convert=AddressEncoding($$);
+    reserved: uint8;
+    rxcost: uint16;
+    interval_value: uint16;
+    address: bytes &size=address_size(self.ae);
+};
+
+type RouterId = unit {
+    : b"\x06";
+    length: uint8;
+    reserved: uint16;
+    router_id: bytes &size=8;
+};
+
+type NextHop = unit {
+    : b"\x07";
+    length: uint8;
+    ae: uint8 &convert=AddressEncoding($$);
+    reserved: uint8;
+    next_hop: bytes &size=address_size(self.ae);
+};
+
+type Update = unit {
+    : b"\x08";
+    length: uint8;
+    ae: uint8 &convert=AddressEncoding($$);
+    flags: uint8;
+    plen: uint8;
+    omitted: uint8;
+    interval_value: uint16;
+    seqno: uint16;
+    metric: uint16;
+    prefix: bytes &size=prefix_size(self.plen, self.omitted);
+};
+
+type RouteRequest = unit {
+    : b"\x09";
+    length: uint8;
+    ae: uint8 &convert=AddressEncoding($$);
+    plen: uint8;
+    prefix: bytes &size=prefix_size(self.plen, 0);
+};
+
+type SeqnoRequest = unit {
+    : b"\x0a";
+    length: uint8;
+    ae: uint8 &convert=AddressEncoding($$);
+    plen: uint8;
+    seqno: uint16;
+    hop_count: uint8;
+    reserved: uint8;
+    router_id: bytes &size=8;
+    prefix: bytes &size=prefix_size(self.plen, 0);
+};
+
+# Helper function to determine address size based on AE
+function address_size(ae: AddressEncoding): uint64 {
+    if (ae == AddressEncoding::Wildcard) {
+        return 0;
+    } else if (ae == AddressEncoding::IPv4) {
+        return 4;
+    } else if (ae == AddressEncoding::IPv6) {
+        return 16;
+    } else if (ae == AddressEncoding::LinkLocalIPv6) {
+        return 8;
+    } else {
+        return 0;
+    }
+}
+
+# Helper function to determine prefix size
+function prefix_size(plen: uint8, omitted: uint8): uint64 {
+    local prefix_bytes: uint64 = plen / 8;
+    if (plen % 8 > 0) {
+        prefix_bytes = prefix_bytes + 1;
+    }
+    if (prefix_bytes >= omitted) {
+        return prefix_bytes - omitted;
+    } else {
+        return 0;
+    }
+}

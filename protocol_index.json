@@ -4,6 +4,12 @@
     "spec_type": "rfc",
     "rfc_id": "826"
   },
+  "babel": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "8966",
+    "local_spec_file": "specs/babel-grammar.txt"
+  },
   "bfd": {
     "type": "binary",
     "spec_type": "rfc",
