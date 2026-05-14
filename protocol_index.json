@@ -90,6 +90,11 @@
     "spec-type": "rfc",
     "rfc_id": "4511"
   },
+  "ntp": {
+    "type": "binary",
+    "rfc_id": "5905",
+    "local_spec_file": "specs/ntp-grammar.txt"
+  },
   "rtsp": {
     "type": "text",
     "spec_type": "rfc",
