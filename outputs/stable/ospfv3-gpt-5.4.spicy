@@ -1,0 +1,277 @@
+module OSPFv3_gpt;
+import spicy;
+
+type PacketType = enum {
+    Hello = 1,
+    DatabaseDescription = 2,
+    LinkStateRequest = 3,
+    LinkStateUpdate = 4,
+    LinkStateAcknowledgment = 5,
+};
+
+type LSAFunctionCode = enum {
+    Router = 1,
+    Network = 2,
+    InterAreaPrefix = 3,
+    InterAreaRouter = 4,
+    ASExternal = 5,
+    Deprecated = 6,
+    NSSA = 7,
+    Link = 8,
+    IntraAreaPrefix = 9,
+};
+
+type PrefixOptions = unit {
+    bits: bitfield(8) {
+        reserved_0: 0..2;
+        dn: 3;
+        p: 4;
+        x: 5;
+        la: 6;
+        nu: 7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type PriorityOptions = unit {
+    bits: bitfield(32) {
+        rtr_priority: 0..7;
+        reserved_0: 8..24;
+        dc: 25;
+        r: 26;
+        n: 27;
+        x: 28;
+        e: 29;
+        v6: 30;
+        reserved_1: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type ReservedOptions = unit {
+    bits: bitfield(32) {
+        reserved_0: 0..24;
+        dc: 25;
+        r: 26;
+        n: 27;
+        x: 28;
+        e: 29;
+        v6: 30;
+        reserved_1: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type RouterLSAFlagsOptions = unit {
+    bits: bitfield(32) {
+        reserved_0: 0..4;
+        nt: 5;
+        x: 6;
+        v: 7;
+        e: 8;
+        b: 9;
+        reserved_1: 10..24;
+        dc: 25;
+        r: 26;
+        n: 27;
+        opt_x: 28;
+        opt_e: 29;
+        v6: 30;
+        reserved_2: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type IPv6Prefix = unit {
+    prefix_length: uint8;
+    prefix_options: PrefixOptions;
+    reserved_0: uint16;
+    address_prefix: bytes &size=((self.prefix_length + 31) / 32) * 4;
+};
+
+type IPv6PrefixWithMetric = unit {
+    prefix_length: uint8;
+    prefix_options: PrefixOptions;
+    metric: uint16;
+    address_prefix: bytes &size=((self.prefix_length + 31) / 32) * 4;
+};
+
+type OSPFHeader = unit {
+    version: uint8;
+    type_value: uint8 &convert=PacketType($$);
+    packet_length: uint16;
+    router_id: uint32;
+    area_id: uint32;
+    checksum: uint16;
+    instance_id: uint8;
+    reserved_0: uint8;
+};
+
+type HelloBody = unit(body_length: uint16) {
+    interface_id: uint32;
+    priority_options: PriorityOptions;
+    hello_interval: uint16 &convert=cast<interval>($$);
+    router_dead_interval: uint16 &convert=cast<interval>($$);
+    designated_router_id: uint32;
+    backup_designated_router_id: uint32;
+    neighbor_ids: uint32[] &size=(body_length - 24);
+};
+
+type DatabaseDescriptionFlags = unit {
+    bits: bitfield(8) {
+        reserved_0: 0..4;
+        i: 5;
+        m: 6;
+        ms: 7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type LSAType = unit {
+    bits: bitfield(16) {
+        u: 0;
+        s2: 1;
+        s1: 2;
+        function_code: 3..15 &convert=LSAFunctionCode($$);
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type LSAHeader = unit {
+    ls_age: uint16 &convert=cast<interval>($$);
+    ls_type: LSAType;
+    link_state_id: uint32;
+    advertising_router: uint32;
+    ls_sequence_number: uint32;
+    ls_checksum: uint16;
+    length: uint16;
+};
+
+type DatabaseDescriptionBody = unit(body_length: uint16) {
+    options: ReservedOptions;
+    interface_mtu: uint16;
+    reserved_1: uint8;
+    flags: DatabaseDescriptionFlags;
+    dd_sequence_number: uint32;
+    lsa_headers: LSAHeader[] &size=(body_length - 12);
+};
+
+type LinkStateRequestEntry = unit {
+    reserved_0: uint16;
+    ls_type: LSAType;
+    link_state_id: uint32;
+    advertising_router: uint32;
+};
+
+type LinkStateRequestBody = unit(body_length: uint16) {
+    requests: LinkStateRequestEntry[] &size=body_length;
+};
+
+type RouterLSALink = unit {
+    type_value: uint8;
+    reserved_0: uint8;
+    metric: uint16;
+    interface_id: uint32;
+    neighbor_interface_id: uint32;
+    neighbor_router_id: uint32;
+};
+
+type RouterLSABody = unit(body_length: uint16) {
+    flags_options: RouterLSAFlagsOptions;
+    links: RouterLSALink[] &size=(body_length - 4);
+};
+
+type NetworkLSABody = unit(body_length: uint16) {
+    options: ReservedOptions;
+    attached_routers: uint32[] &size=(body_length - 4);
+};
+
+type InterAreaPrefixLSABody = unit {
+    reserved_0: uint8;
+    metric: bytes &size=3;
+    prefix: IPv6Prefix;
+};
+
+type InterAreaRouterLSABody = unit {
+    options: ReservedOptions;
+    reserved_1: uint8;
+    metric: bytes &size=3;
+    destination_router_id: uint32;
+};
+
+type ASExternalFlagsMetric = unit {
+    bits: bitfield(32) {
+        reserved_0: 0..4;
+        e: 5;
+        f: 6;
+        t: 7;
+        metric: 8..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type ASExternalLSABody = unit {
+    flags_metric: ASExternalFlagsMetric;
+    prefix_length: uint8;
+    prefix_options: PrefixOptions;
+    referenced_ls_type: uint16;
+    address_prefix: bytes &size=((self.prefix_length + 31) / 32) * 4;
+    forwarding_address: bytes &size=16 if(self.flags_metric.bits.f == 1);
+    external_route_tag: uint32 if(self.flags_metric.bits.t == 1);
+    referenced_link_state_id: uint32 if(self.referenced_ls_type != 0);
+};
+
+type NSSALSABody = unit {
+    flags_metric: ASExternalFlagsMetric;
+    prefix_length: uint8;
+    prefix_options: PrefixOptions;
+    referenced_ls_type: uint16;
+    address_prefix: bytes &size=((self.prefix_length + 31) / 32) * 4;
+    forwarding_address: bytes &size=16 if(self.flags_metric.bits.f == 1);
+    external_route_tag: uint32 if(self.flags_metric.bits.t == 1);
+    referenced_link_state_id: uint32 if(self.referenced_ls_type != 0);
+};
+
+type LinkLSABody = unit {
+    priority_options: PriorityOptions;
+    link_local_interface_address: bytes &size=16;
+    prefix_count: uint32;
+    prefixes: IPv6Prefix[self.prefix_count];
+};
+
+type IntraAreaPrefixLSABody = unit {
+    prefix_count: uint16;
+    referenced_ls_type: uint16;
+    referenced_link_state_id: uint32;
+    referenced_advertising_router: uint32;
+    prefixes: IPv6PrefixWithMetric[self.prefix_count];
+};
+
+type GenericLSA = unit {
+    header: LSAHeader;
+    switch ( self.header.ls_type.bits.function_code ) {
+        LSAFunctionCode::Router -> router_lsa: RouterLSABody(self.header.length - 20);
+        LSAFunctionCode::Network -> network_lsa: NetworkLSABody(self.header.length - 20);
+        LSAFunctionCode::InterAreaPrefix -> inter_area_prefix_lsa: InterAreaPrefixLSABody;
+        LSAFunctionCode::InterAreaRouter -> inter_area_router_lsa: InterAreaRouterLSABody;
+        LSAFunctionCode::ASExternal -> as_external_lsa: ASExternalLSABody;
+        LSAFunctionCode::NSSA -> nssa_lsa: NSSALSABody;
+        LSAFunctionCode::Link -> link_lsa: LinkLSABody;
+        LSAFunctionCode::IntraAreaPrefix -> intra_area_prefix_lsa: IntraAreaPrefixLSABody;
+        * -> payload: bytes &size=(self.header.length - 20);
+    };
+};
+
+type LinkStateUpdateBody = unit(body_length: uint16) {
+    lsa_count: uint32;
+    lsas: GenericLSA[] &size=(body_length - 4);
+};
+
+type LinkStateAcknowledgmentBody = unit(body_length: uint16) {
+    lsa_headers: LSAHeader[] &size=body_length;
+};
+
+public type OSPFv3 = unit {
+    header: OSPFHeader;
+    switch ( self.header.type_value ) {
+        PacketType::Hello -> hello: HelloBody(self.header.packet_length - 16);
+        PacketType::DatabaseDescription -> database_description: DatabaseDescriptionBody(self.header.packet_length - 16);
+        PacketType::LinkStateRequest -> link_state_request: LinkStateRequestBody(self.header.packet_length - 16);
+        PacketType::LinkStateUpdate -> link_state_update: LinkStateUpdateBody(self.header.packet_length - 16);
+        PacketType::LinkStateAcknowledgment -> link_state_acknowledgment: LinkStateAcknowledgmentBody(self.header.packet_length - 16);
+        * -> payload: bytes &size=(self.header.packet_length - 16);
+    };
+};

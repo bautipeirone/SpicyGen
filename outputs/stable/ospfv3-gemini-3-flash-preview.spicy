@@ -1,0 +1,231 @@
+module OSPFv3_gemini;
+
+import spicy;
+
+type LSAType = bitfield(16) {
+    u: 0;
+    s2: 1;
+    s1: 2;
+    function_code: 3..15;
+} &bit-order=spicy::BitOrder::MSB0;
+
+type LSAHeader = unit {
+    ls_age: uint16;
+    ls_type_field: LSAType;
+    ls_id: uint32;
+    adv_router: uint32;
+    ls_sequence_number: uint32;
+    ls_checksum: uint16;
+    length: uint16;
+};
+
+type IPv6Prefix = unit {
+    prefix_length: uint8;
+    prefix_options: uint8;
+    : uint16;
+    address_prefix: bytes &size=(((self.prefix_length + 31) / 32) * 4);
+};
+
+type IntraAreaPrefixEntry = unit {
+    prefix_length: uint8;
+    prefix_options: uint8;
+    metric: uint16;
+    address_prefix: bytes &size=(((self.prefix_length + 31) / 32) * 4);
+};
+
+type RouterLink = unit {
+    type_value: uint8;
+    : uint8;
+    metric: uint16;
+    interface_id: uint32;
+    neighbor_interface_id: uint32;
+    neighbor_router_id: uint32;
+};
+
+type RouterLSABody = unit {
+    flags_options: bitfield(32) {
+        nt: 3;
+        x_bit: 4;
+        v: 5;
+        e: 6;
+        b: 7;
+        dc: 26;
+        r: 27;
+        n: 28;
+        x_opt: 29;
+        e_opt: 30;
+        v6: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    links: RouterLink[] &eod;
+};
+
+type NetworkLSABody = unit {
+    options_word: bitfield(32) {
+        dc: 26;
+        r: 27;
+        n: 28;
+        x: 29;
+        e: 30;
+        v6: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    attached_routers: uint32[] &eod;
+};
+
+type InterAreaPrefixLSABody = unit {
+    metric_word: bitfield(32) {
+        metric: 8..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    prefix_length: uint8;
+    prefix_options: uint8;
+    : uint16;
+    address_prefix: bytes &size=(((self.prefix_length + 31) / 32) * 4);
+};
+
+type InterAreaRouterLSABody = unit {
+    options_word: bitfield(32) {
+        dc: 26;
+        r: 27;
+        n: 28;
+        x: 29;
+        e: 30;
+        v6: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    metric_word: bitfield(32) {
+        metric: 8..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    dest_router_id: uint32;
+};
+
+type ASExternalLSABody = unit {
+    metric_word: bitfield(32) {
+        e: 5;
+        f: 6;
+        t: 7;
+        metric: 8..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    prefix_length: uint8;
+    prefix_options: uint8;
+    referenced_ls_type: uint16;
+    address_prefix: bytes &size=(((self.prefix_length + 31) / 32) * 4);
+    forwarding_address: addr &ipv6 if(self.metric_word.f);
+    external_route_tag: uint32 if(self.metric_word.t);
+    referenced_ls_id: uint32 if(self.referenced_ls_type != 0);
+};
+
+type LinkLSABody = unit {
+    options_word: bitfield(32) {
+        rtr_priority: 0..7;
+        dc: 26;
+        r: 27;
+        n: 28;
+        x: 29;
+        e: 30;
+        v6: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    link_local_addr: addr &ipv6;
+    num_prefixes: uint32;
+    prefixes: IPv6Prefix[self.num_prefixes];
+};
+
+type IntraAreaPrefixLSABody = unit {
+    num_prefixes: uint16;
+    ref_ls_type: uint16;
+    ref_ls_id: uint32;
+    ref_adv_router: uint32;
+    prefixes: IntraAreaPrefixEntry[self.num_prefixes];
+};
+
+type LSABody = unit(func_code: uint16) {
+    switch ( func_code ) {
+        1 -> router_lsa: RouterLSABody;
+        2 -> network_lsa: NetworkLSABody;
+        3 -> inter_area_prefix: InterAreaPrefixLSABody;
+        4 -> inter_area_router: InterAreaRouterLSABody;
+        5 -> as_external: ASExternalLSABody;
+        7 -> nssa: ASExternalLSABody;
+        8 -> link: LinkLSABody;
+        9 -> intra_area_prefix: IntraAreaPrefixLSABody;
+        * -> data_field: bytes &eod;
+    };
+};
+
+type LSA = unit {
+    header: LSAHeader;
+    body: LSABody(self.header.ls_type_field.function_code) &size=(self.header.length - 20);
+};
+
+type HelloPacketBody = unit {
+    interface_id: uint32;
+    options_word: bitfield(32) {
+        rtr_priority: 0..7;
+        dc: 26;
+        r: 27;
+        n: 28;
+        x: 29;
+        e: 30;
+        v6: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    hello_interval: uint16;
+    router_dead_interval: uint16;
+    dr_id: uint32;
+    bdr_id: uint32;
+    neighbors: uint32[] &eod;
+};
+
+type DDPacketBody = unit {
+    options_word: bitfield(32) {
+        dc: 26;
+        r: 27;
+        n: 28;
+        x: 29;
+        e: 30;
+        v6: 31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    interface_mtu: uint16;
+    flags_word: bitfield(16) {
+        i: 13;
+        m: 14;
+        ms: 15;
+    } &bit-order=spicy::BitOrder::MSB0;
+    dd_sequence_number: uint32;
+    lsa_headers: LSAHeader[] &eod;
+};
+
+type LSR_Entry = unit {
+    : uint16;
+    ls_type: uint16;
+    ls_id: uint32;
+    adv_router: uint32;
+};
+
+type LSUPacketBody = unit {
+    num_lsas: uint32;
+    lsas: LSA[self.num_lsas];
+};
+
+type OSPFv3Body = unit(type_val: uint8) {
+    switch ( type_val ) {
+        1 -> hello_pkt: HelloPacketBody;
+        2 -> dd_pkt: DDPacketBody;
+        3 -> lsr_pkt: LSR_Entry[] &eod;
+        4 -> lsu_pkt: LSUPacketBody;
+        5 -> lsack_pkt: LSAHeader[] &eod;
+        * -> data_field: bytes &eod;
+    };
+};
+
+type OSPFv3Header = unit {
+    version: uint8;
+    type_value: uint8;
+    length: uint16;
+    router_id: uint32;
+    area_id: uint32;
+    checksum: uint16;
+    instance_id: uint8;
+    : uint8;
+};
+
+public type OSPFv3Packet = unit {
+    header: OSPFv3Header;
+    body: OSPFv3Body(self.header.type_value) &size=(self.header.length - 16);
+};

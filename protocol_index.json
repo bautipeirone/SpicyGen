@@ -98,8 +98,15 @@
   },
   "ntp": {
     "type": "binary",
+    "spec_type": "rfc",
     "rfc_id": "5905",
     "local_spec_file": "specs/ntp-grammar.txt"
+  },
+  "ospfv3": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "5340",
+    "local_spec_file": "specs/ospfv3-grammar.txt"
   },
   "rtsp": {
     "type": "text",
