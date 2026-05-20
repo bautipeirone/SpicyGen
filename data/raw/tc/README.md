@@ -1,4 +1,4 @@
-# Telecommand Data Link Layer Protocol (TC)
+# Telecommand Space Data Link Layer Protocol (TC-SDLP)
 
 ## Valid Packets
 For these cases, the channel parameters are:

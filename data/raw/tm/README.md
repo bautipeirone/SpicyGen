@@ -1,4 +1,4 @@
-# Telemetry Data Link Layer Protocol (TM)
+# Telemetry Space Data Link Layer Protocol (TM-SDLP)
 
 ## Valid Packets
 For these cases, the channel parameters are:

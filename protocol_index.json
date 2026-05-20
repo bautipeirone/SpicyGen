@@ -136,6 +136,11 @@
     "spec_type": "rfc",
     "rfc_id": "4253"
   },
+  "tc-sdlp": {
+    "type": "binary",
+    "spec_type": "bluebook",
+    "local_spec_file": "specs/tc-sdlp-bluebook.txt"
+  },
   "tcp": {
     "type": "binary",
     "spec_type": "rfc",
@@ -152,6 +157,11 @@
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "1350"
+  },
+  "tm-sdlp": {
+    "type": "binary",
+    "spec_type": "bluebook",
+    "local_spec_file": "specs/tm-sdlp-bluebook.txt"
   },
   "udp": {
     "type": "binary",
