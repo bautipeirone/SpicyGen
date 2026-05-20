@@ -24,7 +24,10 @@ exactly the following fields:
 {
   "type": "<text|binary>",
   "port": <integer or null>,
-  "transport": "<tcp|udp|sctp|...  or null>"
+  "transport": "<tcp|udp|sctp|... or null>"
+  "layer": "<application|session|transport|network|link| or null>",
+  "encoding": <ASN.1|CBOR|... or null>",
+  "checksum": <Internet Checksum|CRC16|CRC32|HMAC-SHA1|... or null>",
 }
 
 Rules:
@@ -34,6 +37,9 @@ Rules:
   applicable / not assigned.
 - "transport" is the underlying transport protocol in lowercase \
   (e.g. "tcp", "udp", "sctp"), or null if not applicable.
+- "layer" is the layer of the OSI model the protocol belongs to.
+- "encoding" is the encoding of the protocol message (e.g. "ASN.1", "CBOR", ...).
+- "checksum" is the checksum algorithm used in the protocol header, or null if not applicable.
 """
 
 SUMMARIZE_SECTION_SYSTEM_PROMPT = """\
@@ -87,7 +93,7 @@ def _query_llm_once(llm_config: dict, system_prompt: str, user_message: str) -> 
 
 
 def extract_protocol_info(llm_config: dict, protocol_name: str, spec_content: str | None) -> dict:
-    """Use the LLM to extract type, port and transport for *protocol_name*.
+    """Use the LLM to extract metadata about a protocol, like port number, transport protocol, etc.
 
     The spec text is included when available; otherwise the model relies on
     its training data.
