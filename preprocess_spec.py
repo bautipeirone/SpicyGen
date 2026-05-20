@@ -24,7 +24,7 @@ exactly the following fields:
 {
   "type": "<text|binary>",
   "port": <integer or null>,
-  "transport": "<tcp|udp|sctp|... or null>"
+  "transport": "array of <tcp|udp|sctp|...> or [] if not applicable>",
   "layer": "<application|session|transport|network|link| or null>",
   "encoding": <ASN.1|CBOR|... or null>",
   "checksum": <Internet Checksum|CRC16|CRC32|HMAC-SHA1|... or null>",
@@ -35,8 +35,8 @@ Rules:
   otherwise "binary".
 - "port" is the well-known port number assigned by IANA, or null if not \
   applicable / not assigned.
-- "transport" is the underlying transport protocol in lowercase \
-  (e.g. "tcp", "udp", "sctp"), or null if not applicable.
+- "transport" is the array of underlying transport protocols in lowercase \
+  (e.g. ["tcp", "udp"]), or [] if not applicable.
 - "layer" is the layer of the OSI model the protocol belongs to.
 - "encoding" is the encoding of the protocol message (e.g. "ASN.1", "CBOR", ...).
 - "checksum" is the checksum algorithm used in the protocol header, or null if not applicable.
