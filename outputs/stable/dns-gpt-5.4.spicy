@@ -1,0 +1,206 @@
+module DNS_gpt;
+
+import spicy;
+
+type Opcode = enum {
+    QUERY = 0,
+    IQUERY = 1,
+    STATUS = 2
+};
+
+type Rcode = enum {
+    NOERROR = 0,
+    FORMERR = 1,
+    SERVFAIL = 2,
+    NXDOMAIN = 3,
+    NOTIMP = 4,
+    REFUSED = 5
+};
+
+type RRType = enum {
+    A = 1,
+    NS = 2,
+    MD = 3,
+    MF = 4,
+    CNAME = 5,
+    SOA = 6,
+    MB = 7,
+    MG = 8,
+    MR = 9,
+    NULL = 10,
+    WKS = 11,
+    PTR = 12,
+    HINFO = 13,
+    MINFO = 14,
+    MX = 15,
+    TXT = 16,
+    AXFR = 252,
+    MAILB = 253,
+    MAILA = 254,
+    ANY = 255
+};
+
+type RRClass = enum {
+    IN = 1,
+    CS = 2,
+    CH = 3,
+    HS = 4,
+    ANY = 255
+};
+
+type CharacterString = unit {
+    length: uint8;
+    data: bytes &size=self.length;
+};
+
+type DomainName = unit {
+    length: bitfield(8) {
+        tag: 0..1;
+        value: 2..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    label: bytes &size=self.length.value if (self.length.tag == 0 && self.length.value > 0);
+    pointer_low: uint8 if (self.length.tag == 3);
+    suffix: DomainName if (self.length.tag == 0 && self.length.value > 0);
+};
+
+type Header = unit {
+    id: uint16;
+    flags: bitfield(16) {
+        qr: 0;
+        opcode: 1..4 &convert=Opcode($$);
+        aa: 5;
+        tc: 6;
+        rd: 7;
+        ra: 8;
+        z: 9..11;
+        rcode: 12..15 &convert=Rcode($$);
+    } &bit-order=spicy::BitOrder::MSB0;
+    qdcount: uint16;
+    ancount: uint16;
+    nscount: uint16;
+    arcount: uint16;
+};
+
+type Question = unit {
+    qname: DomainName;
+    qtype: uint16 &convert=RRType($$);
+    qclass: uint16 &convert=RRClass($$);
+};
+
+type CNAME_RDATA = unit {
+    cname: DomainName;
+};
+
+type HINFO_RDATA = unit {
+    cpu: CharacterString;
+    os: CharacterString;
+};
+
+type MB_RDATA = unit {
+    madname: DomainName;
+};
+
+type MD_RDATA = unit {
+    madname: DomainName;
+};
+
+type MF_RDATA = unit {
+    madname: DomainName;
+};
+
+type MG_RDATA = unit {
+    mgmname: DomainName;
+};
+
+type MINFO_RDATA = unit {
+    rmailbx: DomainName;
+    emailbx: DomainName;
+};
+
+type MR_RDATA = unit {
+    newname: DomainName;
+};
+
+type MX_RDATA = unit {
+    preference: uint16;
+    exchange: DomainName;
+};
+
+type NULL_RDATA = unit(rdlength: uint16) {
+    anything: bytes &size=rdlength;
+};
+
+type NS_RDATA = unit {
+    nsdname: DomainName;
+};
+
+type PTR_RDATA = unit {
+    ptrdname: DomainName;
+};
+
+type SOA_RDATA = unit {
+    mname: DomainName;
+    rname: DomainName;
+    serial: uint32;
+    refresh: uint32 &convert=cast<interval>($$);
+    retry: uint32 &convert=cast<interval>($$);
+    expire: uint32 &convert=cast<interval>($$);
+    minimum: uint32;
+};
+
+type TXT_RDATA = unit(rdlength: uint16) {
+    txt_data: CharacterString[] &size=rdlength;
+};
+
+type A_RDATA = unit {
+    address: addr &ipv4;
+};
+
+type WKS_RDATA = unit(rdlength: uint16) {
+    address: addr &ipv4;
+    protocol: uint8;
+    bitmap: bytes &size=(rdlength - 5);
+};
+
+type Unknown_RDATA = unit(rdlength: uint16) {
+    data: bytes &size=rdlength;
+};
+
+type RData = unit(rdlength: uint16, rr_type: RRType) {
+    switch (rr_type) {
+        RRType::A -> a: A_RDATA;
+        RRType::NS -> ns: NS_RDATA;
+        RRType::MD -> md: MD_RDATA;
+        RRType::MF -> mf: MF_RDATA;
+        RRType::CNAME -> cname: CNAME_RDATA;
+        RRType::SOA -> soa: SOA_RDATA;
+        RRType::MB -> mb: MB_RDATA;
+        RRType::MG -> mg: MG_RDATA;
+        RRType::MR -> mr: MR_RDATA;
+        RRType::NULL -> null_rr: NULL_RDATA(rdlength);
+        RRType::WKS -> wks: WKS_RDATA(rdlength);
+        RRType::PTR -> ptr: PTR_RDATA;
+        RRType::HINFO -> hinfo: HINFO_RDATA;
+        RRType::MINFO -> minfo: MINFO_RDATA;
+        RRType::MX -> mx: MX_RDATA;
+        RRType::TXT -> txt: TXT_RDATA(rdlength);
+        * -> unknown: Unknown_RDATA(rdlength);
+    };
+};
+
+type ResourceRecord = unit {
+    name: DomainName;
+    rr_type: uint16 &convert=RRType($$);
+    rr_class: uint16 &convert=RRClass($$);
+    ttl: uint32 &convert=cast<interval>($$);
+    rdlength: uint16;
+    rdata: RData(self.rdlength, self.rr_type);
+};
+
+public type Message = unit {
+    header: Header;
+    questions: Question[self.header.qdcount];
+    answers: ResourceRecord[self.header.ancount];
+    authorities: ResourceRecord[self.header.nscount];
+    additionals: ResourceRecord[self.header.arcount];
+};

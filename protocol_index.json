@@ -31,9 +31,10 @@
     "rfc_id": "2131"
   },
   "dns": {
-    "type": "",
+    "type": "binary",
     "spec_type": "rfc",
-    "rfc_id": "1035"
+    "rfc_id": "1035",
+    "local_spec_file": "specs/dns-grammar.txt"
   },
   "dtls": {
     "type": "binary",
@@ -92,7 +93,7 @@
     "local_spec_file": "specs/irc-grammar.txt"
   },
   "ldap": {
-    "type": "",
+    "type": "binary",
     "spec-type": "rfc",
     "rfc_id": "4511"
   },
