@@ -9,6 +9,7 @@ import argparse
 import autogen
 import json
 import re
+from typing import Annotated
 
 
 # ---------------------------------------------------------------------------
@@ -42,25 +43,35 @@ Rules:
 - "checksum" is the checksum algorithm used in the protocol header, or null if not applicable.
 """
 
-SUMMARIZE_SECTION_SYSTEM_PROMPT = """\
-You are a communication protocol expert reviewing RFC sections. \
-Your task is to decide whether a given RFC section contains important \
-information about the message grammar/format or the protocol state machine.
+SUMMARIZE_SPEC_SYSTEM_PROMPT = """\
+You are a communication protocol expert. You are given the full text of an \
+RFC specification. Your task is to identify every interval of the document \
+that contains important information about the message grammar/format or the \
+protocol state machine.
 
-Respond with a single JSON object (no markdown, no extra text):
-{"relevant": true}   — if the section IS relevant
-{"relevant": false}  — if the section is NOT relevant
-
-A section is relevant if it describes:
+An interval is relevant if it describes:
 - Packet/message/frame structure or field layouts
 - Encoding rules (bit fields, TLVs, length-value, etc.)
 - Protocol state machines, transitions, or control flow
 - Finite-state automata or sequence diagrams describing protocol behaviour
+- ABNF or BNF grammar rules
+- Message type definitions or command/response formats
 
-It is NOT relevant if it only discusses:
+An interval is NOT relevant if it only discusses:
 - Administrative or organisational information
 - References, acknowledgements, or IANA considerations boilerplate
-- General background or motivation
+- Implementation details or platform-specific information
+- Programming interfaces or APIs (sockets, libraries, function calls, etc.)
+- General background or motivation without protocol details
+- Table of contents
+
+You MUST use the `select_intervals` tool to mark the relevant intervals. \
+Each interval is defined by a pair of strings: the start marker and the end \
+marker. These markers must be exact substrings of the document text — copy \
+them verbatim. Use full lines to avoid ambiguity. Do NOT rewrite or \
+paraphrase the document text. Select intervals that do not overlap.
+
+After you have marked all the relevant intervals, say "TERMINATE" to end the conversation.
 """
 
 
@@ -125,166 +136,168 @@ def extract_protocol_info(llm_config: dict, protocol_name: str, spec_content: st
 
     return info
 
-def normalize_title(title: str) -> str:
-    title = title.strip()
-    title = re.sub(r'\s+', ' ', title)
-    title = title.rstrip('.')
-    return title
+# ---------------------------------------------------------------------------
+# Interval-based spec summarization
+# ---------------------------------------------------------------------------
+
+def _build_normalized_index(text: str) -> tuple[str, list[int]]:
+    """Collapse all whitespace runs in *text* into single spaces.
+
+    Returns ``(normalized_text, pos_map)`` where ``pos_map[i]`` is the
+    index in the **original** *text* that corresponds to character *i* in
+    *normalized_text*.
+    """
+    normalized_chars: list[str] = []
+    pos_map: list[int] = []
+    in_ws = False
+    for i, ch in enumerate(text):
+        if ch in " \t\n\r\f\v":
+            if not in_ws:
+                normalized_chars.append(" ")
+                pos_map.append(i)
+                in_ws = True
+        else:
+            normalized_chars.append(ch)
+            pos_map.append(i)
+            in_ws = False
+    return "".join(normalized_chars), pos_map
 
 
-def extract_toc_entries(text: str):
-    TOC_ENTRY_RE = re.compile(
-        r'''(?mx)
-        ^
-        (?![ \t]*\d+(?:\.\d+)+\b)   # reject 1.1, 2.10, 4.3.2, etc.
-        [ \t]*
-        (?P<heading>.*?\S)
-        [ \t]*
-        \.{2,}
-        [ \t]*
-        (?P<page>\d+|[ivxlcdm]+)
-        [ \t]*$
-        '''
-)
+def _normalize_marker(marker: str) -> str:
+    """Collapse whitespace in a marker the same way as ``_build_normalized_index``."""
+    return re.sub(r'\s+', ' ', marker).strip()
 
-    toc_heading = re.search(r'(?im)^[ \t]*Table of Contents[ \t]*$', text)
-    if not toc_heading:
-        return {}, None
 
-    # Limit the search to a reasonable region after the ToC heading.
-    # This avoids accidentally picking up unrelated dot-leader lines later.
-    toc_start = toc_heading.end()
-    toc_region = text[toc_start:toc_start + 50_000]
+def extract_intervals(spec_content: str, intervals: list[list[str]]) -> str:
+    """Given a spec text and a list of [start_marker, end_marker] pairs,
+    find each marker in the text and return the concatenation of all matched
+    intervals.
 
-    entries = []
-    last_match_end = None
+    Matching is **whitespace-normalized**: all runs of whitespace in both the
+    spec and the markers are collapsed to a single space before searching.
+    The extracted text, however, preserves the original formatting. This avoids
+    mismatches because of LLM missing newlines or extra spaces in the markers.
 
-    for m in TOC_ENTRY_RE.finditer(toc_region):
-        entries.append(normalize_title(m.group("heading")))
-        last_match_end = toc_start + m.end()
+    Overlapping or adjacent intervals are merged automatically.
+    Intervals that cannot be resolved are logged and skipped.
+    """
+    norm_text, pos_map = _build_normalized_index(spec_content)
+    resolved: list[tuple[int, int]] = []
 
-    return entries, last_match_end
-
-def find_sections(spec_content: str) -> list[dict]:
-    BODY_HEADER_RE = re.compile(
-        r'''(?mx)
-        ^
-        (?![ \t]*\d+(?:\.\d+)+\b)   # reject 1.1, 2.10, 4.3.2, etc.
-        [ \t]*
-        (?P<heading>.*?\S)
-        [ \t]*$
-        '''
-    )
-
-    SECTION_HEADING_RE = re.compile(
-        r'''(?mx)
-        ^[ \t]*
-        (?!.*\.{2,}[ \t]*\d+[ \t]*$)
-        (?:
-            (?P<number>\d+)\.[ \t]+(?P<heading>\S.*?)
-        |
-            (?P<annex>(?:Appendix|Annex)[ \t]+[A-Z])[\.:]?[ \t]+(?P<annex_heading>\S.*?)
-        )
-        [ \t]*$
-        '''
-    )
-
-    toc_entries, body_start = extract_toc_entries(spec_content)
-
-    # RFCs that dont have a table of contents are harder to split
-    # We choose to fallback to another a more straightforward method that works for some cases
-    regex_to_use = BODY_HEADER_RE
-    if not toc_entries:
-        regex_to_use = SECTION_HEADING_RE
-
-    # Start after the ToC, otherwise we may inspect front matter unnecessarily.
-    search_start = body_start or 0
-
-    matches = []
-    for m in regex_to_use.finditer(spec_content, search_start):
-        heading = normalize_title(m.group("heading") or m.group("annex_heading"))
-
-        if toc_entries and heading not in toc_entries:
+    for idx, pair in enumerate(intervals):
+        if len(pair) != 2:
+            logger.warning(f"Interval {idx}: expected a pair [start, end], got {len(pair)} elements — skipping.")
             continue
 
-        matches.append({
-            "heading": heading,
-            "start": m.start(),
-            "end": m.end(),
-            "match": m,
-        })
+        start_marker_norm = _normalize_marker(pair[0])
+        end_marker_norm = _normalize_marker(pair[1])
 
-    if matches == []:
-        logger.error(f"Could not find any sections in the spec content.")
-        return [{ "heading": "Full Specification", "content": spec_content, "start": 0, "end": len(spec_content), "match": None }]
+        norm_start = norm_text.find(start_marker_norm)
+        if norm_start == -1:
+            logger.warning(f"Interval {idx}: start marker not found — skipping.\n  marker: {pair[0]!r}")
+            continue
 
-    sections = []
-    for i, match_info in enumerate(matches):
-        start_idx = match_info["start"]
-        end_idx = matches[i + 1]["start"] if i + 1 < len(matches) else len(spec_content)
-        
-        match_info["content"] = spec_content[start_idx:end_idx]
-        sections.append(match_info)
+        norm_end = norm_text.find(end_marker_norm, norm_start)
+        if norm_end == -1:
+            logger.warning(f"Interval {idx}: end marker not found after start — skipping.\n  marker: {pair[1]!r}")
+            continue
 
-    return sections
+        # Map back to original positions.
+        orig_start = pos_map[norm_start]
+        norm_end_last = norm_end + len(end_marker_norm) - 1
+        orig_end = pos_map[min(norm_end_last, len(pos_map) - 1)] + 1
 
-def split_spec_into_sections(spec_content: str) -> list[str]:
-    """Split *spec_content* into (header, body) pairs using a section regex."""
-    # This regex matches only the first level sections (e.g. "1. Introduction", "2. Protocol Overview")
-    
-    SECTION_HEADING_RE = re.compile(
-        r'''(?mx)
-        ^[ \t]*
-        (?!.*\.{2,}[ \t]*\d+[ \t]*$)
-        (?:
-            (?P<number>\d+)\.[ \t]+(?P<title>\S.*?)
-        |
-            (?P<annex>(?:Appendix|Annex)[ \t]+[A-Z])[\.:]?[ \t]+(?P<annex_title>\S.*?)
-        )
-        [ \t]*$
-        '''
-    )
+        logger.debug(f"Interval {idx}: resolved to positions {orig_start}-{orig_end}.")
+        resolved.append((orig_start, orig_end))
 
-    parts = SECTION_HEADING_RE.split(spec_content)
-    headings = SECTION_HEADING_RE.findall(spec_content)
+    if not resolved:
+        return ""
 
-    # This case handles the extreme case where no splitting could be done
-    if len(parts) == 1:
-        return [{"heading": "Full Specification", "content": spec_content}]
+    # Sort by start position and merge overlapping/adjacent intervals.
+    resolved.sort()
+    merged: list[tuple[int, int]] = [resolved[0]]
+    for start, end in resolved[1:]:
+        prev_start, prev_end = merged[-1]
+        if start <= prev_end:
+            merged[-1] = (prev_start, max(prev_end, end))
+        else:
+            merged.append((start, end))
 
-    return [{"heading": heading, "content": part} for heading, part in zip(headings, parts[1:]) if part.strip()]
+    logger.debug(f"Merged {len(resolved)} interval(s) into {len(merged)}.")
+
+    parts = [spec_content[s:e] for s, e in merged]
+    return "\n".join(parts)
 
 
 def summarize_spec(llm_config: dict, spec_content: str) -> str:
-    """Return the concatenation of RFC sections that contain grammar/state-machine info."""
-    sections = find_sections(spec_content)
-    logger.info(f"Split spec into {len(sections)} section(s).")
+    """Use an LLM agent with a select_intervals tool to identify and extract
+    the parts of *spec_content* that describe message grammar, format, or
+    protocol state machines.  Returns the concatenated relevant text.
+    """
+    # Mutable container so the nested tool function can store its result.
+    result_holder: dict[str, str | None] = {"summary": None}
 
-    relevant_parts: list[str] = []
+    def select_intervals(
+        intervals: Annotated[list[list[str]],
+            "Array of [start_marker, end_marker] pairs. "
+            "Each marker must be an exact substring copied verbatim from the "
+            "document (use full lines to reduce ambiguity)."],
+    ) -> str:
+        """Mark intervals of the specification that are relevant to protocol
+        grammar, message format, or state machine description."""
+        logger.info(f"select_intervals called with {len(intervals)} interval(s).")
+        summary = extract_intervals(spec_content, intervals)
+        result_holder["summary"] = summary
+        if summary:
+            return f"OK — extracted {len(intervals)} interval(s) ({len(summary)} chars total)."
+        return "WARNING — no intervals could be matched in the document."
 
-    for idx, section in enumerate(sections):
-        header = section["heading"]
-        content = section["content"]
+    assistant = autogen.AssistantAgent(
+        name="SpecAnalyzer",
+        system_message=SUMMARIZE_SPEC_SYSTEM_PROMPT,
+        llm_config=llm_config,
+    )
 
-        logger.debug(f"Evaluating section {idx + 1}/{len(sections)}: {header!r}")
-        user_message = f"Section:\n{content}"
+    user_proxy = autogen.UserProxyAgent(
+        name="SpecProxy",
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=3,
+        is_termination_msg=lambda msg: "TERMINATE" in msg.get("content", "") or result_holder.get("summary") is not None,
+        code_execution_config=False,
+        default_auto_reply="Please use the `select_intervals` tool to mark the relevant parts of the document, then say TERMINATE.",
+    )
 
-        raw = _query_llm_once(llm_config, SUMMARIZE_SECTION_SYSTEM_PROMPT, user_message)
+    autogen.agentchat.register_function(
+        select_intervals,
+        caller=assistant,
+        executor=user_proxy,
+        name="select_intervals",
+        description=(
+            "Mark intervals of the RFC specification that contain protocol grammar, "
+            "message format, or state machine information. Each interval is a pair "
+            "[start_marker, end_marker] of exact substrings from the document."
+        ),
+    )
 
-        try:
-            result = json.loads(raw)
-            is_relevant = bool(result.get("relevant", False))
-        except json.JSONDecodeError:
-            logger.warning(f"Section {idx + 1}: LLM returned non-JSON; defaulting to not relevant.")
-            is_relevant = False
+    user_message = (
+        "Here is the full specification document. Read it carefully and use the "
+        "`select_intervals` tool to select every interval that is relevant to "
+        "the protocol message grammar/format or state machine.\n\n"
+        f"{spec_content}"
+    )
 
-        if is_relevant:
-            logger.info(f"Section {idx + 1} marked relevant.")
-            relevant_parts.append(content)
-        else:
-            logger.debug(f"Section {idx + 1} marked not relevant.")
+    logger.info("Starting spec summarization agent...")
+    user_proxy.initiate_chat(
+        assistant,
+        message=user_message,
+    )
 
-    return "".join(relevant_parts)
+    if result_holder["summary"] is not None:
+        logger.info(f"Spec summarization complete — {len(result_holder['summary'])} chars extracted.")
+        return result_holder["summary"]
+
+    logger.warning("LLM did not call select_intervals; returning empty summary.")
+    return ""
 
 
 def parse_args() -> argparse.Namespace:
