@@ -90,7 +90,8 @@ def get_spicy_context_file(protocol_type: ProtocolType) -> Path:
 
 def main() -> None:
     args = parse_args()
-    enable_runtime_log_file(args.debug_dir)
+    runtime_log_path = args.debug_dir / "runtime.log" if args.debug_dir else None
+    enable_runtime_log_file(runtime_log_path)
 
     logger.info(f"Generating grammar for {args.protocol} using {args.model}")
     logger.debug(f"Instructions file: {args.instructions_file}")

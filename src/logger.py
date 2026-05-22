@@ -31,13 +31,12 @@ def setup_logger() -> logging.Logger:
     return logger
 
 
-def enable_runtime_log_file(debug_dir: Path | None) -> None:
-    """Mirror logger output to ``debug_dir/runtime.log`` when a debug dir is set."""
-    if debug_dir is None:
+def enable_runtime_log_file(log_path: Path | None) -> None:
+    """Mirror logger output to ``log_path`` when a log file path is set."""
+    if log_path is None:
         return
 
-    debug_dir.mkdir(parents=True, exist_ok=True)
-    log_path = debug_dir / "runtime.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("spicy-agent")
 
     for handler in logger.handlers:

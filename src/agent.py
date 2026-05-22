@@ -3,11 +3,44 @@ from pathlib import Path
 from src.tools.compiler import compile_spicy_grammar
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from src.tools.runtime import run_parser_check_from_code
+from src.tools.extraction import extract_intervals
 from src.protocol import Protocol
 from src.logger import logger
 from src.usage import extract_cost_summary, CostSummary
 from typing import Annotated, Any
 import autogen
+
+SUMMARIZE_SPEC_SYSTEM_PROMPT = """\
+You are a communication protocol expert. You are given the full text of an \
+RFC specification. Your task is to identify every interval of the document \
+that contains important information about the message grammar/format or the \
+protocol state machine.
+
+An interval is relevant if it describes:
+- Packet/message/frame structure or field layouts
+- Encoding rules (bit fields, TLVs, length-value, etc.)
+- Protocol state machines, transitions, or control flow
+- Finite-state automata or sequence diagrams describing protocol behaviour
+- ABNF or BNF grammar rules
+- Message type definitions or command/response formats
+
+An interval is NOT relevant if it only discusses:
+- Administrative or organisational information
+- References, acknowledgements, or IANA considerations boilerplate
+- Implementation details or platform-specific information
+- Programming interfaces or APIs (sockets, libraries, function calls, etc.)
+- General background or motivation without protocol details
+- Table of contents
+
+You MUST use the `select_intervals` tool to mark the relevant intervals. \
+Each interval is defined by a pair of strings: the start marker and the end \
+marker. These markers must be exact substrings of the document text — copy \
+them verbatim. For section headers, include the header AND the following line exactly as they appear. \
+Do NOT rewrite or paraphrase the document text. Select intervals that do not overlap.
+
+After you have marked all the relevant intervals, say "TERMINATE" to end the conversation.
+"""
+
 
 COMPILATION_FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the following errors:
 
@@ -34,6 +67,7 @@ IMPORTANT WORKFLOW — follow these steps in order:
 You can also use the retrieve_rfc_by_id tool to fetch additional RFC documents if needed.
 """
 
+
 @dataclass
 class State:
     protocol: Protocol
@@ -58,6 +92,124 @@ def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retr
     if rfc_text is None:
         return f"Could not retrieve RFC {rfc_id}."
     return clean_rfc_text(rfc_text)
+
+
+def query_llm_once(llm_config: dict, system_prompt: str, user_message: str) -> tuple[str, dict[str, Any] | None]:
+    """Send a single user message to the LLM and return the reply text plus usage."""
+    assistant = autogen.ConversableAgent(
+        name="assistant",
+        system_message=system_prompt,
+        llm_config=llm_config,
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=1,
+    )
+    user_proxy = autogen.ConversableAgent(
+        name="user",
+        llm_config=False,
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=0,
+    )
+    
+    chat_result = None
+    try:
+        chat_result = user_proxy.initiate_chat(
+            assistant,
+            message=user_message,
+            max_turns=1,
+            silent=True,
+        )
+    except Exception as e:
+        logger.error(f"Agent loop terminated with an exception: {e}")
+
+    return assistant.last_message()["content"], extract_cost_summary(chat_result.cost) if chat_result is not None else None
+
+
+def summarize_spec(llm_config: dict, spec_content: str) -> tuple[str, dict[str, Any], dict[str, Any] | None]:
+    """Use an LLM agent with a select_intervals tool to identify and extract
+    the parts of *spec_content* that describe message grammar, format, or
+    protocol state machines.  Returns the concatenated relevant text.
+    """
+    # Mutable container so the nested tool function can store its result.
+    result_holder: dict[str, Any] = {
+        "summary": None,
+        "stats": {
+            "requested_intervals": 0,
+            "resolved_intervals": 0,
+            "merged_intervals": 0,
+            "skipped_invalid_pairs": 0,
+            "missing_start_markers": 0,
+            "missing_end_markers": 0,
+            "summary_chars": 0,
+            "summary_lines": 0,
+            "summary_nonempty_lines": 0,
+            "source_chars": len(spec_content),
+            "coverage_ratio": 0.0,
+        },
+    }
+
+    def select_intervals(
+        intervals: Annotated[list[list[str]],
+            "Array of [start_marker, end_marker] pairs. "
+            "Each marker must be an exact substring copied verbatim from the "
+            "document (use full lines to reduce ambiguity)."],
+    ) -> str:
+        """Mark intervals of the specification that are relevant to protocol
+        grammar, message format, or state machine description."""
+        logger.info(f"select_intervals called with {len(intervals)} interval(s).")
+        summary, stats = extract_intervals(spec_content, intervals)
+        result_holder["summary"] = summary
+        result_holder["stats"] = stats
+        if summary:
+            return f"OK — extracted {len(intervals)} interval(s) ({len(summary)} chars total)."
+        return "WARNING — no intervals could be matched in the document."
+
+    assistant = autogen.AssistantAgent(
+        name="SpecAnalyzer",
+        system_message=SUMMARIZE_SPEC_SYSTEM_PROMPT,
+        llm_config=llm_config,
+    )
+
+    user_proxy = autogen.UserProxyAgent(
+        name="SpecProxy",
+        human_input_mode="NEVER",
+        max_consecutive_auto_reply=3,
+        is_termination_msg=lambda msg: "TERMINATE" in msg.get("content", "") or result_holder.get("summary") is not None,
+        code_execution_config=False,
+        default_auto_reply="Please use the `select_intervals` tool to mark the relevant parts of the document, then say TERMINATE.",
+    )
+
+    autogen.agentchat.register_function(
+        select_intervals,
+        caller=assistant,
+        executor=user_proxy,
+        name="select_intervals",
+        description=(
+            "Mark intervals of the RFC specification that contain protocol grammar, "
+            "message format, or state machine information. Each interval is a pair "
+            "[start_marker, end_marker] of exact substrings from the document."
+        ),
+    )
+
+    user_message = (
+        "Here is the full specification document. Read it carefully and use the "
+        "`select_intervals` tool to select every interval that is relevant to "
+        "the protocol message grammar/format or state machine.\n\n"
+        f"{spec_content}"
+    )
+
+    logger.info("Starting spec summarization agent...")
+    chat_result = user_proxy.initiate_chat(
+        assistant,
+        message=user_message,
+    )
+
+    if result_holder["summary"] is not None:
+        logger.info(f"Spec summarization complete — {len(result_holder['summary'])} chars extracted.")
+        return result_holder["summary"], result_holder["stats"], extract_cost_summary(chat_result.cost)
+
+    logger.warning("LLM did not call select_intervals; returning empty summary.")
+    return "", result_holder["stats"], extract_cost_summary(chat_result.cost)
+
 
 def run_refinement_loop(
     llm_config: dict,
