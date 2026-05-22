@@ -10,6 +10,7 @@ import autogen
 import json
 import re
 from typing import Annotated
+from functools import cache
 
 
 # ---------------------------------------------------------------------------
@@ -68,8 +69,8 @@ An interval is NOT relevant if it only discusses:
 You MUST use the `select_intervals` tool to mark the relevant intervals. \
 Each interval is defined by a pair of strings: the start marker and the end \
 marker. These markers must be exact substrings of the document text — copy \
-them verbatim. Use full lines to avoid ambiguity. Do NOT rewrite or \
-paraphrase the document text. Select intervals that do not overlap.
+them verbatim. For section headers, include the header AND the following line exactly as they appear. \
+Do NOT rewrite or paraphrase the document text. Select intervals that do not overlap.
 
 After you have marked all the relevant intervals, say "TERMINATE" to end the conversation.
 """
@@ -140,32 +141,59 @@ def extract_protocol_info(llm_config: dict, protocol_name: str, spec_content: st
 # Interval-based spec summarization
 # ---------------------------------------------------------------------------
 
-def _build_normalized_index(text: str) -> tuple[str, list[int]]:
-    """Collapse all whitespace runs in *text* into single spaces.
-
-    Returns ``(normalized_text, pos_map)`` where ``pos_map[i]`` is the
-    index in the **original** *text* that corresponds to character *i* in
-    *normalized_text*.
-    """
-    normalized_chars: list[str] = []
-    pos_map: list[int] = []
+@cache
+def normalize_str(s: str):
+    norm_chars: list[str] = []
+    pos_map: list[int] = []          # norm index -> original index
     in_ws = False
-    for i, ch in enumerate(text):
+    for i, ch in enumerate(s):
         if ch in " \t\n\r\f\v":
             if not in_ws:
-                normalized_chars.append(" ")
+                norm_chars.append(" ")
                 pos_map.append(i)
                 in_ws = True
         else:
-            normalized_chars.append(ch)
+            norm_chars.append(ch)
             pos_map.append(i)
             in_ws = False
-    return "".join(normalized_chars), pos_map
+    norm_text = "".join(norm_chars)
+    return norm_text, pos_map
 
 
-def _normalize_marker(marker: str) -> str:
-    """Collapse whitespace in a marker the same way as ``_build_normalized_index``."""
-    return re.sub(r'\s+', ' ', marker).strip()
+def find_marker(spec_content: str, marker: str, start: int = 0) -> tuple[int, int] | None:
+    """Find *marker* in *spec_content* starting from *start*.
+
+    Matching is **whitespace-normalized**: all runs of whitespace in both
+    the spec and the marker are collapsed to single spaces, and the marker
+    is stripped before comparison.  The returned span ``(start, end)``
+    refers to positions in the **original** (un-normalized) *spec_content*.
+
+    Returns ``None`` if the marker cannot be found.
+    """
+    
+    norm_text, pos_map = normalize_str(spec_content)
+
+    # --- normalize marker ---
+    norm_marker = re.sub(r'\s+', ' ', marker).strip()
+
+    # --- map start to normalized space ---
+    # Find the first norm index whose original position is >= start.
+    norm_start = 0
+    if start > 0:
+        for j, orig in enumerate(pos_map):
+            if orig >= start:
+                norm_start = j
+                break
+
+    # --- search ---
+    idx = norm_text.find(norm_marker, norm_start)
+    if idx == -1:
+        return None
+
+    orig_start = pos_map[idx]
+    norm_end_last = idx + len(norm_marker) - 1
+    orig_end = pos_map[min(norm_end_last, len(pos_map) - 1)] + 1
+    return (orig_start, orig_end)
 
 
 def extract_intervals(spec_content: str, intervals: list[list[str]]) -> str:
@@ -173,15 +201,9 @@ def extract_intervals(spec_content: str, intervals: list[list[str]]) -> str:
     find each marker in the text and return the concatenation of all matched
     intervals.
 
-    Matching is **whitespace-normalized**: all runs of whitespace in both the
-    spec and the markers are collapsed to a single space before searching.
-    The extracted text, however, preserves the original formatting. This avoids
-    mismatches because of LLM missing newlines or extra spaces in the markers.
-
     Overlapping or adjacent intervals are merged automatically.
     Intervals that cannot be resolved are logged and skipped.
     """
-    norm_text, pos_map = _build_normalized_index(spec_content)
     resolved: list[tuple[int, int]] = []
 
     for idx, pair in enumerate(intervals):
@@ -189,23 +211,18 @@ def extract_intervals(spec_content: str, intervals: list[list[str]]) -> str:
             logger.warning(f"Interval {idx}: expected a pair [start, end], got {len(pair)} elements — skipping.")
             continue
 
-        start_marker_norm = _normalize_marker(pair[0])
-        end_marker_norm = _normalize_marker(pair[1])
-
-        norm_start = norm_text.find(start_marker_norm)
-        if norm_start == -1:
+        start_hit = find_marker(spec_content, pair[0])
+        if start_hit is None:
             logger.warning(f"Interval {idx}: start marker not found — skipping.\n  marker: {pair[0]!r}")
             continue
 
-        norm_end = norm_text.find(end_marker_norm, norm_start)
-        if norm_end == -1:
+        end_hit = find_marker(spec_content, pair[1], start=start_hit[0])
+        if end_hit is None:
             logger.warning(f"Interval {idx}: end marker not found after start — skipping.\n  marker: {pair[1]!r}")
             continue
 
-        # Map back to original positions.
-        orig_start = pos_map[norm_start]
-        norm_end_last = norm_end + len(end_marker_norm) - 1
-        orig_end = pos_map[min(norm_end_last, len(pos_map) - 1)] + 1
+        orig_start = start_hit[0]
+        orig_end = end_hit[1]
 
         logger.debug(f"Interval {idx}: resolved to positions {orig_start}-{orig_end}.")
         resolved.append((orig_start, orig_end))
