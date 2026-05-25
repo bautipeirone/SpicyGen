@@ -112,13 +112,24 @@ python3 pipeline.py status --model gemini-3.1-flash
 
 ---
 
+## Automatic Integration in the Pipeline
+When running the full pipeline or resuming a workspace:
+* The `preprocess` step executes first and creates `preprocess/summary.txt`.
+* Before running the `grammar` step, the pipeline checks if `preprocess/summary.txt` exists in the workspace.
+* If found, the pipeline **automatically** appends `--spec-file <workspace>/preprocess/summary.txt` to the `generate_grammar.py` subprocess command.
+* If no preprocessed summary is present, the grammar generator safely falls back to standard index resolution.
+
+---
+
 ## Component Separation & Design
 
 ```mermaid
 graph TD
-    P["pipeline.py"] -->|"1. Run Subprocess"| PS["preprocess_spec.py"]
-    P -->|"2. Run Subprocess"| GG["generate_grammar.py"]
-    P -->|"Manages"| WS["workspaces/protocol/model/timestamp/"]
+    P["pipeline.py"] -->|"1. Run preprocessing"| PS["preprocess_spec.py"]
+    PS -->|"Writes summary.txt"| WS
+    P -->|"2. Checks for summary.txt"| WS
+    P -->|"3. Run grammar generation"| GG["generate_grammar.py"]
+    WS["workspaces/protocol/model/timestamp/"]
     WS --> M["manifest.json"]
     WS --> PP["preprocess/"]
     WS --> GR["grammar/"]
