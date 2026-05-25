@@ -13,6 +13,7 @@ a.out*
 *.hlto
 
 # Runtime debug and outputs
+workspaces/
 outputs/*
 !outputs/stable
 !outputs/wip
