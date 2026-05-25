@@ -33,6 +33,11 @@ Another possibility to test many models along various protocols is to use the sh
 This will run the grammar generator for each combination of the specified models and protocols. It will also try to compile the result with `spicyc` to test if the LLM produced a valid grammar.
 To keep track of each run, a `README.md` file is created in the output directory and metrics are aggregated. The flag `--note` can be used to add a note to the run, and `--debug` to save debug logs.
 
+### Standalone Specification Override
+By default, `generate_grammar.py` resolves the protocol specification using the metadata inside `protocol_index.json`. You can override this behavior by passing the `--spec-file` flag with a path to any custom text file (such as a preprocessed summary).
+
+This is highly useful for isolated manual testing, debugging custom prompts, or validating how the LLM reacts to specific cuts of the specification.
+
 ## Docker Usage
 You can use the provided `Dockerfile` to run the benchmark script in an isolated environment containing all the necessary dependencies.
 
