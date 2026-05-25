@@ -60,6 +60,13 @@ def parse_args() -> argparse.Namespace:
         help="Directory to save debug information like refinement steps and compilation errors for each attempt (optional)",
     )
     parser.add_argument(
+        "--spec-file",
+        type=Path,
+        default=None,
+        help="Path to a custom specification file to use instead of the one resolved from protocol_index.json "
+             "(e.g. a preprocessed summary from preprocess_spec.py).",
+    )
+    parser.add_argument(
         "--config",
         "-c",
         type=Path,
@@ -98,6 +105,7 @@ def main() -> None:
     logger.debug(f"Output file: {args.output_file}")
     logger.debug(f"Debug dir: {args.debug_dir}")
     logger.debug(f"Config file: {args.config}")
+    logger.debug(f"Spec file override: {args.spec_file}")
 
     protocol = load_protocol(args.protocol)
     if protocol is None:
@@ -110,7 +118,13 @@ def main() -> None:
         logger.debug(f"Using default spicy instructions file: {instructions_file}")
 
     spicy_context = load_file(instructions_file)
-    spec_content = load_spec(protocol)
+
+    if args.spec_file:
+        logger.info(f"Using custom spec file: {args.spec_file}")
+        spec_content = load_file(args.spec_file)
+    else:
+        spec_content = load_spec(protocol)
+
     if spec_content is None:
         logger.error(f"No specification content found for protocol '{protocol.name}'.")
         exit(1)

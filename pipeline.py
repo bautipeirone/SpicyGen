@@ -107,10 +107,25 @@ def _run_grammar(
     protocol: str,
     model: str,
     config: Path | None = None,
+    spec_file: Path | None = None,
 ) -> int:
-    """Run ``generate_grammar.py`` and route outputs into the workspace."""
+    """Run ``generate_grammar.py`` and route outputs into the workspace.
+
+    If *spec_file* is not given explicitly, the runner checks whether the
+    preprocess step produced a ``summary.txt`` in this workspace and uses
+    it automatically.  When no preprocessed summary is available, the
+    grammar generator falls back to its default spec resolution via
+    ``protocol_index.json``.
+    """
     paths = grammar_paths(workspace_dir)
     paths["debug_dir"].mkdir(parents=True, exist_ok=True)
+
+    # Auto-detect the preprocessed summary when no explicit spec_file is given.
+    if spec_file is None:
+        candidate = preprocess_paths(workspace_dir)["summary"]
+        if candidate.exists():
+            spec_file = candidate
+            logger.info(f"[grammar] Using preprocessed summary: {spec_file}")
 
     cmd = [
         sys.executable, "generate_grammar.py",
@@ -120,6 +135,9 @@ def _run_grammar(
         "--metrics-file", str(paths["metrics"]),
         "--debug-dir",    str(paths["debug_dir"]),
     ]
+
+    if spec_file is not None:
+        cmd.extend(["--spec-file", str(spec_file)])
 
     if config is not None:
         cmd.extend(["--config", str(config)])
