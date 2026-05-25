@@ -1,2 +1,0 @@
-The protocol is TCP, the Transmission Control Protocol. There is no specification available.
-Try to produce the grammar from your training data and what you know about the TCP protocol.

@@ -63,3 +63,38 @@ def extract_cost_summary(cost: Any) -> dict[str, CostSummary | None] | None:
             }
 
     return None
+
+def merge_usage_reports(*usage_reports: dict[str, CostSummary | None] | None) -> dict[str, CostSummary | None] | None:
+    """Aggregate multiple ``extract_cost_summary`` results into the same shape."""
+    summary_keys = ("total_usage", "actual_usage")
+    field_keys = ("total_cost", "prompt_tokens", "completion_tokens", "total_tokens")
+    merged: dict[str, CostSummary | None] = {}
+
+    for summary_key in summary_keys:
+        combined_block: CostSummary = {
+            "total_cost": None,
+            "prompt_tokens": None,
+            "completion_tokens": None,
+            "total_tokens": None,
+        }
+        has_values = False
+
+        for field_key in field_keys:
+            values = [
+                report[summary_key][field_key]
+                for report in usage_reports
+                if report
+                and isinstance(report.get(summary_key), dict)
+                and report[summary_key].get(field_key) is not None
+            ]
+            if not values:
+                continue
+
+            total = sum(values)
+            combined_block[field_key] = round(total, 6) if field_key == "total_cost" else int(total)
+            has_values = True
+
+        if has_values:
+            merged[summary_key] = combined_block
+
+    return merged or None

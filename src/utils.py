@@ -1,6 +1,8 @@
 import yaml
 from pathlib import Path
 import difflib
+import json
+from typing import Any
 
 def read_config(path: Path | None) -> tuple[dict, dict]:
     # Defaults
@@ -31,6 +33,12 @@ def load_file(path: Path) -> str:
     except OSError as exc:
         raise SystemExit(f"Unable to read {path}: {exc}") from exc
 
+def write_json_file(path: Path, payload: dict[str, Any]) -> None:
+    try:
+        path.write_text(json.dumps(payload, indent=2))
+    except OSError as exc:
+        raise SystemExit(f"Unable to write to {path}: {exc}") from exc
+
 def generate_diff(str_a: str, str_b: str) -> str | None:    
     diff_generator = difflib.unified_diff(
         str_a.splitlines(keepends=True),
@@ -47,3 +55,19 @@ def generate_diff(str_a: str, str_b: str) -> str | None:
     clean_diff = "".join(diff_lines[2:])
     
     return clean_diff
+
+def compute_text_stats(text: str | None) -> dict[str, Any]:
+    if not text:
+        return {
+            "chars": 0,
+            "lines": 0,
+            "nonempty_lines": 0,
+        }
+
+    lines = text.splitlines()
+    return {
+        "chars": len(text),
+        "lines": len(lines),
+        "nonempty_lines": sum(1 for line in lines if line.strip()),
+    }
+

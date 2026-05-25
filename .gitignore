@@ -12,6 +12,9 @@ __pycache__/
 a.out*
 *.hlto
 
+# Input specs
+specs/
+
 # Runtime debug and outputs
 outputs/*
 !outputs/stable
