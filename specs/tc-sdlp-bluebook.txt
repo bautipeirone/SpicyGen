@@ -1,5 +1,827 @@
-TC SPACE DATA LINK PROTOCOL 
+Recommendation for Space Data System Standards 
+
+TC SPACE DATA 
+LINK PROTOCOL 
+
+RECOMMENDED STANDARD 
+
+CCSDS 232.0-B-4 
+
+Note:
+This current 
+issue includes 
+all updates through 
+Technical Corrigendum 1, 
+dated October 2023. 
+
+BLUE BOOK 
+October 2021 
+
+
+Recommendation for Space Data System Standards 
+
+TC SPACE DATA 
+LINK PROTOCOL 
+
+RECOMMENDED STANDARD 
+
+CCSDS 232.0-B-4 
+
+Note:
+This current 
+issue includes 
+all updates through 
+Technical Corrigendum 1, 
+dated October 2023 
+
+BLUE BOOK 
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+AUTHORITY 
+
+Issue: 
+  Date: 
+
+Location: 
+
+Recommended Standard, Issue 4 
+October 2021 
+Washington, DC, USA 
+
+This  document  has  been  approved  for  publication  by  the  Management  Council  of  the 
+Consultative  Committee  for  Space  Data  Systems  (CCSDS)  and  represents  the  consensus 
+technical  agreement  of  the  participating  CCSDS  Member  Agencies.    The  procedure  for 
+review and authorization of CCSDS documents is detailed in Organization and Processes for 
+the Consultative Committee for Space Data Systems (CCSDS A02.1-Y-4), and the record of 
+Agency participation in the authorization of this document can be obtained from the CCSDS 
+Secretariat at the email address below. 
+
+This document is published and maintained by: 
+
+CCSDS Secretariat 
+National Aeronautics and Space Administration 
+Washington, DC, USA 
+Email: secretariat@mailman.ccsds.org 
+
+CCSDS 232.0-B-4 
+
+Page i 
+
+October 2021 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+STATEMENT OF INTENT 
+
+The Consultative Committee for Space Data Systems (CCSDS) is an organization officially 
+established by the management of its members. The Committee meets periodically to address 
+data systems problems that are common to all participants, and to formulate sound technical 
+solutions  to  these  problems.  Inasmuch  as  participation  in  the  CCSDS  is  completely 
+voluntary,  the  results  of  Committee  actions  are  termed  Recommended  Standards  and  are 
+not considered binding on any Agency. 
+
+This  Recommended  Standard  is  issued  by,  and  represents  the  consensus  of,  the  CCSDS 
+members.    Endorsement  of  this  Recommendation  is  entirely  voluntary.  Endorsement, 
+however, indicates the following understandings: 
+
+o  Whenever a member establishes a CCSDS-related standard, this standard will be in 
+accord  with  the  relevant  Recommended  Standard.  Establishing  such  a  standard 
+does not preclude other provisions which a member may develop. 
+
+o  Whenever  a  member  establishes  a  CCSDS-related  standard,  that  member  will 
+
+provide other CCSDS members with the following information: 
+
+--  The standard itself. 
+
+--  The anticipated date of initial operational capability. 
+
+--  The anticipated duration of operational service. 
+
+o  Specific  service  arrangements  shall  be  made  via  memoranda  of  agreement.  Neither 
+this  Recommended  Standard  nor  any  ensuing  standard  is  a  substitute  for  a 
+memorandum of agreement. 
+
+No  later  than  five  years  from  its  date  of  issuance,  this  Recommended  Standard  will  be 
+reviewed by the CCSDS to determine whether it should: (1) remain in effect without change; 
+(2)  be  changed  to  reflect  the  impact  of  new  technologies,  new  requirements,  or  new 
+directions; or (3) be retired or canceled. 
+
+In  those  instances  when  a  new  version  of  a  Recommended  Standard  is  issued,  existing 
+CCSDS-related member standards and implementations are not negated or deemed to be non-
+CCSDS  compatible.    It  is  the  responsibility  of  each  member  to  determine  when  such 
+standards  or  implementations  are  to  be  modified.    Each  member  is,  however,  strongly 
+encouraged  to  direct  planning  for  its  new  standards  and  implementations  towards  the  later 
+version of the Recommended Standard. 
+
+CCSDS 232.0-B-4 
+
+Page ii 
+
+October 2021 
+
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+FOREWORD 
+
+This  document  is  a  technical  Recommendation  for  use  in  developing  flight  and  ground 
+systems for space missions and has been prepared by the Consultative Committee for Space 
+Data Systems (CCSDS).  The TC Space Data Link Protocol described herein is intended for 
+missions that are cross-supported between Agencies of the CCSDS. 
+
+Attention is drawn to the possibility that some of the elements of this document may be the 
+subject of patent rights. CCSDS has processes for identifying patent issues and for securing 
+from  the  patent  holder  agreement  that  all  licensing  policies  are  reasonable  and  non-
+discriminatory.  However, CCSDS does not have a patent law staff, and CCSDS shall not be 
+held responsible for identifying any or all such patent rights. 
+
+Through  the  process  of  normal  evolution,  it  is  expected  that  expansion,  deletion,  or 
+modification of this document may occur.  This Recommended Standard is therefore subject 
+to  CCSDS  document  management  and  change  control  procedures,  which  are  defined  in 
+Organization  and  Processes  for  the  Consultative  Committee  for  Space  Data  Systems 
+(CCSDS A02.1-Y-4).  Current versions of CCSDS documents are maintained at the CCSDS 
+Web site: 
+
+http://www.ccsds.org/ 
+
+Questions  relating  to  the  contents  or  status  of  this  document  should  be  sent  to  the  CCSDS 
+Secretariat at the email address indicated on page i. 
+
+CCSDS 232.0-B-4 
+
+Page iii 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+At time of publication, the active Member and Observer Agencies of the CCSDS were: 
+
+Member Agencies 
+
+–  Agenzia Spaziale Italiana (ASI)/Italy. 
+–  Canadian Space Agency (CSA)/Canada. 
+–  Centre National d’Etudes Spatiales (CNES)/France. 
+–  China National Space Administration (CNSA)/People’s Republic of China. 
+–  Deutsches Zentrum für Luft- und Raumfahrt (DLR)/Germany. 
+–  European Space Agency (ESA)/Europe. 
+–  Federal Space Agency (FSA)/Russian Federation. 
+– 
+–  Japan Aerospace Exploration Agency (JAXA)/Japan. 
+–  National Aeronautics and Space Administration (NASA)/USA. 
+–  UK Space Agency/United Kingdom. 
+
+Instituto Nacional de Pesquisas Espaciais (INPE)/Brazil. 
+
+Observer Agencies 
+
+–  Austrian Space Agency (ASA)/Austria. 
+–  Belgian Science Policy Office (BELSPO)/Belgium. 
+–  Central Research Institute of Machine Building (TsNIIMash)/Russian Federation. 
+–  China Satellite Launch and Tracking Control General, Beijing Institute of Tracking and 
+
+Telecommunications Technology (CLTC/BITTT)/China. 
+
+Indian Space Research Organization (ISRO)/India. 
+Institute of Space Research (IKI)/Russian Federation. 
+
+–  Chinese Academy of Sciences (CAS)/China. 
+–  China Academy of Space Technology (CAST)/China. 
+–  Commonwealth Scientific and Industrial Research Organization (CSIRO)/Australia. 
+–  Danish National Space Center (DNSC)/Denmark. 
+–  Departamento de Ciência e Tecnologia Aeroespacial (DCTA)/Brazil. 
+–  Electronics and Telecommunications Research Institute (ETRI)/Korea. 
+–  European Organization for the Exploitation of Meteorological Satellites (EUMETSAT)/Europe. 
+–  European Telecommunications Satellite Organization (EUTELSAT)/Europe. 
+–  Geo-Informatics and Space Technology Development Agency (GISTDA)/Thailand. 
+–  Hellenic National Space Committee (HNSC)/Greece. 
+–  Hellenic Space Agency (HSA)/Greece. 
+– 
+– 
+–  Korea Aerospace Research Institute (KARI)/Korea. 
+–  Ministry of Communications (MOC)/Israel. 
+–  Mohammed Bin Rashid Space Centre (MBRSC)/United Arab Emirates. 
+–  National Institute of Information and Communications Technology (NICT)/Japan. 
+–  National Oceanic and Atmospheric Administration (NOAA)/USA. 
+–  National Space Agency of the Republic of Kazakhstan (NSARK)/Kazakhstan. 
+–  National Space Organization (NSPO)/Chinese Taipei. 
+–  Naval Center for Space Technology (NCST)/USA. 
+–  Netherlands Space Office (NSO)/The Netherlands. 
+–  Research Institute for Particle & Nuclear Physics (KFKI)/Hungary. 
+–  Scientific and Technological Research Council of Turkey (TUBITAK)/Turkey. 
+–  South African National Space Agency (SANSA)/Republic of South Africa. 
+–  Space and Upper Atmosphere Research Commission (SUPARCO)/Pakistan. 
+–  Swedish Space Corporation (SSC)/Sweden. 
+–  Swiss Space Office (SSO)/Switzerland. 
+–  United States Geological Survey (USGS)/USA. 
+
+CCSDS 232.0-B-4 
+
+Page iv 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+DOCUMENT CONTROL 
+
+Document 
+
+Title 
+
+Date 
+
+Status 
+
+CCSDS 
+232.0-B-1 
+
+TC Space Data Link Protocol, 
+Recommended Standard, Issue 1 
+
+September 
+2003 
+
+Original Issue, 
+superseded 
+
+CCSDS 
+232.0-B-2 
+
+TC Space Data Link Protocol, 
+Recommended Standard, Issue 2 
+
+September 
+2010 
+
+Issue 2, superseded 
+
+CCSDS 
+232.0-B-3 
+
+TC Space Data Link Protocol, 
+Recommended Standard, Issue 3 
+
+September 
+2015 
+
+Issue 3, superseded 
+
+CCSDS 
+232.0-B-4 
+
+TC Space Data Link Protocol, 
+Recommended Standard, Issue 4 
+
+October 
+2021 
+
+Current issue: 
+– adds corrections and 
+
+clarifications; 
+– adds a protocol 
+implementation 
+conformance statement 
+proforma as new 
+normative annex A 
+(note). 
+
+Expands and clarifies 
+discussion under  6.5.2, 
+Order of Processing 
+between TC, COP-1, and 
+SDLS protocols. 
+
+Technical Corrigendum 1 
+
+October 
+2023 
+
+CCSDS 
+232.0-B-4 
+Cor. 1 
+
+CCSDS 
+232.0-B-4 
+EC 1 
+
+Editorial Change 1 
+
+October 
+2024 
+
+Corrects/adjusts 
+– erroneous callout in 
+
+table 6-1; 
+
+– capitalization and 
+hyphenation in 
+figure 6-3; 
+
+– page layout in annex A; 
+– change bar positioning; 
+– page size to A4. 
+
+NOTE  –  Excepting  annex A, which  is new in its entirety in issue 4, substantive changes 
+
+from issue 3 are indicated by change bars in the inside margin. 
+
+CCSDS 232.0-B-4 
+CCSDS 232.0-B-4 Cor. 1 
+
+Page v 
+
+October 2021 
+October 2023 
+October 2024 
+
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+CONTENTS 
+
+Section 
+
+Page 
+
+1  INTRODUCTION .......................................................................................................... 1-1 
+
+1.1  PURPOSE ............................................................................................................... 1-1 
+1.2  SCOPE .................................................................................................................... 1-1 
+1.3  APPLICABILITY ................................................................................................... 1-1 
+1.4  RATIONALE .......................................................................................................... 1-2 
+1.5  DOCUMENT STRUCTURE .................................................................................. 1-2 
+1.6  CONVENTIONS AND DEFINITIONS ................................................................. 1-2 
+1.7  REFERENCES ........................................................................................................ 1-5 
+
+2  OVERVIEW ................................................................................................................... 2-1 
+
+2.1  CONCEPT OF TC SPACE DATA LINK PROTOCOL ........................................ 2-1 
+2.2  OVERVIEW OF SERVICES .................................................................................. 2-5 
+2.3  OVERVIEW OF FUNCTIONS ............................................................................ 2-12 
+2.4  SERVICES ASSUMED FROM LOWER LAYERS ............................................ 2-16 
+
+3  SERVICE DEFINITION ............................................................................................... 3-1 
+
+3.1  OVERVIEW ............................................................................................................ 3-1 
+3.2  SOURCE DATA ..................................................................................................... 3-1 
+3.3  MAP PACKET SERVICE ...................................................................................... 3-3 
+3.4  VIRTUAL CHANNEL PACKET SERVICE ......................................................... 3-9 
+3.5  MAP ACCESS SERVICE .................................................................................... 3-14 
+3.6  VIRTUAL CHANNEL ACCESS SERVICE ....................................................... 3-20 
+3.7  VIRTUAL CHANNEL FRAME SERVICE ......................................................... 3-25 
+3.8  MASTER CHANNEL FRAME SERVICE .......................................................... 3-28 
+3.9  COP MANAGEMENT SERVICE ........................................................................ 3-31 
+
+4  PROTOCOL SPECIFICATION WITHOUT SDLS OPTION .................................. 4-1 
+
+4.1  PROTOCOL DATA UNIT (TC TRANSFER FRAME) ........................................ 4-1 
+4.2  PROTOCOL DATA UNIT (CLCW) .................................................................... 4-12 
+4.3  PROTOCOL PROCEDURES AT THE SENDING END .................................... 4-18 
+4.4  PROTOCOL PROCEDURES AT THE RECEIVING END ................................ 4-29 
+
+5  MANAGED PARAMETERS WITHOUT SDLS OPTION ....................................... 5-1 
+
+5.1  MANAGED PARAMETERS FOR A PHYSICAL CHANNEL ............................ 5-1 
+5.2  MANAGED PARAMETERS FOR A MASTER CHANNEL ............................... 5-2 
+5.3  MANAGED PARAMETERS FOR A VIRTUAL CHANNEL .............................. 5-2 
+
+CCSDS 232.0-B-4 
+
+Page vi 
+
+October 2021 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+CONTENTS (continued) 
+
+Section 
+
+Page 
+
+5.4  MANAGED PARAMETERS FOR A MAP CHANNEL ....................................... 5-4 
+5.5  MANAGED PARAMETERS FOR PACKET TRANSFER .................................. 5-4 
+
+6  PROTOCOL SPECIFICATION WITH SDLS OPTION .......................................... 6-1 
+
+6.1  OVERVIEW ........................................................................................................... 6-1 
+6.2  USE OF SDLS PROTOCOL .................................................................................. 6-1 
+6.3  TC TRANSFER FRAME WITH SDLS ................................................................. 6-1 
+6.4  SENDING-END PROTOCOL PROCEDURES WITH SDLS ............................... 6-5 
+6.5  RECEIVING-END PROTOCOL PROCEDURES WITH SDLS ......................... 6-10 
+6.6  ADDITIONAL MANAGED PARAMETERS FOR SDLS .................................. 6-13 
+
+ANNEX A  PROTOCOL IMPLEMENTATION CONFORMANCE   
+
+STATEMENT PROFORMA  (NORMATIVE) .......................................... A-1 
+ANNEX B  ACRONYMS  (INFORMATIVE) ................................................................ B-1 
+ANNEX C  INFORMATIVE REFERENCES  (INFORMATIVE) ............................... C-1 
+
+Figure 
+
+1-1  Bit Numbering Convention ........................................................................................... 1-5 
+2-1  Relationship with OSI Layers ....................................................................................... 2-1 
+2-2  Relationships Between Channels .................................................................................. 2-4 
+Internal Organization of Protocol Entity (Sending End) ............................................ 2-13 
+2-3 
+2-4 
+Internal Organization of Protocol Entity (Receiving End) ......................................... 2-14 
+2-5  TC Space Data Link Protocol Channel Tree ............................................................... 2-15 
+4-1  TC Transfer Frame Structural Components .................................................................. 4-1 
+4-2  Transfer Frame Primary Header .................................................................................... 4-2 
+4-3  Segment Header ............................................................................................................ 4-7 
+4-4  Logic Diagram of the Encoder .................................................................................... 4-11 
+4-5  Logic Diagram of the Decoder .................................................................................... 4-12 
+4-6  Communications Link Control Word .......................................................................... 4-13 
+4-7 
+Internal Organization of Protocol Entity (Sending End) ............................................ 4-19 
+4-8  Abstract Model of MAP Packet Processing Function ................................................ 4-20 
+4-9  Example of MAP Packet Processing Procedures ........................................................ 4-20 
+4-10  Abstract Model of MAP Generation Function ............................................................ 4-22 
+4-11  Example of MAP Generation Procedures ................................................................... 4-22 
+4-12  Abstract Model of MAP Multiplexing Function ......................................................... 4-23 
+4-13  Abstract Model of VC Packet Processing Function .................................................... 4-24 
+4-14  Example of VC Packet Processing Procedures ........................................................... 4-24 
+4-15  Abstract Model of Virtual Channel Generation Function ........................................... 4-25 
+
+CCSDS 232.0-B-4 
+
+Page vii 
+
+October 2021 
+
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+CONTENTS (continued) 
+
+Figure 
+
+Page 
+
+4-16  Abstract Model of Virtual Channel Multiplexing Function ........................................ 4-26 
+4-17  Abstract Model of Master Channel Multiplexing Function ........................................ 4-27 
+4-18  Abstract Model of All Frames Generation Function................................................... 4-28 
+4-19  Internal Organization of Protocol Entity (Receiving End) ......................................... 4-29 
+4-20  Abstract Model of MAP Packet Extraction Function ................................................. 4-30 
+4-21  Abstract Model of MAP Reception Function ............................................................. 4-31 
+4-22  Abstract Model of MAP Demultiplexing Function .................................................... 4-31 
+4-23  Abstract Model of VC Packet Extraction Function .................................................... 4-32 
+4-24  Abstract Model of Virtual Channel Reception Function ............................................ 4-33 
+4-25  Abstract Model of Virtual Channel Demultiplexing Function ................................... 4-34 
+4-26  Abstract Model of Master Channel Demultiplexing Function .................................... 4-35 
+4-27  Abstract Model of All Frames Reception Function .................................................... 4-36 
+6-1  SDLS Fields in a Type-D Transfer Frame with a Segment Header .............................. 6-2 
+6-2  SDLS Fields in a Type-D Transfer Frame without a Segment Header ......................... 6-2 
+6-3  Order of Processing between TC, COP-1, and SDLS Functions .................................. 6-7 
+
+Table 
+
+2-1  Summary of Services Provided by TC Space Data Link Protocol ................................ 2-8 
+Interpretation of the Bypass and Control Command Flags ........................................... 4-4 
+4-1 
+4-2 
+Interpretation of the Sequence Flags ............................................................................. 4-8 
+5-1  Managed Parameters for a Physical Channel ................................................................ 5-1 
+5-2  Managed Parameters for a Master Channel .................................................................. 5-2 
+5-3  Managed Parameters for a Virtual Channel .................................................................. 5-3 
+5-4  Managed Parameters for a MAP Channel ..................................................................... 5-4 
+5-5  Managed Parameters for Packet Transfer ..................................................................... 5-4 
+6-1  CCSDS Order of Processing for Telecommand User Data Frames  
+
+Using SDLS (Sequential with Figure 6 3) .................................................................... 6-7 
+
+6-2  Additional Managed Parameters for a Virtual Channel without  
+
+Segment Headers When TC Space Data Link Protocol Supports SDLS .................... 6-13 
+
+6-3  Additional Managed Parameters for a MAP When TC Space  
+
+Data Link Protocol Supports SDLS ............................................................................ 6-14 
+A-1  USLP Service Data Units ............................................................................................. A-4 
+A-2  Service Parameters ....................................................................................................... A-4 
+A-3  Service Primitives ........................................................................................................ A-5 
+A-4  USLP Protocol Data Unit ............................................................................................. A-6 
+A-5  Protocol Procedures ..................................................................................................... A-6 
+A-6  Management Parameters .............................................................................................. A-7 
+A-7  Protocol Specification with SDLS Option ................................................................... A-9 
+A-8  Additional Managed Parameters with SDLS Option ................................................... A-9 
+
+CCSDS 232.0-B-4 
+
+Page viii 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+1  INTRODUCTION 
+
+1.1  PURPOSE 
+
+The purpose of this Recommended Standard is to specify the Telecommand (TC) Space Data 
+Link  Protocol.    This  protocol  is  a  Data  Link  Layer  protocol  (see  reference  [1])  to  be  used 
+over ground-to-space or space-to-space communications links by space missions. 
+
+1.2  SCOPE 
+
+This Recommended Standard defines the TC Space Data Link Protocol in terms of: 
+
+a)  the services provided to the users of this protocol; 
+
+b)  the protocol data units employed by the protocol; and 
+
+c)  the procedures performed by the protocol. 
+
+It does not specify: 
+
+a)  individual implementations or products; 
+
+b)  the implementation of service interfaces within real systems; 
+
+c)  the methods or technologies required to perform the procedures; or 
+
+d)  the management activities required to configure and control the protocol. 
+
+1.3  APPLICABILITY 
+
+This Recommended Standard applies to the creation of Agency standards and to future data 
+communications over space links between CCSDS Agencies in cross-support situations.  The 
+Recommended  Standard  includes  comprehensive  specification  of  the  services  and  protocol 
+for inter-Agency cross support.  It is neither a specification of, nor a design for, real systems 
+that may be implemented for existing or future missions. 
+
+The Recommended Standard specified in this document is to be invoked through the normal 
+standards  programs  of  each  CCSDS  Agency  and  is  applicable  to  those  missions  for  which 
+cross support based on capabilities described in this Recommended Standard is anticipated.  
+Where  mandatory  capabilities  are  clearly  indicated  in  sections  of  the  Recommended 
+Standard, they must be implemented when this document is used as a basis for cross support.  
+Where options are allowed or implied, implementation of these options is subject to specific 
+bilateral cross support agreements between the Agencies involved. 
+
+CCSDS 232.0-B-4 
+
+Page 1-1 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+1.4  RATIONALE 
+
+the 
+The  CCSDS  believes 
+recommendations  chosen,  so  that  future  evaluations  of  proposed  changes  or  improvements 
+will not lose sight of previous decisions. 
+
+the  rationale  underlying 
+
+to  document 
+
+important 
+
+is 
+
+it 
+
+1.5  DOCUMENT STRUCTURE 
+
+This document is divided into six numbered sections and three annexes: 
+
+a)  section  1  presents 
+
+this 
+Recommended  Standard  and  lists  the  conventions,  definitions,  and  normative 
+references used throughout the Recommended Standard; 
+
+the  purpose,  scope,  applicability  and  rationale  of 
+
+b)  section 2 provides an overview of the TC Space Data Link Protocol; 
+
+c)  section 3 defines the services provided by the protocol entity; 
+
+d)  section  4 specifies the protocol  data  units  and  procedures employed by the protocol 
+
+entity; 
+
+e)  section 5 specifies the managed parameters used by the protocol entity; 
+
+f)  section 6 specifies the protocol entity with support for the Space Data Link Security 
+
+protocol; 
+
+g)  annex A is the Protocol Implementation Conformance Statement (PICS) proforma for 
+
+the specifications in this Recommended Standard; 
+
+h)  annex B lists all acronyms used within this document; 
+
+i)  annex C provides a list of informative references. 
+
+1.6  CONVENTIONS AND DEFINITIONS 
+
+1.6.1  DEFINITIONS 
+
+1.6.1.1  Definitions from the Open Systems Interconnection (OSI) Basic Reference 
+
+Model 
+
+This Recommended Standard makes use of a number of terms defined in reference [1].  The 
+use of those terms in this Recommended Standard is to be understood in a generic sense, i.e., 
+in the sense that those terms are generally applicable to any of a variety of technologies that 
+provide for the exchange of information between real systems.  Those terms are: 
+
+a)  blocking; 
+
+b)  connection; 
+
+CCSDS 232.0-B-4 
+
+Page 1-2 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+c)  Data Link Layer; 
+
+d)  entity; 
+
+e)  flow control; 
+
+f)  Network Layer; 
+
+g)  peer entities; 
+
+h)  Physical Layer; 
+
+i)  protocol control information; 
+
+j)  protocol data unit; 
+
+k)  real system; 
+
+l)  segmenting; 
+
+m)  service; 
+
+n)  Service Access Point (SAP); 
+
+o)  SAP address; 
+
+p)  service data unit. 
+
+1.6.1.2  Definitions from OSI Service Definition Conventions 
+
+This Recommended Standard makes use of a number of terms defined in reference [2].  The 
+use of those terms in this Recommended Standard is to be understood in a generic sense, i.e., 
+in the sense that those terms are generally applicable to any of a variety of technologies that 
+provide for the exchange of information between real systems.  Those terms are: 
+
+a)  confirmation; 
+
+b)  indication; 
+
+c)  primitive; 
+
+d)  request; 
+
+e)  response; 
+
+f)  service provider; 
+
+g)  service user. 
+
+CCSDS 232.0-B-4 
+
+Page 1-3 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+1.6.1.3  Terms Defined in this Recommended Standard 
+
+For the purposes of this Recommended Standard, the following definitions also apply.  Many 
+other terms that pertain to specific items are defined in the appropriate sections. 
+
+asynchronous:  not synchronous (see below). 
+
+delimited:    having  a  known  (and  finite)  length;  applies  to  data  in  the  context  of  data 
+handling. 
+
+Mission  Phase: 
+  a  period  of  a  mission  during  which  specified  communications 
+characteristics are fixed.  The transition between two consecutive Mission Phases may cause 
+an interruption of the communications services. 
+
+Physical Channel:  a stream of bits transferred over a space link in a single direction. 
+
+space link:  a communications link between a spacecraft and its associated ground system, or 
+between two spacecraft.  A space link consists of one or more Physical Channels in one or 
+both directions. 
+
+synchronous:  of or pertaining to a sequence of events occurring in a fixed time relationship 
+(within specified tolerance) to another sequence of events. 
+
+(TC)  Transfer  Frame:  The  protocol  data  unit  of  the  Telecommand  (TC)  Space Data Link 
+Protocol. 
+
+1.6.2  NOMENCLATURE 
+
+1.6.2.1  Normative Text 
+
+The  following  conventions  apply  for  the  normative  specifications  in  this  Recommended 
+Standard: 
+
+a)  the words ‘shall’ and ‘must’ imply a binding and verifiable specification; 
+
+b)  the word ‘should’ implies an optional, but desirable, specification; 
+
+c)  the word ‘may’ implies an optional specification; 
+
+d)  the words ‘is’, ‘are’, and ‘will’ imply statements of fact. 
+
+NOTE  –  These  conventions  do  not  imply  constraints  on  diction  in  text  that  is  clearly 
+
+informative in nature. 
+
+1.6.2.2  Informative Text 
+
+In  the  normative  sections  of  this  document,  informative  text  is  set  off  from  the  normative 
+specifications either in notes or under one of the following subsection headings: 
+
+CCSDS 232.0-B-4 
+
+Page 1-4 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+–  Overview; 
+
+–  Background; 
+
+–  Rationale; 
+
+–  Discussion. 
+
 1.6.3  CONVENTIONS 
+
 In this document, the following convention is used to identify each bit in an N-bit field.  The 
 first  bit in  the field  to  be  transmitted  (i.e., the most left justified when drawing a figure) is 
 defined  to  be  ‘Bit  0’;  the  following  bit  is  defined  to  be  ‘Bit  1’  and  so  on  up  to  ‘Bit  N-1’.  
@@ -14,6 +836,8 @@ N-BIT DATA FIELD
 
 FIRST BIT TRANSMITTED = MSB
 
+Figure 1-1:  Bit Numbering Convention 
+
 In accordance with standard data-communications practice, data fields are often grouped into 
 eight-bit  ‘words’  which  conform  to  the  above  convention.    Throughout  this  Recommended 
 Standard, such an eight-bit word is called an ‘octet’. 
@@ -21,6 +845,2720 @@ Standard, such an eight-bit word is called an ‘octet’.
 The numbering for octets within a data structure starts with zero. 
 
 By CCSDS convention, all ‘spare’ bits shall be permanently set to ‘0’. 
+
+1.7 
+
+ REFERENCES 
+
+The  following  publications  contain  provisions  which,  through  reference  in  this  text, 
+constitute  provisions  of  this  document.    At  the  time  of  publication,  the  editions  indicated 
+were  valid.    All  publications  are  subject  to  revision,  and  users  of  this  document  are 
+encouraged  to  investigate  the  possibility  of  applying  the  most  recent  editions  of  the 
+publications indicated below.  The CCSDS Secretariat maintains a register of currently valid 
+CCSDS publications. 
+
+[1] 
+
+Information Technology—Open Systems Interconnection—Basic Reference Model: The 
+Basic  Model.  2nd  ed.  International  Standard,  ISO/IEC  7498-1:1994.  Geneva:  ISO, 
+1994. 
+
+CCSDS 232.0-B-4 
+
+Page 1-5 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+[2] 
+
+Information  Technology—Open  Systems  Interconnection—Basic  Reference  Model—
+Conventions  for  the  Definition  of  OSI  Services.  International  Standard,  ISO/IEC 
+10731:1994. Geneva: ISO, 1994. 
+
+[3]  TC  Synchronization  and  Channel  Coding.  Issue  4.  Recommendation  for  Space  Data 
+System Standards (Blue Book), CCSDS 231.0-B-4. Washington, D.C.: CCSDS, July 2021. 
+
+[4]  Communications  Operation  Procedure-1.  Issue  2.  Recommendation  for  Space  Data 
+System  Standards  (Blue  Book),  CCSDS  232.1-B-2.  Washington,  D.C.:  CCSDS, 
+September 2010. 
+
+[5]  “Packet Version Number.” Space Assigned Numbers Authority. 
+
+https://sanaregistry.org/r/packet_version_number. 
+
+[6]  CCSDS  Spacecraft  Identification  Field  Code  Assignment  Control  Procedures.  Issue  7. 
+Recommendation for Space Data System Practices (Magenta Book), CCSDS 320.0-M-7. 
+Washington, D.C.: CCSDS, November 2017. 
+
+[7]  Space Data Link Security  Protocol. Issue 1. Recommendation for Space Data System 
+Standards  (Blue  Book),  CCSDS  355.0-B-1.  Washington,  D.C.:  CCSDS,  September 
+2015. 
+
+NOTE  –  Informative references are listed in annex C. 
+
+CCSDS 232.0-B-4 
+
+Page 1-6 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2  OVERVIEW 
+
+2.1  CONCEPT OF TC SPACE DATA LINK PROTOCOL 
+
+2.1.1  ARCHITECTURE 
+
+The  TC  Space  Data  Link  Protocol  is  a  Data  Link  Layer  protocol  (see  reference  [1])  to  be 
+used by space missions.  This protocol has been designed to meet the requirements of space 
+missions  for  efficient  transfer  of  space  application  data of various  types  and characteristics 
+over ground-to-space or space-to-space communications links (hereafter called space links). 
+
+Figure  2-1  illustrates  the  relationship  of  this  protocol  to  the  Open  Systems  Interconnection 
+(OSI) reference model (reference [1]).  Two sublayers of the Data Link Layer are defined for 
+CCSDS space link protocols as shown in reference  [C2].  The TC Space Data Link Protocol 
+corresponds  to  the  Logical  Link  Sublayer  and  provides  functions  of  transferring  various data 
+using a variable-length protocol data unit called the Transfer Frame. The optional Space Data 
+Link  Layer  Security  Protocol  (reference  [7])  is  provided  within  the  Data  Link  Protocol 
+Sublayer,  as  illustrated  below.  The  Channel  Coding  Sublayer  provides  some  additional 
+functions  necessary  for  transferring  Transfer  Frames  over  a  space  link.    These  functions  are 
+error-correction  coding/decoding,  the  delimiting/synchronizing  of  codeblocks  (consisting  of 
+one  or  more  Transfer  Frames),  and  bit  transition  generation/removal  (optional).    For  the 
+Channel  Coding  Sublayer, the Channel Coding and Synchronization  Recommended  Standard 
+(reference [3]) must be used with the TC Space Data Link Protocol.  How the TC Space Data 
+Link Protocol is used in overall space data systems is shown in references [C2], [C3], and [C4]. 
+
+OSI LAYERS
+
+CCSDS LAYERS
+
+NETWORK AND
+UPPER LAYERS
+
+NETWORK AND
+UPPER LAYERS
+
+CCSDS
+PROTOCOLS
+
+DATA LINK LAYER
+
+DATA LINK
+PROTOCOL
+SUBLAYER
+
+TC SPACE DATA LINK
+PROTOCOL
+&
+SPACE DATA LINK
+SECURITY PROTOCOL
+
+SYNCHRONIZATION
+AND CHANNEL
+CODING SUBLAYER
+
+TC SYNCHRONIZATION
+AND
+CHANNEL CODING
+
+PHYSICAL LAYER
+
+PHYSICAL LAYER
+
+Figure 2-1:  Relationship with OSI Layers 
+
+CCSDS 232.0-B-4 
+
+Page 2-1 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.1.2  PROTOCOL FEATURES 
+
+2.1.2.1  Efficient Data Transfer 
+
+The TC Space Data Link Protocol provides the users with several services to transfer service 
+data  units  over  a  space  link.    The  major  functions  performed  by  this  protocol  are  (1) 
+segmentation and blocking of service data units and (2) transmission control of service data 
+units. 
+
+Because  the  underlying  space  link  inherently  includes  a  noisy  signal  path,  there  is  a  finite 
+probability that it will introduce an error.  It is desirable to break large service data units into 
+relatively  small  pieces  so  that  each  piece  has  a  lower  probability  of  being  invalidated  by 
+transmission  error  than  if  the  entire  service  data  unit  were  sent  contiguously.    System 
+throughput efficiency is improved because only small pieces have to be retransmitted when 
+errors are detected.  However, there may also be situations in which the service data units are 
+very  small.    For  efficient  transfer  of  service  data  units,  it  is  desirable  to  group  these  small 
+units into larger pieces.  The TC Space Data Link Protocol provides the capability to break 
+large service data units into relatively small pieces (segmentation) and to group small service 
+data units into larger pieces (blocking). 
+
+The TC Space Data Link Protocol controls the transmission of service data units through the 
+space  link  performing  retransmissions  needed  to  ensure  delivery  of  service  data  units  in 
+sequence  and  without  gaps  or  duplication.    This  function  is  provided  by  an  automatic 
+retransmission  control  mechanism  called  the  Communications  Operation  Procedure  (COP).  
+The  specification  of  the  COP  is  given  in  reference  [4].    In  addition,  the  systematic 
+retransmission  mechanism  described  in  2.4.2  for  use  on deep  space links  can optionally  be 
+provided by the Synchronization and Channel Coding Sublayer as specified in reference [3]. 
+
+2.1.2.2  Sharing the Physical Channel 
+
+The  protocol  data  units  employed  by  this  protocol  are  the  TC  Transfer  Frame  (unless 
+otherwise  stated,  the  terms  ‘Transfer  Frame’  and  ‘Frame’  in  this  document  refer  to  the  TC 
+Transfer  Frame)  and  the  Communications  Link  Control  Word  (CLCW).    Each  Transfer 
+Frame contains a header, which provides protocol control information, and a variable-length 
+data field, within which higher-layer service data units are carried.  Transfer Frames are sent 
+in the direction of the flow of service data units.  Each CLCW contains a report that describes 
+the status of acceptance of Transfer Frames.  CLCWs are sent from the receiver to the sender 
+of Transfer Frames. 
+
+A key feature of the TC Space Data Link Protocol is the concept of ‘Virtual Channels’.  The 
+Virtual  Channel  facility  allows  one  Physical  Channel  to  be  shared  among  multiple  higher-
+layer data streams, each of which may have different service requirements.  A single Physical 
+Channel may therefore be divided into several separate logical data channels, each known as 
+a ‘Virtual Channel’ (VC).  Each Transfer Frame transferred over a Physical Channel belongs 
+to one of the Virtual Channels of the Physical Channel. 
+
+CCSDS 232.0-B-4 
+
+Page 2-2 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Optionally, this protocol enables service data units from different sources to be multiplexed 
+together  in  one  Virtual  Channel  using  ‘Multiplexer  Access  Points’  (MAPs).    If  MAPs  are 
+used, service data units arriving at the service access point for a MAP at the sending end are 
+transferred to the corresponding MAP at the receiving end. 
+
+2.1.2.3  Optional Space Data Link Security Protocol 
+
+The  Data  Link  Protocol  Sublayer  includes  the  Space  Data  Link  Security  (SDLS)  protocol 
+specified  in  reference  [7].  The  SDLS  protocol  can  provide  security,  such  as  authentication 
+and  confidentiality,  for  TC  Transfer  Frames.  Support  for  the  SDLS  protocol  is  an  optional 
+feature of the TC Space Data Link Protocol. 
+
+NOTE  –  The introduction of the SDLS protocol in this Recommended Standard makes no 
+changes  to  any  requirements  that  apply  to  a  TC  Space  Data  Link  Protocol  that 
+does not support the SDLS protocol. 
+
+The security provided by the SDLS protocol can vary between Virtual Channels and between 
+MAPs within a Virtual Channel. So, for example, there can be some Virtual Channels with 
+security  and  some  without.  The  type  of  security  can  vary  from  one  Virtual  Channel  to 
+another and from one MAP to another. 
+
+2.1.3  ADDRESSING 
+
+There are  three identifier fields in the header of Transfer Frames:  Transfer Frame Version 
+Number (TFVN), Spacecraft Identifier (SCID), and Virtual Channel Identifier (VCID).  The 
+concatenation of a TFVN and a SCID is known as a Master Channel Identifier (MCID), and 
+the  concatenation  of  an  MCID  and  a  VCID  is  called  a  Global  Virtual  Channel  Identifier 
+(GVCID).  Therefore 
+
+MCID 
+
+= TFVN + SCID; 
+
+GVCID  = MCID + VCID 
+
+= TFVN + SCID + VCID. 
+
+Each Virtual Channel on a Physical Channel is identified by a GVCID.  Therefore a Virtual 
+Channel consists of Transfer Frames having the same GVCID. 
+
+All Transfer Frames with the same MCID on a Physical Channel constitute a Master Channel 
+(MC).    A  Master  Channel  consists  of  one  or  more  Virtual  Channels.    In  most  cases,  a 
+Physical  Channel  carries  only Transfer  Frames  of  a  single  MCID,  and  the  Master  Channel 
+will  be  identical  with  the  Physical  Channel.    However,  a  Physical  Channel  may  carry 
+Transfer Frames with multiple MCIDs (with the same TFVN).  In such a case, the Physical 
+Channel  consists  of  multiple  Master  Channels.    A  Physical  Channel  is  identified  with  a 
+Physical  Channel  Name,  which  is  set  by  management  and  not  included  in  the  header  of 
+Transfer Frames. 
+
+CCSDS 232.0-B-4 
+
+Page 2-3 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+In  the  optional  Segment  Header,  there  is  a  field  called  Multiplexer  Access  Point  Identifier 
+(MAP  ID).    All  Transfer  Frames  with  the  same  GVCID  and  MAP  ID  constitute  a  MAP 
+Channel.  If the Segment Header is used, a Virtual Channel consists of one or multiple MAP 
+Channels.    The  concatenation  of  a  GVCID  and  a  MAP  ID  is  known  as  a  Global  MAP  ID 
+(GMAP ID).  Therefore 
+
+GMAP ID 
+
+= GVCID + MAP ID 
+= MCID + VCID + MAP ID 
+= TFVN + SCID + VCID + MAP ID. 
+
+The relationships between these Channels are shown in figure 2-2. 
+
+MAP Channel (Optional):
+Identified by GMAP ID
+
+Virtual Channel:
+Identified by GVCID
+
+Master Channel:
+Identified by MCID
+
+Physical Channel:
+Identified by Physical
+Channel Name
+
+Figure 2-2:  Relationships Between Channels 
+
+2.1.4  PROTOCOL DESCRIPTION 
+
+The TC Space Data Link Protocol is described in terms of: 
+
+a)  the services provided to the users; 
+
+b)  the protocol data units; and 
+
+c)  the procedures performed by the protocol. 
+
+The service definitions are given in the form of primitives, which present an abstract model of 
+the logical exchange of data and control information between the protocol entity and the service 
+user.  The definitions of primitives are independent of specific implementation approaches. 
+
+The  procedure  specifications  define  the  procedures  performed  by  protocol  entities  for  the 
+transfer of information between peer entities.  The definitions of procedures are independent 
+of specific implementation methods or technologies. 
+
+This  protocol  specification  also  specifies  the  requirements  for  the  underlying  services 
+provided by the Channel Coding Sublayer and the Physical Layer. 
+
+CCSDS 232.0-B-4 
+
+Page 2-4 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.2  OVERVIEW OF SERVICES 
+
+2.2.1  COMMON FEATURES OF SERVICES 
+
+The  TC  Space  Data  Link  Protocol  provides  users  with  data  transfer  services.    The  point at 
+which  a  service  is  provided  by  a  protocol  entity  to  a  user  is  called  a  Service  Access  Point 
+(SAP) (see reference [1]).  Each service user is identified by a SAP address. 
+
+Service  data  units  of  the  same  type  submitted  to  a  SAP  are  processed  in  the  order  of 
+submission.  No processing order is maintained for service data units submitted to different 
+SAPs. 
+
+NOTE  –  Implementations may be required to perform flow control at a SAP between the 
+service  user  and  the  service  provider.    However,  CCSDS  does  not  make  any 
+recommendations  for  a  scheme  for  flow  control  between  the  user  and  the 
+provider. 
+
+The  followings  features  are  common  to  all  the  services  defined  by  this  Recommended 
+Standard: 
+
+a)  Unidirectional (one way) services: one end of a connection can send, but not receive, 
+
+data through the space link, while the other end can receive, but not send. 
+
+b)  Asynchronous  services:    there  are  no  predefined  timing  rules  for  the  transfer  of 
+service  data  units  supplied  by  the  service  user  or  for  the  transmission  of  Transfer 
+Frames generated by the service provider.  The user may request data transfer at any 
+time,  but  there  may  be  restrictions  imposed  by  the  service  provider  on  the  data 
+generation  rate.    The  timing  of  data  transfer  is  determined  by  the  provider  in 
+accordance with mission-specific rules and may depend on the traffic at the time of 
+transfer. 
+
+c)  Sequence  preserving  services:  the  sequence  of  service  data  units  supplied  by  the 
+sending  user  is  preserved  through  the  transfer  over  the  space  link,  although  for  the 
+Expedited  Service,  described  below,  there  may  be  gaps  in  the  sequence  of  service 
+data units delivered to the receiving user. 
+
+NOTE  –  This Recommended Standard assumes that these services are provided at the end 
+points  of  a  space  link.    However,  this  Recommended  Standard  makes  no 
+assumptions concerning how these end points are composed or configured either 
+on-board  a  spacecraft  or  in  a  ground  system.    In  a  ground  system,  the  services 
+defined by this Recommended Standard may be extended or enhanced with Space 
+Link Extension Services (reference [C5]). 
+
+CCSDS 232.0-B-4 
+
+Page 2-5 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.2.2  SERVICE TYPES 
+
+2.2.2.1  Overview 
+
+The  TC  Space  Data  Link  Protocol  provides  two  service  types  (Sequence-Controlled  and 
+Expedited)  that  determine  how  reliably  service  data  units  supplied  by  the  sending  user  are 
+delivered to the receiving user. 
+
+Both  of  these  two  service  types  are  provided  at  any  Service  Access  Point  except  for  the 
+Virtual Channel Frame, Master  Channel  Frame,  and  COP  Management Services.  The user 
+requests with a parameter of the service request primitive whether the Sequence-Controlled 
+or Expedited Service Type should be applied to each service data unit. 
+
+For the Virtual Channel Frame and Master Channel Frame Services, the service provider does 
+not make any distinction between Sequence-Controlled and Expedited service types applicable 
+to  service  data  units  supplied  by  the  user.    The  user  should  perform  necessary  procedures  to 
+provide Sequence-Controlled and Expedited Service Types for its service data units. 
+
+2.2.2.2  Sequence-Controlled Service (Type-A Service) 
+
+The  Sequence-Controlled  Service  (Type-A  Service)  utilizes  an  Automatic  Repeat  Request 
+(ARQ) procedure of the ‘go-back-n’ type with sequence-control mechanisms at both sending 
+and receiving ends and a standard report returned from the receiving end to the sending end. 
+
+For Type-A Service, service data units supplied by a sending user at a SAP are inserted into 
+Transfer  Frames  (after  MAP  multiplexing  when  applicable)  and  transmitted  on  a  Virtual 
+Channel in the order in which they are presented at the SAP.  The retransmission mechanism 
+ensures with a high probability of success that: 
+
+a)  no service data unit is lost; 
+
+b)  no service data unit is duplicated; 
+
+c)  no service data unit is delivered out of sequence. 
+
+The  Type-A  Service  guarantees,  with  a  high  probability,  complete  in-sequence  delivery  of 
+service  data  units  supplied  by  a  user  on  a  single  MAP  or  Virtual  Channel.    Because 
+retransmission  is  performed  independently  on  each  Virtual  Channel,  there  is  no  guarantee 
+that Type-A service data units transmitted on separate Virtual Channels will be delivered to 
+the  receiving  users  in  the  order  initially  presented.    Further,  because  MAP  multiplexing  is 
+performed  before  the  sequence-control  mechanisms  are  applied,  there  is  no  guarantee  that 
+Type-A  service  data  units  transmitted  on  separate  MAP  Channels  will  be  delivered  to  the 
+receiving users in the order initially presented. 
+
+CCSDS 232.0-B-4 
+
+Page 2-6 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+NOTE  –  Some  implementations  of  this  protocol  may  not  distinguish  service  data  units 
+transferred with Type-A Service from service data units transferred with Type-B 
+Service  at  the  receiving  end.    In  this  case,  if  both  Type-A  Service  and  Type-B 
+Service are used simultaneously on one MAP Channel, the receiving end may not 
+be  able  to  reconstruct  service  data  units  transferred  with  Type-A  Service  even 
+though the ARQ procedure has been applied to them (because, for example, the 
+Type-A  Transfer  Frames  derived  from  a  single  service  data  unit  may  be 
+interlaced,  at  the  receiving  end,  with  Type-B  Transfer  Frames  derived  from  a 
+different  service  data  unit).    For  this  implementation,  the  sending  end  should 
+terminate  any  ongoing  Type-A  Service  before  starting  a  Type-B  Service  on the 
+same Virtual Channel. 
+
+2.2.2.3  Expedited Service (Type-B Service) 
+
+The  Expedited  Service  (Type-B  Service)  is  normally  used  either  in exceptional  operational 
+circumstances,  typically  during  spacecraft  recovery  operations,  or  when  a  higher  layer 
+protocol provides a retransmission capability. 
+
+For Type-B Service, service data units supplied by the sending user are transmitted only once 
+(i.e.,  no  retransmission).    There  is  no  guarantee  that  all  Type-B  service  data  units  are 
+delivered to the receiving user. 
+
+NOTES 
+
+1 
+
+2 
+
+Although  Type-B  Service  carries  the  name  ‘Expedited’,  it  is  neither  a  required 
+method  nor  a  faster  method  for  sending  urgent  data  to  the  receiving  end.    If  the 
+service provider is supporting a reliable Type-A Service, then Type-A Service should 
+be used exclusively. 
+
+For frames carrying service data units on the Type-B Service (i.e., type BD frames), 
+the  TC  Space  Data  Link  Protocol  does  not  use  the  systematic  retransmission 
+mechanism  that  is  optionally  provided  by  the  Synchronization  and  Channel  Coding 
+Sublayer (see 2.4.2). 
+
+CCSDS 232.0-B-4 
+
+Page 2-7 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.2.3  SUMMARY OF SERVICES 
+
+2.2.3.1  Overview 
+
+Six data transfer services are provided by the TC Space Data Link Protocol.  Two of them 
+(MAP  Packet  and  MAP  Access)  are  provided  for  a  MAP  Channel.    Three  of  them  (VC 
+Packet,  Virtual  Channel  Access,  and  Virtual  Channel  Frame)  are  provided  for  a  Virtual 
+Channel.    One  of  them  (Master  Channel  Frame)  is  provided  for  a  Master  Channel.  In 
+addition, the protocol provides a management service, the COP Management Service, which 
+is used at the sending end to control the COP automatic retransmission procedure of a Virtual 
+Channel. 
+
+Table 2-1 summarizes these services and shows their characteristics, the Service Data Units 
+(SDUs) that they transfer, and the availability of SDLS security features.  The optional SDLS 
+protocol can provide security features for the SDUs transferred by some of the services: 
+
+–  encryption, to provide confidentiality by hiding data content; 
+
+–  authentication, to confirm the source and integrity of the data. 
+
+Table 2-1:  Summary of Services Provided by TC Space Data Link Protocol 
+
+Service 
+
+Service 
+Type 
+
+Service 
+Data Unit 
+
+SAP Address  SDLS Security 
+
+Features 
+
+MAP Packet 
+(MAPP) 
+
+Type-A and 
+Type-B 
+
+Packet 
+
+Virtual Channel 
+Packet (VCP) 
+
+Type-A and 
+Type-B 
+
+Packet 
+
+GMAP ID + 
+Packet Version 
+Number 
+
+GVCID + 
+Packet Version 
+Number 
+
+MAP Access 
+(MAPA) 
+
+Virtual Channel 
+Access (VCA) 
+
+Virtual Channel 
+Frame (VCF) 
+
+Master Channel 
+Frame (MCF) 
+
+Type-A and 
+Type-B 
+
+Type-A and 
+Type-B 
+
+N/A 
+
+N/A 
+
+MAP_SDU  GMAP ID 
+
+VCA_SDU  GVCID 
+
+Transfer 
+Frame 
+
+Transfer 
+Frame 
+
+GVCID 
+
+None 
+
+MCID 
+
+None 
+
+All 
+
+All 
+
+All 
+
+All 
+
+COP Management  N/A 
+
+N/A 
+
+GVCID 
+
+N/A 
+
+CCSDS 232.0-B-4 
+
+Page 2-8 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.2.3.2  MAP Packet (MAPP) Service 
+
+The MAP Packet (MAPP) Service transfers a sequence of variable-length, delimited, octet-
+aligned service data units known as Packets across a space link on a specified MAP Channel.  
+The  Packets  transferred  by  this  service  must  have  a  Packet  Version  Number  (PVN) 
+authorized by CCSDS.  PVNs presently authorized by CCSDS are defined in reference [5]. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited (Type-B) service types are provided for the MAPP Service.  The user requests with a 
+parameter  of  the  service  request  primitive  whether  Type-A  or  Type-B  should  be  applied  for 
+each Packet. 
+
+In the context of a given GMAP ID (i.e., a GVCID and a MAP ID), a user of this service is a 
+protocol entity that sends or receives Packets with a single PVN.  A user is identified with a 
+PVN  and  a  GMAP  ID.    Different  users  (i.e.,  Packets  with  different  versions)  can  share  a 
+single MAP Channel, and if there are multiple users on a MAP Channel, the service provider 
+multiplexes Packets of different versions to form a single stream of Packets to be transferred 
+on that MAP Channel. 
+
+2.2.3.3  Virtual Channel Packet (VCP) Service 
+
+The Virtual Channel Packet (VCP) Service transfers a sequence of variable-length, delimited, 
+octet-aligned service data units known as Packets across a space link on a specified Virtual 
+Channel.  The Packets transferred by this service must have a PVN authorized by CCSDS.  
+PVNs presently authorized by CCSDS are defined in reference [5]. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited (Type-B) service types are provided for the VCP Service.  The user requests with 
+a parameter of the service request primitive whether Type-A or Type-B should be applied for 
+each Packet. 
+
+Within the context of a given GVCID, a user of this service is a protocol entity that sends or 
+receives Packets with a single PVN.  A user is identified with a PVN and a GVCID.  Different 
+users (i.e., Packets with different versions) can share a single Virtual Channel, and if there are 
+multiple  users  on  a  Virtual  Channel,  the  service  provider  multiplexes  Packets  of  different 
+versions to form a single stream of Packets to be transferred on that Virtual Channel. 
+
+2.2.3.4  MAP Access (MAPA) Service 
+
+The  MAP  Access  (MAPA)  Service  provides  transfer  of  a  sequence  of  privately  formatted 
+service data units of variable length across a space link.  The length of the service data units 
+transferred by this service is not constrained by the length of the Data Field of the Transfer 
+Frame. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited  (Type-B)  service  types  are  provided  for  the  MAPA  Service.    The  user  requests 
+
+CCSDS 232.0-B-4 
+
+Page 2-9 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+with  a  parameter  of  the  service  request  primitive  whether  Type-A  or  Type-B  should  be 
+applied for each service data unit. 
+
+For a given service instance, only one user, identified with the GMAP ID (i.e., GVCID and 
+MAP ID) of the MAP Channel, can use this service on a MAP Channel.  Service data units 
+from different users are not multiplexed together within one MAP Channel. 
+
+2.2.3.5  Virtual Channel Access (VCA) Service 
+
+The  Virtual  Channel  Access  (VCA)  Service  provides  transfer  of  a  sequence  of  privately 
+formatted service data units of variable length across a space link.  The length of the service 
+data units transferred by this service can not exceed the maximum length of the Data Field of 
+the Transfer Frame. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited (Type-B) service types are provided for the VCA Service.  The user requests with 
+a parameter of the service request primitive whether Type-A or Type-B should be applied for 
+each service data unit. 
+
+For  a  given  service  instance,  only  one  user,  identified  with  the  GVCID  of  the  Virtual 
+Channel, can use this service on a Virtual Channel.  Service data units from different users 
+are not multiplexed together within one Virtual Channel. 
+
+2.2.3.6  Virtual Channel Frame (VCF) Service 
+
+The  Virtual  Channel  Frame  (VCF)  Service  provides  transfer  of  a  sequence  of  TC  Transfer 
+Frames, created by an independent protocol entity, on a Virtual Channel across a space link.  
+The  service  does  not  guarantee  completeness  nor  does  it  make  any  distinction  between 
+Sequence-Controlled and Expedited service types applicable to service data units supplied by 
+the user.  The user should perform necessary procedures to provide Sequence-Controlled and 
+Expedited service types. 
+
+For  a  given  service  instance,  only  one  user,  identified  with  the  GVCID  of  the  Virtual 
+Channel,  can  use  this  service  on  a  Virtual  Channel,  and  each  VCF  Service  instance  on  a 
+physical channel must utilize a unique GVCID value.  Service data units from different users 
+are not multiplexed together within one Virtual Channel. 
+
+The  Virtual  Channel  Frame  Service  transfers  the  independently  created  TC  Transfer  Frames 
+through a space link, possibly together with TC Transfer Frames identified by other GVCID values 
+created  by  the  service  provider  itself.    This  service  is  made  available  to  trusted  users  who  are 
+certified during the design process to ensure that the independently created protocol data units do 
+not violate the operational integrity of the space link. Moreover, transfer frames provided by the 
+VCF service User are partially formatted TC Transfer Frames as defined in 3.2.5. 
+
+CCSDS 232.0-B-4 
+
+Page 2-10 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.2.3.7  Master Channel Frame (MCF) Service 
+
+The  Master  Channel  Frame  (MCF)  Service  provides  transfer  of  a sequence  of TC Transfer 
+Frames of a Master Channel, created by an independent protocol entity, across a space link.  
+The  service  does  not  guarantee  completeness  nor  does  it  make  any  distinction  between 
+Sequence-Controlled and Expedited service types applicable to service data units supplied by 
+the user.  The user should perform necessary procedures to provide Sequence-Controlled and 
+Expedited service types. 
+
+For a given service instance, only one user, identified with the MCID of the Master Channel, 
+can  use  this  service  on  a  Master  Channel,  and  each  MCF  Service  instance  on  a  Physical 
+Channel must utilize a unique MCID value.  Service data units from different users are not 
+multiplexed together within one Master Channel. 
+
+The  Master  Channel  Frame  Service  transfers  the  independently  created  TC  Transfer  Frames 
+through the space link, possibly together with TC Transfer Frames identified by other MCID values 
+created  by  the  service  provider  itself.    This  service  is  made  available  to  trusted  users  who  are 
+certified during the design process to ensure that the independently created protocol data units do 
+not violate the operational integrity of the space link. Moreover, transfer frames provided by the 
+MCF service User are partially formatted TC Transfer Frames as defined in 3.2.5. 
+
+2.2.3.8  COP Management Service 
+
+The COP Management Service is used by a user at the sending end for managing the operations 
+of the COP for a particular Virtual Channel.  The user manages the operations of the COP by 
+invoking  Directives  defined  in  reference  [4].    The  user  is  notified  by  the  service  provider  of 
+events associated with Directives and events that occur asynchronously with Directives. 
+
+A user of this service must be authorized to manage the COP for a particular Virtual Channel. 
+For  a  given  service  instance,  only  one  user,  identified  with  the  GVCID  of  the  Virtual 
+Channel, is allowed to use this service on a Virtual Channel. 
+
+2.2.4  RESTRICTIONS ON SERVICES 
+
+There are some restrictions on the services provided on a Physical Channel. 
+
+a)  If the Master Channel Frame Service exists on a Master Channel, other data transfer 
+
+services shall not exist simultaneously on that Master Channel. 
+
+b)  If the Virtual Channel Frame Service exists on a Virtual Channel, other data transfer 
+
+services shall not exist simultaneously on that Virtual Channel. 
+
+c)  If the Virtual Channel Access Service exists on a Virtual Channel, other data transfer 
+
+services shall not exist simultaneously on that Virtual Channel. 
+
+d)  If the Virtual Channel Packet Service exists on a Virtual Channel, other data transfer 
+
+services shall not exist simultaneously on that Virtual Channel. 
+
+CCSDS 232.0-B-4 
+
+Page 2-11 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+e)  On one MAP Channel, the MAP Access Service shall not exist simultaneously with 
+
+the MAP Packet Service. 
+
+f)  On one Virtual Channel, the COP Management Service shall not exist simultaneously 
+
+with the Virtual Channel Frame Service. 
+
+g)  The  COP  Management  Service  shall  not  exist  simultaneously  with  the  Master 
+
+Channel Frame Service. 
+
+2.3  OVERVIEW OF FUNCTIONS 
+
+2.3.1  GENERAL FUNCTIONS 
+
+Using  services  of  lower  layers,  the  TC  Space  Data  Link  Protocol  transfers  various  service 
+data units, supplied by sending users, encapsulated in a sequence of protocol data units.  The 
+protocol data units, known as TC Transfer Frames, have variable lengths and are transferred 
+over a Physical Channel asynchronously. 
+
+The protocol entity performs the following protocol functions: 
+
+a)  generation and processing of protocol control information (i.e., headers and trailers) 
+
+to perform data identification, loss detection, and error detection; 
+
+b)  segmenting and blocking of service data units to transfer service data units of various 
+
+sizes in protocol data units suitable for efficient transfer; 
+
+c)  multiplexing/demultiplexing  in  order  for  various  service  users  to  share  a  single 
+
+Physical Channel; 
+
+d)  retransmission  of  missing  protocol  data  units,  rejection  of  out-of-sequence  and 
+duplicated  protocol  data  units,  and  control  of  sequence-control  mechanisms  at 
+sending and receiving ends to guarantee complete and in-order delivery (for Type-A 
+Service only); 
+
+e)  flow control (for Type-A Service only). 
+
+If the protocol entity supports the optional SDLS protocol, then it uses the functions of SDLS 
+to apply the configured security features. 
+
+The protocol entity does not perform the following protocol functions: 
+
+a)  connection establishment and release; 
+
+b)  management or configuration of the SDLS protocol. 
+
+CCSDS 232.0-B-4 
+
+Page 2-12 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.3.2  INTERNAL ORGANIZATION OF PROTOCOL ENTITY 
+
+Figures 2-3 and 2-4 show the internal organization of the protocol entity of the sending and 
+receiving ends, respectively.  Data flow from top to bottom in figure 2-3 and from bottom to 
+top in figure 2-4.  The four functions in the upper part of these figures are collectively called 
+the  Segmentation  Sublayer,  and  the  other  four  functions  in  the  lower  part  are  collectively 
+called the Transfer Sublayer. 
+
+These figures identify data-handling functions performed by the protocol entity.  The purpose 
+of these  figures  is to show logical relationships among the functions of the protocol entity.  
+The  figures  are  not  intended  to  imply  any  hardware  or  software  configuration  in  a  real 
+system.  Depending on the services actually used for a real system, not all of the functions 
+may be present in the protocol entity. 
+
+MAP
+Packet
+Service
+
+MAP
+Access
+Service
+
+MAP Packet
+Processing
+
+MAP
+Generation
+
+COP Mgmt.
+Service
+
+VC Packet
+Service
+
+VC Access
+Service
+
+Segmen-
+tation
+Sublayer
+
+Transfer
+Sublayer
+
+MAP Multiplexing
+
+VC Packet
+Processing
+
+Virtual Channel Generation
+
+Virtual Channel Multiplexing
+
+Master Channel Multiplexing
+
+All Frames Generation
+
+VC Frame
+Service
+
+MC Frame
+Service
+
+Figure 2-3:  Internal Organization of Protocol Entity (Sending End) 
+
+CCSDS 232.0-B-4 
+
+Page 2-13 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Segmen-
+tation
+Sublayer
+
+Transfer
+Sublayer
+
+VC Packet
+Service
+
+VC Access
+Service
+
+VC Frame
+Service
+
+MC Frame
+Service
+
+MAP
+Packet
+Service
+
+MAP
+Access
+Service
+
+MAP Packet
+Extraction
+
+MAP
+Reception
+
+MAP Demultiplexing
+
+VC Packet
+Extraction
+
+Virtual Channel Reception
+
+Virtual Channel Demultiplexing
+
+Master Channel Demultiplexing
+
+All Frames Reception
+
+Figure 2-4:  Internal Organization of Protocol Entity (Receiving End) 
+
+By  extracting  multiplexing  and  demultiplexing  functions  from  figures  2-3  and  2-4,  the 
+relationship  among  various  data  units  can  be  shown  as  figure  2-5,  which  is  known  as  the 
+Channel Tree of the TC Space Data Link Protocol. 
+
+In figure 2-5, multiplexing (shown with a triangle) is a function of mixing, according to an 
+algorithm  established  by  the  project,  multiple  streams  of  data  units,  each  with  a  different 
+identifier, and generating a single stream of data units. 
+
+CCSDS 232.0-B-4 
+
+Page 2-14 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+MAP
+Packet
+Service
+
+MAP
+Access
+Service
+
+Packet
+
+MAP_SDU
+
+VC Packet
+Service
+
+VC Access
+Service
+
+VC Frame
+Service
+
+Packet
+
+VCA_SDU
+
+MC Frame
+Service
+
+MAPID
+
+VC Frame
+
+VCID
+
+MC Frame
+
+MCID
+
+All Frames
+
+Key
+
+Multiplexer/
+Demultiplexer
+
+Figure 2-5:  TC Space Data Link Protocol Channel Tree 
+
+2.3.3  COMMUNICATIONS OPERATION PROCEDURE (COP) 
+
+The Communications Operation Procedure (COP) fully specifies the closed-loop procedures 
+executed by the sending and receiving ends of the TC Space Data Link Protocol.  The COP, 
+which  exists  wholly  within  this  protocol,  consists  of  a  pair  of  synchronized  procedures  for 
+each Virtual Channel: a Frame Operation Procedure (FOP) that executes within the sending 
+entity; and a Frame Acceptance and Reporting Mechanism (FARM) that executes within the 
+receiving entity.  The sending FOP transmits Transfer Frames to the receiving FARM.  The 
+FARM  returns  to  the  FOP  reports  of  the  status  of  Transfer  Frame  acceptance  using 
+Communications Link Control Words (CLCWs) and thus closes the loop. 
+
+Within this protocol, the COP provides a basic Quality of Service (QoS), i.e., the delivery of 
+service  data  units  to  the  layer  above  at  the  receiving  end,  correct  and  without  omission  or 
+duplication,  and  in  the  same  sequential  order  in  which  they  were  received  from  the  layer 
+above at the sending end. 
+
+Underlying this protocol is a space link, which interconnects its sending and receiving ends.  
+If a perfect link existed, the QoS would be assured since the exact duplicate of the series of 
+service  data  units  input  at  the  sending  end  would  appear  at  the  receiving  end.    However, 
+space  links  are  noisy  and  may  introduce  errors  or  discontinuities  into  transmitted  data 
+streams.  The job of the COP within this protocol is therefore to ensure, in the presence of 
+
+CCSDS 232.0-B-4 
+
+Page 2-15 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+such errors or discontinuities introduced by the space link, the correctness, completeness, and 
+sequentiality of the delivered service data units. 
+
+Correctness  of  the  delivered  service  data  units  is  guaranteed  (within  known  error 
+probabilities) by the error-protection encoding applied by the Channel Coding Sublayer, and 
+by  the  Frame  Validation  Checks  performed  in  this  protocol.    However,  validation  of  the 
+completeness,  sequentiality,  and  non-duplication  of  the  delivered  service  data  units  on  a 
+particular Virtual Channel requires that an accounting (i.e., numbering) scheme for Transfer 
+Frames be implemented by the COP. 
+
+The COP controls transfer of Type-A Transfer Frames so that service data units within Type-
+A Transfer Frames are delivered to the receiving end of the layer above, correct and without 
+omission or duplication, and in the same sequential order in which they were received from 
+the layer above at the sending end. 
+
+The receipt of a Type-B Transfer Frame causes the FARM to increment a counter for Type-B 
+Transfer  Frames  in  the  CLCW.    Type-B  Transfer  Frames  are  also  used  to  send  Control 
+Commands from the FOP to the FARM. 
+
+Only  one  COP,  which  is  called  COP-1,  is  defined  in  this  Recommended  Standard.    The 
+detailed specification of the COP-1 is given in reference [4]. 
+
+CAUTION  –  The  controlling  specifications  for  the  logical  operations  which  must  be 
+executed  to  perform  the  COP-1  are  contained  in  a  more  detailed  CCSDS 
+Recommended Standard (reference [4]).  In the event of any conflict between 
+the descriptive text contained in this Recommended Standard and the text of 
+reference [4], the more detailed specifications contained in reference [4] are 
+normative. 
+
+2.4  SERVICES ASSUMED FROM LOWER LAYERS 
+
+2.4.1  SERVICES ASSUMED FROM THE CHANNEL CODING SUBLAYER 
+
+As described in 2.1.1, the TC Synchronization and Channel Coding Recommended Standard 
+(reference [3]) must be used with the TC Space Data Link Protocol as the Synchronization 
+and  Channel  Coding  Sublayer  specification. 
+  The  functions  provided  by  the  TC 
+Synchronization and Channel Coding Recommended Standard are as follows: 
+
+a)  error control encoding and decoding functions; 
+
+b)  bit transition generation and removal functions (optional); 
+
+c)  delimiting and synchronizing functions. 
+
+The Synchronization and Channel Coding Sublayer, then, transfers variable-length, delimited 
+protocol data units as an intermittent stream of bits over a space link using the services of the 
+underlying Physical Layer. 
+
+CCSDS 232.0-B-4 
+
+Page 2-16 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+2.4.2  SYSTEMATIC RETRANSMISSIONS 
+
+In addition, the TC Space Data Link Protocol can request the Synchronization and Channel 
+Coding Sublayer to perform systematic retransmissions of the data units submitted to it. The 
+retransmissions can improve the efficiency of the protocol for deep space missions on links 
+with long light time delays. 
+
+The definition of the service interface to the Synchronization and Channel Coding Sublayer 
+specified in reference [3] includes the ChannelAccess.request service primitive, which has an 
+optional  Repetitions  parameter.  The  sublayer  transfers  the  data  unit  the  number  of  times 
+specified by Repetitions. If the value of Repetitions is one, or if the sublayer does not support 
+the  Repetitions  parameter,  then  no  systematic  retransmissions  are  performed,  and  the  data 
+unit is transferred once. 
+
+The TC Space Data Link Protocol requests the systematic retransmissions in accordance with 
+parameters set by management. For each Virtual Channel, management sets the value to be 
+used  for  the  Repetitions  parameter  when  requesting  the  transfer  of  frames  carrying  service 
+data  units  on  the  Type-A  Service.  For  each  Virtual  Channel,  management  sets  a  similar 
+parameter for frames carrying COP control commands (i.e., type BC frames). For a Physical 
+Channel, management sets an upper limit for the value of the Repetitions parameter specified 
+in reference [3]. 
+
+When  requesting  the  transfer  of  frames  carrying  service  data  units  on  the  Type-B  Service 
+(i.e.,  type  BD  frames),  the  TC  Space  Data  Link  Protocol  always  sets  the  value  of  the 
+Repetitions parameter to one (i.e., no systematic retransmissions). 
+
+2.4.3  PERFORMANCE REQUIREMENTS TO LOWER LAYERS 
+
+The coding options of the TC Synchronization and Channel Coding Recommended Standard 
+and the performance of the RF link provided by the Physical Layer shall be chosen according 
+to the following criteria: 
+
+a)  the probability of misidentifying the MCID, VCID and MAP ID shall be less than a 
+
+mission-specified value; 
+
+b)  the probability of rejection of Transfer Frames by the Channel Coding Sublayer due 
+
+to channel errors shall be less than a mission-specified value. 
+
+In  order  to  assure  correct  decoding  at  the  receiving  end,  the  same  coding  options  must  be 
+applied to all Transfer Frames of a Physical Channel. 
+
+CCSDS 232.0-B-4 
+
+Page 2-17 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3  SERVICE DEFINITION 
+
+3.1  OVERVIEW 
+
+This section provides service definition in the form of primitives, which present an abstract 
+model  of  the  logical  exchange  of  data  and  control  information  between  the  protocol  entity 
+and  the  service  user. 
+  The  definitions  of  primitives  are  independent  of  specific 
+implementation approaches. 
+
+The  parameters  of  the  primitives  are  specified  in  an  abstract  sense  and  specify  the 
+information to be made available to the user of the primitives.  The way in which a specific 
+implementation makes this information available is not constrained by this specification.  In 
+addition  to  the  parameters  specified  in  this  section,  an  implementation  may  provide  other 
+parameters  to  the  service  user  (e.g.,  parameters  for  controlling  the  service,  monitoring 
+performance, facilitating diagnosis, and so on). 
+
+3.2  SOURCE DATA 
+
+3.2.1  SOURCE DATA OVERVIEW 
+
+NOTE  –  This subsection describes the service data units that are transferred from sending 
+
+users to receiving users by the TC Space Data Link Protocol. 
+
+The service data units transferred by the TC Space Data Link Protocol shall be: 
+
+a)  Packet; 
+
+b)  MAP Access Service Data Unit (MAP_SDU); 
+
+c)  Virtual Channel Access Service Data Unit (VCA_SDU); 
+
+d)  TC Transfer Frame. 
+
+3.2.2  PACKET 
+
+3.2.2.1  Packets shall be transferred over a space link via the MAP Packet and VC Packet 
+Services. 
+
+3.2.2.2  The Packets transferred by this service must have a PVN authorized by CCSDS. 
+
+NOTES 
+
+1 
+
+2 
+
+Packets  are  variable-length,  delimited,  octet-aligned  data  units,  and  are  usually  the 
+protocol data unit of a Network Layer protocol. 
+
+PVNs presently authorized by CCSDS are defined in reference [5]. 
+
+CCSDS 232.0-B-4 
+
+Page 3-1 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.2.2.3 
+If blocking of Packets is performed by the service provider, the position and length 
+of the Packet Length Field of the Packets must be known to the service provider in order to 
+extract Packets from Transfer Frames at the receiving end. 
+
+3.2.3  MAP CHANNEL ACCESS SERVICE DATA UNIT (MAP_SDU) 
+
+3.2.3.1  MAP Channel Access Service Data Units (MAP_SDUs) shall be transferred over a 
+space link via the MAP Channel Access Service. 
+
+3.2.3.2  A  single  MAP_SDU  may  be  transmitted  in  the  Data  Field  of  one  or  multiple 
+Transfer Frame(s), and therefore the length of MAP_SDUs is not constrained by the length of 
+the Data Field of the Transfer Frames. 
+
+NOTE  –  MAP_SDUs are variable-length, octet-aligned data units, the format of which is 
+
+unknown to the service provider. 
+
+3.2.4  VIRTUAL CHANNEL ACCESS SERVICE DATA UNIT (VCA_SDU) 
+
+3.2.4.1  Virtual Channel Access Service Data Units (VCA_SDUs) shall be transferred over 
+a space link via the Virtual Channel Access Service. 
+
+3.2.4.2  A  single  VCA_SDU  shall  be  transmitted  in  the  Data  Field  of  a  single  Transfer 
+Frame, and therefore the length of VCA_SDUs shall not exceed the maximum length of the 
+Transfer Frame Data Field. 
+
+NOTE  –  VCA_SDUs are variable-length, delimited, octet-aligned data units, the format of 
+
+which is unknown to the service provider. 
+
+3.2.5  TC TRANSFER FRAME 
+
+3.2.5.1  TC Transfer Frames transferred by the Virtual Channel Frame and Master Channel 
+Frame Services shall be partially formatted TC Transfer Frames 
+
+3.2.5.2  The Frame Error Control Field of the TC Transfer Frames submitted to the Master 
+or Virtual Channel Frame Service shall be empty, if it is present on the Physical Channel. 
+
+NOTE  –  The TC Transfer Frame is the variable-length protocol data unit of the TC Space 
+Data Link Protocol, but it can also be used as the service data unit of the Virtual 
+Channel  Frame  and  Master  Channel  Frame  Services.    Its  format  is  defined  in 
+4.1and 6.3 of this Recommended Standard. 
+
+CCSDS 232.0-B-4 
+
+Page 3-2 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.3  MAP PACKET SERVICE 
+
+3.3.1  OVERVIEW 
+
+The  MAP  Packet  (MAPP)  Service  transfers  a  sequence  of  variable-length,  delimited,  octet-
+aligned service data units known as Packets across a space link on a specified MAP Channel.  
+The Packets transferred by this service must be assigned a Packet Version Number (PVN) by 
+CCSDS.  Packet Version Numbers presently authorized by CCSDS are defined in reference [5]. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited (Type-B) service types are provided for the MAPP Service.  The user requests with a 
+parameter  of  the  service  request  primitive  whether  Type-A  or  Type-B  should  be  applied  for 
+each Packet. 
+
+A  user  of  this  service  is  a  protocol  entity  identified  with  the  PVN  and  a  GMAP  ID  (i.e., a 
+GVCID and a MAP ID) that sends or receives Packets with a single PVN.  Different users 
+(i.e.,  Packets  with  different  versions)  can  share  a  single  MAP  Channel,  and  if  there  are 
+multiple  users  on  a  MAP  Channel,  the  service  provider  multiplexes  Packets  of  different 
+versions to form a single stream of Packets to be transferred on that MAP Channel. 
+
+3.3.2  MAPP SERVICE PARAMETERS 
+
+3.3.2.1  General 
+
+The parameters used by the MAPP Service primitives shall conform to the specifications of 
+the following subsections. 
+
+3.3.2.2  Packet 
+
+The Packet parameter shall contain a Packet for transfer by the MAPP Service. 
+
+NOTE  –  The Packet parameter is the service data unit transferred by the MAPP Service.  
+
+Restrictions on the Packets transferred by the MAPP Service are stated in 3.2.2. 
+
+3.3.2.3  GVCID 
+
+The  GVCID  parameter  shall  contain  a  GVCID  that  indicates  the  Virtual  Channel  through 
+which the Packet is to be transferred. 
+
+NOTE  –  The GVCID consists of an MCID and a VCID and is part of the SAP address of 
+
+the MAPP Service. 
+
+CCSDS 232.0-B-4 
+
+Page 3-3 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.3.2.4  MAP ID 
+
+The MAP ID parameter shall contain a MAP ID that indicates the MAP Channel (within the 
+Virtual Channel specified by the GVCID) through which the Packet is to be transferred. 
+
+NOTE  –  The MAP ID is part of the SAP address of the MAPP Service. 
+
+3.3.2.5  Packet Version Number 
+
+The Packet Version Number parameter shall contain the PVN of the Packet to be transferred. 
+
+NOTE  –  The  PVN  is  part  of  the  SAP  address  of  the  MAPP  Service  and  identifies  the 
+
+upper-layer protocol entity that uses the MAPP Service. 
+
+3.3.2.6  SDU ID 
+
+The SDU ID parameter shall contain a user-supplied sequence number to be used to identify 
+the associated Packet in subsequent MAPP_Notify.indication primitives. 
+
+3.3.2.7  Service Type 
+
+3.3.2.7.1  The  Service  Type  parameter  shall  indicate  whether  the  Packet  should  be 
+transferred  with  the  Sequence-Controlled  Service  type  (Type-A)  or  the  Expedited  Service 
+type (Type-B). 
+
+3.3.2.7.2  At the receiving end, the Service Type parameter is not used. 
+
+3.3.2.8  Notification Type 
+
+In notifications to the user, the Notification Type parameter shall contain information about 
+an  event  associated  with  the  transfer  of  a  Packet.    The  values  taken  by  this  parameter  are 
+defined in reference [4]. 
+
+3.3.2.9  Packet Quality Indicator 
+
+The Packet Quality Indicator is an optional parameter that may be used to notify the user at 
+the  receiving  end  of  the  Packet  Service  whether  the  Packet  delivered  by  the  primitive  is 
+complete  or  partial.    This  parameter  shall  be  used  when  the  service  provider  is  required  to 
+deliver incomplete Packets to the user at the receiving end. 
+
+CCSDS 232.0-B-4 
+
+Page 3-4 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.3.2.10  Verification Status Code 
+
+3.3.2.10.1  The  Verification  Status  Code  is  an  optional  parameter  that  may  be  used  if  the 
+service provider supports the optional SDLS protocol. 
+
+3.3.2.10.2  The  Verification  Status  Code  parameter  shall  be  used  to  notify  the  user  at  the 
+receiving end of the Packet Service of a verification failure in a transfer frame addressed to 
+the MAP. 
+
+3.3.2.10.3  A non-zero value shall indicate that the SDLS protocol has detected an error: the 
+values taken by this parameter are defined in reference [7]. 
+
+NOTE  –  A non-zero value of the Verification Status Code does not indicate an error in the 
+delivered  Packet.    Processing  of  frames  failing  verification  is  implementation 
+specific  and  depends  also  on  the  processing  capabilities  of  the  service  user  for 
+eventual forensic investigation. 
+
+3.3.3  MAPP SERVICE PRIMITIVES 
+
+3.3.3.1  General 
+
+The service primitives associated with the MAPP service are: 
+
+a)  MAPP.request; 
+
+b)  MAPP_Notify.indication; 
+
+c)  MAPP.indication. 
+
+CCSDS 232.0-B-4 
+
+Page 3-5 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.3.3.2  MAPP.request 
+
+3.3.3.2.1  Function 
+
+At  the  sending  end,  the  MAPP  Service  user  shall  pass  a  MAPP.request  primitive  to  the 
+service  provider  to  request  that  a  Packet  be  transferred  to  the  user  at  the  receiving  end 
+through the specified MAP Channel. 
+
+3.3.3.2.2  Semantics 
+
+The MAPP.request primitive shall provide parameters as follows: 
+
+MAPP.request 
+
+(Packet, 
+GVCID, 
+MAP ID, 
+Packet Version Number, 
+SDU ID, 
+Service Type) 
+
+3.3.3.2.3  When Generated 
+
+The sending-end user shall generate a MAPP.request primitive when a Packet is ready to be 
+transferred. 
+
+3.3.3.2.4  Effect On Receipt 
+
+Receipt of the MAPP.request primitive shall cause the service provider to transfer the Packet. 
+
+CCSDS 232.0-B-4 
+
+Page 3-6 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.3.3.3  MAPP_Notify.indication 
+
+3.3.3.3.1  Function 
+
+At  the  sending  end,  the  service  provider  shall  pass  a  MAPP_Notify.indication  primitive  to 
+the MAPP Service user to notify the user of an event associated with the transfer of a Packet. 
+
+3.3.3.3.2  Semantics 
+
+The MAPP_Notify.indication primitive shall provide parameters as follows: 
+
+MAPP_Notify.indication 
+
+(GVCID, 
+MAP ID, 
+Packet Version Number, 
+SDU ID, 
+Service Type, 
+Notification Type) 
+
+3.3.3.3.3  When Generated 
+
+The  sending-end  service  provider  shall  generate  a  MAPP_Notify.indication  primitive  in 
+response to an event associated with the transfer of a Packet. 
+
+3.3.3.3.4  Effect On Receipt 
+
+The effect of receipt of the MAPP_Notify.indication primitive by the MAPP Service user is 
+undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-7 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.3.3.4  MAPP.indication 
+
+3.3.3.4.1  Function 
+
+At the receiving end, the service provider shall pass a MAPP.indication to the MAPP Service 
+user to deliver a Packet. 
+
+3.3.3.4.2  Semantics 
+
+The MAPP.indication primitive shall provide parameters as follows: 
+
+MAPP.indication 
+
+(Packet, 
+GVCID, 
+MAP ID, 
+Packet Version Number, 
+Service Type (optional), 
+Packet Quality Indicator (optional), 
+Verification Status Code (optional)) 
+
+3.3.3.4.3  When Generated 
+
+The  receiving-end  service  provider  shall  generate  a  MAPP.indication  primitive  when  a 
+Packet is ready to be delivered. 
+
+3.3.3.4.4  Effect On Receipt 
+
+The  effect  of  receipt  of  the  MAPP.indication  primitive  by  the  MAPP  Service  user  is 
+undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-8 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.4  VIRTUAL CHANNEL PACKET SERVICE 
+
+3.4.1  OVERVIEW 
+
+The Virtual Channel Packet (VCP) Service transfers a sequence of variable-length, delimited, 
+octet-aligned service data units known as Packets across a space link on a specified Virtual 
+Channel.  The Packets transferred by this service must be assigned a Packet Version Number 
+(PVN) by CCSDS.  Packet Version Numbers presently authorized by CCSDS are defined in 
+reference [5]. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited (Type-B) service types are provided for the VCP Service.  The user requests with 
+a parameter of the service request primitive whether Type-A or Type-B should be applied for 
+each Packet. 
+
+A user of this service is a protocol entity identified with the PVN and a GVCID that sends or 
+receives  Packets  with  a  single  PVN.    Different  users  (i.e.,  Packets  with  different  versions) 
+can share a single Virtual Channel, and if there are multiple users on a Virtual Channel, the 
+service provider multiplexes Packets of different versions to form a single stream of Packets 
+to be transferred on that Virtual Channel. 
+
+3.4.2  VCP SERVICE PARAMETERS 
+
+3.4.2.1  General 
+
+The parameters used by the VCP Service primitives shall conform to the specifications of the 
+following subsections. 
+
+3.4.2.2  Packet 
+
+The Packet parameter shall contain a Packet for transfer on the Virtual Channel identified by 
+GVCID. 
+
+NOTE  –  The  Packet  is  the  service  data  unit  of  the  VCP  Service.    Restrictions  on  the 
+
+Packets transferred by the VCP Service are stated in 3.2.2. 
+
+3.4.2.3  GVCID 
+
+The  GVCID  parameter  shall  contain  a  GVCID  that  indicates  the  Virtual  Channel  through 
+which the Packet is to be transferred. 
+
+NOTE  –  The GVCID consists of an MCID and a VCID and is part of the SAP address of 
+
+the VCP Service. 
+
+CCSDS 232.0-B-4 
+
+Page 3-9 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.4.2.4  Packet Version Number 
+
+The Packet Version Number parameter shall contain the PVN of the Packet to be transferred. 
+
+NOTE  –  The PVN is part of the SAP address of the VCP Service and identifies the upper-
+
+layer protocol entity that uses the VCP Service. 
+
+3.4.2.5  SDU ID 
+
+The SDU ID parameter shall contain a user-supplied sequence number to be used to identify 
+the associated Packet in subsequent VCP_Notify.indication primitives. 
+
+3.4.2.6  Service Type 
+
+3.4.2.6.1  The  Service  Type  parameter  shall  indicate  whether  the  Packet  should  be 
+transferred  with  the  Sequence-Controlled  Service  type  (Type-A)  or  the  Expedited  Service 
+type (Type-B). 
+
+3.4.2.6.2  At the receiving end, the Service Type parameter is not used. 
+
+3.4.2.7  Notification Type 
+
+In notifications to the user, the Notification Type parameter shall contain information about 
+an  event  associated  with  the  transfer  of  a  Packet.    The  values  taken  by  this  parameter  are 
+defined in reference [4]. 
+
+3.4.2.8  Packet Quality Indicator 
+
+3.4.2.8.1  The  Packet  Quality  Indicator  shall  indicate  whether  the  Packet  delivered  by  the 
+service provider to the service user at the receiving end is complete or not. 
+
+3.4.2.8.2  This parameter shall be used only when the service provider is required to deliver 
+incomplete Packets to the service user at the receiving end. 
+
+3.4.2.9  Verification Status Code 
+
+3.4.2.9.1  The  Verification  Status  Code  is  an  optional  parameter  that  may  be  used  if  the 
+service provider supports the optional SDLS protocol. 
+
+3.4.2.9.2  The  Verification  Status  Code  parameter  shall  be  used  to  notify  the  user  at  the 
+receiving end of the Packet Service of a verification failure in a transfer frame addressed to 
+the Virtual Channel. 
+
+CCSDS 232.0-B-4 
+
+Page 3-10 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.4.2.9.3  A non-zero value shall indicate that the SDLS protocol has detected an error: the 
+values taken by this parameter are defined in reference [7]. 
+
+NOTE  –  A non-zero value of the Verification Status Code does not indicate an error in the 
+delivered  Packet.    Processing  of  frames  failing  verification  is  implementation 
+specific  and  depends  also  on  the  processing  capabilities  of  the  service  user  for 
+eventual forensic investigation. 
+
+3.4.3  VCP SERVICE PRIMITIVES 
+
+3.4.3.1  General 
+
+The service primitives associated with the VCP service are: 
+
+a)  VCP.request; 
+
+b)  VCP_Notify.indication; 
+
+c)  VCP.indication. 
+
+CCSDS 232.0-B-4 
+
+Page 3-11 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.4.3.2  VCP.request 
+
+3.4.3.2.1  Function 
+
+At the sending end, the VCP Service user shall pass a VCP.request primitive to the service 
+provider to request that a Packet be transferred to the user at the receiving end through the 
+specified Virtual Channel. 
+
+3.4.3.2.2  Semantics 
+
+The VCP.request primitive shall provide parameters as follows: 
+
+VCP.request 
+
+(Packet, 
+GVCID, 
+Packet Version Number, 
+SDU ID, 
+Service Type) 
+
+3.4.3.2.3  When Generated 
+
+The  sending-end  user  shall  generate  a  VCP.request  primitive  when  a  Packet  is  ready  to  be 
+transferred. 
+
+3.4.3.2.4  Effect On Receipt 
+
+Receipt of the VCP.request primitive shall cause the service provider to transfer the Packet. 
+
+CCSDS 232.0-B-4 
+
+Page 3-12 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.4.3.3  VCP_Notify.indication 
+
+3.4.3.3.1  Function 
+
+At the sending end, the service provider shall pass a VCP_Notify.indication primitive to the 
+VCP Service user to notify the user of an event associated with the transfer of a Packet. 
+
+3.4.3.3.2  Semantics 
+
+The VCP_Notify.indication primitive shall provide parameters as follows: 
+
+VCP_Notify.indication 
+
+(GVCID, 
+Packet Version Number, 
+SDU ID, 
+Service Type, 
+Notification Type) 
+
+3.4.3.3.3  When Generated 
+
+The  sending-end  service  provider  shall  generate  a  VCP_Notify.indication  primitive  in 
+response to an event associated with the transfer of a Packet. 
+
+3.4.3.3.4  Effect On Receipt 
+
+The  effect  of  receipt  of  the  VCP_Notify.indication  primitive  by  the  VCP  Service  user  is 
+undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-13 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.4.3.4  VCP.indication 
+
+3.4.3.4.1  Function 
+
+At the receiving end, the service provider shall pass a VCP.indication primitive to the VCP 
+Service user to deliver a Packet. 
+
+3.4.3.4.2  Semantics 
+
+The VCP.indication primitive shall provide parameters as follows: 
+
+VCP.indication 
+
+(Packet, 
+GVCID, 
+Packet Version Number, 
+Service Type (optional), 
+Packet Quality Indicator (optional), 
+Verification Status Code (optional)) 
+
+3.4.3.4.3  When Generated 
+
+The receiving-end service provider shall generate a VCP.indication primitive when a Packet 
+is ready to be delivered. 
+
+3.4.3.4.4  Effect On Receipt 
+
+The effect of receipt of the VCP.indication primitive by the VCP Service user is undefined. 
+
+3.5  MAP ACCESS SERVICE 
+
+3.5.1  OVERVIEW 
+
+The  MAP  Access  (MAPA)  Service  provides  transfer  of  a  sequence  of  privately  formatted 
+service data units of variable length across a space link.  The length of the service data units 
+transferred by this service is not constrained by the length of the Data Field of the Transfer 
+Frame. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited  (Type-B)  service  types  are  provided  for  the  MAPA  Service.    The  user  requests 
+with  a  parameter  of  the  service  request  primitive  whether  Type-A  or  Type-B  should  be 
+applied for each service data unit. 
+
+Only  one  user,  identified  with  the  GMAP  ID  (i.e.,  GVCID  and  MAP  ID)  of  the  MAP 
+Channel, can use this service on a MAP Channel.  Service data units from different users are 
+not multiplexed together within one MAP Channel. 
+
+CCSDS 232.0-B-4 
+
+Page 3-14 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.5.2  MAPA SERVICE PARAMETERS 
+
+3.5.2.1  General 
+
+The parameters used by the MAPA Service primitives shall conform to the specifications of 
+the following subsections. 
+
+3.5.2.2  MAP_SDU 
+
+The  MAP_SDU  parameter  shall  contain  a  MAP_SDU  to  be  transferred  over  the  MAP 
+channel identified by MAP ID. 
+
+NOTE  –  The  MAP_SDU  is  the  service  data  unit  transferred  by  the  MAPA  Service.  
+Restrictions  on  the  MAP_SDUs  transferred  by  the  MAPA  Service  are  stated  in 
+3.2.3. 
+
+3.5.2.3  GVCID 
+
+The  GVCID  parameter  shall  contain  the  GVCID  of  the  Virtual  Channel  through which the 
+MAP_SDU is to be transferred. 
+
+NOTE  –  The GVCID consists of an MCID and a VCID and is part of the SAP address of 
+
+the MAPA Service. 
+
+3.5.2.4  MAP ID 
+
+The MAP ID parameter shall contain the MAP ID of the MAP Channel (within the Virtual 
+Channel specified by GVCID) through which the MAP_SDU is to be transferred. 
+
+NOTE  –  The MAP ID is part of the SAP address of the MAPA Service. 
+
+3.5.2.5  SDU ID 
+
+The SDU ID parameter shall contain a user-supplied sequence number to be used to identify 
+the associated MAP_SDU in subsequent MAPA_Notify.indication primitive. 
+
+3.5.2.6  Service Type 
+
+3.5.2.6.1  The  Service  Type  parameter  shall  indicate  whether  the  MAP_SDU  should  be 
+transferred  with  the  Sequence-Controlled  Service  type  (Type-A)  or  the  Expedited  Service 
+type (Type-B). 
+
+3.5.2.6.2  At the receiving end, the Service Type parameter is not used. 
+
+CCSDS 232.0-B-4 
+
+Page 3-15 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.5.2.7  Notification Type 
+
+In notifications to the user, the Notification Type parameter shall contain information about 
+an event associated with the transfer of a MAP_SDU.  The values taken by this parameter are 
+defined in reference [4]. 
+
+3.5.2.8  Verification Status Code 
+
+3.5.2.8.1  The  Verification  Status  Code  is  an  optional  parameter  that  may  be  used  if  the 
+service provider supports the optional SDLS protocol. 
+
+3.5.2.8.2  The  Verification  Status  Code  parameter  shall  be  used  to  notify  the  user  at  the 
+receiving end of the MAPA Service of a verification failure in a transfer frame addressed to 
+the MAP. 
+
+3.5.2.8.3  A non-zero value shall indicate that the SDLS protocol has detected an error: the 
+values taken by this parameter are defined in reference [7]. 
+
+NOTE  –  A non-zero value of the Verification Status Code does not indicate an error in the 
+delivered  MAP_SDU. 
+is 
+  Processing  of 
+implementation  specific  and  depends  also  on  the  processing  capabilities  of  the 
+service user for eventual forensic investigation. 
+
+failing  verification 
+
+frames 
+
+3.5.3  MAPA SERVICE PRIMITIVES 
+
+3.5.3.1  General 
+
+The service primitives associated with this service are: 
+
+a)  MAPA.request; 
+
+b)  MAPA_Notify.indication; 
+
+c)  MAPA.indication. 
+
+CCSDS 232.0-B-4 
+
+Page 3-16 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.5.3.2  MAPA.request 
+
+3.5.3.2.1  Function 
+
+At  the  sending  end,  the  MAPA  Service  user  shall  pass  a  MAPA.request  primitive  to  the 
+service provider to request that a MAP_SDU be transferred to the user at the receiving end 
+through the specified MAP Channel. 
+
+NOTE  –  The  MAPA.request  primitive  is  the  service  request  primitive  for  the  MAPA 
+
+Service. 
+
+3.5.3.2.2  Semantics 
+
+The MAPA.request primitive shall provide parameters as follows: 
+
+MAPA.request 
+
+(MAP_SDU, 
+GVCID, 
+MAP ID, 
+SDU ID, 
+Service Type) 
+
+3.5.3.2.3  When Generated 
+
+The sending-end service user shall generate a MAPA.request primitive when a MAP_SDU is 
+ready to be transferred. 
+
+3.5.3.2.4  Effect On Receipt 
+
+Receipt  of  the  MAPA.request  primitive  shall  cause  the  service  provider  to  transfer  the 
+MAP_SDU. 
+
+CCSDS 232.0-B-4 
+
+Page 3-17 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.5.3.3  MAPA_Notify.indication 
+
+3.5.3.3.1  Function 
+
+At  the  sending  end,  the  service  provider  shall  pass  a  MAPA_Notify.indication  primitive  to 
+the  MAPA  Service  user  to  notify  the  user  of  an  event  associated  with  the  transfer  of  a 
+MAP_SDU. 
+
+3.5.3.3.2  Semantics 
+
+The MAPA.indication primitive shall provide parameters as follows: 
+
+MAPA_Notify.indication 
+
+(GVCID, 
+MAP ID, 
+SDU ID, 
+Service Type, 
+Notification Type) 
+
+3.5.3.3.3  When Generated 
+
+The  sending-end  service  provider  shall  generate  a  MAPA_Notify.indication  primitive  in 
+response to an event associated with the transfer of a MAP_SDU. 
+
+3.5.3.3.4  Effect On Receipt 
+
+The effect of receipt of the MAPA_Notify.indication primitive by the MAPA Service user is 
+undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-18 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.5.3.4  MAPA.indication 
+
+3.5.3.4.1  Function 
+
+At  the  receiving  end,  the  service  provider  shall  pass  a  MAPA.indication  to  the  MAPA 
+Service user to deliver a MAP_SDU. 
+
+NOTE  –  The MAPA.indication primitive is the service indication primitive for the MAPA 
+
+Service. 
+
+3.5.3.4.2  Semantics 
+
+The MAPA.indication primitive shall provide parameters as follows: 
+
+MAPA.indication 
+
+(MAP_SDU, 
+GVCID, 
+MAP ID, 
+Service Type (optional), 
+Verification Status Code (optional)) 
+
+3.5.3.4.3  When Generated 
+
+The  receiving-end  service  provider  shall  generate  a  MAPA.indication  primitive  when  a 
+MAP_SDU is ready to be delivered. 
+
+3.5.3.4.4  Effect On Receipt 
+
+The  effect  of  receipt  of  the  MAPA.indication  primitive  by  the  MAPA  Service  user  is 
+undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-19 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.6  VIRTUAL CHANNEL ACCESS SERVICE 
+
+3.6.1  OVERVIEW 
+
+The  Virtual  Channel  Access  (VCA)  Service  provides  transfer  of  a  sequence  of  privately 
+formatted service data units of variable length across a space link.  The length of the service 
+data units transferred by this service should not exceed the maximum length of the Data Field 
+of the Transfer Frame. 
+
+The  service  is  unidirectional  and  asynchronous.    Both  Sequence-Controlled  (Type-A)  and 
+Expedited (Type-B) service types are provided for the VCA Service.  The user requests with 
+a parameter of the service request primitive whether Type-A or Type-B should be applied for 
+each service data unit. 
+
+Only one user, identified with the GVCID of the Virtual Channel, can use this service on a 
+Virtual Channel.  Service data units from different users are not multiplexed together within 
+one Virtual Channel. 
+
+3.6.2  VCA SERVICE PARAMETERS 
+
+3.6.2.1  General 
+
+The parameters used by the VCA Service primitives shall conform to the specifications of the 
+following subsections. 
+
+3.6.2.2  VCA_SDU 
+
+The  VCA_SDU  parameter  shall  contain  a  VCA_SDU  to  be  transferred  on  the  Virtual 
+Channel identified by GVCID. 
+
+NOTE  –  The  VCA_SDU  is  the  service  data  unit  transferred  by  the  VCA  Service.  
+Restrictions  on  the  VCA_SDUs  transferred  by  the  VCA  Service  are  stated  in 
+3.2.4. 
+
+3.6.2.3  GVCID 
+
+The  GVCID  parameter  shall  contain  the  GVCID  of  the  Virtual  Channel  through which the 
+VCA_SDU is to be transferred. 
+
+NOTE  –  The  GVCID  consists  of  an  MCID  and  a  VCID  and  is  the  SAP  address  of  the 
+
+VCA Service. 
+
+CCSDS 232.0-B-4 
+
+Page 3-20 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.6.2.4  SDU ID 
+
+The SDU ID parameter shall contain a user-supplied sequence number to be used to identify 
+the associated VCA_SDU in subsequent VCA_Notify.indication primitives. 
+
+3.6.2.5  Service Type 
+
+3.6.2.5.1  The  Service  Type  parameter  shall  be  used  to  indicate  whether  the  VCA_SDU 
+should be transferred with the Sequence-Controlled Service type (Type-A) or the Expedited 
+Service type (Type-B). 
+
+3.6.2.5.2  At the receiving end, the Service Type parameter is not used. 
+
+3.6.2.6  Notification Type 
+
+In notifications to the user, the Notification Type parameter shall contain information about 
+an event associated with the transfer of a VCA_SDU.  The values taken by this parameter are 
+defined in reference [4]. 
+
+3.6.2.7  Verification Status Code 
+
+3.6.2.7.1  The  Verification  Status  Code  is  an  optional  parameter  that  may  be  used  if  the 
+service provider supports the optional SDLS protocol. 
+
+3.6.2.7.2  The  Verification  Status  Code  parameter  shall  be  used  to  notify  the  user  at  the 
+receiving end of the VCA Service of a verification failure in a transfer frame addressed to the 
+Virtual Channel. 
+
+3.6.2.7.3  A non-zero value shall indicate that the SDLS protocol has detected an error: the 
+values taken by this parameter are defined in reference [7]. 
+
+NOTE  –  A non-zero value of the Verification Status Code does not indicate an error in the 
+delivered  VCA_SDU. 
+is 
+  Processing  of 
+implementation  specific  and  depends  also  on  the  processing  capabilities  of  the 
+service user for eventual forensic investigation. 
+
+failing  verification 
+
+frames 
+
+3.6.3  VCA SERVICE PRIMITIVES 
+
+3.6.3.1  General 
+
+The service primitives associated with this service are: 
+
+a)  VCA.request; 
+
+b)  VCA_Notify.indication; 
+
+c)  VCA.indication. 
+
+CCSDS 232.0-B-4 
+
+Page 3-21 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.6.3.2  VCA.request 
+
+3.6.3.2.1  Function 
+
+At the sending end, the VCA Service user shall pass a VCA.request primitive to the service 
+provider to request that a VCA_SDU be transferred to the user at the receiving end through 
+the specified Virtual Channel. 
+
+NOTE  –  The VCA.request primitive is the service request primitive for the VCA Service. 
+
+3.6.3.2.2  Semantics 
+
+The VCA.request primitive shall provide parameters as follows: 
+
+VCA.request 
+
+(VCA_SDU, 
+GVCID, 
+SDU ID, 
+Service Type) 
+
+3.6.3.2.3  When Generated 
+
+The  VCA  service  user  shall  generate  a  VCA.request  primitive  when  a  VCA_SDU  is  ready 
+for transfer. 
+
+3.6.3.2.4  Effect On Receipt 
+
+Receipt  of  the  VCA.request  primitive  shall  cause  the  service  provider  to  transfer  the 
+VCA_SDU. 
+
+CCSDS 232.0-B-4 
+
+Page 3-22 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.6.3.3  VCA_Notify.indication 
+
+3.6.3.3.1  Function 
+
+At the sending end, the service provider shall pass a VCA_Notify.indication primitive to the 
+VCA Service user to notify the user of an event associated with the transfer of a VCA_SDU. 
+
+3.6.3.3.2  Semantics 
+
+The VCA.indication primitive shall provide parameters as follows: 
+
+VCA_Notify.indication 
+
+(GVCID, 
+SDU ID, 
+Service Type, 
+Notification Type) 
+
+3.6.3.3.3  When Generated 
+
+The  service  provider  shall  generate  a  VCA_Notify.indication  primitive  in  response  to  an 
+event associated with the transfer of a VCA_SDU. 
+
+3.6.3.3.4  Effect On Receipt 
+
+The  effect  of  receipt  of  the  VCA_Notify.indication  primitive  by  the  VCA  Service  user  is 
+undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-23 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.6.3.4  VCA.indication 
+
+3.6.3.4.1  Function 
+
+At the receiving end, the service provider shall pass a VCA.indication primitive to the VCA 
+Service user to deliver a VCA_SDU. 
+
+NOTE  –  The  VCA.indication  primitive  is  the  service  indication  primitive  for  the  VCA 
+
+Service. 
+
+3.6.3.4.2  Semantics 
+
+The VCA.indication primitive shall provide parameters as follows: 
+
+VCA.indication 
+
+(VCA_SDU, 
+GVCID, 
+Service Type (optional), 
+Verification Status Code (optional)) 
+
+3.6.3.4.3  When Generated 
+
+The service provider shall generate a VCA.indication primitive when a VCA_SDU is ready 
+for delivery. 
+
+3.6.3.4.4  Effect On Receipt 
+
+The effect of receipt of the VCA.indication primitive by the VCA Service user is undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-24 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.7  VIRTUAL CHANNEL FRAME SERVICE 
+
+3.7.1  OVERVIEW 
+
+The Virtual Channel Frame (VCF) Service provides transfer of a sequence of TC Transfer Frames 
+of a Virtual Channel, created by an independent protocol entity, across a space link.  The service 
+does not guarantee completeness nor does it make any distinction between Sequence-Controlled 
+and  Expedited  service  types  against  service  data  units  supplied  by  the  user.    The  user  should 
+perform necessary procedures to provide Sequence-Controlled and Expedited service types. 
+
+Only one user, identified with the GVCID of the Virtual Channel, can use this service on a 
+Virtual Channel.  Service data units from different users are not multiplexed together within 
+one Virtual Channel. 
+
+3.7.2  VCF SERVICE PARAMETERS 
+
+3.7.2.1  General 
+
+The parameters used by the VCF Service primitives shall conform to the specifications of the 
+following subsections. 
+
+3.7.2.2  Frame 
+
+The  Frame  parameter  shall  contain  a  TC  Transfer  Frame  to  be  transferred  on  the  Virtual 
+Channel identified by GVCID. 
+
+NOTE  –  The TC Transfer Frame is the service data unit transferred by the VCF Service.  
+The format of the TC Transfer Frame is defined in 4.1.  Restrictions on the TC 
+Transfer Frames transferred by the VCF Service are stated in 3.2.5. 
+
+3.7.2.3  GVCID 
+
+The GVCID parameter shall contain the GVCID of the Virtual Channel on which the Frame 
+is to be transferred. 
+
+NOTE  –  The GVCID consists of an MCID and a VCID and is the SAP address of the VCF 
+
+Service. 
+
+3.7.3  VCF SERVICE PRIMITIVES 
+
+3.7.3.1  General 
+
+The service primitives associated with VCF Service are: 
+
+a)  VCF.request; 
+
+b)  VCF.indication. 
+
+CCSDS 232.0-B-4 
+
+Page 3-25 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.7.3.2  VCF.request 
+
+3.7.3.2.1  Function 
+
+At the sending end, the VCF Service user shall pass a VCF.request primitive to the service 
+provider to request that a Frame be transferred to the user at the receiving end through the 
+specified Virtual Channel. 
+
+NOTE  –  The VCF.request primitive is the service request primitive for the VCF Service. 
+
+3.7.3.2.2  Semantics 
+
+The VCF.request primitive shall provide parameters as follows: 
+
+VCF.request 
+
+(Frame, 
+GVCID) 
+
+3.7.3.2.3  When Generated 
+
+The sending-end service user shall generate a VCF.request primitive when a Frame is ready 
+to be transferred. 
+
+3.7.3.2.4  Effect On Receipt 
+
+Receipt of the VCF.request primitive shall cause the service provider to transfer the Frame. 
+
+CCSDS 232.0-B-4 
+
+Page 3-26 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.7.3.3  VCF.indication 
+
+3.7.3.3.1  Function 
+
+At  the  receiving  end,  the  service  provider  shall  pass  a  VCF.indication  to  the  VCF  Service 
+user to deliver a Frame. 
+
+NOTE  –  The  VCF.indication  primitive  is  the  service  indication  primitive  for  the  VCF 
+
+Service. 
+
+3.7.3.3.2  Semantics 
+
+The VCF.indication primitive shall provide parameters as follows: 
+
+VCF.indication 
+
+(Frame, 
+GVCID) 
+
+3.7.3.3.3  When Generated 
+
+The receiving-end service provider shall generate a VCF.indication primitive when a Frame 
+is ready to be delivered to the user. 
+
+3.7.3.3.4  Effect On Receipt 
+
+The effect of receipt of the VCF.indication primitive by the VCF Service user is undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-27 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.8  MASTER CHANNEL FRAME SERVICE 
+
+3.8.1  OVERVIEW 
+
+The Master Channel Frame (MCF) Service provides transfer of a sequence of TC Transfer Frames 
+of a Master Channel, created by an independent protocol entity, across a space link.  The service 
+does not guarantee completeness nor does it make any distinction between Sequence-Controlled 
+and  Expedited  service  types  against  service  data  units  supplied  by  the  user.    The  user  should 
+perform necessary procedures to provide Sequence-Controlled and Expedited service types. 
+
+Only  one  user,  identified  with  the  MCID  of  the  Master  Channel,  can  use  this  service  on  a 
+Master Channel.  Service data units from different users are not multiplexed together within 
+one Master Channel. 
+
+3.8.2  MCF SERVICE PARAMETERS 
+
+3.8.2.1  General 
+
+The parameters used by the MCF Service primitives shall conform to the specifications of the 
+following subsections. 
+
+3.8.2.2  Frame 
+
+The  Frame  parameter  shall  contain  a  TC  Transfer  Frame  to  be  transferred  on  the  Master 
+Channel identified by MCID. 
+
+NOTE  –  The TC Transfer Frame is the service data unit transferred by the MCF Service.  
+The format of the TC Transfer Frame is defined in 4.1.  Restrictions on the TC 
+Transfer Frames transferred by the MCF Service are stated in 3.2.5. 
+
+3.8.2.3  MCID 
+
+The MCID parameter shall contain the MCID of the Master Channel on which the Frame is 
+to be transferred. 
+
+NOTE  –  The MCID is the SAP address of the MCF Service. 
+
+3.8.3  MCF SERVICE PRIMITIVES 
+
+3.8.3.1  General 
+
+The service primitives associated with the MCF service are: 
+
+a)  MCF.request; 
+
+b)  MCF.indication. 
+
+CCSDS 232.0-B-4 
+
+Page 3-28 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.8.3.2  MCF.request 
+
+3.8.3.2.1  Function 
+
+At the sending end, the MCF Service user shall pass an MCF.request primitive to the service 
+provider to request that a Frame be transferred to the user at the receiving end through the 
+specified Master Channel. 
+
+NOTE  –  The MCF.request primitive is the service request primitive for the MCF Service. 
+
+3.8.3.2.2  Semantics 
+
+The MCF.request primitive shall provide parameters as follows: 
+
+MCF.request 
+
+(Frame, 
+MCID) 
+
+3.8.3.2.3  When Generated 
+
+The sending-end service user shall generate an MCF.request primitive when a Frame is ready 
+to be transferred. 
+
+3.8.3.2.4  Effect On Receipt 
+
+Receipt of the MCF.request primitive shall cause the service provider to transfer the Frame. 
+
+CCSDS 232.0-B-4 
+
+Page 3-29 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.8.3.3  MCF.indication 
+
+3.8.3.3.1  Function 
+
+At the receiving end, the service provider shall pass an MCF.indication primitive to the MCF 
+Service user to deliver a Frame. 
+
+NOTE  –  The  MCF.indication  primitive  is  the  service  indication  primitive  for  the  MCF 
+
+Service. 
+
+3.8.3.3.2  Semantics 
+
+The MCF.indication primitive shall provide parameters as follows: 
+
+MCF.indication 
+
+(Frame, 
+MCID) 
+
+3.8.3.3.3  When Generated 
+
+The receiving-end service provider shall generate an MCF.indication primitive when a Frame 
+is ready to be delivered. 
+
+3.8.3.3.4  Effect On Receipt 
+
+The effect of receipt of the MCF.indication primitive by the MCF Service user is undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-30 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.9  COP MANAGEMENT SERVICE 
+
+3.9.1  OVERVIEW 
+
+The  COP  Management  Service  is  used  by  a  user  at  the  sending  end  for  managing  the 
+operations of COP for a particular Virtual Channel.  The user manages the operations of COP 
+by invoking Directives defined in reference [4].  The user is notified by the service provider 
+of events associated with Directives and events that occur asynchronously with Directives. 
+
+A user of  this  service must be authorized to manage COP for a particular Virtual Channel. 
+Only  one  user,  identified  with  the  GVCID  of  the  Virtual  Channel,  is  allowed  to  use  this 
+service on a Virtual Channel. 
+
+3.9.2  COP MANAGEMENT SERVICE PARAMETERS 
+
+3.9.2.1  General 
+
+The  parameters  used  by  the  COP  Management  Service  primitives  shall  conform  to  the 
+specifications of the following subsections. 
+
+3.9.2.2  GVCID 
+
+The GVCID parameter shall contain the GVCID of the Virtual Channel for which the COP is 
+managed. 
+
+NOTE  –  The GVCID consists of an MCID and a VCID and is the SAP address of the COP 
+
+Management Service. 
+
+3.9.2.3  Directive ID 
+
+The  Directive  ID  parameter  shall  contain  a  user-supplied  sequence  number  to  be  used  to 
+identify the associated Directive.request primitive in subsequent Directive_Notify.indication 
+primitives. 
+
+3.9.2.4  Directive Type 
+
+The Directive Type parameter shall contain the type of Directive.  The values taken by this 
+parameter are defined in table 4-1 of reference [4]. 
+
+3.9.2.5  Directive Qualifier 
+
+The Directive Qualifier parameter shall contain a qualifier of the Directive if one is required.  
+The values taken by this parameter are defined in table 4-1 of reference [4]. 
+
+CCSDS 232.0-B-4 
+
+Page 3-31 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.9.2.6  Notification Type 
+
+In notifications to the user, the Notification Type parameter shall contain information about 
+an  event  associated  with  a  Directive.    The  values  taken  by  this  parameter  are  defined  in 
+reference [4]. 
+
+3.9.2.7  Notification Qualifier 
+
+The  Notification  Qualifier  parameter  shall  contain  a  qualifier  of  the  notification  if  one  is 
+required.  The values taken by this parameter are defined in reference [4]. 
+
+3.9.3  COP MANAGEMENT SERVICE PRIMITIVES 
+
+3.9.3.1  General 
+
+The service primitives associated with the COP Management Service are: 
+
+a)  Directive.request; 
+
+b)  Directive_Notify.indication; 
+
+c)  Async_Notify.indication. 
+
+CCSDS 232.0-B-4 
+
+Page 3-32 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.9.3.2  Directive.request 
+
+3.9.3.2.1  Function 
+
+At the sending end, the authorized user shall pass a Directive.request primitive to the service 
+provider to invoke a Directive defined in reference [4]. 
+
+3.9.3.2.2  Semantics 
+
+The Directive.request primitive shall provide parameters as follows: 
+
+Directive.request 
+
+(GVCID, 
+Directive ID, 
+Directive Type, 
+Directive Qualifier) 
+
+3.9.3.2.3  When Generated 
+
+The  authorized  user  shall  generate  a  Directive.request  primitive  when  execution  of  a 
+Directive is required. 
+
+3.9.3.2.4  Effect On Receipt 
+
+Receipt  of  the  Directive.request  primitive  shall  cause  the  service  provider  to  execute  the 
+Directive. 
+
+NOTE  –  Most  of  the  directives  only  cause  internal  processing  in  the  FOP,  while  two  of 
+them  cause  the  generation  of  Type-BC  Transfer  Frames,  carrying  Control 
+Commands for configuring COP-1 (‘Unlock’ and ‘Set V(R)’) (see 4.1.3.3). 
+
+CCSDS 232.0-B-4 
+
+Page 3-33 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.9.3.3  Directive_Notify.indication 
+
+3.9.3.3.1  Function 
+
+At the sending end, the service provider shall pass a Directive_Notify.indication primitive to 
+the  authorized  user  to  notify  the  user  of  an  event  or  an  action  associated  with  a  Directive 
+requested by the user. 
+
+3.9.3.3.2  Semantics 
+
+The Directive_Notify.indication primitive shall provide parameters as follows: 
+
+Directive_Notify.indication 
+
+(GVCID, 
+Directive ID, 
+Notification Type) 
+
+3.9.3.3.3  When Generated 
+
+The  sending-end  service  provider  shall  generate  a  Directive_Notify.indication  primitive  in 
+response to an event or action associated with a Directive. 
+
+3.9.3.3.4  Effect On Receipt 
+
+The  effect  of  receipt  of  the  Directive_Notify.indication  primitive  by  the  COP  Management 
+Service user is undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-34 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+3.9.3.4  Async_Notify.indication 
+
+3.9.3.4.1  Function 
+
+At the sending end, the service provider shall pass an Async_Notify.indication primitive to 
+the authorized user to notify the user of an event that occurs asynchronously with requests. 
+
+3.9.3.4.2  Semantics 
+
+The Async_Notify.indication primitive shall provide parameters as follows: 
+
+Async_Notify.indication 
+
+(GVCID,  
+Notification Type, 
+Notification Qualifier) 
+
+3.9.3.4.3  When Generated 
+
+The  sending-end  service  provider  shall  generate  an  Async_Notify.indication  primitive  in 
+response to an event that occurs asynchronously with requests. 
+
+3.9.3.4.4  Effect On Receipt 
+
+The  effect  of  receipt  of  the  Async_Notify.indication  primitive  by  the  COP  Management 
+Service user is undefined. 
+
+CCSDS 232.0-B-4 
+
+Page 3-35 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 4  PROTOCOL SPECIFICATION WITHOUT SDLS OPTION 
 
@@ -43,6 +3581,12 @@ c)  Frame Error Control Field (2 octets, optional).
 
 NOTES 
 
+1 
+
+2 
+
+3 
+
 The TC Transfer Frame is the protocol data unit transmitted from the sending end to 
 the  receiving  end  by  the  TC  Space  Data  Link  Protocol.    In  this  Recommended 
 Standard,  the  TC  Transfer  Frame  is  also  called  the  Transfer  Frame  or  Frame  for 
@@ -52,37 +3596,170 @@ The  maximum  Transfer  Frame  length  allowed  by  a  particular  spacecraft  o
 implementation  on  a  particular  Virtual  Channel  may  be  less  than  the  maximum 
 specified here. 
 
+The structural components of the TC Transfer Frame are shown in figure 4-1. 
+
+TC TRANSFER FRAME
+
+TRANSFER FRAME
+DATA FIELD
+
+TRANSFER
+FRAME
+PRIMARY
+HEADER
+
+FRAME
+ERROR
+CONTROL
+FIELD
+(Optional)
+
+5 octets
+
+Varies
+
+2 octets
+
+Up to 1019 octets
+
+Figure 4-1:  TC Transfer Frame Structural Components 
+
+CCSDS 232.0-B-4 
+
+Page 4-1 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.1.2  TRANSFER FRAME PRIMARY HEADER 
+
 4.1.2.1  General 
+
 The Transfer Frame Primary Header is mandatory and shall consist of eight fields, positioned 
 contiguously, in the following sequence: 
+
 a)  Transfer Frame Version Number (2 bits, mandatory); 
+
 b)  Bypass Flag (1 bit, mandatory); 
+
 c)  Control Command Flag (1 bit, mandatory); 
+
 d)  Reserved Spare (2 bits, mandatory); 
+
 e)  Spacecraft Identifier (10 bits, mandatory); 
+
 f)  Virtual Channel Identifier (6 bits, mandatory); 
+
 g)  Frame Length (10 bits, mandatory); 
+
 h)  Frame Sequence Number (8 bits, mandatory). 
 
+NOTE  –  The format of the Transfer Frame Primary Header is shown in figure 4-2. 
+
+TRANSFER FRAME PRIMARY HEADER (5 octets)
+
+TRANSFER
+FRAME
+VERSION
+NUMBER
+
+BYPASS
+FLAG
+
+CONTROL
+COMMAND
+FLAG
+
+RSVD.
+SPARE
+
+SPACE-
+CRAFT
+ID
+
+VIRTUAL
+CHANNEL
+ID
+
+FRAME
+LENGTH
+
+FRAME
+SEQUENCE
+NUMBER
+
+2 bits
+
+1 bit
+
+1 bit
+
+2 bits
+
+10 bits
+
+6 bits
+
+10 bits
+
+8 bits
+
+2 octets
+
+2 octets
+
+1 octet
+
+Figure 4-2:  Transfer Frame Primary Header 
+
 4.1.2.2  Transfer Frame Version Number 
+
 4.1.2.2.1  Bits 0–1 of the Transfer Frame Primary Header shall contain the (binary encoded) 
 Transfer Frame Version Number. 
+
 4.1.2.2.2  This  2-bit  field  shall  identify  the  data  unit  as  a  Transfer  Frame  defined  by  this 
 Recommended Standard and shall be set to ‘00’. 
-NOTE  –  This  Recommended  Standard  defines  the  TC  Version  1 Asynchronous  Transfer Frame, whose binary encoded Version Number is ‘00’. 
+
+NOTE  –  This  Recommended  Standard  defines  the  TC  Version  1 Asynchronous  Transfer 
+
+Frame, whose binary encoded Version Number is ‘00’. 
+
+CCSDS 232.0-B-4 
+
+Page 4-2 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.1.2.3  Bypass and Control Command Flags 
+
 4.1.2.3.1  Bypass Flag 
+
 4.1.2.3.1.1  Bit 2 of the Transfer Frame Primary Header shall contain the Bypass Flag. 
-4.1.2.3.1.2  The  single-bit  Bypass  Flag  shall  be  used  to  control  the  application  of  Frame  Acceptance Checks by the receiving end: 
+
+4.1.2.3.1.2  The  single-bit  Bypass  Flag  shall  be  used  to  control  the  application  of  Frame 
+Acceptance Checks by the receiving end: 
+
 a)  setting the Bypass Flag to value ‘0’ shall specify that this Transfer Frame is a Type-A 
 Transfer Frame, and acceptance of this Transfer Frame by the receiving end shall be 
 subject to the normal Frame Acceptance Checks of the FARM; 
+
 b)  setting the Bypass Flag to value ‘1’ shall specify that this Transfer Frame is a Type-B 
 Transfer  Frame,  and  the  Frame  Acceptance  Checks  of  the  FARM  by  the  receiving 
 end shall be bypassed. 
 
 NOTES 
+
+1 
+
+2 
+
 The Frame Acceptance and Reporting Mechanism (FARM) associated with the COP 
 can be made to operate in a normal ‘Acceptance’ mode (for Type-A Transfer Frames) 
 or  a  ‘Bypass’  mode  (for  Type-B  Transfer  Frames),  according  to  the  setting  of  the 
@@ -93,19 +3770,40 @@ of Frame Validation Checks, which are applied regardless of the setting of the B
 Flag (see 4.4.9.3). 
 
 4.1.2.3.2  Control Command Flag 
-4.1.2.3.2.1  Bit 3 of the Transfer Frame Primary Header shall contain the Control Command Flag. 
+
+4.1.2.3.2.1  Bit 3 of the Transfer Frame Primary Header shall contain the Control Command 
+Flag. 
+
 4.1.2.3.2.2  The single-bit Control Command Flag shall be used to specify whether the Data 
 Field of the Transfer Frame is conveying Control Commands (Type-C) or Data (Type-D): 
-a) setting the Control Command Flag to value ‘0’ shall indicate that the Transfer Frame Data Field contains a Frame Data Unit (FDU) (Type-D); 
-b) setting the Control Command Flag to value ‘1’ shall indicate that the Transfer Frame Data Field contains control information (Type-C). 
+
+a)  setting the Control Command Flag to value ‘0’ shall indicate that the Transfer Frame 
+
+Data Field contains a Frame Data Unit (FDU) (Type-D); 
+
+b)  setting the Control Command Flag to value ‘1’ shall indicate that the Transfer Frame 
+
+Data Field contains control information (Type-C). 
 
 NOTE  –  In the C mode, the Transfer Frame Data Field conveys control information used 
 to set the parameters of the FARM to the proper configuration to accept data.  In 
 the D mode, the Transfer Frame Data Field contains a Frame Data Unit. 
 
+CCSDS 232.0-B-4 
+
+Page 4-3 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.1.2.3.3  Combined States of the Bypass Flag and Control Command Flag 
 
-The combined states of the Bypass Flag and Control Command Flag shall be interpreted by the receiving end as shown in table 4-1. 
+The combined states of the Bypass Flag and Control Command Flag shall be interpreted by 
+the receiving end as shown in table 4-1. 
+
+Table 4-1:  Interpretation of the Bypass and Control Command Flags 
 
 Bypass 
 Flag 
@@ -114,32 +3812,72 @@ Control
 Command 
 Flag 
 
+0 
+
+0 
+
+1 
+
+1 
+
+0 
+
+1 
+
+0 
+
+1 
+
 Interpretation 
 
-0 - 0: Type-AD.    Transfer  Frame  Data  Field  carries  a  Frame 
+Type-AD.    Transfer  Frame  Data  Field  carries  a  Frame 
 Data  Unit,  subject  to  Frame  Acceptance  Checks  under 
 control of the FARM. These Frames use the Sequence-
 Controlled (or AD) Service of the COP. 
 
-0 - 1: Reserved for future application. 
+Reserved for future application. 
 
-1 - 0: Type-BD.  Transfer  Frame  Data  Field  carries  a  Frame 
+Type-BD.  Transfer  Frame  Data  Field  carries  a  Frame 
 Data  Unit,  with  Frame  Acceptance  Checks  bypassed 
 under  control  of  the  FARM.    These  Frames  use  the 
 Expedited (or BD) Service of the COP. 
 
-1 - 1: Type-BC.  Transfer  Frame  Data  Field  carries  Control 
+Type-BC.  Transfer  Frame  Data  Field  carries  Control 
 Commands,  with  Frame  Acceptance  Checks  bypassed 
 under  control  of  the  FARM.    These  Frames  control  the 
 Sequence-Controlled Service of the COP. 
 
 4.1.2.4  Reserved Spare 
+
 4.1.2.4.1  Bits 4–5 of the Transfer Frame Primary Header shall contain the Reserved Spare. 
+
 4.1.2.4.2  These two bits are reserved for future application and shall be set to ‘00’. 
+
 4.1.2.5  Spacecraft Identifier 
-4.1.2.5.1  Bits  6–15  of  the  Transfer  Frame  Primary  Header  shall  contain  the  Spacecraft Identifier (SCID). 
-4.1.2.5.2  The  Spacecraft  Identifier  is  assigned  by  the  CCSDS  and  shall  provide  the identification of the spacecraft associated with the data contained in the Transfer Frame. 
+
+4.1.2.5.1  Bits  6–15  of  the  Transfer  Frame  Primary  Header  shall  contain  the  Spacecraft 
+Identifier (SCID). 
+
+4.1.2.5.2  The  Spacecraft  Identifier  is  assigned  by  the  CCSDS  and  shall  provide  the 
+identification of the spacecraft associated with the data contained in the Transfer Frame. 
+
 4.1.2.5.3  The Spacecraft Identifier shall be static throughout all Mission Phases. 
+
+NOTE  –  The  Secretariat  of  the  CCSDS  assigns  Spacecraft  Identifiers  according  to  the 
+
+procedures in reference [6]. 
+
+CCSDS 232.0-B-4 
+
+Page 4-4 
+
+October 2021 
+
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 4.1.2.6  Virtual Channel Identifier 
 
@@ -199,8 +3937,16 @@ of the Virtual Channels.
 The COP does not use this field of Type-B Transfer Frames; in this case the contents 
 of the Frame Sequence Number field is set to ‘all zeroes’ by COP. 
 
+CCSDS 232.0-B-4 
+
+Page 4-5 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.1.3  TRANSFER FRAME DATA FIELD 
 
 4.1.3.1  General 
@@ -257,6 +4003,14 @@ c)  a complete VCA_SDU.
 4.1.3.2.1.4  The Segment Header is required for any Virtual Channel which has more than 
 one  MAP  or  which  transfers  service  data  units  larger  than  permitted  in  a  single  Transfer 
 
+CCSDS 232.0-B-4 
+
+Page 4-6 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 Frame.  Its use is optional otherwise, except that if it is used in any Transfer Frame carried on 
 a  Virtual  Channel,  it  must  be  used  for  all  Transfer  Frames  carrying  Frame  Data  Units  (not 
@@ -306,8 +4060,16 @@ Figure 4-3:  Segment Header
 
 4.1.3.2.2.2.1  Bits 0–1 of the Segment Header shall contain the Sequence Flags. 
 
+CCSDS 232.0-B-4 
+
+Page 4-7 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 NOTE  –  This two-bit field delimits the service data unit provided by the user by indicating 
 the sequential position of the User Data contained in the Frame Data Unit relative 
 to the service data unit of which the User Data is a part. 
@@ -372,6 +4134,14 @@ MAPs are not required to be numbered consecutively.
 Two Control Commands are defined: Unlock and Set V(R);  the action to be taken when the 
 FARM receives one of these Control Commands is defined in reference [4]. 
 
+CCSDS 232.0-B-4 
+
+Page 4-8 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 4.1.3.3.2  Unlock 
 
@@ -439,8 +4209,16 @@ underlying Channel Coding Sublayer.
 4.1.4.2.1  The  Frame  Error  Control  Field  is  computed  by  applying  Cyclic  Redundancy 
 Check (CRC) techniques.  The Frame Error Control Field Encoding Procedure shall accept 
 
+CCSDS 232.0-B-4 
+
+Page 4-9 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 an  (n–16)-bit  Transfer  Frame,  excluding  the  Frame  Error  Control  Field,  and  generate  a 
 systematic  binary  (n,n–16)  block  code  by  appending  a  16-bit  Frame  Error  Control Field as 
 the final 16 bits of the codeblock, where n is the length of the Transfer Frame. 
@@ -497,6 +4275,24 @@ to encoding.
 A possible FECF generator implementation is shown in figure 4-4.  For each frame, 
 the shift register cells are initialized to ‘1’.  The ganged switch is in position 1 while 
 the information bits are being transferred and in position 2 for the sixteen FECF bits. 
+
+CCSDS 232.0-B-4 
+CCSDS 232.0-B-4 Cor. 1 
+
+Page 4-10 
+
+October 2021 
+October 2023 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 INFORMATION BITS     M
 0
@@ -683,10 +4479,18 @@ n  bits  of  the  frame  are  clocked  into  the  input  and  then  the  storage
 examined. For an error-free block, the contents of the shift register cells will be 
 ‘zero’. A non-zero content indicates an erroneous block. 
 
+CCSDS 232.0-B-4 
+
+Page 4-11 
+
+October 2021 
+
  
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 S
 
 15
@@ -847,8 +4651,16 @@ b)  CLCW Version Number (2 bits, mandatory);
 
 c)  Status Field (3 bits, mandatory); 
 
+CCSDS 232.0-B-4 
+
+Page 4-12 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 d)  COP in Effect (2 bits, mandatory); 
 
 e)  Virtual Channel Identification (6 bits, mandatory); 
@@ -957,8 +4769,16 @@ Control Field of TM or AOS Transfer Frames (references [C6] and [C7]).
 
 4.2.1.2.2  This one-bit field shall be set to ‘0’. 
 
+CCSDS 232.0-B-4 
+
+Page 4-13 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.2.1.3  CLCW Version Number 
 
 4.2.1.3.1  Bits  1-2  of  the  CLCW  shall  contain  the  (Binary  Encoded)  CLCW  Version 
@@ -1007,6 +4827,14 @@ NOTE  –  Each Virtual Channel in use has its own CLCW reporting activated.
 
 4.2.1.7.2  These two bits are reserved by CCSDS for future application and shall be set to ‘00’. 
 
+CCSDS 232.0-B-4 
+
+Page 4-14 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 4.2.1.8  Flags 
 
@@ -1055,6 +4883,14 @@ provides  a  performance  quality  indicator  that  indicates  specifically  whe
 Physical  Layer  is  working  normally  by  having  enough  signal  energy  to  achieve  bit 
 synchronization with the received data stream. 
 
+CCSDS 232.0-B-4 
+
+Page 4-15 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 2 
 
@@ -1107,6 +4943,14 @@ NOTE  –  The precise specifications for use of the Lockout Flag are contained 
 4.2.1.8.5.2  The Wait Flag shall be used to indicate that the receiving end is unable to accept 
 data for processing on a particular Virtual Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 4-16 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 NOTE  –  An inability to accept data could be caused by temporary lack of storage and/or 
 
@@ -1157,6 +5001,14 @@ Type-B  Transfer  Frame  is  accepted  in  Bypass  mode  on  a  particular  Virt
 Channel.    The  field  supports  the  verification  that  Type-B  Transfer  Frames 
 (Control or User Data) were accepted by the receiving end. 
 
+CCSDS 232.0-B-4 
+
+Page 4-17 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 4.2.1.10  Reserved Spare 
 
@@ -1203,6 +5055,14 @@ functions may be present in the protocol entity.  The procedures described in th
 subsection  are  defined  in  an  abstract  sense  and  are  not  intended  to  imply  any 
 particular implementation approach of a protocol entity. 
 
+CCSDS 232.0-B-4 
+
+Page 4-18 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 MAP
 Packet
@@ -1283,8 +5143,16 @@ Segment Header and the residue of the Packet.
 MAP Channel without being interlaced with any other Packets or portions in the same MAP 
 Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 4-19 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.3.1.7 
 Header is generated and attached to the Packet, forming a Frame Data Unit. 
 
@@ -1370,9 +5238,17 @@ FRAME DATA UNIT
 
 Figure 4-9:  Example of MAP Packet Processing Procedures 
 
+CCSDS 232.0-B-4 
+
+Page 4-20 
+
+October 2021 
+
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.3.2  MAP GENERATION FUNCTION 
 
 4.3.2.1  The  MAP  Generation  Function  shall  be  used  to  transfer  variable-length  user-
@@ -1418,6 +5294,14 @@ An abstract model of the MAP Generation Function is illustrated in figure 4-10.
 Figure  4-11  shows  how  MAP_SDUs  assigned  to  one  MAP  are  processed  to  form 
 Frame Data Units. 
 
+CCSDS 232.0-B-4 
+
+Page 4-21 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 MAP
 Generation
@@ -1481,9 +5365,17 @@ isochronous timing requirements, etc.
 
 NOTE  –  An abstract model of the MAP Multiplexing Function is illustrated in figure 4-12. 
 
+CCSDS 232.0-B-4 
+
+Page 4-22 
+
+October 2021 
+
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 MAP Packet
 Proc.  Function
 
@@ -1546,8 +5438,16 @@ An abstract model of the VC Packet Processing Function is illustrated in figure 
 Figure  4-14  shows  how  Packets  assigned  to  one  Virtual  Channel  are  processed  to 
 form Frame Data Units. 
 
+CCSDS 232.0-B-4 
+
+Page 4-23 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 VC Packet
 Processing
 Function for
@@ -1610,9 +5510,17 @@ Communications Operation Procedure (COP-1); and
 
 c)  the Frame Finalization Procedure. 
 
+CCSDS 232.0-B-4 
+
+Page 4-24 
+
+October 2021 
+
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.3.5.2  Frame Initialization Procedure 
 
 The  Frame  Initialization  Procedure  shall  accept  Frame  Data  Units  (FDUs)  from  the  MAP 
@@ -1684,8 +5592,16 @@ Virtual Channel Multiplexing Function
 
 Figure 4-15:  Abstract Model of Virtual Channel Generation Function 
 
+CCSDS 232.0-B-4 
+
+Page 4-25 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.3.6  VIRTUAL CHANNEL MULTIPLEXING FUNCTION 
 
 4.3.6.1  The  Virtual  Channel  Multiplexing  Function  shall  be  used  to  multiplex  Transfer 
@@ -1745,8 +5661,16 @@ NOTE  –  There  is  an  instance  of  the  Master  Channel  Multiplexing  Func
 
 Physical Channel that has multiple Master Channels. 
 
+CCSDS 232.0-B-4 
+
+Page 4-26 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.3.7.2  The  Master  Channel  Multiplexing  Function  shall  multiplex  Transfer  Frames 
 received from the instances of the Virtual Channel Multiplexing Function and, if present, the 
 Master Channel Frame Service users, and shall put them into a queue of Transfer Frames in 
@@ -1807,8 +5731,16 @@ b)  the Frame Error Control Field shall be present in all the Transfer Frames tr
 
 in a particular Physical Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 4-27 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.3.8.3  The  All  Frames  Generation  Function  shall  deliver  data  units  to  the  underlying 
 Channel Coding Sublayer. 
 
@@ -1861,8 +5793,16 @@ Coding Sublayer
 
 Figure 4-18:  Abstract Model of All Frames Generation Function 
 
+CCSDS 232.0-B-4 
+
+Page 4-28 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.4  PROTOCOL PROCEDURES AT THE RECEIVING END 
 
 NOTE  –  This subsection describes procedures at the receiving end associated with each of 
@@ -1935,8 +5875,16 @@ Channel that carries Packets.
 4.4.1.2  The MAP Packet Extraction Function shall extract Packets from Frame Data Units 
 received from the MAP Demultiplexing Function. 
 
+CCSDS 232.0-B-4 
+
+Page 4-29 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.4.1.3  Original Packets shall be extracted and reconstructed from Frame Data Units using 
 the  Sequence  Flag  of  the  Segment  Header  of  each  Frame  Data  Unit  and,  if  blocking  of 
 Packets is permitted, the length field of each Packet. 
@@ -1994,8 +5942,16 @@ using the Sequence Flag of the Segment Header of each Frame Data Unit.
 
 NOTE  –  An abstract model of the MAP Reception Function is illustrated in figure 4-21. 
 
+CCSDS 232.0-B-4 
+
+Page 4-30 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 MAP
 Reception
 Function for
@@ -2055,9 +6011,17 @@ Virtual Channel Reception Function
 
 Figure 4-22:  Abstract Model of MAP Demultiplexing Function 
 
+CCSDS 232.0-B-4 
+
+Page 4-31 
+
+October 2021 
+
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.4.4  VC PACKET EXTRACTION FUNCTION 
 
 4.4.4.1  The VC Packet Extraction Function shall be used to extract variable-length Packets 
@@ -2118,8 +6082,16 @@ NOTE  –  There is an instance of the Virtual Channel Reception Function for ea
 
 Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 4-32 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.4.5.3  The FARM shall examine the Primary Header of the incoming Transfer Frames  in 
 order to 
 
@@ -2188,8 +6160,16 @@ Figure 4-24:  Abstract Model of Virtual Channel Reception Function
 4.4.7.1  The Virtual Channel Demultiplexing Function shall be used to demultiplex Transfer 
 Frames of different Virtual Channels on a Master Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 4-33 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 NOTE  –  There  is  an  instance  of  the  Virtual  Channel  Demultiplexing  Function  for  each 
 
 Master Channel that has multiple Virtual Channels. 
@@ -2244,8 +6224,16 @@ NOTE  –  An abstract model of the Master Channel Demultiplexing Function is il
 
 in figure 4-26. 
 
+CCSDS 232.0-B-4 
+
+Page 4-34 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 VC Demux.
 Function
 
@@ -2298,8 +6286,16 @@ Removal Procedure.
 
 NOTE  –  An abstract model of the All Frames Reception Function is illustrated in figure 4-27. 
 
+CCSDS 232.0-B-4 
+
+Page 4-35 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 All Frames
 Reception
 Function for
@@ -2352,8 +6348,16 @@ transferring  octets  because  of  a  decoder  failure  or  channel  deactivatio
 Decoding  failure  may  be  caused  by  the  normal  end  of  the  transmitted  Transfer 
 Frame(s), or by a genuine channel-induced error. 
 
+CCSDS 232.0-B-4 
+
+Page 4-36 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 4.4.9.2.4 
 If one or more valid Frame Length fields are detected by this Procedure and the 
 number of octets received when the Data Stop condition occurs equals the number of octets 
@@ -2409,6 +6413,14 @@ After each Transfer Frame is reconstituted by the Frame Delimiting and Fill Remo
 Procedure, it will next be subjected to a set of standard tests called Frame Validation 
 Checks. 
 
+CCSDS 232.0-B-4 
+
+Page 4-37 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 4.4.9.3  Frame Validation Check Procedure 
 
@@ -2438,8 +6450,16 @@ e)  If  the  Frame  Error  Control  Field  is  present,  the  recomputed  CRC  v
 
 Transfer Frame must match the content of the Frame Error Control Field. 
 
+CCSDS 232.0-B-4 
+
+Page 4-38 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 5  MANAGED PARAMETERS WITHOUT SDLS OPTION 
 
 NOTES 
@@ -2508,6 +6528,14 @@ Integer
 Real number/second 
 Integer 
 
+CCSDS 232.0-B-4 
+
+Page 5-1 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 5.2  MANAGED PARAMETERS FOR A MASTER CHANNEL 
 
@@ -2547,6 +6575,14 @@ in table 5-3.
 
 NOTE  –  The managed parameters associated with the COP are listed in reference [4]. 
 
+CCSDS 232.0-B-4 
+
+Page 5-2 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 Table 5-3:  Managed Parameters for a Virtual Channel 
 
@@ -2617,6 +6653,14 @@ NOTE  –  The  value  of  the  Transfer  Frame  Version  Number  is  the  same 
 
 Transfer Frames on a Physical Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 5-3 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 5.4  MANAGED PARAMETERS FOR A MAP CHANNEL 
 
@@ -2673,8 +6717,16 @@ reference  [5])
 Integer 
 Required, Not required 
 
+CCSDS 232.0-B-4 
+
+Page 5-4 
+
+October 2021 
+
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 6  PROTOCOL SPECIFICATION WITH SDLS OPTION 
 
 6.1  OVERVIEW 
@@ -2721,6 +6773,14 @@ placed between the Segment Header and the User Data field of the Segment. Figure
 
 If the Segment Header is present then it is present in all frames for the Virtual Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 6-1 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 TC TRANSFER FRAME
 
@@ -2860,11 +6920,19 @@ TC TRANSFER FRAME WITH SDLS
 
 Figure 6-2:  SDLS Fields in a Type-D Transfer Frame without a Segment Header 
 
+CCSDS 232.0-B-4 
+
+Page 6-2 
+
+October 2021 
+
  
  
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 6.3.2  TRANSFER FRAME PRIMARY HEADER IN A FRAME WITH SDLS 
 
 The  Transfer  Frame  Primary  Header  for  a  frame  with  SDLS  shall  conform  to  the 
@@ -2925,6 +6993,14 @@ specified in 4.1.
 The length of the Security Header is an integral number of octets and is a managed 
 parameter of the MAP or Virtual Channel. 
 
+CCSDS 232.0-B-4 
+
+Page 6-3 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 6.3.5  TRANSFER FRAME DATA FIELD IN A FRAME WITH SDLS 
 
@@ -2996,6 +7072,14 @@ The Security Trailer is optional in a TC Transfer Frame with SDLS. For a Transfe
 Frame with a Segment Header, the presence of the Security Trailer in Type-D frames 
 is  a  managed  parameter  of  the  MAP.  For  a  Transfer  Frame  without  a  Segment 
 
+CCSDS 232.0-B-4 
+
+Page 6-4 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 Header,  the  presence  of  the  Security  Header  in  Type-D  frames  is  a  managed 
 parameter of the Virtual Channel. 
@@ -3040,6 +7124,14 @@ Channel Generation Function (final step of processing by the function);
 
 d)  the Frame Finalization Procedure including SDLS. 
 
+CCSDS 232.0-B-4 
+
+Page 6-5 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 6.4.2.2  Discussion 
 
@@ -3085,6 +7177,14 @@ If COP-1 is used, the FOP-1 Procedure specified in reference [4] shall be applie
 6.4.2.6.2  The values provided by the SDLS ApplySecurity Function shall be inserted into the 
 Security Header and, if in use (see 6.6), Security Trailer within the Transfer Frame. 
 
+CCSDS 232.0-B-4 
+
+Page 6-6 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 Interfaces and Order of Processing between RF&M, C&S, and Data Link Protocol Sublayer (SDLP, COP-1, and SDLS) Protocols
 
@@ -3322,11 +7422,19 @@ This document  4.3.8
 
 This document  4.3.8.2 
 
+CCSDS 232.0-B-4 
+
+Page 6-7 
+
+October 2021 
+
  
  
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 Numbered Step in Figure 6-3 
 
 CCSDS 
@@ -3453,6 +7561,14 @@ b)  conform to the specifications of 4.3.1.
 
 The MAP Generation Function of a TC protocol entity that supports SDLS shall 
 
+CCSDS 232.0-B-4 
+
+Page 6-8 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 a)  apply the Transfer Frame Data Field specification in 6.3.5 to determine the maximum 
 
@@ -3503,6 +7619,14 @@ NOTES
 The  lengths  of  the  Security  Header  and  Security  Trailer  are  managed  parameters of 
 the Virtual Channel or MAP (see 6.6). 
 
+CCSDS 232.0-B-4 
+
+Page 6-9 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 2 
 
@@ -3561,6 +7685,14 @@ b)  the SDLS ProcessSecurity Function;
 
 c)  the Virtual Channel Reception Function (final step of processing by the function). 
 
+CCSDS 232.0-B-4 
+CCSDS 232.0-B-4 Cor. 1 
+
+Page 6-10 
+
+October 2021 
+October 2023 
+
  
  
  
@@ -3571,6 +7703,8 @@ c)  the Virtual Channel Reception Function (final step of processing by the func
 r
 o
 C
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 6.5.2.2  Discussion 
 
@@ -3623,10 +7757,20 @@ them  as  SDLS  security  failures).  Therefore,  mixing  Type-AD  and  Type-BD
 frames on the same VC secured by SDLS is generally not advised unless Type-
 BD frames are sent only after all Type-AD frames have been accepted on board. 
 
+CCSDS 232.0-B-4 
+CCSDS 232.0-B-4 Cor. 1 
+
+Page 6-11 
+
+October 2021 
+October 2023 
+
  
  
  
 
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
 6.5.3  MAP PACKET EXTRACTION FUNCTION WITH SDLS 
 
 The MAP Packet Extraction Function of a TC protocol entity that supports SDLS shall 
@@ -3680,6 +7824,14 @@ NOTES
 The  lengths  of  the  Security  Header  and  Security  Trailer  are  managed  parameters of 
 the Virtual Channel or MAP (see 6.6). 
 
+CCSDS 232.0-B-4 
+
+Page 6-12 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 2 
 
@@ -3734,6 +7886,14 @@ reference [7].
 Protocol  supports  the  SDLS  protocol  shall  conform  to  the  definitions  in  table  5-4  and  the 
 additional definitions in table 6-3. 
 
+CCSDS 232.0-B-4 
+
+Page 6-13 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
 
 Table 6-3:  Additional Managed Parameters for a MAP When TC Space Data Link 
 
@@ -3756,4 +7916,1692 @@ Integer
 
 If the Security Header is present then SDLS is in use for the MAP. 
 The valid lengths for the Security Header and Security Trailer are specified in 
-reference [7].
+reference [7]. 
+
+CCSDS 232.0-B-4 
+
+Page 6-14 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+ANNEX A 
+
+PROTOCOL IMPLEMENTATION CONFORMANCE  
+STATEMENT PROFORMA 
+
+(NORMATIVE) 
+
+A1 
+
+INTRODUCTION 
+
+A1.1  OVERVIEW 
+
+This  annex  provides  the  PICS  Requirements  List  (RL)  for  an  implementation  of  the  TC 
+Space  Data  Link  Protocol  (CCSDS  232.0-B-4).    The  PICS  for  an  implementation  is 
+generated  by  completing  the  RL  in  accordance  with  the  instructions  below.  An 
+implementation claiming conformance must satisfy the mandatory requirements referenced in 
+the RL. 
+
+The RL support column in this annex is blank. An implementation’s completed RL is called 
+the  PICS.  The  PICS  states  which  capabilities  and  options  have  been  implemented.  The 
+following can use the PICS: 
+
+– 
+
+the implementer, as a checklist to reduce the risk of failure to conform to the standard 
+through oversight; 
+
+–  a supplier or potential acquirer of the implementation, as a detailed indication of the 
+capabilities  of  the  implementation,  stated  relative  to  the  common  basis  for 
+understanding provided by the standard PICS proforma; 
+
+–  a  user  or  potential  user  of  the  implementation,  as  a  basis  for  initially  checking  the 
+possibility  of  interworking  with  another  implementation  (it  should  be  noted  that, 
+while  interworking  can  never  be  guaranteed,  failure  to  interwork  can  often  be 
+predicted from incompatible PICSes); 
+
+–  a tester, as the basis for selecting appropriate tests against which to assess the claim 
+
+for conformance of the implementation. 
+
+A1.2  ABBREVIATIONS AND CONVENTIONS 
+
+The RL consists of information in tabular form.  The status of features is indicated using the 
+abbreviations and conventions described below. 
+
+Item Column 
+
+The item column contains sequential numbers for items in the table. 
+
+NOTE  –  The item-number prefix ‘TC’ = ‘Data Link Layer’. 
+
+CCSDS 232.0-B-4 
+
+Page A-1 
+
+October 2021 
+
+ 
+  
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Feature Column 
+
+The feature column contains a brief descriptive name for a feature. It implicitly means ‘Is this 
+feature supported by the implementation?’ 
+
+Status Column 
+
+The status column uses the following notations: 
+
+M 
+
+O 
+
+C# 
+
+O.<n> 
+
+mandatory. 
+
+optional. 
+
+Conditional; condition stated below table. 
+
+optional, but support of at least one of the group of options labeled by 
+the same numeral <n> is required. 
+
+N/A 
+
+Not applicable. 
+
+Support Column Symbols 
+
+The support column is to be used by the implementer to state whether a feature is supported 
+by entering Y, N, or N/A, indicating: 
+
+Y 
+
+N 
+
+Yes, supported by the implementation. 
+
+No, not supported by the implementation. 
+
+N/A  Not applicable. 
+
+The support column should also be used, when appropriate, to enter values supported for a 
+given capability. 
+
+A1.3  INSTRUCTIONS FOR COMPLETING THE RL 
+
+An  implementer  shows  the  extent  of  compliance  to  the  Recommended  Standard  by 
+completing the RL; that is, the state of compliance with all mandatory requirements and the 
+options supported are shown. The resulting completed RL is called a PICS. The implementer 
+shall complete the RL by entering appropriate responses in the support or values supported 
+column, using the notation described in A1.2.  If a conditional requirement is inapplicable, 
+N/A should be used. If a mandatory requirement is not satisfied, exception information must 
+be  supplied  by  entering  a  reference  Xi,  where  i  is  a  unique  identifier,  to  an  accompanying 
+rationale for the noncompliance. 
+
+CCSDS 232.0-B-4 
+
+Page A-2 
+
+October 2021 
+
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+A2  PICS PROFORMA FOR TC SPACE DATA LINK PROTOCOL (CCSDS 232.0-B-4) 
+
+A2.1  GENERAL INFORMATION 
+
+A2.1.1 
+
+Identification of PICS 
+
+Date of Statement (DD/MM/YYYY) 
+
+PICS serial number 
+
+System  Conformance  statement 
+cross-reference 
+
+A2.1.2 
+
+Identification of Implementation Under Test (IUT) 
+
+Implementation name 
+
+Implementation version 
+
+Special Configuration 
+
+Other Information 
+
+A2.1.3 
+
+Identification of Supplier 
+
+Supplier 
+
+Contact Point for Queries 
+
+Implementation Name(s) and Versions 
+
+information  necessary 
+
+Other 
+full 
+identification,  e.g.,  name(s)  and  version(s) 
+for machines and/or operating systems; 
+
+for 
+
+System Name(s) 
+
+A2.1.4 
+
+Identification of Specification 
+
+CCSDS 232.0-B-4 
+
+Have any exceptions been required? 
+NOTE  –  A YES answer means that the implementation does not 
+conform to the Recommended Standard. Non-supported 
+mandatory capabilities are to be identified in the PICS, 
+with an explanation of why the implementation is non-
+conforming. 
+
+Yes [  ]      No [  ] 
+
+CCSDS 232.0-B-4 
+
+Page A-3 
+
+October 2021 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+A2.2  REQUIREMENTS LIST 
+
+Table A-1:  TC Service Data Units 
+
+Item 
+
+Description 
+
+Reference 
+
+TC-1 
+TC-2 
+TC-3 
+TC-4 
+
+Packet SDU 
+MAP SDU 
+VCA SDU 
+TC Transfer Frame  
+
+3.2.2 
+3.2.3 
+3.2.4 
+3.2.5 
+
+Status 
+M 
+M 
+M 
+M 
+
+Support 
+
+Table A-2:  Service Parameters 
+
+Item 
+
+Description 
+
+Reference  Status  Values Allowed 
+
+Support 
+
+MAP Packet Service Parameters 
+
+TC-5 
+TC-6 
+TC-7 
+TC-8 
+TC-9 
+TC-10 
+TC-11 
+TC-12 
+TC-13 
+
+TC-14 
+TC-15 
+TC-16 
+TC-17 
+TC-18 
+TC-19 
+TC-20 
+TC-21 
+
+TC-22 
+TC-23 
+TC-24 
+TC-25 
+TC-26 
+TC-27 
+TC-28 
+
+Packet  
+GVCID 
+MAP ID 
+Packet Version Number 
+SDU ID  
+Service Type 
+Notification Type 
+Packet Quality Indicator 
+Verification Status Code 
+
+3.3.2.2 
+3.3.2.3 
+3.3.2.4 
+3.3.2.5 
+3.3.2.6 
+3.3.2.7 
+3.3.2.8 
+3.3.2.9 
+3.3.2.10 
+
+M 
+M 
+M 
+M 
+M 
+M 
+O 
+O 
+C2 
+
+(see reference [4]) 
+
+(see reference [7]) 
+
+VC Packet Service Parameters 
+
+Packet 
+GVCID 
+Packet Version Number 
+SDU ID 
+Service Type  
+Notification Type 
+Packet Quality Indicator 
+Verification Status Code 
+
+3.4.2.2 
+3.4.2.3 
+3.4.2.4 
+3.4.2.5 
+3.4.2.6 
+3.4.2.7 
+3.4.2.8 
+3.4.2.9 
+
+M 
+M 
+M 
+M 
+M 
+O 
+O 
+C2 
+
+(see reference [4]) 
+
+(see reference [7]) 
+
+MAP Access Service Parameters 
+
+MAP SDU 
+GVCID 
+MAP ID 
+SDU ID 
+Service Type 
+Notification Type 
+Verification Status Code 
+
+3.5.2.2 
+3.5.2.3 
+3.5.2.4 
+3.5.2.5 
+3.5.2.6 
+3.5.2.7 
+3.5.2.8 
+
+M 
+M 
+M 
+M 
+M 
+O 
+C2 
+
+(see reference [4]) 
+(see reference [7]) 
+
+CCSDS 232.0-B-4 
+
+Page A-4 
+
+October 2021 
+
+ 
+  
+  
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+ 
+  
+ 
+  
+ 
+ 
+  
+ 
+  
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Item 
+
+Description 
+
+Reference  Status  Values Allowed 
+
+Support 
+
+TC-29 
+TC-30 
+TC-31 
+TC-32 
+TC-33 
+TC-34 
+
+VCA_SDU 
+GVCID 
+SDU ID 
+Service Type 
+Notification Type 
+Verification Status Code 
+
+VCA Service Parameters 
+M 
+M 
+M 
+M 
+O 
+C2 
+
+3.6.2.2 
+3.6.2.3 
+3.6.2.4 
+3.6.2.5 
+3.6.2.6 
+3.6.2.7 
+
+(see reference [4]) 
+(see reference [7]) 
+
+TC-35 
+TC-36 
+
+TC Frame 
+GVCID 
+
+TC-33 
+TC-34 
+
+TC Frame 
+MCID 
+
+VCF Service Parameters 
+M 
+M 
+
+3.7.2.2 
+3.7.2.3 
+
+MCF Service Parameters 
+M 
+M 
+
+3.8.2.2 
+3.8.2.3 
+
+COPs Management Service Parameters 
+
+TC-35 
+TC-36 
+TC-37 
+TC-38 
+TC-39 
+TC-40 
+
+GVCID 
+Directive ID 
+Directive Type  
+Directive Qualifier 
+Notification Type  
+Notification Qualifier 
+
+C2: O if SDLS Option else N/A. 
+
+3.9.2.2 
+3.9.2.3 
+3.9.2.4 
+3.9.2.5 
+3.9.2.6 
+3.9.2.7 
+
+M 
+M 
+M 
+M 
+M 
+M 
+
+(see reference [4]) 
+(see reference [4]) 
+(see reference [4]) 
+(see reference [4]) 
+
+Table A-3:  Service Primitives 
+
+Item 
+
+Description 
+
+Reference 
+
+Status 
+
+Support 
+
+TC-41 
+TC-42 
+TC-43 
+
+TC-44 
+TC-45 
+TC-46 
+
+TC-47 
+TC-48 
+TC-49 
+
+TC-50 
+TC-51 
+
+TC-52 
+
+MAPP Service Primitives 
+
+MAPP.request 
+MAPP_Notify.indication  
+MAPP.indication 
+
+3.3.3.2 
+3.3.3.3 
+3.3.3.4 
+
+VCP.request 
+VCP_Notify.indication 
+VCP.indication 
+
+VCP Service Primitives 
+3.4.3.2 
+3.4.3.3 
+3.4.3.4 
+
+MAP Access Service Primitives 
+
+MAPA.request 
+MAPA_Notify.indication 
+MAPA.indication 
+
+3.5.3.2 
+3.5.3.3 
+3.5.3.4 
+
+VC Access Service Primitives 
+
+VCA.request 
+VCA_Notify.indication 
+
+VCA.indication 
+
+3.6.3.2 
+3.6.3.3 
+
+3.6.3.4 
+
+M 
+M 
+M 
+
+M 
+M 
+M 
+
+M 
+M 
+
+M 
+M 
+
+CCSDS 232.0-B-4 
+
+Page A-5 
+
+October 2021 
+
+ 
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+  
+ 
+ 
+ 
+  
+ 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+ 
+  
+ 
+ 
+ 
+  
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Item 
+
+Description 
+
+Reference 
+
+Status 
+
+Support 
+
+TC-53 
+TC-54 
+
+TC-55 
+TC-56 
+
+TC-57 
+TC-58 
+TC-59 
+
+VCF.request 
+VCF.indication 
+
+MCF.request 
+MCF.indication 
+
+VC Frame Service Primitives 
+
+3.7.3.2 
+3.7.3.3 
+MCF Service Primitives 
+3.8.3.2 
+3.8.3.3 
+
+COPs Management Service Primitives 
+
+Directive.request 
+Directive_Notify.indication 
+Async_Notify.indication 
+
+3.9.3.2 
+3.9.3.3 
+3.9.3.4 
+
+M 
+M 
+
+M 
+M 
+
+M 
+M 
+M 
+
+Table A-4:  TC Protocol Data Units 
+
+Item 
+
+TC-60 
+TC-61 
+TC-62 
+TC-63 
+TC-64 
+
+Description 
+TC Transfer Frame 
+Transfer Frame Primary Header 
+Transfer Frame Data Field 
+Frame Error Control Field 
+CLCW 
+
+Reference 
+
+4.1.1 
+4.1.2 
+4.1.3 
+4.1.4 
+4.2.1 
+
+Table A-5:  Protocol Procedures 
+
+Item 
+
+TC-65 
+TC-66 
+TC-67 
+TC-68 
+TC-69 
+TC-70 
+TC-71 
+TC-72 
+TC-73 
+TC-74 
+TC-75 
+TC-76 
+TC-77 
+TC-78 
+TC-79 
+TC-80 
+
+Reference 
+
+Description 
+4.3.1 
+MAPP Processing Function 
+4.3.2 
+MAP Generation Function 
+4.3.3 
+MAP Multiplexing Function 
+4.3.4 
+VC Packet Processing Function 
+4.3.5 
+Virtual Channel Generation Function 
+4.3.6 
+Virtual Channel Multiplexing Function 
+4.3.7 
+Master Channel Multiplexing Function 
+4.3.8 
+All Frames Generation Function 
+4.4.1 
+MAP Packet Extraction Function 
+4.4.2 
+MAP Reception Function 
+4.4.3 
+MAP Demultiplexing Function 
+4.4.4 
+VC Packet Extraction Function 
+4.4.5 
+Virtual Channel Reception Function 
+4.4.6 
+Virtual Channel Demultiplexing Function 
+Master Channel Demultiplexing Function  4.4.7 
+4.4.8 
+All Frames Reception Function 
+
+Status 
+M 
+M 
+M 
+M 
+M 
+
+Status 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+M 
+
+Support 
+
+Support 
+
+CCSDS 232.0-B-4 
+
+Page A-6 
+
+October 2021 
+
+  
+ 
+  
+ 
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Table A-6:  Management Parameters 
+
+Item 
+
+Description 
+
+Reference  Status  Values Allowed  Support 
+
+Managed Parameters for a Physical Channel 
+
+TC-81 
+TC-82 
+
+TC-83 
+
+TC-84 
+TC-85 
+TC-86 
+
+TC-87 
+
+TC-88 
+
+TC-89 
+
+TC-90 
+
+TC-91 
+
+TC-92 
+TC-93 
+TC-94 
+
+TC-95 
+
+TC-96 
+TC-97 
+TC-98 
+TC-99 
+TC-100 
+
+Frame 
+
+Version 
+
+Physical Channel Name 
+Maximum  Transfer  Frame 
+Length (octets) 
+Transfer 
+Number (TFVN) 
+Valid Spacecraft IDs 
+MC Multiplexing Scheme 
+Presence of Frame Error 
+Control 
+Maximum Number of Transfer 
+Frames  Given  to  the  Coding 
+Sublayer  as  a  Single  Data 
+Unit 
+Maximum Length of Data Unit 
+Given to the Coding Sublayer 
+Maximum  Bit  Rate  Accepted 
+by the Coding Sublayer 
+Maximum 
+the 
+for 
+value 
+Repetitions  parameter  to  the 
+Coding Sublayer 
+
+Table 5-1 
+Table 5-1 
+
+M 
+M 
+
+Character String 
+Integer  
+
+Table 5-1 
+
+M 
+
+‘00’ binary 
+
+Table 5-1 
+Table 5-1 
+Table 5-1 
+
+Table 5-1 
+
+M 
+M 
+M 
+
+M 
+
+Integer 
+Mission Specific 
+Present (‘1’) / 
+Absent (‘0’) 
+Integer 
+
+Table 5-1 
+
+M 
+
+Integer 
+
+Table 5-1 
+
+Table 5-1 
+
+M 
+
+M 
+
+Real 
+number/second 
+Integer 
+
+Managed Parameters for a Master Channel 
+
+Maximum  Transfer  Frame 
+Length (octets) 
+SCID 
+VCIDs 
+VC Multiplexing Scheme 
+
+Table 5-2 
+
+Table 5-2 
+Table 5-2 
+Table 5-2 
+
+M 
+
+M 
+M 
+M 
+
+Integer (up to 
+1024) 
+Integer 
+0 to 62 
+Mission Specific 
+
+Managed Parameters for a Virtual Channel 
+
+Maximum  Transfer  Frame 
+Length (octets) 
+SCID 
+VCID 
+COP in Effect 
+CLCW Version Number 
+CLCW Reporting Rate 
+
+Table 5-3 
+
+Table 5-3 
+Table 5-3 
+Table 5-3 
+Table 5-3 
+Table 5-3 
+
+TC-101 
+
+Presence of Segment Header  Table 5-3 
+
+TC-102 
+
+TC-103 
+
+TC-104 
+
+(if 
+
+Field  Content 
+
+Data 
+Segment Header is absent) 
+Valid  MAP  IDs  (if  Segment 
+Header is absent) 
+MAP  Multiplexing  Scheme  (if 
+Segment Header is absent) 
+
+Table 5-3 
+
+Table 5-3 
+
+M 
+
+M 
+M 
+M 
+M 
+M 
+
+M 
+
+M 
+
+M 
+
+Integer (up to 
+1024) 
+Integer 
+0 to 63 
+1 
+1 
+Real 
+number/second 
+Present(‘1’)/ 
+Absent (‘0’) 
+Packets, 
+VCA_SDU 
+0–15 
+
+Table 5-3 
+
+M 
+
+Mission Specific 
+
+CCSDS 232.0-B-4 
+
+Page A-7 
+
+October 2021 
+
+  
+  
+  
+  
+  
+  
+  
+  
+ 
+ 
+  
+  
+  
+  
+  
+ 
+  
+  
+ 
+  
+ 
+ 
+  
+  
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Item 
+TC-105 
+
+TC-106 
+
+TC-107 
+
+TC-108 
+
+TC-109 
+TC-110 
+TC-111 
+TC-112 
+
+TC-113 
+
+TC-114 
+
+TC-115 
+
+Description 
+Blocking  (if Segment Header 
+is absent and Data Field 
+Content is Packets) 
+Value for the Repetitions 
+parameter to the Coding 
+Sublayer when transferring 
+TC Frames carrying service 
+data on the Sequence-
+Controlled Service 
+Value for the Repetitions 
+parameter to the Coding 
+Sublayer when transferring 
+TC Frames carrying COP 
+Control Commands 
+
+Reference  Status  Values Allowed  Support 
+Permitted, 
+Table 5-3 
+Prohibited 
+
+M 
+
+Table 5-3 
+
+M 
+
+Integer (see 
+reference [4]) 
+
+Table 5-3 
+
+M 
+
+Integer (see 
+reference [4]) 
+
+Managed Parameters for a MAP Channel 
+
+Maximum  Frame  Data  Unit 
+Length (octets) 
+Spacecraft ID 
+VCID 
+MAP ID 
+Data Field Content 
+
+(if  Data  Field 
+
+Blocking 
+Content is Packets) 
+Segmentation 
+
+Maximum  MAP_SDU  Length 
+(octet)  (if  the  MAP  permits 
+Segmentation) 
+
+Table 5-4 
+
+Table 5-4 
+Table 5-4 
+Table 5-4 
+Table 5-4 
+
+Table 5-4 
+
+Table 5-4 
+
+Table 5-4 
+
+to 
+
+M 
+
+M 
+M 
+M 
+M 
+
+M 
+
+M 
+
+M 
+
+(up 
+
+Integer 
+1019) 
+Integer 
+0 to 63 
+0 to 63 
+Packets, 
+MAP_SDU 
+Permitted, 
+Prohibited 
+Permitted, 
+Prohibited 
+Integer 
+
+Managed Parameters for a Packet Transfer 
+
+TC-116 
+
+Valid PVNs 
+
+TC-117 
+
+TC-118 
+
+Maximum Packet Length 
+(octets) 
+Whether incomplete Packets 
+are required to be delivered to 
+the user at the receiving end 
+
+Table 5-5 
+
+Table 5-5 
+
+Table 5-5 
+
+M 
+
+M 
+
+M 
+
+Set of Integers, 
+(see reference [5]) 
+Integer 
+
+Required, not 
+required 
+
+CCSDS 232.0-B-4 
+
+Page A-8 
+
+October 2021 
+
+  
+  
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+Table A-7:  Protocol Specification with SDLS Option 
+
+Description 
+
+Reference  Status 
+
+Suppor
+t 
+
+SDLS Protocol 
+Security Header 
+Transfer Frame Data Field in a TC Frame with SDLS 
+Security Trailer 
+Frame Error Control Field in a TC Frame with SDLS 
+Order  of  Processing  Between  TC,  COP-1,  and  SDLS 
+Protocols (Sending End) 
+MAP Packet Processing Function with SDLS 
+MAP Generation Function with SDLS 
+VC Packet Processing Function with SDLS 
+VC Generation Function with SDLS  
+Order  of  Processing  Between  TC,  COP-1,  and  SDLS 
+Protocols (Receiving-End) 
+MAP Packet Extraction Function with SDLS 
+MAP Reception Function with SDLS 
+VC Packet Extraction Function with SDLS 
+VC Reception Function with SDLS 
+
+(see ref. [7]) 
+6.3.4 
+6.3.5 
+6.3.6 
+6.3.7 
+6.4.2 
+
+6.4.3 
+6.4.4 
+6.4.6 
+6.4.7 
+6.5.2 
+
+6.5.3 
+6.5.4 
+6.5.6 
+6.5.7 
+
+O 
+C3 
+C3 
+C4 
+C3 
+C3 
+
+C3 
+C3 
+C3 
+C3 
+C3 
+
+C3 
+C3 
+C3 
+C3 
+
+Item 
+TC-119 
+TC-120 
+TC-121 
+TC-122 
+TC-123 
+TC-124 
+
+TC-125 
+TC-126 
+TC-127 
+TC-128 
+TC-129 
+
+TC-130 
+TC-131 
+TC-132 
+TC-133 
+
+C3: M if SDLS Option else N/A. 
+
+C4: O if SDLS Option else N/A. 
+
+Table A-8:  Additional Managed Parameters with SDLS Option 
+
+Item 
+TC-141 
+
+TC-142 
+
+TC-143 
+
+TC-144 
+
+Description 
+
+Presence of Space Data Link Security 
+Header 
+Presence of Space Data Link Security 
+Trailer 
+Length of Space Data Link Security Header 
+(octets) 
+Length of Space Data Link Security Trailer 
+(octets) 
+
+Reference  Status 
+Table 6-2 
+
+C5 
+
+Table 6-2 
+
+C5 
+
+Table 6-2 
+
+C5 
+
+Table 6-2 
+
+C5 
+
+Values 
+Allowed 
+Present (‘1’) / 
+Absent (‘0’) 
+Present (‘1’) / 
+Absent (‘0’) 
+Integer 
+(see ref. [7])  
+Integer 
+(see ref. [7])  
+
+Support 
+
+C5: M if SDLS Option else N/A. 
+
+CCSDS 232.0-B-4 
+
+Page A-9 
+
+October 2021 
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+ANNEX B 
+
+ACRONYMS 
+
+(INFORMATIVE) 
+
+APID 
+
+ARQ 
+
+CCSDS 
+
+CLCW 
+
+COP 
+
+FARM 
+
+FDU 
+
+FOP 
+
+Application Process Identifier 
+
+Automatic Repeat Request 
+
+Consultative Committee for Space Data Systems 
+
+Communications Link Control Word 
+
+Communications Operation Procedure 
+
+Frame Acceptance and Reporting Mechanism 
+
+Frame Data Unit 
+
+Frame Operation Procedure 
+
+GMAP ID 
+
+Global Multiplexer Access Point Identifier 
+
+GVCID 
+
+MAP ID 
+
+MAP 
+
+MAPA 
+
+MAPP 
+
+MC 
+
+MCF 
+
+MCID 
+
+MSB 
+
+OSI 
+
+PVN 
+
+QoS 
+
+Global Virtual Channel Identifier 
+
+Multiplexer Access Point Identifier 
+
+Multiplexer Access Point 
+
+Multiplexer Access Point Access 
+
+Multiplexer Access Point Packet 
+
+Master Channel 
+
+Master Channel Frame 
+
+Master Channel Identifier 
+
+Most Significant Bit 
+
+Open Systems Interconnection 
+
+Packet Version Number 
+
+Quality of Service 
+
+CCSDS 232.0-B-4 
+
+Page B-1 
+
+October 2021 
+
+ 
+  
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+SAP 
+
+SCID 
+
+SDLS 
+
+SDU 
+
+TC 
+
+TFVN 
+
+VC 
+
+VCA 
+
+VCF 
+
+VCID 
+
+VCP 
+
+Service Access Point 
+
+Spacecraft Identifier 
+
+Space Data Link Security 
+
+Service Data Unit 
+
+Telecommand 
+
+Transfer Frame Version Number 
+
+Virtual Channel 
+
+Virtual Channel Access 
+
+Virtual Channel Frame 
+
+Virtual Channel Identifier 
+
+Virtual Channel Packet 
+
+CCSDS 232.0-B-4 
+
+Page B-2 
+
+October 2021 
+
+ 
+
+CCSDS RECOMMENDED STANDARD FOR TC SPACE DATA LINK PROTOCOL 
+
+ANNEX C 
+
+INFORMATIVE REFERENCES 
+
+(INFORMATIVE) 
+
+[C1]  Organization  and  Processes  for  the  Consultative  Committee  for  Space  Data  Systems. 
+Issue  4.  CCSDS  Record  (Yellow  Book),  CCSDS  A02.1-Y-4.  Washington,  D.C.: 
+CCSDS, April 2014. 
+
+[C2]  Overview of Space Communications Protocols. Issue 3. Report Concerning Space Data 
+System Standards (Green Book), CCSDS 130.0-G-3. Washington, D.C.: CCSDS, July 
+2014. 
+
+[C3]  Space  Communications  Cross  Support—Architecture  Description  Document.  Issue  1. 
+Report  Concerning  Space  Data  System  Standards  (Green  Book),  CCSDS  901.0-G-1. 
+Washington, D.C.: CCSDS, November 2013. 
+
+[C4]  Space  Communications  Cross  Support—Architecture  Requirements  Document.  Issue  1. 
+Recommendation for Space Data System Practices (Magenta Book), CCSDS 901.1-M-1. 
+Washington, D.C.: CCSDS, May 2015. 
+
+[C5]  Cross  Support  Reference  Model—Part  1:  Space  Link  Extension  Services.  Issue  2. 
+Recommendation  for  Space  Data  System  Standards  (Blue  Book),  CCSDS  910.4-B-2. 
+Washington, D.C.: CCSDS, October 2005. 
+
+[C6]  TM  Space  Data  Link  Protocol.  Issue  3.  Recommendation  for  Space  Data  System 
+Standards (Blue Book), CCSDS 132.0-B-3. Washington, D.C.: CCSDS, October 2021. 
+
+[C7]  AOS  Space  Data  Link  Protocol.  Issue  4.  Recommendation  for  Space  Data  System 
+Standards (Blue Book), CCSDS 732.0-B-4. Washington, D.C.: CCSDS, October 2021. 
+
+NOTE  –  Normative references are listed in 1.7. 
+
+CCSDS 232.0-B-4 
+
+Page C-1 
+
+October 2021 
+
+ 
+  
+

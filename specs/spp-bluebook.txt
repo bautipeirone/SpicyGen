@@ -1,4 +1,162 @@
 CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 1-1
+June 2020
+1 INTRODUCTION
+1.1
+PURPOSE
+The purpose of this Recommended Standard is to specify the Space Packet Protocol.  Space
+missions will use this protocol to transfer space application data between a sending and a
+receiving entity, relying on services provided by underlying layers.
+1.2
+SCOPE
+This Recommended Standard defines the Space Packet Protocol in terms of
+a) the abstract services provided to the users of this protocol;
+b) the Protocol Data Units (PDUs) employed by the protocol; and
+c) the procedures performed by the protocol.
+It does not specify
+a) individual implementations or products;
+b) the implementation of service interfaces within real systems;
+c) the methods or technologies required to perform the procedures; or
+d) the management activities required to configure and control the protocol.
+1.3
+APPLICABILITY
+This Recommended Standard applies to the creation of Agency standards and to data
+communications over space links between CCSDS Agencies in cross-support situations as
+well as, for example, data exchange within spacecraft or ground networks.  The
+Recommended Standard includes specification of the abstract services and the interoperable
+protocol for inter-Agency cross-support.  It is neither a specification of, nor a design for, real
+systems that may be implemented for existing or future missions.
+The Recommended Standard specified in this document is to be invoked through the normal
+standards programs of each CCSDS Agency and is applicable to those missions for which
+cross-support, based on capabilities described in this Recommended Standard, is anticipated.
+Where mandatory capabilities are clearly indicated in sections of the Recommended
+Standard, they must be implemented when this document is used as a basis for cross-support.
+Where options are allowed or implied, implementation of these options is subject to specific
+bilateral cross-support agreements between the Agencies involved.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 1-2
+June 2020
+1.4
+RATIONALE
+In many space applications, there is significant value in having a single, common Application
+Layer data structure for the creation, storage, and transport of variable-length Application
+Layer data.  Such a data structure can be exchanged and stored on board, transferred over one
+or more space data links, and used within ground systems.  Often it is necessary to identify
+such data as to type, source, and/or destination.
+1.5
+DOCUMENT STRUCTURE
+This document is divided into five numbered sections and four annexes:
+a) section 1 presents the purpose, scope, applicability, and rationale of this
+Recommended Standard and lists the conventions, definitions, and references used
+throughout the Recommended Standard;
+b) section 2 provides an overview of the Space Packet Protocol;
+c) section 3 defines the services provided by the protocol entity;
+d) section 4 specifies the PDUs and procedures employed by the protocol entity;
+e) section 5 lists the managed parameters associated with this protocol;
+f) annex A contains the Protocol Implementation Conformance Statement (PICS)
+proforma;
+g) annex B discusses security, Space Assigned Numbers Authority (SANA), and patent
+considerations;
+h) annex C lists informative references;
+i) annex D lists abbreviations used within this document.
+1.6
+CONVENTIONS AND DEFINITIONS
+1.6.1 DEFINITIONS
+1.6.1.1 Terms from the Open Systems Interconnection Basic Reference Model
+This Recommended Standard makes use of a number of terms defined in reference [1].  The
+use of those terms in this Recommended Standard is to be understood in a generic sense, that
+is, in the sense that those terms are generally applicable to any of a variety of technologies
+that provide for the exchange of information between real systems.  Those terms are
+a) connection;
+b) entity;
+c) flow control;
+d) peer entities;
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 1-3
+June 2020
+e) protocol control information;
+f) protocol data unit;
+g) real subnetwork;
+h) real system;
+i) service;
+j) Service Access Point (SAP);
+k) SAP address;
+l) service data unit;
+m) subnetwork.
+In this document, particular relevance is given to the term ‘subnetwork’ intended as an
+abstraction of a ‘real subnetwork’ (i.e., a collection of equipment and physical media which
+forms an autonomous whole and which can be used to interconnect real systems for the
+purpose of data transfer).
+1.6.1.2 Terms from OSI Service Definition Conventions
+This Recommended Standard makes use of a number of terms defined in reference [2].  The
+use of those terms in this Recommended Standard is to be understood in a generic sense, that
+is, in the sense that those terms are generally applicable to any of a variety of technologies
+that provide for the exchange of information between real systems.  Those terms are
+a) indication;
+b) primitive;
+c) request;
+d) service provider; and
+e) service user.
+1.6.1.3 Terms Defined in this Recommended Standard
+For the purposes of this Recommended Standard, the following definitions also apply.  Many
+other terms that pertain to specific items are defined in the appropriate sections.
+application process identifier, APID: The field in the packet primary header that uniquely
+identifies a stream of packets (indicates source, destination, or type).
+asynchronous:  Not synchronous (see synchronous, below).
+Idle Packet: A Space Packet identified by a reserved APID value (see 4.1.3.3.4.4) that
+contains idle data (see 1.6.1.5).
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 1-4
+June 2020
+managed data path: The actual path through the end-to-end data system, configured by
+design or by a management system before data transfer occurs, through which the packets
+flow. This path can be reconfigured only through the management system.
+Mission Phase:  A period of a mission during which specified communications
+characteristics are fixed.  The transition between two consecutive Mission Phases may cause
+an interruption of the communications services and/or a change in communications
+parameters.
+Physical Channel:  A stream of bits transferred over a space link in a single direction.
+space link:  A communications link between a spacecraft and its associated ground system,
+or between two spacecraft.  A space link consists of one or more Physical Channels in one or
+both directions.
+synchronous:  Of or pertaining to a sequence of events occurring in a fixed-time relationship
+(within specified tolerance) to another sequence of events.
+user application:  In this document, a process generating or receiving Space Packets
+associated with a specific APID.
+1.6.1.4 Definition from CCSDS 232.0-B-3 (Reference [C4])
+delimited:  Having a known (and finite) length; applies to data in the context of data handling.
+1.6.1.5 Definition from CCSDS 732.0-B-3 (Reference [C5])
+idle data: A fixed-length project-specified ‘idle’ pattern of binary digits, whose assignment
+is a project design choice.
+1.6.2 NOMENCLATURE
+1.6.2.1 Normative Text
+The following conventions apply for the normative specifications in this Recommended
+Standard:
+a) the words ‘shall’ and ‘must’ imply a binding and verifiable specification;
+b) the word ‘should’ implies an optional, but desirable, specification;
+c) the word ‘may’ implies an optional specification;
+d) the words ‘is’, ‘are’, and ‘will’ imply statements of fact.
+NOTE – These conventions do not imply constraints on diction in text that is clearly
+informative in nature.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 1-5
+June 2020
+1.6.2.2 Informative Text
+In the normative sections of this document, informative text is set off from the normative
+specifications either in notes or under one of the following subsection headings:
+– Overview;
+– Background;
+– Rationale;
+– Discussion.
 1.6.3 CONVENTIONS
 In this document, the following convention is used to identify each bit in an N-bit field.  The
 first bit in the field to be transmitted (i.e., the most left justified when drawing a figure) is
@@ -9,11 +167,51 @@ N-BIT DATA FIELD
 BIT 0
 BIT N-1
 FIRST BIT TRANSMITTED = MSB
+
+Figure 1-1:  Bit Numbering Convention
 In accordance with standard data-communications practice, data fields are often grouped into
 eight-bit ‘words’ that conform to the above convention.  Throughout this Recommended
 Standard, such an eight-bit word is called an ‘octet’.
 The numbering for octets within a data structure starts with zero.
 By CCSDS convention, all ‘spare’ bits shall be permanently set to ‘0’.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 1-6
+June 2020
+1.7
+REFERENCES
+The following publications contain provisions which, through reference in this text,
+constitute provisions of this document.  At the time of publication, the editions indicated
+were valid.  All publications are subject to revision, and users of this document are
+encouraged to investigate the possibility of applying the most recent editions of the
+publications indicated below.  The CCSDS Secretariat maintains a register of currently valid
+CCSDS publications.
+[1]
+Information Technology—Open Systems Interconnection—Basic Reference Model: The
+Basic Model. 2nd ed. International Standard, ISO/IEC 7498-1:1994. Geneva: ISO,
+1994.
+[2]
+Information Technology—Open Systems Interconnection—Basic Reference Model—
+Conventions for the Definition of OSI Services. International Standard, ISO/IEC
+10731:1994. Geneva: ISO, 1994.
+[3]
+Time Code Formats. Issue 4. Recommendation for Space Data System Standards (Blue
+Book), CCSDS 301.0-B-4. Washington, D.C.: CCSDS, November 2010.
+[4]
+“Space Packet Protocol Application Process Identifier (APID).” Space Assigned Numbers
+Authority. https://sanaregistry.org/r/space_packet_protocol_application_process_id.
+[5]
+“Space Packet Protocol Secondary Header Format Document.” Space Assigned
+Numbers Authority.
+https://sanaregistry.org/r/space_packet_protocol_secondary_header_format_document.
+NOTE – Informative references are listed in annex C.
+
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-1
+June 2020
 2 OVERVIEW
 2.1
 CONCEPT OF SPACE PACKET PROTOCOL
@@ -52,6 +250,41 @@ The SPP provides a unidirectional data transfer service from a single source use
 to one or more destination user applications through one or more subnetworks. In this
 document, a user application is intended to be an application generating (or receiving) Space
 Packets with a unique APID.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-2
+June 2020
+BP
+LTP
+AMS
+CFDP
+LTPCLA
+ENCAPCLA
+TCPCLA
+UDPCLA
+TCP
+IP
+IPoC
+LTP
+RF/Optical
+USLP
+TM
+TC
+AOS
+Prox-1
+Ethernet
+Wire
+UDP
+Physical Layer
+Data Link Layer
+Either Encapsulation Packet Protocol or Space Packet Protocol
+Upper Layers
+Space Data Link Layer Protocols
+SPP
+MO-MAL
+
+Figure 2-1:  SPP Context within the CCSDS Protocol Stack
 The APID provides a single naming domain within a given mission deployment.  The APID
 can be used in a variety of ways by a mission, depending on mission needs.  It can be used to
 designate the intended destination for a stream of packets, to designate the source of a stream
@@ -67,6 +300,11 @@ As the data traverse the subnetworks, they are carried by subnetwork-specific me
 using protocols provided by the subnetworks.  The selection of protocols used in the
 subnetworks is determined independently for each subnetwork and may not be the same
 throughout.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-3
+June 2020
 The actual path through the end-to-end data system through which the packets flow needs to
 be configured by design or by a management system before the data transfer occurs and can
 only be reconfigured through the management system.  This flow is referred to as a managed
@@ -106,6 +344,11 @@ domain.  An APID naming domain usually corresponds to a spacecraft (or an elemen
 constellation of cooperating space vehicles).  Each space project establishes the allocation of
 APIDs to be used in its naming domain.  The assignment of APIDs to managed data paths
 within a naming domain is controlled by the space project that owns the naming domain.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-4
+June 2020
 2.1.4 PROTOCOL DESCRIPTION
 The SPP is described in terms of
 a) the abstract services provided to the users;
@@ -140,6 +383,11 @@ but there may be restrictions imposed by the provider implementation on the data
 generation rate.
 d) Unconfirmed Services:  the sending user does not receive confirmation from the
 receiving end that data has been received.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-5
+June 2020
 e) Incomplete Services:  the services do not guarantee completeness of a sequence of
 SDUs, nor do they provide a retransmission mechanism.
 f) Non–Sequence Preserving Services:  the sequence of SDUs supplied by the sending
@@ -175,6 +423,11 @@ system(s) of the same managed data path.
 NOTE – As explained in 2.1.2, the PDU generated by SPP is the Space Packet for both
 service types.  In the case of the Packet Service, the same Space Packet is used
 both as the SDU and as the PDU.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-6
+June 2020
 2.2.2.2 Packet Service
 The Packet Service transfers Space Packets, pre-formatted by the service user, intact through
 the managed data path.  The service user must generate Space Packets according to the
@@ -203,6 +456,11 @@ b) segmenting of SDUs;
 c) retransmission of missing SDUs;
 d) flow control;
 e) quality of service features.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-7
+June 2020
 2.3.2 INTERNAL ORGANIZATION OF PROTOCOL ENTITY
 Figures 2-2 and 2-3 show the internal organization of the protocol entity of the sending and
 receiving systems, respectively.  In figure 2-2, data flows from top to bottom of the figure.  In
@@ -232,6 +490,11 @@ Packet Reception
 Subnetwork
 
 Figure 2-3:  Internal Organization of Protocol Entity (Receiving End)
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 2-8
+June 2020
 2.4
 SERVICES ASSUMED FROM LOWER LAYERS
 As described in 2.1.1, the SPP uses services provided by the underlying layers.  It is intended
@@ -251,6 +514,12 @@ board between instruments and data stores over the SOIS Packet Service (referenc
 within the S/C over local message busses or private data exchanges, within the ground
 system over local message busses or private data exchanges, over terrestrial TCP/IP socket
 links as a flow of data, etc.
+
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 3-1
+June 2020
 3 SERVICE DEFINITION
 3.1
 OVERVIEW
@@ -286,6 +555,11 @@ content and format are unknown to the SPP.  It shall consist of at least 1 and a
 octets, but individual project organizations may establish the maximum length used for their
 projects, taking into account the maximum SDU size in all subnetworks traversed by the
 Space Packet.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 3-2
+June 2020
 3.2.3.2 The Octet String may contain a Packet Secondary Header defined in 4.1.4.2 of this
 Recommended Standard.
 3.2.3.3 An Octet String shall be placed within the User Data Field of a single Space Packet.
@@ -316,6 +590,11 @@ Packet Name in lieu of a Sequence Counter.
 If Packet Loss Indicators are to be generated by a particular implementation, they shall be
 declared at design time and be used consistently by all parties involved in the
 implementation.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 3-3
+June 2020
 3.3.2.4 QoS Requirement
 The QoS Requirement is an optional parameter that indicates the Quality of Service (QoS)
 requirement of each Space Packet.  If one of the underlying subnetworks supports multiple
@@ -346,6 +625,11 @@ the Space Packet.
 3.3.3.2.4 Effect on Receipt
 Receipt of the PACKET.request primitive shall cause the service provider to transfer the
 Space Packet.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 3-4
+June 2020
 3.3.3.3 PACKET.indication
 3.3.3.3.1 Function
 At the receiving end, the service provider shall pass a PACKET.indication to the Packet
@@ -368,6 +652,11 @@ undefined.
 3.3.3.3.5 Discussion
 The PACKET.indication primitive is used to deliver Space Packets to the Packet Service user
 identified with the APID.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 3-5
+June 2020
 3.4
 OCTET STRING SERVICE
 3.4.1 OVERVIEW OF OCTET STRING SERVICE
@@ -401,6 +690,11 @@ service user of the SPP Packet Service provides the SPP service provider with a
 predefined space packet in the PACKET.request, while the service user of the SPP
 Octet String Service provides the SPP service provider with a predefined space packet
 data field and a Secondary Header Indicator in the OCTET_STRING.request.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 3-6
+June 2020
 3.4.2.4 Data Loss Indicator
 The Data Loss Indicator parameter shall be used to alert the user in a destination end system
 that one or more Octet Strings have been lost during transmission, as evidenced by a
@@ -435,6 +729,12 @@ APID,
 Secondary Header Indicator,
 Packet Type,
 Packet Sequence Count/Packet Name)
+
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 3-7
+June 2020
 3.4.3.2.3 When Generated
 The OCTET_STRING.request primitive shall be passed to the service provider to request it
 to send the Octet String.
@@ -466,6 +766,11 @@ user is undefined.
 3.4.3.3.5 Discussion
 The OCTET_STRING.indication primitive is used to deliver Octet Strings to the Octet String
 Service user identified with the APID.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-1
+June 2020
 4 PROTOCOL SPECIFICATION
 4.1
 PROTOCOL DATA UNIT
@@ -508,6 +813,11 @@ Variable
 USER DATA FIELD
 
 Figure 4-1:  Space Packet Structural Components
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-2
+June 2020
 4.1.3 PACKET PRIMARY HEADER
 4.1.3.1 General
 The Packet Primary Header is mandatory and shall consist of four fields, positioned
@@ -562,6 +872,11 @@ Recommended Standard; it shall be set to ‘000’.
 NOTE – The Version Number is used to reserve the possibility of introducing other packet
 structures.  This Recommended Standard defines Version 1 CCSDS Packet
 whose binary encoded Version Number is ‘000’.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-3
+June 2020
 4.1.3.3 Packet Identification Field
 4.1.3.3.1 General
 4.1.3.3.1.1 Bits 3–15 of the Packet Primary Header shall contain the Packet Identification Field.
@@ -590,6 +905,11 @@ managed data path throughout a Mission Phase.
 4.1.3.3.4.2 The APID shall provide the naming mechanism for the managed data path.
 NOTE – The APID is unique only within its naming domain.  For the discussion of
 naming domains (see 2.1.1 and 2.1.3 of this Recommended Standard).
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-4
+June 2020
 4.1.3.3.4.3 The APID may uniquely identify the individual sending or receiving application
 process within a particular space vehicle.
 4.1.3.3.4.4 For Idle Packets the APID shall be ‘11111111111’, that is, ‘all ones’(see
@@ -623,6 +943,11 @@ larger set of application data.
 4.1.3.4.2.2 The Sequence Flags shall be set as follows:
 a) ‘00’ if the Space Packet contains a continuation segment of User Data;
 b) ‘01’ if the Space Packet contains the first segment of User Data;
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-5
+June 2020
 c) ‘10’ if the Space Packet contains the last segment of User Data;
 d) ‘11’ if the Space Packet contains unsegmented User Data.
 4.1.3.4.2.3 If the Octet String service is invoked at any point within the managed data path,
@@ -662,6 +987,11 @@ The Packet Name allows a particular Packet to be identified with respect to othe
 occurring within the same communications session.  There are no restrictions on
 binary encoding of the Packet Name.  That is, the Packet Name can be any 14-bit
 binary pattern.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-6
+June 2020
 4.1.3.5 Packet Data Length
 4.1.3.5.1 Bits 32–47 of the Packet Primary Header shall contain the Packet Data Length.
 4.1.3.5.2 This 16-bit field shall contain a length count C that equals one fewer than the
@@ -693,6 +1023,11 @@ NOTES
 The intension of the ‘Packet Secondary Header Contents’ Parameter is explained in table 5-1.
 2
 The Packet Secondary Header is not allowed for Idle Packets (see 4.1.3.3.3).
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-7
+June 2020
 4.1.4.2.1.5 If present, the Packet Secondary Header shall consist of either:
 a) a Time Code Field (variable length) only;
 b) an Ancillary Data Field (variable length) only; or
@@ -728,6 +1063,11 @@ data field and a Secondary Header Indicator in the OCTET_STRING.request.
 4.1.4.2.2.1 If present, the Time Code Field shall consist of an integral number of octets.
 4.1.4.2.2.2 The Time Code Field shall consist of one of the CCSDS segmented binary or
 unsegmented binary time codes specified in reference [3].
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-8
+June 2020
 NOTE – The time codes defined in reference [3] consist of an optional P-Field (Preamble
 Field), which identifies the time code and its characteristics and a mandatory T-
 Field (Time Field).  Examples of time codes are CCSDS Unsegmented Time
@@ -761,6 +1101,11 @@ application data supplied by the sending user.  If the Packet is an Idle Packet,
 Field shall contain Idle Data.
 NOTE – The bit pattern of Idle Data is set by the mission and is not specified in this
 Recommended Standard.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-9
+June 2020
 4.2
 PROTOCOL PROCEDURES AT THE SENDING END
 4.2.1 OVERVIEW
@@ -795,6 +1140,11 @@ indicate the presence or absence of a Packet Secondary Header at the start of Oc
 Secondary Header Flag in the Packet Primary Header to a corresponding value.  A sequence
 counter is maintained and shall be used to generate the Packet Sequence Count in the Packet
 Primary Header.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-10
+June 2020
 4.2.3 PACKET TRANSFER FUNCTION
 4.2.3.1 The Packet Transfer Function shall be used to transfer Space Packets to the packet
 service entity at receiving end in the managed data path, using services of the underlying
@@ -830,6 +1180,11 @@ Packet Reception
 Subnetwork
 
 Figure 4-5:  Internal Organization of Protocol Entity (Receiving End)
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 4-11
+June 2020
 4.3.2 PACKET EXTRACTION FUNCTION
 4.3.2.1 The Packet Extraction Function shall be used to extract SDUs from Space Packets.
 NOTE – There is an instance of the Packet Extraction Function for each packet service
@@ -853,6 +1208,12 @@ APID of each Packet.
 be delivered intact to the user identified by the APID.  If the receiving user of the APID uses
 the Octet String Service, then the received Packets shall be delivered to the user through the
 Packet Extraction Function.
+
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page 5-1
+June 2020
 5 MANAGED PARAMETERS
 5.1
 OVERVIEW OF MANAGED PARAMETERS
@@ -895,3 +1256,623 @@ destination end user(s) by management.
 2
 Packet Type is set by the SPP user of the packet service or provided directly as a
 parameter of the OctetString.request primitive.
+
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page A-1
+June 2020
+ANNEX A
+
+PROTOCOL IMPLEMENTATION CONFORMANCE
+STATEMENT PROFORMA
+
+(NORMATIVE)
+A1 INTRODUCTION
+A1.1 OVERVIEW
+This annex provides the Protocol Implementation Conformance Statement (PICS) Requirements
+List (RL) for an implementation of the Space Packet Protocol (CCSDS 133.0-B-2).  The PICS
+for an implementation is generated by completing the RL in accordance with the instructions
+below. An implementation claiming conformance must satisfy the mandatory requirements
+referenced in the RL.
+The RL support column in this annex is blank. An implementation’s completed RL is called
+the PICS. The PICS states which capabilities and options have been implemented. The
+following can use the PICS:
+– the implementer, as a checklist to reduce the risk of failure to conform to the standard
+through oversight;
+– a supplier or potential acquirer of the implementation, as a detailed indication of the
+capabilities of the implementation, stated relative to the common basis for
+understanding provided by the standard PICS proforma;
+– a user or potential user of the implementation, as a basis for initially checking the
+possibility of interworking with another implementation (it should be noted that,
+while interworking can never be guaranteed, failure to interwork can often be
+predicted from incompatible PICSes);
+– a tester, as the basis for selecting appropriate tests against which to assess the claim
+for conformance of the implementation.
+A1.2 ABBREVIATIONS AND CONVENTIONS
+The RL consists of information in tabular form.  The status of features is indicated using the
+abbreviations and conventions described below.
+Item Column
+The item column contains sequential numbers for items in the table.
+NOTE – The item-number prefix ‘SPP’ = ‘Application Layer’.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page A-2
+June 2020
+Feature Column
+The feature column contains a brief descriptive name for a feature. It implicitly means ‘Is this
+feature supported by the implementation?’
+Status Column
+The status column uses the following notations:
+M
+Mandatory.
+O
+Optional.
+C#
+Conditional; condition stated below table.
+O.<n>
+Optional, but support of at least one of the group of options labeled by
+the same numeral <n> is required.
+N/A
+Not applicable.
+Support Column Symbols
+The support column is to be used by the implementer to state whether a feature is supported
+by entering Y, N, or N/A, indicating:
+Y
+Yes, supported by the implementation.
+N
+No, not supported by the implementation.
+N/A
+Not applicable.
+The support column should also be used, when appropriate, to enter values supported for a
+given capability.
+A1.3 INSTRUCTIONS FOR COMPLETING THE RL
+An implementer shows the extent of compliance to the Recommended Standard by
+completing the RL; that is, the state of compliance with all mandatory requirements and the
+options supported are shown. The resulting completed RL is called a PICS. The implementer
+shall complete the RL by entering appropriate responses in the support or values supported
+column, using the notation described in A1.2.  If a conditional requirement is inapplicable,
+N/A should be used. If a mandatory requirement is not satisfied, exception information must
+be supplied by entering a reference Xi, where i is a unique identifier, to an accompanying
+rationale for the noncompliance.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page A-3
+June 2020
+A2 PICS PROFORMA FOR SPACE PACKET PROTOCOL (CCSDS 133.0-B-2)
+A2.1 GENERAL INFORMATION
+A2.1.1 Identification of PICS
+Date of Statement (DD/MM/YYYY)
+
+PICS serial number
+
+System Conformance statement
+cross-reference
+
+A2.1.2 Identification of Implementation Under Test (IUT)
+Implementation name
+
+Implementation version
+
+Special Configuration
+
+Other Information
+
+A2.1.3 Identification of Supplier
+Supplier
+
+Contact Point for Queries
+
+Implementation Name(s) and Versions
+
+Other
+information
+necessary
+for
+full
+identification, for example, name(s) and
+version(s) for machines and/or operating
+systems;
+
+System Name(s)
+
+A2.1.4 Identification of Specification
+CCSDS 133.0-B-2
+Have any exceptions been required?
+NOTE
+–
+A YES answer means that the implementation does not
+conform to the Recommended Standard. Non-supported
+mandatory capabilities are to be identified in the PICS,
+with an explanation of why the implementation is non-
+conforming.
+Yes [  ]      No [  ]
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page A-4
+June 2020
+A2.2 REQUIREMENTS LIST
+Table A-1:  SPP Service Data Units
+Item
+Description
+Reference
+Status
+Support
+SPP-1
+Space Packet SDU
+3.2.2
+M
+
+SPP-2
+Octet String SDU
+3.2.3
+M
+
+Table A-2:  Service Parameters
+Item
+Description
+Reference Status
+Values Allowed
+Support
+Space Packet Service Parameters
+SPP-3
+APID
+3.3.2.2
+M
+
+
+SPP-4
+Packet Loss Indicator
+3.3.2.3
+O
+
+
+SPP-5
+QoS Requirement
+3.3.2.4
+O
+
+
+Octet String Service Parameters
+SPP-6
+Octet String
+3.4.2.1
+M
+
+
+SPP-7
+APID
+3.4.2.2
+M
+
+
+SPP-8
+Secondary Header Indicator
+3.4.2.3
+M
+
+
+SPP-9
+Data Loss Indicator
+3.4.2.4
+O
+
+
+Table A-3:  Service Primitives
+Item
+Description
+Reference
+Status
+Support
+Space Packet Service Primitives
+SPP-10
+Packet.request
+3.3.3.2
+M
+
+SPP-11
+Packet.indication
+3.3.3.3
+M
+
+Octet String Service Primitives
+SPP-12
+Octet_String.request
+3.4.3.2
+M
+
+SPP-13
+Octet_String.indication
+3.4.3.3
+M
+
+Table A-4:  SPP Protocol Data Unit
+Item
+Description
+Reference
+Status
+Support
+SPP-14
+Space Packet
+4.1
+M
+
+SPP-15
+Packet Primary Header
+4.1.3
+M
+
+SPP-16
+Packet Data Field
+4.1.4
+M
+
+SPP-17
+Packet Secondary Header
+4.1.4.2
+C1
+
+SPP-18
+User Data Field
+4.1.4.3
+C2
+
+C1: It is mandatory for a Space Packet to contain a Packet Secondary Header if no User Data Field is
+present; otherwise, it is optional.
+C2: It is mandatory for a Space Packet to contain a User Data Field if the Packet Secondary Header
+is not present; otherwise, it is optional.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page A-5
+June 2020
+Table A-5:  Protocol Procedures
+Item
+Description
+Reference
+Status
+Support
+SPP-19
+Packet Assembly Function
+4.2.2
+M
+
+SPP-20
+Packet Transfer Function
+4.2.3
+M
+
+SPP-21
+Packet Extraction Function
+4.3.2
+M
+
+SPP-22
+Packet Reception Function
+4.3.3
+M
+
+Table A-6:  Management Parameters
+Protocol Configuration Parameters
+SPP-23
+Maximum Packet Length
+(octets)
+Table 5-1
+M
+Integer
+
+SPP-24
+Packet Type of Outgoing
+Packets (used only by
+sending systems)
+Table 5-1
+M
+0 or 1
+
+SPP-25
+Packet Multiplexing Scheme
+(used only by sending and
+intermediate systems)
+Table 5-1
+O
+Mission specific
+
+SPP-26
+Service Type (this parameter
+is specified for each APID at
+the sending and receiving
+ends of the managed data
+path)
+Table 5-1
+M
+Packet Service
+or Octet String
+Service
+
+
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page B-1
+June 2020
+ANNEX B
+
+SECURITY, SANA, AND PATENT CONSIDERATIONS
+
+(INFORMATIVE)
+B1
+SECURITY CONSIDERATIONS
+The SPP does not provide any security function. Nevertheless, security functions
+(authentication, confidentiality, integrity) can be implemented either at the data link layer
+using Space Data Link Security (SDLS) protocols (references [355.0-B-1], [355.1-B]) or at
+the network layer using Bundle Security Protocol (reference [734.5-B]).
+B2
+SANA CONSIDERATIONS
+B2.1
+GENERAL
+This SANA Considerations annex subsection is a mandatory part of any Recommended
+Standard that creates or modifies a registry.  Familiarity with this subsection is not required
+for users of this standard. It is a record of the information supplied to the SANA operator in
+order to set up the SANA registries described here.
+In this version 2, the existing registry (reference [4]) has been modified and a new registry
+for SPP Secondary Header formats (reference [5]) has been added.
+Because of the change of policy, in the registry “Space Packet Protocol Application Process
+Identifier (APID)” the reserved values for  CFDP and LTP (references [C10] and [C11]) have
+been removed as clarified in Note 2 to 4.1.3.3.4.4. With this issue of this document, the
+following policy is applicable for the registry “Space Packet Protocol Application Process
+Identifier(APID)”:
+Policy:
+0 - 2046: Unmanaged
+2047: CCSDS Blue Book
+Authority:
+CCSDS.SLS.SLP
+References:  [ccsds-133.0-B-2]
+From the point of view of an implementer of this Recommended Standard, this annex
+subsection contains a description of the registry for SPP Secondary Header format documents
+and also a description of structure of the SPP secondary packet data structure document
+registry.  The registry itself, as implemented in the SANA, is provided for the purpose of
+interoperability between agencies.  It contains fields that document the available
+Packet Secondary Header formats that have been registered, including the source, submitting
+organization, and pointer to where the descriptions needed to interpret the data (fields, types,
+sizes) may be found.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page B-2
+June 2020
+The only indicator that a Packet Secondary Header is in use remains the Secondary Header
+Indicator specified in 3.4.2.3.  The association between the actual Packet Secondary Header
+format that is in use, and any entry in this registry, is a managed parameter as specified in
+4.1.4.2.1.4.
+B2.2
+NEW REGISTRY SPECIFICATION
+Registry Name: Space Packet Protocol Secondary Header Format Document Registry
+Registry Description: This registry allows single projects, a single space agency, or multi-
+agency enterprises to register SPP Secondary Header formats. It contains information to
+allow end user applications to interpret the data content and format within the Space Packet.
+User organizations may use this registry to guide processing of Packet Secondary Header
+contents.  The transmission of the specific Secondary Header Format ID that is in use is done
+by management and it is outside the scope of this specification.
+B2.3
+REGISTRY STRUCTURE
+The Secondary Header Format Document Registry shall consist of the following fields:
+Field
+Type
+Comments
+Secondary Header Format
+Name
+Character
+Mandatory.
+Submitting Organization
+Character
+Mandatory.
+Format Point of Contact
+Character
+Mandatory.
+Format source document
+Character
+Mandatory.
+NOTE – Document should be stored in
+the References Registry
+Reference Uniform Resource
+Name (URN)
+URN
+Optional. URN provides additional
+information on the registered format
+The Submitting Organization is the one supplying the format; it identifies the organization
+that created this Space Packet Packet Secondary Header format.  If the Organization is not
+yet registered, it must register in the SANA Organizations registry following the Registry
+Management Policy (RMP) rules (reference [C13]).
+The Format Point of Contact is the individual in the Submitting Organization who is
+identified as the point of contact. If the person is not yet registered he or she must register in
+the SANA Contact registry following the RMP rules.
+The Format source document is the identifier of the document where the secondary header
+format is formally specified.  If this document is not yet registered it must be entered into the
+References registry. The Submitting Organization may provide an optional Uniform
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page B-3
+June 2020
+Resource Name (URN) that has additional information, descriptions, or even code fragments
+that can interpret the Secondary Header format.
+NOTE – The Header Format Source Document is expected to clearly document the Data
+Structure (description needed to interpret the data: fields, types, sizes), Endian-
+ness (big or little endian structure of the encapsulated data), and any other details
+needed to interpret this Secondary Header format.  There is no requirement to use
+a specific approach for these format descriptions, but use of one of the existing
+CCSDS approaches, such as Spacecraft Onboard Interface Services—XML
+Specification for Electronic Data Sheets, CCSDS 876.0-B-1 (reference [C15]) or
+XML Telemetric and Command Exchange—Version 1.2, CCSDS 660.0-B-2
+(reference [C16]) is preferred.
+B2.4
+REGISTRY RULES
+This registry is defined within the SLS Area, but it may find use in other areas such
+as MOIMS or SOIS.
+Registration Maintenance Rules for SANA Operator: Registry change (add/delete/edit) shall
+be submitted by any valid CCSDS Agency Representative (Member, Observer, or Affiliate).
+No special Role is required.  The Organization, PoC, and Header Format Source document
+shall all be verified to be valid and correctly registered and referenced.  The SANA Operator
+shall assign a unique identifier that may be used to reference this registry entry.  New
+versions of existing specifications shall be assigned a unique identifier.
+Registration category: SLS Area Registry.
+Review authority: SLP WG (or SLS Area if the WG is no longer in existence) who
+will provide the designated expert to review the registry, the proposed format, and the source
+document.
+B3
+PATENT CONSIDERATIONS
+At the time of publication, CCSDS was not aware of any claimed patent rights applicable to
+implementing the provisions of this Recommended Standard.
+
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page C-1
+June 2020
+ANNEX C
+
+INFORMATIVE REFERENCES
+
+(INFORMATIVE)
+[C1]
+Organization and Processes for the Consultative Committee for Space Data Systems.
+Issue 4. CCSDS Record (Yellow Book), CCSDS A02.1-Y-4. Washington, D.C.:
+CCSDS, April 2014.
+[C2]
+Overview of Space Communications Protocols. Issue 3. Report Concerning Space
+Data System Standards (Green Book), CCSDS 130.0-G-3. Washington, D.C.:
+CCSDS, July 2014.
+[C3]
+TM Space Data Link Protocol. Issue 2. Recommendation for Space Data System
+Standards (Blue Book), CCSDS 132.0-B-2. Washington, D.C.: CCSDS, September
+2015.
+[C4]
+TC Space Data Link Protocol. Issue 3. Recommendation for Space Data System
+Standards (Blue Book), CCSDS 232.0-B-3. Washington, D.C.: CCSDS, September
+2015.
+[C5]
+AOS Space Data Link Protocol. Issue 3. Recommendation for Space Data System
+Standards (Blue Book), CCSDS 732.0-B-3. Washington, D.C.: CCSDS, September
+2015.
+[C6]
+Proximity-1 Space Link Protocol—Data Link Layer. Issue 5. Recommendation for
+Space Data System Standards (Blue Book), CCSDS 211.0-B-5. Washington, D.C.:
+CCSDS, December 2013.
+[C7]
+Unified Space Data Link Protocol. Issue 1. Recommendation for Space Data System
+Standards (Blue Book), CCSDS 732.1-B-1. Washington, D.C.: CCSDS, October 2018.
+[C8]
+Encapsulation Packet Protocol. Issue 3. Recommendation for (Blue Book), CCSDS
+133.1-B-3. Washington, D.C.: CCSDS, May 2020.
+[C9]
+CCSDS Bundle Protocol Specification. Issue 1. Recommendation for Space Data
+System Standards (Blue Book), CCSDS 734.2-B-1. Washington, D.C.: CCSDS,
+September 2015.
+[C10] CCSDS File Delivery Protocol (CFDP). Issue 4. Recommendation for Space Data
+System Standards (Blue Book), CCSDS 727.0-B-4. Washington, D.C.: CCSDS,
+January 2007.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page C-2
+June 2020
+[C11] Licklider Transmission Protocol (LTP) for CCSDS. Issue 1. Recommendation for
+Space Data System Standards (Blue Book), CCSDS 734.1-B-1. Washington, D.C.:
+CCSDS, May 2015.
+[C12] Spacecraft Onboard Interface Services—Subnetwork Packet Service. Issue 1.
+Recommendation for Space Data System Practices (Magenta Book), CCSDS 851.0-M-
+1. Washington, D.C.: CCSDS, December 2009.
+[C13] CCSDS SANA Registry Management Policy. Issue 1. CCSDS Record (Yellow Book),
+CCSDS 313.1-Y-1. Washington, D.C.: CCSDS, May 2016.
+[C14] Mission Operations—MAL Space Packet Transport Binding and Binary Encoding.
+Issue 1. Recommendation for Space Data System Standards (Blue Book), CCSDS
+524.1-B-1. Washington, D.C.: CCSDS, August 2015.
+[C15] Spacecraft Onboard Interface Services—XML Specification for Electronic Data
+Sheets. Issue 1. Recommendation for Space Data System Standards (Blue Book),
+CCSDS 876.0-B-1. Washington, D.C.: CCSDS, April 2019.
+[C16] XML Telemetric and Command Exchange—Version 1.2. Issue 2. Recommendation
+for Space Data System Standards (Blue Book), CCSDS 660.0-B-2. Washington, D.C.:
+CCSDS, February 2020.
+NOTE – Normative references are listed in 1.7.
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page D-1
+June 2020
+ANNEX D
+
+ABBREVIATIONS
+
+(INFORMATIVE)
+AMS
+Asynchronous Message Service
+APID
+Application Process Identifier
+AOS
+Advanced Orbiting Systems
+BP
+Bundle Protocol
+CCSDS
+Consultative Committee for Space Data Systems
+CFDP
+CCSDS File Delivery Protocol
+ENCAPCLA
+Encapsulation Packet Protocol Convergence Layer Adapter
+EPP
+Encapsulation Packet Protocol
+IP
+Internet Protocol
+IPoC
+IP over CCSDS
+LTP
+Licklider Transmission Protocol
+LTPCLA
+Licklider Transmission Protocol Convergence Layer Adapter
+MOIMS
+Mission Operations and Information Management Services
+MSB
+Most Significant Bit
+OSI
+Open Systems Interconnection
+PDU
+Protocol Data Unit
+Prox-1
+Proximity-1
+PVN
+Packet Version Number
+RF
+Radio Frequency
+SAP
+Service Access Point
+SDU
+Service Data Unit
+
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+CCSDS 133.0-B-2
+Page D-2
+June 2020
+SLP
+Space Link Protocols (Working Group)
+SLS
+Space Link Services (Area)
+SOIS
+Spacecraft Onboard Interface Services
+SPP
+Space Packet Protocol
+TC
+Telecommand
+TCP
+Transaction Control Protocol
+TCPCLA
+Transaction Control Protocol Convergence Layer Adapter
+TM
+Telemetry
+UDP
+User Datagram Protocol
+UDPCLA
+User Datagram Protocol Convergence Layer Adapter
+USLP
+Unified Space Link Protocol
