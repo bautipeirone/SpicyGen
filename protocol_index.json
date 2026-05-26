@@ -31,7 +31,6 @@
   },
   "dns": {
     "type": "binary",
-    "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "1035",
     "local_spec_file": "specs/dns-grammar.txt"
