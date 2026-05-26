@@ -13,6 +13,8 @@ import tempfile
 
 from src.logger import logger
 from src.tools.runtime import ParseResult, RuntimeAdapter, RuntimeArtifact
+from src.tools.compiler import CompileResult
+from src.tools.spicy.compiler import compile_to_hlto
 from src.tools.spicy.parse_tree import compare_parse_trees, parse_spicy_output
 
 
@@ -55,16 +57,10 @@ def precompile_spicy_parser(grammar_file: Path, output_path: Path | None = None)
         cleanup = lambda: cleanup_spicy_artifact_dir(build_dir)
 
     logger.info(f"Pre-compiling grammar to {output_path}")
-    proc = subprocess.run(
-        ["spicyc", "-j", str(grammar_file), "-o", str(output_path)],
-        capture_output=True,
-        text=True,
-    )
-
-    if proc.returncode != 0:
-        error = proc.stderr.strip() or "Unknown pre-compilation error."
-        logger.error(f"Pre-compilation failed: {error}")
-        raise RuntimeError(f"Failed to pre-compile Spicy parser:\n{error}")
+    result = compile_to_hlto(grammar_file=grammar_file, output_path=output_path)
+    if not result.success:
+        logger.error(f"Failed to pre-compile Spicy grammar '{grammar_file}'.")
+        raise RuntimeError(f"Spicy pre-compilation failed with error:\n{result.errors}")
 
     logger.info(f"Pre-compilation succeeded: {output_path}")
     return RuntimeArtifact(path=output_path, cleanup=cleanup)
