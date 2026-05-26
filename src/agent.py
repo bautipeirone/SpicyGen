@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
-from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
+from src.tools.compiler import run_grammar_compiler
 from src.tools.runtime import run_parser_check_from_code
+from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from src.tools.extraction import extract_intervals
 from src.protocol import Protocol
 from src.target_language import TargetLanguage
@@ -60,7 +61,7 @@ IMPORTANT WORKFLOW — follow these steps in order:
 1. Write the grammar and use the `compile_grammar` tool to check if it compiles.
 2. If ``compile_grammar`` returns SUCCESS, use the `parse_packets` tool with the same grammar code to verify it against known protocol packets.
    - If all packets pass, say TERMINATE.
-   - If some packets fail, fix the grammar and go back to step 1. Use the summary provided for each packet to understand what is wrong with the grammar.
+   - If some packets fail, fix the grammar and go back to step 1.{runtime_hint}
 3. If ``compile_grammar`` returns errors, fix the grammar and try again.
 4. If there are no packets registered for this protocol, you will be told so — in that case say TERMINATE after a successful compilation.
 
@@ -76,6 +77,13 @@ class State:
     success: bool = False
     best_score: int = 0
     best_code: str | None = None
+
+
+def build_agent_loop_instructions(target_language: TargetLanguage) -> str:
+    runtime_hint = ""
+    if target_language.supports_parse_tree_summary:
+        runtime_hint = " Use the packet summary provided in the runtime feedback to understand what is wrong with the grammar."
+    return AGENT_LOOP_INSTRUCTIONS.format(runtime_hint=runtime_hint)
 
 def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retrieve (e.g., '1035')"]) -> str:
     logger.debug("Retrieving RFC with ID: %s", rfc_id)
@@ -218,6 +226,7 @@ def run_refinement_loop(
     max_retries = agent_config.get("max_retries")
     show_packet_representation = agent_config.get("show_packet_representation")
     show_parsing_tree = agent_config.get("show_parsing_tree")
+    include_parse_tree_summary = show_parsing_tree and target_language.supports_parse_tree_summary
     refinement_dir = None
     errors_dir = None
     build_dir = None
@@ -250,7 +259,7 @@ def run_refinement_loop(
             f"Compiling {target_language.display_name} attempt {state.attempt}/{max_retries} ..."
         )
 
-        result = target_language.compile_fn(cleaned_code, debug_info=debug_info)
+        result = run_grammar_compiler(cleaned_code, target_language.compile_fn, target_language.source_extension, debug_info=debug_info)
 
         if result.success:
             logger.info(f"Compilation succeeded on attempt {state.attempt}.")
@@ -272,20 +281,28 @@ def run_refinement_loop(
             cleaned_code = code
 
         build_path = None
-        if build_dir and target_language.build_extension:
-            build_path = build_dir / f"{state.attempt}{target_language.build_extension}"
+        if build_dir and target_language.artifact_extension:
+            build_path = build_dir / f"{state.attempt}{target_language.artifact_extension}"
         errors_path = errors_dir / f"{state.attempt}-runtime.log" if errors_dir else None
         debug_info = { "build_path": build_path, "errors_path": errors_path }
 
         logger.info(
             f"Running runtime check for protocol '{state.protocol.name}' using {target_language.display_name}..."
         )
-        check_result = target_language.runtime_check_fn(
+
+        check_result = run_parser_check_from_code(
             cleaned_code,
+            target_language.runtime,
             state.protocol,
-            show_parsing_tree=show_parsing_tree,
+            target_language.source_extension,
+            include_parse_tree_summary=include_parse_tree_summary,
             debug_info=debug_info,
         )
+
+        if check_result.setup_error:
+            logger.warning(f"Runtime setup FAILED for '{state.protocol.name}'.")
+            summary = check_result.summary(show_packet_representation=show_packet_representation)
+            return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
         if not check_result.verdicts:
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
@@ -306,7 +323,12 @@ def run_refinement_loop(
             logger.warning(f"Runtime check FAILED for '{state.protocol.name}'.")
             return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
-    system_message = system_message + AGENT_LOOP_INSTRUCTIONS
+    if show_parsing_tree and not include_parse_tree_summary:
+        logger.info(
+            f"{target_language.display_name} does not provide parse tree summaries; runtime feedback will include accept/reject errors only."
+        )
+
+    system_message = system_message + build_agent_loop_instructions(target_language)
     assistant = autogen.AssistantAgent(
         name=target_language.assistant_name,
         system_message=system_message,
