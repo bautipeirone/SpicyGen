@@ -20,15 +20,15 @@ ANTHROPIC_API_KEY="anthropic_api_key"
 ## Usage
 The main script is `generate_grammar.py`. It is run like this:
 ```bash
-python generate_grammar.py --model MODEL_ID -o OUTPUT_FILE <protocol>
+python generate_grammar.py --model MODEL_ID --target-language spicy -o OUTPUT_FILE <protocol>
 ```
 The `MODEL_ID` must be one of the keys defined in `model_index.json` (e.g., `qwen3-coder` or `gemini-3.1-flash`).
 Necessary API keys required by the model's provider must be set in the `.env` file.
-The script also accepts optional parameters like `--config` to provide generation parameters, `--debug-dir` to save refinement steps, and `--metrics-file`.
+The script also accepts optional parameters like `--config` to provide generation parameters, `--debug-dir` to save refinement steps, `--metrics-file`, and `--target-language` to switch the prompt/toolchain/runtime backend together.
 
 Another possibility to test many models along various protocols is to use the shell script.
 ```bash
-./benchmark.sh -m "qwen3-coder gemini-3.1-flash" -p "tftp dhcp http" --output-dir path_to_output
+./benchmark.sh -m "qwen3-coder gemini-3.1-flash" -p "tftp dhcp http" -t spicy --output-dir path_to_output
 ```
 This will run the grammar generator for each combination of the specified models and protocols. It will also try to compile the result with `spicyc` to test if the LLM produced a valid grammar.
 To keep track of each run, a `README.md` file is created in the output directory and metrics are aggregated. The flag `--note` can be used to add a note to the run, and `--debug` to save debug logs.

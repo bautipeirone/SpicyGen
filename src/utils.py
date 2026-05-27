@@ -71,3 +71,7 @@ def compute_text_stats(text: str | None) -> dict[str, Any]:
         "nonempty_lines": sum(1 for line in lines if line.strip()),
     }
 
+def strip_code_fences(text: str) -> str:
+    if not text:
+        return ""
+    return text.strip().strip("```").strip()

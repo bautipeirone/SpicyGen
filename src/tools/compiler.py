@@ -1,129 +1,33 @@
-import subprocess
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-import re
-from src.tools.reserved_keywords import RESERVED_KEYWORDS, REPLACE_KEYWORDS_MAP
-from typing import TypedDict
+import tempfile
+from typing import Callable
+
+type CompileFunction = Callable[[Path], CompileResult]
 
 @dataclass
 class CompileResult:
     success: bool
     errors: str | None
 
-@dataclass
-class ProcessContext:
-    code: str
-    source_file: Path | None = None
-    errors_path: Path | None = None
-
-def run_spicy_compiler(grammar_file: str):
-    return subprocess.run(
-            ["spicyc", "-j", grammar_file],
-            capture_output=True,
-            text=True,
-        )
-
-def run_spicy_pipeline(context: ProcessContext) -> CompileResult:
-    errors = preprocess_code(context.code)
-    if errors:
-        error_message = "\n".join(errors)
-        if context.errors_path is not None:
-            with context.errors_path.open("w") as f:
-                f.write(error_message)
-        return CompileResult(success=False, errors=error_message)
-  
-    result = run_spicy_compiler(str(context.source_file))
-    if result.returncode == 0:
-        return CompileResult(success=True, errors=None)
-    else:
-        if context.errors_path is not None:
-            with context.errors_path.open("w") as f:
-                f.write(result.stderr)
-        return CompileResult(success=False, errors=result.stderr.strip())
-
-def search_reserved_keywords(code: str) -> list[tuple[int, str]]:
-    # La primer heuristica es buscar literales de la forma "keyword ':'"
-    reserved_keywords: list[tuple[int, str]] = []
-    for line_num, line in enumerate(code.splitlines(), 1):
-        for keyword in RESERVED_KEYWORDS:
-            # if f"{keyword}:" in line:
-            if re.search(rf"\b{keyword}\b\s*:", line): # Regex to match spaces around the keyword
-                reserved_keywords.append((line_num, keyword))
-    return reserved_keywords
-
-def preprocess_code(code: str) -> list[str]:
-    errors = []
-    for line_num, keyword in search_reserved_keywords(code):
-        error_message = f"[error]: found reserved keyword as field identifier '{keyword}' in line {line_num}."
-        suggested_replacement = REPLACE_KEYWORDS_MAP.get(keyword, None)
-        if suggested_replacement:
-            error_message += f" Consider replacing it with '{suggested_replacement}'."
-        errors.append(error_message)
-    for bitfield_info in find_bitfields_without_bitorder_attribute(code):
-        bitfield_name = f"'{bitfield_info['name']}' " if bitfield_info.get("name") else ""
-        error_message = f"[error]: found bitfield declaration {bitfield_name}without a bit-order attribute at lines {bitfield_info['lines_range'][0]}-{bitfield_info['lines_range'][1]}. Add a &bit-order= attribute with the correct bitfield order to fix this issue."
-        errors.append(error_message)
-    return errors
-
-class BitfieldInfo(TypedDict):
-    name: str | None
-    lines_range: tuple[int, int]
-    content: str
-    bitfield_order: str | None
-
-def find_bitfields_without_bitorder_attribute(code: str) -> list[BitfieldInfo]:
-    bitfields = find_bitfields_decls(code)
-    return [ bitfield for bitfield in bitfields if not bitfield.get("bitfield_order") ]
-
-def find_bitfields_decls(code: str) -> list[BitfieldInfo]:
-    lines = list(enumerate([ line.strip() for line in code.splitlines() ], 1))
-    # lines = [ line.strip() for line in code.splitlines() if not line.strip().startswith("#") ]
-    # bitfield_decls = [ line for line in lines if "bitfield" in line ]
-    current_bitfield_decl: BitfieldInfo = {}
-    lines_buf = []
-    result = []
-    in_bitfield_decl = False
-    for line_num, line in lines:
-        if in_bitfield_decl:
-            lines_buf.append(line)
-            if match := re.match(r'^\s*\}\s*(?:(?:[^;]*?)&bit-order=(?P<order>[A-Za-z0-9:]+))?[^;]*;\s*$', line):
-                in_bitfield_decl = False
-                current_bitfield_decl["lines_range"] = start_line, line_num
-                current_bitfield_decl["bitfield_order"] = match.group("order")
-                current_bitfield_decl["content"] = "\n".join(lines_buf)
-                result.append(current_bitfield_decl)
-                current_bitfield_decl = {}
-                lines_buf = []
-        if match := re.match(r'^\s*(?P<identifier>[A-Za-z_]\w*)?\s*:\s*bitfield\(\s*(?P<n>\d+)\s*\)\s*\{\s*$', line):
-            in_bitfield_decl = True
-            start_line = line_num
-            current_bitfield_decl["name"] = match.group("identifier")
-            lines_buf.append(line)
-
-    return result
-
-def compile_spicy_grammar(code: str, debug_info: dict[str, Path | None] | None = None) -> CompileResult:
-    """Compile a Spicy grammar string using spicyc.
-
-    If step_path is provided, writes the code to it. Otherwise writes to a
-    temporary .spicy file. Runs ``spicyc -j`` on it, and returns a
-    :class:`CompileResult` indicating success or failure.
-    """
+def run_grammar_compiler(code: str, compile_fn: CompileFunction, source_extension: str, debug_info: dict[str, Path | None] | None = None) -> CompileResult:
+    """Compile a grammar string using the supplied target-language compiler."""
     step_path = debug_info.get("step_path") if debug_info else None
     errors_path = debug_info.get("errors_path") if debug_info else None
 
     if step_path is not None:
         with step_path.open("w") as f:
             f.write(code)
-        context = ProcessContext(code=code, source_file=step_path, errors_path=errors_path)
-        result = run_spicy_pipeline(context)
+        result = compile_fn(step_path)
     else:
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".spicy", delete=True
+            mode="w", prefix="Grammar_", suffix=source_extension, delete=True
         ) as tmp:
             tmp.write(code)
             tmp.flush()
-            context = ProcessContext(code=code, source_file=Path(tmp.name), errors_path=errors_path)
-            result = run_spicy_pipeline(context)
+            result = compile_fn(Path(tmp.name))
+
+    if not result.success and errors_path is not None:
+        with errors_path.open("w") as f:
+            f.write(result.errors or "")
     return result

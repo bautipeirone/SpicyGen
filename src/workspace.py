@@ -16,7 +16,7 @@ Typical layout::
                 │   ├── report.json
                 │   └── extraction.log
                 ├── grammar/
-                │   ├── output.spicy
+                │   ├── output<ext>
                 │   ├── metrics.json
                 │   ├── runtime.log
                 │   └── debug/
@@ -52,10 +52,11 @@ def _empty_step_entry() -> dict[str, Any]:
     return {"status": "pending"}
 
 
-def _initial_manifest(protocol: str, model: str, workspace_dir: Path) -> dict[str, Any]:
+def _initial_manifest(protocol: str, model: str, target_language: str, workspace_dir: Path) -> dict[str, Any]:
     return {
         "protocol": protocol,
         "model": model,
+        "target_language": target_language,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "workspace_dir": str(workspace_dir),
         "steps": {step: _empty_step_entry() for step in ALL_STEPS},
@@ -115,6 +116,7 @@ def update_step(
 def create_workspace(
     protocol: str,
     model: str,
+    target_language: str = "spicy",
     base_dir: Path | None = None,
     timestamp: str | None = None,
 ) -> Path:
@@ -132,7 +134,7 @@ def create_workspace(
     (workspace_dir / _PREPROCESS_DIR).mkdir(exist_ok=True)
     (workspace_dir / _GRAMMAR_DIR).mkdir(exist_ok=True)
 
-    manifest = _initial_manifest(protocol, model, workspace_dir)
+    manifest = _initial_manifest(protocol, model, target_language, workspace_dir)
     save_manifest(workspace_dir, manifest)
 
     logger.info(f"Workspace created: {workspace_dir}")
@@ -154,11 +156,11 @@ def preprocess_paths(workspace_dir: Path) -> dict[str, Path]:
     }
 
 
-def grammar_paths(workspace_dir: Path) -> dict[str, Path]:
+def grammar_paths(workspace_dir: Path, output_extension: str = ".spicy") -> dict[str, Path]:
     """Return a dict of canonical output paths for the grammar step."""
     d = workspace_dir / _GRAMMAR_DIR
     return {
-        "output": d / "output.spicy",
+        "output": d / f"output{output_extension}",
         "metrics": d / "metrics.json",
         "debug_dir": d / "debug",
     }
@@ -172,6 +174,7 @@ def find_workspaces(
     base_dir: Path | None = None,
     protocol: str | None = None,
     model: str | None = None,
+    target_language: str | None = None,
 ) -> list[Path]:
     """Find existing workspace directories, optionally filtered by protocol/model.
 
@@ -189,4 +192,20 @@ def find_workspaces(
 
     pattern = "/".join(pattern_parts)
     manifests = sorted(base.glob(pattern), reverse=True)
-    return [m.parent for m in manifests]
+
+    if target_language is None:
+        return [m.parent for m in manifests]
+
+    filtered: list[Path] = []
+    for manifest_path in manifests:
+        try:
+            with manifest_path.open("r") as fh:
+                manifest = json.load(fh)
+        except (OSError, json.JSONDecodeError):
+            continue
+
+        manifest_target = manifest.get("target_language", "spicy")
+        if manifest_target == target_language:
+            filtered.append(manifest_path.parent)
+
+    return filtered

@@ -35,6 +35,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.logger import logger, enable_runtime_log_file
+from src.target_language import (
+    DEFAULT_TARGET_LANGUAGE,
+    get_target_language,
+    list_supported_target_languages,
+)
 from src.workspace import (
     ALL_STEPS,
     STEP_GRAMMAR,
@@ -106,6 +111,7 @@ def _run_grammar(
     workspace_dir: Path,
     protocol: str,
     model: str,
+    target_language: str,
     config: Path | None = None,
     spec_file: Path | None = None,
 ) -> int:
@@ -117,7 +123,8 @@ def _run_grammar(
     grammar generator falls back to its default spec resolution via
     ``protocol_index.json``.
     """
-    paths = grammar_paths(workspace_dir)
+    language = get_target_language(target_language)
+    paths = grammar_paths(workspace_dir, output_extension=language.source_extension)
     paths["debug_dir"].mkdir(parents=True, exist_ok=True)
 
     # Auto-detect the preprocessed summary when no explicit spec_file is given.
@@ -131,6 +138,7 @@ def _run_grammar(
         sys.executable, "generate_grammar.py",
         protocol,
         "-m", model,
+        "--target-language", target_language,
         "--output-file",  str(paths["output"]),
         "--metrics-file", str(paths["metrics"]),
         "--debug-dir",    str(paths["debug_dir"]),
@@ -183,6 +191,7 @@ def cmd_init(args: argparse.Namespace) -> int:
     workspace_dir = create_workspace(
         args.protocol,
         args.model,
+        target_language=args.target_language,
         base_dir=args.workspace_root,
     )
     print(f"Workspace initialised at: {workspace_dir}")
@@ -206,6 +215,7 @@ def cmd_run(args: argparse.Namespace) -> int:
             base_dir=args.workspace_root,
             protocol=args.protocol,
             model=args.model,
+            target_language=args.target_language,
         )
         if not existing:
             logger.error("No existing workspace found to resume. Run without --resume first.")
@@ -216,6 +226,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         workspace_dir = create_workspace(
             args.protocol,
             args.model,
+            target_language=args.target_language,
             base_dir=args.workspace_root,
         )
 
@@ -254,7 +265,13 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     # ---- Grammar generation ----
     if STEP_GRAMMAR in steps_to_run:
-        rc = _run_grammar(workspace_dir, args.protocol, args.model, config=args.config)
+        rc = _run_grammar(
+            workspace_dir,
+            args.protocol,
+            args.model,
+            args.target_language,
+            config=args.config,
+        )
         if rc != 0:
             exit_code = rc
 
@@ -270,6 +287,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         base_dir=args.workspace_root,
         protocol=getattr(args, "protocol", None),
         model=getattr(args, "model", None),
+        target_language=getattr(args, "target_language", None),
     )
 
     if not workspaces:
@@ -277,8 +295,8 @@ def cmd_status(args: argparse.Namespace) -> int:
         return 0
 
     # Table header
-    print(f"{'Protocol':<12} {'Model':<22} {'Timestamp':<18} {'Preprocess':<14} {'Grammar':<14}")
-    print("-" * 82)
+    print(f"{'Protocol':<12} {'Model':<22} {'Language':<12} {'Timestamp':<18} {'Preprocess':<14} {'Grammar':<14}")
+    print("-" * 96)
 
     for ws in workspaces:
         try:
@@ -288,6 +306,7 @@ def cmd_status(args: argparse.Namespace) -> int:
 
         proto = m.get("protocol", "?")
         model = m.get("model", "?")
+        target_language = m.get("target_language", DEFAULT_TARGET_LANGUAGE)
         ts = ws.name  # timestamp directory name
         pre_status = m["steps"].get(STEP_PREPROCESS, {}).get("status", "—")
         gram_status = m["steps"].get(STEP_GRAMMAR, {}).get("status", "—")
@@ -296,7 +315,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         pre_display = _colorise_status(pre_status)
         gram_display = _colorise_status(gram_status)
 
-        print(f"{proto:<12} {model:<22} {ts:<18} {pre_display:<23} {gram_display:<23}")
+        print(f"{proto:<12} {model:<22} {target_language:<12} {ts:<18} {pre_display:<23} {gram_display:<23}")
 
     return 0
 
@@ -334,11 +353,23 @@ def build_parser() -> argparse.ArgumentParser:
     init_parser = subparsers.add_parser("init", help="Scaffold a workspace without running anything.")
     init_parser.add_argument("protocol", type=str, help="Protocol name (e.g. 'dns').")
     init_parser.add_argument("-m", "--model", required=True, help="Model key from model_index.json.")
+    init_parser.add_argument(
+        "-t", "--target-language",
+        choices=list_supported_target_languages(),
+        default=DEFAULT_TARGET_LANGUAGE,
+        help="Target language/toolchain to use for this workspace.",
+    )
 
     # ---- run ----
     run_parser = subparsers.add_parser("run", help="Execute the pipeline.")
     run_parser.add_argument("protocol", type=str, help="Protocol name (e.g. 'dns').")
     run_parser.add_argument("-m", "--model", required=True, help="Model key from model_index.json.")
+    run_parser.add_argument(
+        "-t", "--target-language",
+        choices=list_supported_target_languages(),
+        default=DEFAULT_TARGET_LANGUAGE,
+        help="Target language/toolchain to use for grammar generation.",
+    )
     run_parser.add_argument(
         "--only",
         choices=list(ALL_STEPS),
@@ -366,6 +397,12 @@ def build_parser() -> argparse.ArgumentParser:
     status_parser = subparsers.add_parser("status", help="Show workspace statuses.")
     status_parser.add_argument("--protocol", type=str, default=None, help="Filter by protocol.")
     status_parser.add_argument("--model", "-m", type=str, default=None, help="Filter by model.")
+    status_parser.add_argument(
+        "--target-language", "-t",
+        choices=list_supported_target_languages(),
+        default=None,
+        help="Filter by target language.",
+    )
 
     return parser
 

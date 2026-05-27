@@ -3,6 +3,11 @@ load_dotenv()
 
 from src.providers import get_autogen_config
 from src.agent import run_refinement_loop
+from src.target_language import (
+    DEFAULT_TARGET_LANGUAGE,
+    get_target_language,
+    list_supported_target_languages,
+)
 from src.utils import load_file, read_config
 from src.logger import enable_runtime_log_file, logger
 from src.protocol import load_protocol, load_spec, ProtocolType
@@ -35,6 +40,13 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Path to the instructions file that will be added to the prompt",
+    )
+    parser.add_argument(
+        "--target-language",
+        "-t",
+        choices=list_supported_target_languages(),
+        default=DEFAULT_TARGET_LANGUAGE,
+        help="Target language/toolchain to compile and verify against.",
     )
     parser.add_argument(
         "protocol",
@@ -84,15 +96,8 @@ def save_response(path: Path, response: str) -> None:
         raise SystemExit(f"Unable to write to {path}: {exc}") from exc
 
 
-def get_spicy_context_file(protocol_type: ProtocolType) -> Path:
-    match protocol_type:
-        case ProtocolType.TEXT:
-            instructions_path = Path("./prompts/TEXT.md")
-        case ProtocolType.BINARY:
-            instructions_path = Path("./prompts/BINARY.md")
-        case _:
-            raise ValueError(f"Unsupported protocol type: {protocol_type}")
-    return instructions_path
+def get_default_instructions_file(target_language_name: str, protocol_type: ProtocolType) -> Path:
+    return get_target_language(target_language_name).instructions_path_for(protocol_type)
 
 
 def main() -> None:
@@ -100,7 +105,12 @@ def main() -> None:
     runtime_log_path = args.debug_dir / "runtime.log" if args.debug_dir else None
     enable_runtime_log_file(runtime_log_path)
 
-    logger.info(f"Generating grammar for {args.protocol} using {args.model}")
+    target_language = get_target_language(args.target_language)
+
+    logger.info(
+        f"Generating grammar for {args.protocol} using {args.model} targeting {target_language.display_name}"
+    )
+    logger.debug(f"Target language: {target_language.name}")
     logger.debug(f"Instructions file: {args.instructions_file}")
     logger.debug(f"Output file: {args.output_file}")
     logger.debug(f"Debug dir: {args.debug_dir}")
@@ -114,10 +124,10 @@ def main() -> None:
 
     instructions_file = args.instructions_file
     if instructions_file is None:
-        instructions_file = get_spicy_context_file(protocol.type)
-        logger.debug(f"Using default spicy instructions file: {instructions_file}")
+        instructions_file = get_default_instructions_file(target_language.name, protocol.type)
+        logger.debug(f"Using default {target_language.name} instructions file: {instructions_file}")
 
-    spicy_context = load_file(instructions_file)
+    target_language_context = load_file(instructions_file)
 
     if args.spec_file:
         logger.info(f"Using custom spec file: {args.spec_file}")
@@ -134,13 +144,14 @@ def main() -> None:
 
     model_name = args.model.split("-")[0]
     prompt = PROMPT_TEMPLATE.format(name=model_name)
-    system_instruction = prompt + spicy_context
+    system_instruction = prompt + target_language_context
     messages = [spec_content]
 
     start_time = time.time()
     content, success, attempts, conversation_usage = run_refinement_loop(
         llm_config, system_instruction, messages,
         protocol=protocol,
+        target_language=target_language,
         agent_config=agent_config,
         debug_dir=args.debug_dir,
     )
@@ -149,6 +160,7 @@ def main() -> None:
     metrics = {
         "model": args.model,
         "protocol": protocol.name,
+        "target_language": target_language.name,
         "success": success,
         "attempts": attempts,
         "time_elapsed_s": round(elapsed_time, 2),

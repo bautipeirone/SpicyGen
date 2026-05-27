@@ -7,6 +7,7 @@ BASE_OUTPUT_PATH="$PWD/outputs"
 MODEL_INDEX_FILE="model_index.json"
 
 DEBUG_MODE=""
+TARGET_LANGUAGE="spicy"
 POSITIONAL_ARGS=()
 
 usage () {
@@ -15,6 +16,7 @@ usage () {
   echo "  -m|--models <models> Comma separated list of models to use"
   echo "  -p|--protocols <protocols> Comma separated list of protocols to use"
   echo "  --debug             Enable debug mode"
+  echo "  -t|--target-language <language> Target language/toolchain to use"
   echo "  --output-dir <path> Path to the output directory"
   echo "  --note <text>       Add a note for this run"
   echo "  -h|--help           Show this help message"
@@ -49,6 +51,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     --debug)
       DEBUG_MODE="1"
+      shift
+      ;;
+    -t|--target-language)
+      TARGET_LANGUAGE="$2"
+      shift
       shift
       ;;
     -h|--help)
@@ -88,6 +95,11 @@ get_model_name() {
   echo "$MODEL_NAME"
 }
 
+get_target_language_extension() {
+  local LANGUAGE=$1
+  python -c "from src.target_language import get_target_language; print(get_target_language('$LANGUAGE').source_extension)"
+}
+
 # First input is model id (from model_index.json)
 # Second input is protocol
 run_grammar_generator() {
@@ -95,16 +107,17 @@ run_grammar_generator() {
   local PROTOCOL=$2
 
   MODEL_NAME=$(get_model_name "$MODEL_ID")
+  OUTPUT_EXT=$(get_target_language_extension "$TARGET_LANGUAGE")
 
-  OUTPUT_PATH="$RUN_OUT_DIR/$PROTOCOL-$MODEL_NAME.spicy"
+  OUTPUT_PATH="$RUN_OUT_DIR/$PROTOCOL-$MODEL_NAME$OUTPUT_EXT"
   
   local DEBUG_ARGS=""
   if [[ -n "$DEBUG_DIR" ]]; then
     DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL_NAME}"
   fi
 
-  local METRICS_PATH="${OUTPUT_PATH%.spicy}.json"
-  python generate_grammar.py -m "$MODEL_ID" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
+  local METRICS_PATH="${OUTPUT_PATH%$OUTPUT_EXT}.json"
+  python generate_grammar.py -m "$MODEL_ID" -t "$TARGET_LANGUAGE" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
   if [ $? -ne 0 ]; then
     echo "GRAMMAR PRODUCED BY $MODEL_ID DIDNT PASS TESTS: $(basename "$OUTPUT_PATH")"
   else
@@ -132,6 +145,7 @@ cat <<EOF > "$RUN_OUT_DIR/README.md"
 - **Timestamp:** $TIMESTAMP
 - **Models:** $MODELS
 - **Protocols:** $PROTOCOLS
+- **Target language:** $TARGET_LANGUAGE
 
 ## Note
 ${RUN_NOTE:-"No note provided."}

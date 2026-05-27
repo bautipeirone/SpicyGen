@@ -1,20 +1,10 @@
-"""Semantic validation of Spicy grammars against known packets in runtime execution.
-
-This module runs compiled Spicy grammars through ``spicy-driver`` to verify
-that they correctly accept or reject a set of raw binary packets stored on
-disk per protocol.
-"""
-
-import subprocess
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-import os
-import difflib
+from typing import Callable
+import tempfile
 
 from src.logger import logger
 from src.protocol import Protocol, ProtocolType
-from src.tools.parse_tree import parse_spicy_output, compare_parse_trees
 
 _RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
@@ -25,11 +15,47 @@ _RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
 @dataclass
 class ParseResult:
-    """Result of running spicy-driver on a single packet."""
+    """Result of running a parser on a single packet."""
     packet_path: str
     success: bool
     error: str
     parse_tree: str | None = None
+
+
+@dataclass(frozen=True)
+class RuntimeArtifact:
+    path: Path
+    cleanup: Callable[[], None] | None = None
+
+
+type ParseFunction = Callable[[Path, Path], ParseResult]
+type PrepareParserFunction = Callable[[Path, Path | None], RuntimeArtifact]
+type ParseResultSummarizer = Callable[[ParseResult], str | None]
+
+
+@dataclass(frozen=True)
+class RuntimeAdapter:
+    parse_packet: ParseFunction
+    prepare_parser: PrepareParserFunction | None = None
+    summarize_parse_result: ParseResultSummarizer | None = None
+
+    @property
+    def requires_preparation(self) -> bool:
+        return self.prepare_parser is not None
+
+    @property
+    def supports_parse_tree_summary(self) -> bool:
+        return self.summarize_parse_result is not None
+
+    def build_parser(self, source_path: Path, build_dir: Path | None = None) -> RuntimeArtifact:
+        if self.prepare_parser is None:
+            return RuntimeArtifact(path=source_path)
+        return self.prepare_parser(source_path, build_dir)
+
+    def summarize_result(self, parse_result: ParseResult) -> str | None:
+        if self.summarize_parse_result is None:
+            return None
+        return self.summarize_parse_result(parse_result)
 
 
 @dataclass
@@ -45,15 +71,17 @@ class PacketVerdict:
     def passed(self) -> bool:
         return self.expected_accept == self.actual_accept
 
+
 @dataclass
 class SemanticCheckResult:
     """Aggregated results of running a grammar against all packets for a protocol."""
     protocol: Protocol
     verdicts: list[PacketVerdict] = field(default_factory=list)
+    setup_error: str | None = None
 
     @property
     def all_passed(self) -> bool:
-        return all(v.passed for v in self.verdicts)
+        return self.setup_error is None and all(v.passed for v in self.verdicts)
 
     @property
     def accept_passed(self) -> int:
@@ -69,6 +97,8 @@ class SemanticCheckResult:
 
     @property
     def score(self) -> int:
+        if self.setup_error is not None:
+            return 0
         return self.accept_passed + self.reject_passed
 
     @property
@@ -76,7 +106,15 @@ class SemanticCheckResult:
         return sum(1 for v in self.verdicts if not v.expected_accept)
 
     def report_errors(self, show_packet_representation: bool) -> str:
-        lines = []
+        lines: list[str] = []
+        if self.setup_error:
+            lines.append("")
+            lines.append("Runtime setup failed:")
+            for err_line in self.setup_error.strip().splitlines():
+                lines.append(f"  {err_line}")
+            lines.append("")
+            return "\n".join(lines)
+
         if not self.all_passed:
             lines.append("")
             lines.append("Packets tested:")
@@ -87,18 +125,17 @@ class SemanticCheckResult:
 
                 packet_repr = get_packet_representation(_RAW_BASE_DIR / v.packet_path, self.protocol.type) if show_packet_representation else None
                 if packet_repr is not None:
-                    lines.append(f"Packet representation:")
+                    lines.append("Packet representation:")
                     lines.append(packet_repr)
 
                 if v.parse_tree_summary:
-                    lines.append(f"Parse tree summary:")
+                    lines.append("Parse tree summary:")
                     lines.append(v.parse_tree_summary)
 
-                if not v.passed:
-                    if v.error:
-                        lines.append(f"Error output from parsing:")
-                        for err_line in v.error.strip().splitlines():
-                            lines.append(f"  {err_line}")
+                if not v.passed and v.error:
+                    lines.append("Error output from parsing:")
+                    for err_line in v.error.strip().splitlines():
+                        lines.append(f"  {err_line}")
                 lines.append("")
         return "\n".join(lines)
 
@@ -111,84 +148,12 @@ class SemanticCheckResult:
         return "\n".join(lines)
 
 
-def get_parse_tree_summary(parse_result: ParseResult) -> str | None:
-    if parse_result.parse_tree is None:
-        return None
-    
-    packet_path, _ = os.path.splitext(parse_result.packet_path)
-    expected_tree_path = Path(f"{packet_path}.tree")
-    if not expected_tree_path.exists():
-        logger.warning(f"No expected parse tree found for packet '{parse_result.packet_path}' at {expected_tree_path}. Skipping parse tree diff.")
-        return None
-    
-    with open(expected_tree_path, "r") as f:
-        expected_tree = f.read()
-
-    actual_tree = parse_result.parse_tree
-
-    actual_tree = parse_spicy_output(actual_tree)
-    expected_tree = parse_spicy_output(expected_tree)
-    
-    parse_tree_diffs = [str(mismatch) for mismatch in compare_parse_trees(actual_tree, expected_tree)]
-    if not parse_tree_diffs:
-        return None
-
-    summary = "The parse tree of the actual packet is different from the expected one.\n"
-    summary += "The following mismatches were found between the actual parse tree and the expected parse tree:\n"
-    summary += "\n".join(parse_tree_diffs)
-    
-    logger.debug(f"Generated parse tree diff for {os.path.basename(parse_result.packet_path)}")    
-    return summary
-
-# ---------------------------------------------------------------------------
-# Core functions
-# ---------------------------------------------------------------------------
-
-def precompile_grammar(grammar_file: str, output_path: Path | None = None) -> Path | None:
-    """Pre-compile a ``.spicy`` grammar to a ``.hlto`` binary.
-
-    Runs ``spicyc -j <grammar_file> -o <output>`` so that repeated calls to
-    :func:`run_spicy_parser` can skip the compilation step entirely.
-
-    Parameters
-    ----------
-    grammar_file:
-        Path to the ``.spicy`` source grammar.
-    debug_dir:
-        Optional output path.  If not provided, the compiled ``.hlto`` is stored
-        in a temporary directory that is deleted after use.
-
-    Returns
-    -------
-    Path | None
-        Path to the compiled ``.hlto`` file, or ``None`` if compilation failed.
-    """
-    if output_path is None:
-        grammar_name = os.path.splitext(os.path.basename(grammar_file))[0]
-        build_dir = Path(tempfile.mkdtemp(prefix="spicy_build_"))
-        output_path = build_dir / f"{grammar_name}.hlto"
-
-    logger.info(f"Pre-compiling grammar to {output_path}")
-    proc = subprocess.run(
-        ["spicyc", "-j", grammar_file, "-o", str(output_path)],
-        capture_output=True,
-        text=True,
-    )
-
-    if proc.returncode != 0:
-        logger.error(f"Pre-compilation failed: {proc.stderr.strip()}")
-        return None
-
-    logger.info(f"Pre-compilation succeeded: {output_path}")
-    return output_path
-
-
 def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType) -> str | None:
     """Return the raw text packet or a binary hexdump for a packet on disk."""
     try:
         with open(packet_path, "rb") as f:
             data = f.read()
-    except OSError as exc:
+    except OSError:
         return None
 
     if packet_type == ProtocolType.TEXT:
@@ -197,7 +162,7 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
             return "<empty>"
         return packet
 
-    elif packet_type == ProtocolType.BINARY:
+    if packet_type == ProtocolType.BINARY:
         lines = []
         for offset in range(0, len(data), 16):
             chunk = data[offset:offset + 16]
@@ -206,64 +171,23 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
             lines.append(f"{offset:08x}  {hex_bytes:<47}  {ascii_bytes}")
         return "\n".join(lines)
 
-def run_spicy_parser(grammar_file: str, packet_file: str, errors_file: None = None) -> ParseResult:
-    """Run ``spicy-dump <grammar_file> < <packet_file>`` and return the result."""
-    packet_name = os.path.basename(packet_file)
-    logger.info(f"Running spicy-dump: {grammar_file} < {packet_name}")
-
-    with open(packet_file, "rb") as pf:
-        result = subprocess.run(
-            ["spicy-dump", grammar_file],
-            stdin=pf,
-            capture_output=True,
-            text=True,
-        )
-
-    success = result.returncode == 0
-    if success:
-        logger.debug(f"spicy-dump accepted {packet_name}")
-    else:
-        logger.debug(f"spicy-dump rejected {packet_name}: {result.stderr.strip()}")
-
-    return ParseResult(
-        packet_path=packet_file,
-        success=success,
-        parse_tree=result.stdout if success else None,
-        error=result.stderr.strip(),
-    )
+    return None
 
 
 def run_parser_check(
-    grammar_file: str,
+    parser_source: str | Path,
+    runtime: RuntimeAdapter,
     protocol: Protocol,
-    show_parsing_tree: bool,
-    debug_info: dict[str, Path | None] | None = None
+    include_parse_tree_summary: bool,
+    debug_info: dict[str, Path | None] | None = None,
 ) -> SemanticCheckResult:
-    """Run a grammar against all packets for *protocol* found on disk.
-
-    Parameters
-    ----------
-    grammar_file:
-        Path to the ``.spicy`` grammar file.
-    protocol:
-        Protocol to look up under ``data/raw/<protocol>``.
-    show_parsing_tree:
-        Whether to include the parsing tree output from spicy-driver in the error report.
-    debug_dir:
-        Optional debug directory. When provided, the compiled ``.hlto`` is
-        stored in ``<debug_dir>/build/``.
-
-    Returns
-    -------
-    SemanticCheckResult
-        Aggregated verdicts for every packet.
-    """
+    """Run a parser against all packets for *protocol* found on disk."""
     protocol_name = protocol.name
     protocol_dir = _RAW_BASE_DIR / protocol_name
     accept_dir = protocol_dir / "positive"
     reject_dir = protocol_dir / "negative"
 
-    build_path = debug_info.get("build_path") if debug_info else None
+    build_dir = debug_info.get("build_dir") if debug_info else None
     errors_path = debug_info.get("errors_path") if debug_info else None
 
     accept_packets = sorted(
@@ -278,9 +202,18 @@ def run_parser_check(
     ) if reject_dir.exists() else []
 
     result = SemanticCheckResult(protocol=protocol)
-    
+
     if not protocol_dir.exists():
         logger.warning(f"No raw packet directory found for protocol '{protocol_name}' at {protocol_dir}")
+        return result
+
+    try:
+        parser_artifact = runtime.build_parser(Path(parser_source), build_dir)
+    except RuntimeError as exc:
+        result.setup_error = str(exc)
+        if errors_path:
+            errors_path.write_text(result.setup_error)
+        logger.error(f"Runtime setup failed for '{protocol_name}': {result.setup_error}")
         return result
 
     logger.info(
@@ -288,16 +221,12 @@ def run_parser_check(
         f"{len(accept_packets)} accept packet(s), {len(reject_packets)} reject packet(s)"
     )
 
-    # Pre-compile grammar once to avoid repeated compilation per packet
-    hlto_path = precompile_grammar(grammar_file, build_path)
-    parser_input = str(hlto_path) if hlto_path is not None else grammar_file
-
     errors_log: list[str] = []
 
     for rel_path in accept_packets:
-        abs_path = str(_RAW_BASE_DIR / rel_path)
-        parse_result = run_spicy_parser(parser_input, abs_path)
-        parse_tree_summary = get_parse_tree_summary(parse_result) if show_parsing_tree else None
+        abs_path = _RAW_BASE_DIR / rel_path
+        parse_result = runtime.parse_packet(parser_artifact.path, abs_path)
+        parse_tree_summary = runtime.summarize_result(parse_result) if include_parse_tree_summary else None
         verdict = PacketVerdict(
             packet_path=rel_path,
             expected_accept=True,
@@ -312,8 +241,8 @@ def run_parser_check(
             logger.warning(f"FAIL (accept): {rel_path} was rejected. stderr: {parse_result.error.strip()}")
 
     for rel_path in reject_packets:
-        abs_path = str(_RAW_BASE_DIR / rel_path)
-        parse_result = run_spicy_parser(parser_input, abs_path)
+        abs_path = _RAW_BASE_DIR / rel_path
+        parse_result = runtime.parse_packet(parser_artifact.path, abs_path)
         verdict = PacketVerdict(
             packet_path=rel_path,
             expected_accept=False,
@@ -327,8 +256,10 @@ def run_parser_check(
             logger.warning(f"FAIL (reject): {rel_path} was accepted but should have been rejected.")
 
     if errors_log and errors_path:
-        with open(errors_path, "w") as f:
-            f.write("\n".join(errors_log))
+        errors_path.write_text("\n".join(errors_log))
+
+    if parser_artifact.cleanup is not None:
+        parser_artifact.cleanup()
 
     logger.debug(f"Semantic check result: {result.summary()}")
     return result
@@ -336,19 +267,22 @@ def run_parser_check(
 
 def run_parser_check_from_code(
     grammar_code: str,
+    runtime: RuntimeAdapter,
     protocol: Protocol,
-    show_parsing_tree: bool = False,
-    debug_info: dict[str, Path | None] | None = None
+    source_extension: str,
+    include_parse_tree_summary: bool = False,
+    debug_info: dict[str, Path | None] | None = None,
 ) -> SemanticCheckResult:
-    """Convenience wrapper: writes *grammar_code* to a temp file, then runs
-    :func:`run_parser_check` against it.
-
-    This is useful when calling from the agent where we have the code string
-    but no file on disk yet.
-    """
+    """Write *grammar_code* to a temp file, then run :func:`run_parser_check`."""
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".spicy", delete=True
+        mode="w", prefix="Grammar_", suffix=source_extension, delete=True
     ) as tmp:
         tmp.write(grammar_code)
         tmp.flush()
-        return run_parser_check(tmp.name, protocol, show_parsing_tree, debug_info=debug_info)
+        return run_parser_check(
+            tmp.name,
+            runtime,
+            protocol,
+            include_parse_tree_summary,
+            debug_info=debug_info,
+        )
