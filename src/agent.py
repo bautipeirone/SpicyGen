@@ -249,7 +249,7 @@ def run_refinement_loop(
         state.attempt += 1
         state.last_code = cleaned_code
         step_path = (
-            refinement_dir / f"{state.attempt}-step{target_language.source_extension}"
+            refinement_dir / f"Grammar_{state.attempt}{target_language.source_extension}"
             if refinement_dir else None
         )
         errors_path = errors_dir / f"{state.attempt}-compilation.log" if errors_dir else None

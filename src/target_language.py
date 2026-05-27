@@ -7,9 +7,16 @@ from src.protocol import ProtocolType
 from src.tools.compiler import CompileFunction
 from src.tools.preprocess import ResponseCleaner
 from src.tools.runtime import RuntimeAdapter
+
+############## Spicy ###############
 from src.tools.spicy.compiler import compile_spicy_grammar
 from src.tools.spicy.preprocess import clean_spicy_response
 from src.tools.spicy.runtime import SPICY_RUNTIME
+
+################ 3D ################
+from src.tools._3d.compiler import compile_3d_grammar
+from src.tools._3d.preprocess import clean_3d_response
+from src.tools._3d.runtime import _3D_RUNTIME
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -56,6 +63,18 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         runtime=SPICY_RUNTIME,
         response_cleaner=clean_spicy_response,
     ),
+    "3d": TargetLanguage(
+        name="3d",
+        display_name="3D",
+        assistant_name="3DDeveloper",
+        source_extension=".3d",
+        instructions_by_protocol_type={
+            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "3D_BINARY.md"
+        },
+        compile_fn=compile_3d_grammar,
+        runtime=_3D_RUNTIME,
+        response_cleaner=clean_3d_response,
+    )
 }
 
 DEFAULT_TARGET_LANGUAGE = "spicy"

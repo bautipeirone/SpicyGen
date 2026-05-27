@@ -276,7 +276,7 @@ def run_parser_check_from_code(
 ) -> SemanticCheckResult:
     """Write *grammar_code* to a temp file, then run :func:`run_parser_check`."""
     with tempfile.NamedTemporaryFile(
-        mode="w", suffix=source_extension, delete=True
+        mode="w", prefix="Grammar_", suffix=source_extension, delete=True
     ) as tmp:
         tmp.write(grammar_code)
         tmp.flush()

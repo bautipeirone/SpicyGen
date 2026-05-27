@@ -21,7 +21,7 @@ def run_grammar_compiler(code: str, compile_fn: CompileFunction, source_extensio
         result = compile_fn(step_path)
     else:
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=source_extension, delete=True
+            mode="w", prefix="Grammar_", suffix=source_extension, delete=True
         ) as tmp:
             tmp.write(code)
             tmp.flush()
