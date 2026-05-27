@@ -280,11 +280,9 @@ def run_refinement_loop(
         if not cleaned_code:
             cleaned_code = code
 
-        build_path = None
-        if build_dir and target_language.artifact_extension:
-            build_path = build_dir / f"{state.attempt}{target_language.artifact_extension}"
+        step_build_dir = build_dir / f"step_{state.attempt}" if build_dir else None
         errors_path = errors_dir / f"{state.attempt}-runtime.log" if errors_dir else None
-        debug_info = { "build_path": build_path, "errors_path": errors_path }
+        debug_info = { "build_dir": step_build_dir, "errors_path": errors_path }
 
         logger.info(
             f"Running runtime check for protocol '{state.protocol.name}' using {target_language.display_name}..."

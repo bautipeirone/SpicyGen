@@ -48,13 +48,16 @@ def get_spicy_parse_tree_summary(parse_result: ParseResult) -> str | None:
     return summary
 
 
-def precompile_spicy_parser(grammar_file: Path, output_path: Path | None = None) -> RuntimeArtifact:
+def precompile_spicy_parser(grammar_file: Path, build_dir: Path | None = None) -> RuntimeArtifact:
     """Pre-compile a ``.spicy`` grammar to a ``.hlto`` binary."""
     cleanup = None
-    if output_path is None:
+    if build_dir is None:
         build_dir = Path(tempfile.mkdtemp(prefix="spicy_build_"))
-        output_path = build_dir / f"{grammar_file.stem}.hlto"
         cleanup = lambda: cleanup_spicy_artifact_dir(build_dir)
+    else:
+        build_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = build_dir / "parser.hlto"
 
     logger.info(f"Pre-compiling grammar to {output_path}")
     result = compile_to_hlto(grammar_file=grammar_file, output_path=output_path)
@@ -101,5 +104,4 @@ SPICY_RUNTIME = RuntimeAdapter(
     parse_packet=run_spicy_parser,
     prepare_parser=precompile_spicy_parser,
     summarize_parse_result=get_spicy_parse_tree_summary,
-    artifact_extension=".hlto",
 )

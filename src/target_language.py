@@ -33,10 +33,6 @@ class TargetLanguage:
     response_cleaner: ResponseCleaner
 
     @property
-    def artifact_extension(self) -> str | None:
-        return self.runtime.artifact_extension
-
-    @property
     def supports_parse_tree_summary(self) -> bool:
         return self.runtime.supports_parse_tree_summary
 

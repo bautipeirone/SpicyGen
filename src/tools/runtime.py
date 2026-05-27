@@ -38,7 +38,6 @@ class RuntimeAdapter:
     parse_packet: ParseFunction
     prepare_parser: PrepareParserFunction | None = None
     summarize_parse_result: ParseResultSummarizer | None = None
-    artifact_extension: str | None = None
 
     @property
     def requires_preparation(self) -> bool:
@@ -48,10 +47,10 @@ class RuntimeAdapter:
     def supports_parse_tree_summary(self) -> bool:
         return self.summarize_parse_result is not None
 
-    def build_parser(self, source_path: Path, build_path: Path | None = None) -> RuntimeArtifact:
+    def build_parser(self, source_path: Path, build_dir: Path | None = None) -> RuntimeArtifact:
         if self.prepare_parser is None:
             return RuntimeArtifact(path=source_path)
-        return self.prepare_parser(source_path, build_path)
+        return self.prepare_parser(source_path, build_dir)
 
     def summarize_result(self, parse_result: ParseResult) -> str | None:
         if self.summarize_parse_result is None:
@@ -188,7 +187,7 @@ def run_parser_check(
     accept_dir = protocol_dir / "positive"
     reject_dir = protocol_dir / "negative"
 
-    build_path = debug_info.get("build_path") if debug_info else None
+    build_dir = debug_info.get("build_dir") if debug_info else None
     errors_path = debug_info.get("errors_path") if debug_info else None
 
     accept_packets = sorted(
@@ -209,7 +208,7 @@ def run_parser_check(
         return result
 
     try:
-        parser_artifact = runtime.build_parser(Path(parser_source), build_path)
+        parser_artifact = runtime.build_parser(Path(parser_source), build_dir)
     except RuntimeError as exc:
         result.setup_error = str(exc)
         if errors_path:
