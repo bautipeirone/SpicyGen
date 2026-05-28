@@ -51,6 +51,8 @@ docker build -t grammar-generator .
 docker run --rm --env-file .env -v $(pwd)/outputs:/app/outputs grammar-generator -m "gemini-3.1-flash" -p "dhcp dns"
 ```
 
+## Testing
+To run unit tests and integration tests run `pytest`.
 
 ## Adding Models and Protocols
 To extend the program's capabilities, you can easily add new LLMs or new protocols by updating the respective index files:

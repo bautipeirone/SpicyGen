@@ -1,0 +1,267 @@
+"""Targeted unit tests for functions prone to modification.
+
+These are pure-function tests for utility and preprocessing logic that
+is likely to be edited as the project evolves.
+"""
+
+import pytest
+
+from src.utils import (
+    compute_text_stats,
+    generate_diff,
+    strip_code_fences,
+)
+from src.tools.spicy.preprocess import clean_spicy_response
+from src.tools.rfc import clean_rfc_text
+from src.tools._3d.wrapper import (
+    get_C_entrypoint_from_3d,
+    get_error_callback_name,
+    get_parser_entrypoint,
+    normalize_identifier,
+)
+from src.usage import merge_usage_reports
+from preprocess_spec import compute_info_stats
+
+
+# ---------------------------------------------------------------------------
+# strip_code_fences / clean_spicy_response
+# ---------------------------------------------------------------------------
+
+class TestStripCodeFences:
+
+    def test_strips_triple_backticks(self):
+        assert strip_code_fences("```\nhello\n```") == "hello"
+
+    def test_no_fences(self):
+        assert strip_code_fences("hello world") == "hello world"
+
+    def test_empty_string(self):
+        assert strip_code_fences("") == ""
+
+    def test_none_input(self):
+        assert strip_code_fences(None) == ""
+
+    def test_fences_with_language_tag(self):
+        result = strip_code_fences("```spicy\nmodule foo;\n```")
+        # strip_code_fences only strips the ``` — the language tag remains.
+        assert "module" in result
+
+    def test_preserves_internal_backticks(self):
+        result = strip_code_fences("```\nsome `inline` code\n```")
+        assert "`inline`" in result
+
+
+class TestCleanSpicyResponse:
+
+    def test_strips_fences_and_preamble(self):
+        text = "```spicy\nSome preamble text\nmodule foo;\ntype Bar = unit {};\n```"
+        result = clean_spicy_response(text)
+        assert result.startswith("module foo;")
+
+    def test_already_clean(self):
+        text = "module foo;\ntype Bar = unit {};"
+        result = clean_spicy_response(text)
+        assert result == text
+
+    def test_empty_input(self):
+        assert clean_spicy_response("") == ""
+
+    def test_no_module_keyword(self):
+        text = "```\nthis has no module keyword\n```"
+        result = clean_spicy_response(text)
+        # All lines get stripped because none start with "module".
+        assert result == ""
+
+
+# ---------------------------------------------------------------------------
+# compute_text_stats
+# ---------------------------------------------------------------------------
+
+class TestComputeTextStats:
+
+    def test_normal_text(self):
+        text = "line one\n\nline three\n"
+        stats = compute_text_stats(text)
+        assert stats["chars"] == len(text)
+        assert stats["lines"] == 3
+        assert stats["nonempty_lines"] == 2
+
+    def test_empty_string(self):
+        stats = compute_text_stats("")
+        assert stats["chars"] == 0
+        assert stats["lines"] == 0
+
+    def test_none_input(self):
+        stats = compute_text_stats(None)
+        assert stats["chars"] == 0
+
+    def test_single_line_no_newline(self):
+        stats = compute_text_stats("hello")
+        assert stats["lines"] == 1
+        assert stats["nonempty_lines"] == 1
+
+
+# ---------------------------------------------------------------------------
+# compute_info_stats
+# ---------------------------------------------------------------------------
+
+class TestComputeInfoStats:
+
+    def test_fully_populated(self):
+        info = {
+            "type": "binary",
+            "port": 53,
+            "transport": ["udp", "tcp"],
+            "layer": "application",
+            "encoding": None,
+            "checksum": None,
+        }
+        stats = compute_info_stats(info)
+        assert stats["expected_fields"] == 6
+        assert stats["present_fields"] == 6
+        assert stats["populated_fields"] == 4
+        assert stats["null_or_empty_fields"] == 2
+        assert stats["missing_fields"] == []
+        assert stats["transport_count"] == 2
+        assert stats["valid_json_object"] is True
+
+    def test_raw_response_fallback(self):
+        info = {"raw_response": "some unparseable text"}
+        stats = compute_info_stats(info)
+        assert stats["valid_json_object"] is False
+        assert stats["present_fields"] == 0
+
+    def test_missing_fields_tracked(self):
+        info = {"type": "text", "port": 80}
+        stats = compute_info_stats(info)
+        assert "transport" in stats["missing_fields"]
+
+
+# ---------------------------------------------------------------------------
+# generate_diff
+# ---------------------------------------------------------------------------
+
+class TestGenerateDiff:
+
+    def test_identical_strings(self):
+        assert generate_diff("hello\n", "hello\n") == ""
+
+    def test_single_line_change(self):
+        diff = generate_diff("line1\nline2\n", "line1\nline2_modified\n")
+        assert "-line2" in diff
+        assert "+line2_modified" in diff
+
+    def test_addition(self):
+        diff = generate_diff("a\n", "a\nb\n")
+        assert "+b" in diff
+
+
+# ---------------------------------------------------------------------------
+# clean_rfc_text
+# ---------------------------------------------------------------------------
+
+class TestCleanRfcText:
+
+    def test_removes_page_footers(self):
+        text = "Some content\nAuthor                   [Page 1]\nMore content"
+        result = clean_rfc_text(text)
+        assert "[Page 1]" not in result
+        assert "More content" in result
+
+    def test_removes_rfc_headers(self):
+        text = "RFC 1035                   Domain Names                November 1987\nContent here"
+        result = clean_rfc_text(text)
+        assert "RFC 1035" not in result
+        assert "Content here" in result
+
+    def test_collapses_blank_lines(self):
+        text = "a\n\n\n\nb"
+        result = clean_rfc_text(text)
+        assert "\n\n" not in result
+
+
+# ---------------------------------------------------------------------------
+# 3D wrapper helpers
+# ---------------------------------------------------------------------------
+
+class TestNormalizeIdentifier:
+
+    def test_single_word(self):
+        assert normalize_identifier("hello") == "Hello"
+
+    def test_underscored(self):
+        assert normalize_identifier("my_type") == "MyType"
+
+    def test_already_capitalized(self):
+        assert normalize_identifier("Hello") == "Hello"
+
+
+class TestGetParserEntrypoint:
+
+    def test_finds_entrypoint(self):
+        code = 'entrypoint typedef struct MyPacket {\n  UINT16 field;\n} MyPacket;'
+        result = get_parser_entrypoint(code)
+        assert result == "MyPacket"
+
+    def test_no_entrypoint(self):
+        code = "typedef struct Foo { UINT8 x; } Foo;"
+        assert get_parser_entrypoint(code) is None
+
+
+class TestGetCEntrypoint:
+
+    def test_standard_case(self):
+        result = get_C_entrypoint_from_3d("IPV4", "Header")
+        assert result == "Ipv4CheckHeader"
+
+    def test_underscored_filename(self):
+        result = get_C_entrypoint_from_3d("my_file", "some_type")
+        assert result == "MyFileCheckSomeType"
+
+
+class TestGetErrorCallbackName:
+
+    def test_generates_callback(self):
+        assert get_error_callback_name("IPV4") == "IPV4EverParseError"
+
+
+# ---------------------------------------------------------------------------
+# merge_usage_reports
+# ---------------------------------------------------------------------------
+
+class TestMergeUsageReports:
+
+    def test_merge_two_reports(self):
+        r1 = {
+            "total_usage": {"total_cost": 0.01, "prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+            "actual_usage": {"total_cost": 0.01, "prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+        }
+        r2 = {
+            "total_usage": {"total_cost": 0.02, "prompt_tokens": 200, "completion_tokens": 100, "total_tokens": 300},
+            "actual_usage": {"total_cost": 0.02, "prompt_tokens": 200, "completion_tokens": 100, "total_tokens": 300},
+        }
+        merged = merge_usage_reports(r1, r2)
+        assert merged is not None
+        assert merged["total_usage"]["total_cost"] == pytest.approx(0.03)
+        assert merged["total_usage"]["prompt_tokens"] == 300
+        assert merged["total_usage"]["total_tokens"] == 450
+
+    def test_merge_with_none(self):
+        r1 = {
+            "total_usage": {"total_cost": 0.01, "prompt_tokens": 100, "completion_tokens": 50, "total_tokens": 150},
+            "actual_usage": None,
+        }
+        merged = merge_usage_reports(r1, None)
+        assert merged is not None
+        assert merged["total_usage"]["total_cost"] == pytest.approx(0.01)
+
+    def test_all_none_returns_none(self):
+        assert merge_usage_reports(None, None) is None
+
+    def test_single_report(self):
+        r1 = {
+            "total_usage": {"total_cost": 0.05, "prompt_tokens": 500, "completion_tokens": 250, "total_tokens": 750},
+            "actual_usage": {"total_cost": 0.04, "prompt_tokens": 400, "completion_tokens": 200, "total_tokens": 600},
+        }
+        merged = merge_usage_reports(r1)
+        assert merged["total_usage"]["total_tokens"] == 750
