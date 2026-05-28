@@ -1,15 +1,15 @@
 """Integration tests for the Spicy preprocessor chain.
 
-Covers: preprocess_code() orchestrating reserved keyword search +
+Covers: preprocess_spicy_code() orchestrating reserved keyword search +
 bitfield-without-bitorder detection, producing actionable error lists.
 """
 
 import pytest
 
-from src.tools.spicy.compiler import (
+from src.tools.spicy.preprocess import (
     find_bitfields_decls,
     find_bitfields_without_bitorder_attribute,
-    preprocess_code,
+    preprocess_spicy_code,
     search_reserved_keywords,
 )
 
@@ -83,16 +83,16 @@ class TestBitfieldDetection:
 
 
 class TestPreprocessCodeIntegration:
-    """Full preprocess_code() producing error message lists."""
+    """Full preprocess_spicy_code() producing error message lists."""
 
     def test_clean_code_returns_no_errors(self):
         code = "module test;\nopcode: uint8;\nlength: uint16;"
-        errors = preprocess_code(code)
+        errors = preprocess_spicy_code(code)
         assert errors == []
 
     def test_reserved_keyword_produces_error(self):
         code = "module test;\ntype: uint8;"
-        errors = preprocess_code(code)
+        errors = preprocess_spicy_code(code)
         assert len(errors) >= 1
         assert "reserved keyword" in errors[0].lower() or "type" in errors[0]
 
@@ -104,7 +104,7 @@ class TestPreprocessCodeIntegration:
             "  b: 4..7;\n"
             "};\n"
         )
-        errors = preprocess_code(code)
+        errors = preprocess_spicy_code(code)
         assert len(errors) >= 1
         assert "bit-order" in errors[0] or "bitfield" in errors[0].lower()
 
@@ -116,5 +116,5 @@ class TestPreprocessCodeIntegration:
             "  a: 0..3;\n"
             "};\n"
         )
-        errors = preprocess_code(code)
+        errors = preprocess_spicy_code(code)
         assert len(errors) >= 2  # One for 'port', one for bitfield.

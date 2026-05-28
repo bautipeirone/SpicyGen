@@ -5,7 +5,9 @@ from pathlib import Path
 import os
 import subprocess
 import tempfile
+from src.utils import load_file
 from src.tools.compiler import CompileResult
+from src.tools._3d.preprocess import preprocess_3d_code
 
 def run_everparse(grammar_file: str, build_dir: str):
     EVERPARSE_SCRIPT_PATH = os.getenv("EVERPARSE_SCRIPT_PATH")
@@ -23,7 +25,12 @@ def run_everparse(grammar_file: str, build_dir: str):
     )
 
 def compile_3d_grammar(source_file: Path) -> CompileResult:
-    with tempfile.TemporaryDirectory(prefix="3d_build", delete=True) as build_dir:
+    code = load_file(source_file)
+    errors = preprocess_3d_code(code)
+    if errors:
+        error_message = "\n".join(errors)
+        return CompileResult(success=False, errors=error_message)
+    with tempfile.TemporaryDirectory(prefix="3d_build_", delete=True) as build_dir:
         result = run_everparse(str(source_file), build_dir=build_dir)
     if result.returncode == 0:
         return CompileResult(success=True, errors=None)
