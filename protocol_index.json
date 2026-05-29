@@ -160,6 +160,11 @@
     "spec_type": "bluebook",
     "local_spec_file": "specs/tm-sdlp-bluebook.txt"
   },
+  "tpkt": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "2126"
+  },
   "udp": {
     "type": "binary",
     "spec_type": "rfc",
