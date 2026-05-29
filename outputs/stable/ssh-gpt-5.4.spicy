@@ -1,0 +1,136 @@
+module SSH_gpt;
+
+import spicy;
+
+const NewLine = /\r?\n/;
+
+type SSHString = unit {
+    length: uint32;
+    data: bytes &size=self.length;
+};
+
+type Mpint = unit {
+    length: uint32;
+    data: bytes &size=self.length;
+};
+
+type NameList = unit {
+    length: uint32;
+    data: bytes &size=self.length;
+};
+
+type IdentificationEnd = unit {
+    newline: NewLine;
+};
+
+type IdentificationCommentTail = unit {
+    : b" ";
+    comments: /[^\r\n]*/;
+    newline: NewLine;
+};
+
+type SSHIdentification = unit {
+    : b"SSH-";
+    protoversion: /[^-\r\n]+/;
+    : b"-";
+    softwareversion: /[^ \r\n]+/;
+    switch {
+        -> comment_tail: IdentificationCommentTail;
+        -> end_tail: IdentificationEnd;
+    };
+};
+
+type DisconnectMessage = unit {
+    reason_code: uint32;
+    description: SSHString;
+    language_tag: SSHString;
+};
+
+type IgnoreMessage = unit {
+    data: SSHString;
+};
+
+type UnimplementedMessage = unit {
+    rejected_packet_sequence_number: uint32;
+};
+
+type DebugMessage = unit {
+    always_display: uint8;
+    message: SSHString;
+    language_tag: SSHString;
+};
+
+type ServiceRequestMessage = unit {
+    service_name: SSHString;
+};
+
+type ServiceAcceptMessage = unit {
+    service_name: SSHString;
+};
+
+type KexInitMessage = unit {
+    cookie: bytes &size=16;
+    kex_algorithms: NameList;
+    server_host_key_algorithms: NameList;
+    encryption_algorithms_client_to_server: NameList;
+    encryption_algorithms_server_to_client: NameList;
+    mac_algorithms_client_to_server: NameList;
+    mac_algorithms_server_to_client: NameList;
+    compression_algorithms_client_to_server: NameList;
+    compression_algorithms_server_to_client: NameList;
+    languages_client_to_server: NameList;
+    languages_server_to_client: NameList;
+    first_kex_packet_follows: uint8;
+    reserved: uint32;
+};
+
+type NewKeysMessage = unit {
+    : void;
+};
+
+type KexDhInitMessage = unit {
+    e: Mpint;
+};
+
+type KexDhReplyMessage = unit {
+    server_public_host_key_and_certificates: SSHString;
+    f: Mpint;
+    signature_of_h: SSHString;
+};
+
+type Payload = unit(payload_length: uint32) {
+    message_code: uint8;
+    switch ( self.message_code ) {
+        1 -> disconnect: DisconnectMessage;
+        2 -> ignore: IgnoreMessage;
+        3 -> unimplemented: UnimplementedMessage;
+        4 -> debug: DebugMessage;
+        5 -> service_request: ServiceRequestMessage;
+        6 -> service_accept: ServiceAcceptMessage;
+        20 -> kexinit: KexInitMessage;
+        21 -> newkeys: NewKeysMessage;
+        30 -> kexdh_init: KexDhInitMessage;
+        31 -> kexdh_reply: KexDhReplyMessage;
+        * -> raw: bytes &size=(payload_length - 1);
+    };
+};
+
+type BinaryPacket = unit {
+    packet_length: uint32;
+    padding_length: uint8;
+    payload: Payload(self.packet_length - self.padding_length - 1) if (self.packet_length > self.padding_length);
+    packet_data: bytes &size=(self.packet_length - 1) if (self.packet_length <= self.padding_length);
+    mac: bytes &eod;
+};
+
+type SSHElement = unit {
+    switch {
+        -> identification: SSHIdentification;
+        -> packet: BinaryPacket;
+        -> raw_data: bytes &eod;
+    };
+};
+
+public type SSHMessage = unit {
+    elements: SSHElement[] &eod;
+};
