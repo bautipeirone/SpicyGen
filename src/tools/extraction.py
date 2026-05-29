@@ -71,6 +71,9 @@ def extract_intervals(spec_content: str, intervals: list[list[str]]) -> tuple[st
     Overlapping or adjacent intervals are merged automatically.
     Intervals that cannot be resolved are logged and skipped.
     """
+
+    logger.debug(f"Extracting intervals:\n{"\n".join(map(str,intervals))}")
+
     stats: dict[str, Any] = {
         "requested_intervals": len(intervals),
         "resolved_intervals": 0,
