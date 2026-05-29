@@ -1,0 +1,108 @@
+module RTP_gpt;
+import spicy;
+
+type SdesItemType = enum {
+    END = 0,
+    CNAME = 1,
+    NAME = 2,
+    EMAIL = 3,
+    PHONE = 4,
+    LOC = 5,
+    TOOL = 6,
+    NOTE = 7,
+    PRIV = 8,
+};
+
+type GenericFirstWord = bitfield(16) {
+    version: 0..1;
+    bit2: 2;
+    bit3: 3;
+    low4: 4..7;
+    high_second: 8;
+    low7_second: 9..15;
+} &bit-order=spicy::BitOrder::MSB0;
+
+type RtpHeaderExtension = unit {
+    profile_defined: uint16;
+    length: uint16;
+    extension_data: bytes &size=(self.length * 4);
+};
+
+type RtpPacket = unit(first_word: GenericFirstWord) {
+    sequence_number: uint16;
+    timestamp: uint32;
+    ssrc: uint32;
+    csrc_list: uint32[first_word.low4];
+    header_extension: RtpHeaderExtension if(first_word.bit3 == 1);
+    payload: bytes &eod;
+};
+
+type ReceptionReportBlock = unit {
+    ssrc: uint32;
+    loss_fields: bitfield(32) {
+        fraction_lost: 0..7;
+        cumulative_packets_lost: 8..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    extended_highest_sequence_number_received: uint32;
+    interarrival_jitter: uint32;
+    lsr: uint32;
+    dlsr: uint32;
+};
+
+type SenderInfo = unit {
+    ntp_timestamp_msw: uint32;
+    ntp_timestamp_lsw: uint32;
+    rtp_timestamp: uint32;
+    sender_packet_count: uint32;
+    sender_octet_count: uint32;
+};
+
+type RtcpSrPacket = unit(first_word: GenericFirstWord, length: uint16) {
+    sender_ssrc: uint32;
+    sender_info: SenderInfo;
+    report_blocks: ReceptionReportBlock[first_word.low4];
+    profile_specific_extensions: bytes &size=((((length + 1) * 4) - 24) - (first_word.low4 * 24));
+};
+
+type RtcpRrPacket = unit(first_word: GenericFirstWord, length: uint16) {
+    sender_ssrc: uint32;
+    report_blocks: ReceptionReportBlock[first_word.low4];
+    profile_specific_extensions: bytes &size=((((length + 1) * 4) - 8) - (first_word.low4 * 24));
+};
+
+type RtcpSdesPacket = unit(length: uint16) {
+    sdes_data: bytes &size=((length + 1) * 4 - 4);
+};
+
+type RtcpByePacket = unit(first_word: GenericFirstWord, length: uint16) {
+    sources: uint32[first_word.low4];
+    reason_length: uint8 if((((length + 1) * 4) - 4 - (first_word.low4 * 4)) > 0);
+    reason: bytes &size=self.reason_length if((((length + 1) * 4) - 4 - (first_word.low4 * 4)) > 0);
+    reason_padding: bytes &size=((((length + 1) * 4) - 4 - (first_word.low4 * 4)) - 1 - self.reason_length) if((((length + 1) * 4) - 4 - (first_word.low4 * 4)) > 0);
+};
+
+type RtcpAppPacket = unit(length: uint16) {
+    ssrc_csrc: uint32;
+    name: bytes &size=4;
+    app_data: bytes &size=(((length + 1) * 4) - 12);
+};
+
+type RtcpPacket = unit(first_word: GenericFirstWord) {
+    length: uint16;
+    switch ( (first_word.high_second * 128) + first_word.low7_second ) {
+        200 -> sr: RtcpSrPacket(first_word, self.length);
+        201 -> rr: RtcpRrPacket(first_word, self.length);
+        202 -> sdes: RtcpSdesPacket(self.length);
+        203 -> bye: RtcpByePacket(first_word, self.length);
+        204 -> app: RtcpAppPacket(self.length);
+    };
+    trailing_packets: bytes &eod;
+};
+
+public type Packet = unit {
+    first_word: GenericFirstWord;
+    switch ( (self.first_word.high_second * 128) + self.first_word.low7_second ) {
+        200, 201, 202, 203, 204 -> rtcp: RtcpPacket(self.first_word);
+        * -> rtp: RtpPacket(self.first_word);
+    };
+};
