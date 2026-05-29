@@ -10,7 +10,7 @@ UINT64BE: 64-bit unsigned big-endian integer
 - Defines complex data types using `typedef struct`.
 - !!!DO NOT use 'type' as an identifier. It is a reserved keyword! Use 'message_type' or 'Type' instead.  \
 - Can have nested structs.
-- Uses `entrypoint` to specify which structs should have their validators exposed to the user. entrypoint struct name must be capitalized
+- Uses `entrypoint` to specify which structs should have their validators exposed to the user. entrypoint struct name must be capitalized. There must be only one `entrypoint` declaration in the entire grammar, which is the entry point for the main parser of the protocol.
 - No implicit padding or alignment.
 
 Structs can be nested, such as in the following instance:
