@@ -2,13 +2,13 @@
 
 MODELS="qwen3-coder gemini-3.1-flash"
 PROTOCOLS="tftp dhcp http dns"
+TARGET_LANGUAGES="spicy"
 
 BASE_OUTPUT_PATH="$PWD/outputs"
 MODEL_INDEX_FILE="model_index.json"
 
 DEBUG_MODE=""
 SPEC_FILE=""
-TARGET_LANGUAGE="spicy"
 POSITIONAL_ARGS=()
 
 usage () {
@@ -18,7 +18,7 @@ usage () {
   echo "  -p|--protocols <protocols> Comma separated list of protocols to use"
   echo "  --debug             Enable debug mode"
   echo "  --spec-file <path>  Override specification file to use"
-  echo "  -t|--target-language <language> Target language/toolchain to use"
+  echo "  -t|--target-languages <languages> Target languages/toolchain to use"
   echo "  --output-dir <path> Path to the output directory"
   echo "  --note <text>       Add a note for this run"
   echo "  -h|--help           Show this help message"
@@ -60,8 +60,8 @@ while [[ $# -gt 0 ]]; do
       DEBUG_MODE="1"
       shift
       ;;
-    -t|--target-language)
-      TARGET_LANGUAGE="$2"
+    -t|--target-languages)
+      TARGET_LANGUAGES="$2"
       shift
       shift
       ;;
@@ -112,6 +112,7 @@ get_target_language_extension() {
 run_grammar_generator() {
   local MODEL_ID=$1
   local PROTOCOL=$2
+  local TARGET_LANGUAGE=$3
 
   MODEL_NAME=$(get_model_name "$MODEL_ID")
   OUTPUT_EXT=$(get_target_language_extension "$TARGET_LANGUAGE")
@@ -120,7 +121,7 @@ run_grammar_generator() {
   
   local DEBUG_ARGS=""
   if [[ -n "$DEBUG_DIR" ]]; then
-    DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL_NAME}"
+    DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL_NAME}-${TARGET_LANGUAGE}"
   fi
 
   local SPEC_ARGS=""
@@ -128,7 +129,7 @@ run_grammar_generator() {
     SPEC_ARGS="--spec-file $SPEC_FILE"
   fi
 
-  local METRICS_PATH="${OUTPUT_PATH%$OUTPUT_EXT}.json"
+  local METRICS_PATH="${OUTPUT_PATH%$OUTPUT_EXT}-${TARGET_LANGUAGE}.json"
   python generate_grammar.py -m "$MODEL_ID" -t "$TARGET_LANGUAGE" -o "$OUTPUT_PATH" $SPEC_ARGS $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
   if [ $? -ne 0 ]; then
     echo "GRAMMAR PRODUCED BY $MODEL_ID DIDNT PASS TESTS: $(basename "$OUTPUT_PATH")"
@@ -157,7 +158,7 @@ cat <<EOF > "$RUN_OUT_DIR/README.md"
 - **Timestamp:** $TIMESTAMP
 - **Models:** $MODELS
 - **Protocols:** $PROTOCOLS
-- **Target language:** $TARGET_LANGUAGE
+- **Target languages:** $TARGET_LANGUAGES
 
 ## Note
 ${RUN_NOTE:-"No note provided."}
@@ -166,7 +167,9 @@ EOF
 
 for p in $PROTOCOLS; do
   for m in $MODELS; do
-    run_grammar_generator "$m" "$p"
+    for t in $TARGET_LANGUAGES; do
+      run_grammar_generator "$m" "$p" "$t"
+    done
   done
 done
 
