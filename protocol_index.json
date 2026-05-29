@@ -75,6 +75,11 @@
     "spec_type": "rfc",
     "rfc_id": "1413"
   },
+  "igmpv2": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "2236"
+  },
   "ipv4": {
     "type": "binary",
     "spec_type": "rfc",
