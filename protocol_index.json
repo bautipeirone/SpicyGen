@@ -24,6 +24,11 @@
     "spec_type": "rfc",
     "rfc_id": "9171"
   },
+  "dccp": {
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "4340"
+  },
   "dhcp": {
     "type": "binary",
     "spec_type": "rfc",
