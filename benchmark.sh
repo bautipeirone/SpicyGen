@@ -7,6 +7,7 @@ BASE_OUTPUT_PATH="$PWD/outputs"
 MODEL_INDEX_FILE="model_index.json"
 
 DEBUG_MODE=""
+SPEC_FILE=""
 TARGET_LANGUAGE="spicy"
 POSITIONAL_ARGS=()
 
@@ -16,6 +17,7 @@ usage () {
   echo "  -m|--models <models> Comma separated list of models to use"
   echo "  -p|--protocols <protocols> Comma separated list of protocols to use"
   echo "  --debug             Enable debug mode"
+  echo "  --spec-file <path>  Override specification file to use"
   echo "  -t|--target-language <language> Target language/toolchain to use"
   echo "  --output-dir <path> Path to the output directory"
   echo "  --note <text>       Add a note for this run"
@@ -41,6 +43,11 @@ while [[ $# -gt 0 ]]; do
       ;;
     -c|--config)
       CONFIG_PATH="$2"
+      shift
+      shift
+      ;;
+    --spec-file)
+      SPEC_FILE="$2"
       shift
       shift
       ;;
@@ -116,8 +123,13 @@ run_grammar_generator() {
     DEBUG_ARGS="--debug-dir $DEBUG_DIR/${PROTOCOL}-${MODEL_NAME}"
   fi
 
+  local SPEC_ARGS=""
+  if [[ -n "$SPEC_FILE" ]]; then
+    SPEC_ARGS="--spec-file $SPEC_FILE"
+  fi
+
   local METRICS_PATH="${OUTPUT_PATH%$OUTPUT_EXT}.json"
-  python generate_grammar.py -m "$MODEL_ID" -t "$TARGET_LANGUAGE" -o "$OUTPUT_PATH" $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
+  python generate_grammar.py -m "$MODEL_ID" -t "$TARGET_LANGUAGE" -o "$OUTPUT_PATH" $SPEC_ARGS $CONFIG_ARGS $DEBUG_ARGS --metrics-file "$METRICS_PATH" "$PROTOCOL"
   if [ $? -ne 0 ]; then
     echo "GRAMMAR PRODUCED BY $MODEL_ID DIDNT PASS TESTS: $(basename "$OUTPUT_PATH")"
   else
