@@ -172,7 +172,7 @@ def summarize_spec(llm_config: dict, spec_content: str) -> tuple[str, dict[str, 
         name="SpecProxy",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=3,
-        is_termination_msg=lambda msg: "TERMINATE" in msg.get("content", "") or result_holder.get("summary") is not None,
+        is_termination_msg=lambda msg: "TERMINATE" == msg.get("content", "").strip() or result_holder.get("summary") is not None,
         code_execution_config=False,
         default_auto_reply="Please use the `select_intervals` tool to mark the relevant parts of the document, then say TERMINATE.",
     )
@@ -341,7 +341,7 @@ def run_refinement_loop(
         name="CompilerProxy",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=max_retries * 3,
-        is_termination_msg=lambda x: (x.get("content", "") and "TERMINATE" in x.get("content", "")) or state.attempt > max_retries,
+        is_termination_msg=lambda x: (x.get("content", "") and "TERMINATE" == x.get("content", "").strip()) or state.attempt > max_retries,
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call
         default_auto_reply="Please use the `compile_grammar` tool to check if the grammar compiles. If it does not compile, correct the errors. If you think the grammar is perfect or cannot be fixed, say TERMINATE.",
