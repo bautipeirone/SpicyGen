@@ -52,8 +52,8 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         assistant_name="SpicyDeveloper",
         source_extension=".spicy",
         instructions_by_protocol_type={
-            ProtocolType.TEXT: _PROJECT_ROOT / "prompts" / "TEXT.md",
-            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "BINARY.md",
+            ProtocolType.TEXT: _PROJECT_ROOT / "prompts" / "spicy" / "TEXT.md",
+            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "spicy" / "BINARY.md",
         },
         compile_fn=compile_spicy_grammar,
         runtime=SPICY_RUNTIME,
@@ -65,7 +65,7 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         assistant_name="3DDeveloper",
         source_extension=".3d",
         instructions_by_protocol_type={
-            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "3D_BINARY.md"
+            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "3D" / "BINARY.md"
         },
         compile_fn=compile_3d_grammar,
         runtime=_3D_RUNTIME,
