@@ -422,7 +422,7 @@ entrypoint typedef struct _Message {
 } Message;
 ```
 The value inside `switch(...)` must be a simple name in scope, such as `tag`, `kind`, or `message_type`. Do not write expressions such as `switch(tag + 1)`.
-A `casetype` defines a value-dependent untagged union. 3D does not force all cases to have the same size and does not add padding. If the protocol requires padding or fixed-size alternatives, model that padding explicitly.
+A `casetype` defines a value-dependent untagged union. 3D does not force all cases to have the same size and does not add padding. If the protocol requires padding or fixed-size alternatives, model that padding explicitly. If some branch needs to parse more than one field use a `struct`.
 
 ## Inline switch fields
 A struct may also contain an inline switch:
@@ -434,6 +434,10 @@ typedef struct _Message {
       UINT8 small_value;
     case 2:
       UINT16BE large_value;
+    case 3: struct {
+      UINT16BE value_1;
+      UINT16BE value_2;
+    } Pair;
     default:
       unit unknown;
   } payload;
