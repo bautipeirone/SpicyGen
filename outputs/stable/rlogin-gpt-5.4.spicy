@@ -1,0 +1,31 @@
+module BSD_Rlogin_gpt;
+
+import spicy;
+
+type WindowSizeMessageRest = unit {
+    magic_2: uint8;
+    flag_1: uint8;
+    flag_2: uint8;
+    rows: uint16;
+    columns: uint16;
+    x_pixels: uint16;
+    y_pixels: uint16;
+};
+
+type ServerDataRest = unit {
+    data: bytes &eod;
+};
+
+public type BSDRloginMessage = unit {
+    first_octet: uint8;
+    switch (self.first_octet) {
+        0 -> {
+            client_user_name_first: bytes &size=1 &eod;
+            client_user_name_rest: bytes &until=b"\x00" if (self.client_user_name_first != b"");
+            server_user_name: bytes &until=b"\x00" if (self.client_user_name_first != b"");
+            terminal_type_speed: bytes &until=b"\x00" if (self.client_user_name_first != b"");
+        }
+        255 -> window_size: WindowSizeMessageRest;
+        * -> server_data: ServerDataRest;
+    };
+};

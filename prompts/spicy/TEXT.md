@@ -8,7 +8,8 @@
 3. There must be only one `public type` declaration in the entire grammar, which is the entry point for the main parser of the protocol.
 4. Subunits don't have to repeat fields declared in the parent units.
 5. Inside a unit, `self` references to the current unit, and its fields can be accessed via `self.field`, and `$$` references to the last read input, this can be used to perform conversions or conditional parsing.
-6. Every field mentioned in the specification should be accessible by itself, not as a combination of fields like merging them into an integer type.
+6. Every field mentioned in the specification should be accessible by itself, not as a combination of fields like merging them into an integer type,
+so parsing a whole packet like `data: bytes &eod` is not allowed.
 
 ## Grammar
 ### Type declarations
@@ -51,6 +52,7 @@ public type Foo = unit {
   hint: since `&until=DELIM` consumes the delimiter value at the end of the field, there is no need to add the delimiter as a separate follow-up field.
 * Fields that have a fixed size of N bytes but contain null terminated strings should be declared like this:
 `bytes &size=N &convert=$$.split1(b"\0")[0].decode();`. This will only retain the significant part of the field.
+Note that `&eod` SHOULD NOT be used with `&until`, since this will be omitted.
 
 ### Regular Expressions
 Spicy provides POSIX-style regular expressions. Regular expression are typically of the form `/PATTERN/`, where `PATTERN` is a regular expression to match. In addition, regular expression constants can also consist of multiple patterns, separated by `|`. This creates a single regular expression constant that matches any of the patterns.
@@ -115,8 +117,7 @@ public type KeyValue = unit {
   value: bytes &until=b"\r\n";
 };
 ```
-This is the desired pattern for branching between requests and replies. Note that for this to work,
-methods have to be listed explictly, so that the look ahead parsing works correctly.
+This is the desired pattern for branching between requests and replies. Note that for this to work, methods MUST be listed explictly, so that the look ahead parsing works correctly, parsing with Token is wrong here.
 ```
 type RequestLine = unit {
     method: /GET|POST|DELETE/;

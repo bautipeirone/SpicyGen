@@ -110,6 +110,11 @@
     "spec_type": "rfc",
     "rfc_id": "5340"
   },
+  "rlogin": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "1258"
+  },
   "rtp": {
     "type": "binary",
     "spec_type": "rfc",
