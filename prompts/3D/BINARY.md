@@ -19,6 +19,7 @@
 13. In 3D, fields are referenced by name directly. Do not use dot notation such as `field.Type`, `header.length`, or `self.length`; that is not valid 3D.
 14. Do not use ternary expressions such as `cond ? a : b`.
 15. Use comments sparingly. Line comments use `//`. Block comments use `/* ... */` and do not nest.
+16. Declare and define types before using them.
 
 ## Basic file structure
 A typical 3D file has this shape:
@@ -487,11 +488,7 @@ Use:
 ```
 T field[:byte-size n]
 ```
-This means that `field` contains an array of `T` elements whose total byte size is `n`, or
-```
-T field[n]
-```
-to read an array of `n` elements of type `T`. The first one is preferred if the total amount of bytes is known.
+This means that `field` contains an array of `T` elements whose total byte size is `n`.
 Other possibility is to use `data[:consume-all]` to consume all remaining data in the stream. Only use it when its absolutely necessary.
 
 ## Variable-length payloads
