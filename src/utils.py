@@ -8,6 +8,7 @@ def read_config(path: Path | None) -> tuple[dict, dict]:
     # Defaults
     agent_config = {
         "max_retries": 15,
+        "enable_rfc_retrieval_tool" : False,
         "show_packet_representation": False,
         "show_parsing_tree": False
     }

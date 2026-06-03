@@ -224,6 +224,7 @@ def run_refinement_loop(
     Returns a tuple of (grammar_code, compiled_successfully, attempts, cost_summary).
     """
     max_retries = agent_config.get("max_retries")
+    rfc_retrieval_tool_enabled = agent_config.get("enable_rfc_retrieval_tool")
     show_packet_representation = agent_config.get("show_packet_representation")
     show_parsing_tree = agent_config.get("show_parsing_tree")
     include_parse_tree_summary = show_parsing_tree and target_language.supports_parse_tree_summary
@@ -358,13 +359,14 @@ def run_refinement_loop(
         ),
     )
 
-    autogen.agentchat.register_function(
-        retrieve_rfc_by_id_wrapper,
-        caller=assistant,
-        executor=user_proxy,
-        name="retrieve_rfc_by_id",
-        description="Retrieve an RFC text by its ID (e.g., '1035').",
-    )
+    if rfc_retrieval_tool_enabled:
+        autogen.agentchat.register_function(
+            retrieve_rfc_by_id_wrapper,
+            caller=assistant,
+            executor=user_proxy,
+            name="retrieve_rfc_by_id",
+            description="Retrieve an RFC text by its ID (e.g., '1035').",
+        )
 
     autogen.agentchat.register_function(
         parse_packets,

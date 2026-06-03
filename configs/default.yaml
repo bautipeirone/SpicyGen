@@ -7,5 +7,6 @@ llm:
 # Agent parameters
 agent:
     max_retries: 15
+    enable_rfc_retrieval_tool: true
     show_packet_representation: true
     show_parsing_tree: false
