@@ -8,6 +8,7 @@ from src.target_language import (
     get_target_language,
     list_supported_target_languages,
 )
+from src.prompts import build_refinement_system_message
 from src.utils import load_file, read_config
 from src.logger import enable_runtime_log_file, logger
 from src.protocol import load_protocol, load_spec, ProtocolType
@@ -15,13 +16,6 @@ from pathlib import Path
 import argparse
 import time
 import json
-
-PROMPT_TEMPLATE = """You are a communication protocol's specialist called {name}, and your job is to extract message structures from RFC specifications.
-You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
-Make sure to capture all the fields relationships. Value constraints for fields (e.g. "MUST be equal to 1") must be ommitted, but the field name must be included in the grammar.
-Use the tools provided to generate correct and complete grammars in this language for the RFC the user gives you as input.
-Retrieve any additional information you need from other RFCs using the provided tool, so the grammar is as complete as possible.
-"""
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -143,13 +137,16 @@ def main() -> None:
     llm_config = get_autogen_config(args.model, llm_params)
 
     model_name = args.model.split("-")[0]
-    prompt = PROMPT_TEMPLATE.format(name=model_name)
-    system_instruction = prompt + target_language_context
-    messages = [spec_content]
+    system_instruction = build_refinement_system_message(
+        model_name=model_name,
+        target_language_context=target_language_context,
+        target_language=target_language,
+        rfc_retrieval_tool_enabled=agent_config.get("enable_rfc_retrieval_tool", False),
+    )
 
     start_time = time.time()
     content, success, attempts, conversation_usage = run_refinement_loop(
-        llm_config, system_instruction, messages,
+        llm_config, system_instruction, spec_content,
         protocol=protocol,
         target_language=target_language,
         agent_config=agent_config,

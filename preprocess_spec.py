@@ -4,50 +4,16 @@ load_dotenv()
 from src.providers import get_autogen_config
 from src.logger import logger, enable_runtime_log_file
 from src.protocol import load_protocol, load_spec
-from src.usage import extract_cost_summary, merge_usage_reports
+from src.prompts import EXTRACT_INFO_SYSTEM_PROMPT
+from src.usage import merge_usage_reports
 from src.agent import query_llm_once, summarize_spec
 from src.utils import write_json_file, compute_text_stats
 from pathlib import Path
 import argparse
-import autogen
 import json
 import re
 import time
 from typing import Any
-from typing import Annotated
-from functools import cache
-
-
-# ---------------------------------------------------------------------------
-# Prompt templates
-# ---------------------------------------------------------------------------
-
-EXTRACT_INFO_SYSTEM_PROMPT = """\
-You are a communication protocol expert. Your task is to extract metadata about \
-a network protocol from the given RFC text and/or your training data.
-
-You MUST respond with a single JSON object (no markdown, no extra text) with \
-exactly the following fields:
-{
-  "type": "<text|binary>",
-  "port": <integer or null>,
-  "transport": "array of <tcp|udp|sctp|...> or [] if not applicable>",
-  "layer": "<application|session|transport|network|link| or null>",
-  "encoding": <ASN.1|CBOR|... or null>",
-  "checksum": <Internet Checksum|CRC16|CRC32|HMAC-SHA1|... or null>",
-}
-
-Rules:
-- "type" is "text" if the protocol payload is human-readable ASCII/UTF-8, \
-  otherwise "binary".
-- "port" is the well-known port number assigned by IANA, or null if not \
-  applicable / not assigned.
-- "transport" is the array of underlying transport protocols in lowercase \
-  (e.g. ["tcp", "udp"]), or [] if not applicable.
-- "layer" is the layer of the OSI model the protocol belongs to.
-- "encoding" is the encoding of the protocol message (e.g. "ASN.1", "CBOR", ...).
-- "checksum" is the checksum algorithm used in the protocol header, or null if not applicable.
-"""
 
 EXPECTED_INFO_FIELDS = ("type", "port", "transport", "layer", "encoding", "checksum")
 

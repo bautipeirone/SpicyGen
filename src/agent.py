@@ -7,40 +7,10 @@ from src.tools.extraction import extract_intervals
 from src.protocol import Protocol
 from src.target_language import TargetLanguage
 from src.logger import logger
+from src.prompts import SUMMARIZE_SPEC_SYSTEM_PROMPT
 from src.usage import extract_cost_summary, CostSummary
 from typing import Annotated, Any
 import autogen
-
-SUMMARIZE_SPEC_SYSTEM_PROMPT = """\
-You are a communication protocol expert. You are given the full text of an \
-RFC specification. Your task is to identify every interval of the document \
-that contains important information about the message grammar/format or the \
-protocol state machine.
-
-An interval is relevant if it describes:
-- Packet/message/frame structure or field layouts
-- Encoding rules (bit fields, TLVs, length-value, etc.)
-- Protocol state machines, transitions, or control flow
-- Finite-state automata or sequence diagrams describing protocol behaviour
-- ABNF or BNF grammar rules
-- Message type definitions or command/response formats
-
-An interval is NOT relevant if it only discusses:
-- Administrative or organisational information
-- References, acknowledgements, or IANA considerations boilerplate
-- Implementation details or platform-specific information
-- Programming interfaces or APIs (sockets, libraries, function calls, etc.)
-- General background or motivation without protocol details
-- Table of contents
-
-You MUST use the `select_intervals` tool to mark the relevant intervals. \
-Each interval is defined by a pair of strings: the start marker and the end \
-marker. These markers must be exact substrings of the document text — copy \
-them verbatim. For section headers, include the header AND the following line exactly as they appear. \
-Do NOT rewrite or paraphrase the document text. Select intervals that do not overlap.
-
-After you have marked all the relevant intervals, say "TERMINATE" to end the conversation.
-"""
 
 
 COMPILATION_FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the following errors:
@@ -55,20 +25,6 @@ RUNTIME_FEEDBACK_TEMPLATE = """The grammar you produced failed to parse the foll
 
 Please fix the grammar to handle these packets correctly, then use compile_grammar again."""
 
-AGENT_LOOP_INSTRUCTIONS = """
-IMPORTANT WORKFLOW — follow these steps in order:
-
-1. Write the grammar and use the `compile_grammar` tool to check if it compiles.
-2. If ``compile_grammar`` returns SUCCESS, use the `parse_packets` tool with the same grammar code to verify it against known protocol packets.
-   - If all packets pass, say TERMINATE.
-   - If some packets fail, fix the grammar and go back to step 1.{runtime_hint}
-3. If ``compile_grammar`` returns errors, fix the grammar and try again.
-4. If there are no packets registered for this protocol, you will be told so — in that case say TERMINATE after a successful compilation.
-
-You can also use the retrieve_rfc_by_id tool to fetch additional RFC documents if needed.
-"""
-
-
 @dataclass
 class State:
     protocol: Protocol
@@ -78,12 +34,6 @@ class State:
     best_score: int = 0
     best_code: str | None = None
 
-
-def build_agent_loop_instructions(target_language: TargetLanguage) -> str:
-    runtime_hint = ""
-    if target_language.supports_parse_tree_summary:
-        runtime_hint = " Use the packet summary provided in the runtime feedback to understand what is wrong with the grammar."
-    return AGENT_LOOP_INSTRUCTIONS.format(runtime_hint=runtime_hint)
 
 def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retrieve (e.g., '1035')"]) -> str:
     logger.debug("Retrieving RFC with ID: %s", rfc_id)
@@ -172,7 +122,7 @@ def summarize_spec(llm_config: dict, spec_content: str) -> tuple[str, dict[str, 
         name="SpecProxy",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=3,
-        is_termination_msg=lambda msg: "TERMINATE" == msg.get("content", "").strip() or result_holder.get("summary") is not None,
+        is_termination_msg=lambda msg: msg.get("content", "").strip().endswith("TERMINATE") or result_holder.get("summary") is not None,
         code_execution_config=False,
         default_auto_reply="Please use the `select_intervals` tool to mark the relevant parts of the document, then say TERMINATE.",
     )
@@ -213,7 +163,7 @@ def summarize_spec(llm_config: dict, spec_content: str) -> tuple[str, dict[str, 
 def run_refinement_loop(
     llm_config: dict,
     system_message: str,
-    messages: list[str],
+    spec_content: str,
     protocol: Protocol,
     target_language: TargetLanguage,
     agent_config: dict,
@@ -327,7 +277,6 @@ def run_refinement_loop(
             f"{target_language.display_name} does not provide parse tree summaries; runtime feedback will include accept/reject errors only."
         )
 
-    system_message = system_message + build_agent_loop_instructions(target_language)
     assistant = autogen.AssistantAgent(
         name=target_language.assistant_name,
         system_message=system_message,
@@ -342,7 +291,7 @@ def run_refinement_loop(
         name="CompilerProxy",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=max_retries * 3,
-        is_termination_msg=lambda x: (x.get("content", "") and "TERMINATE" == x.get("content", "").strip()) or state.attempt > max_retries,
+        is_termination_msg=lambda msg: msg.get("content", "").strip().endswith("TERMINATE") or state.attempt > max_retries,
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call
         default_auto_reply="Please use the `compile_grammar` tool to check if the grammar compiles. If it does not compile, correct the errors. If you think the grammar is perfect or cannot be fixed, say TERMINATE.",
@@ -379,8 +328,7 @@ def run_refinement_loop(
         ),
     )
 
-    initial_prompt = "\n".join(messages)
-    initial_prompt += "\n\nPlease output the grammar and use the compile_grammar tool to verify it."
+    initial_prompt = "\n".join([spec_content, "Please output the grammar and verify it with the given tools."])
 
     logger.info("System message and tools initialized. Starting the agent loop...")
     logger.info(f"LLM Config: {llm_config | { 'config_list' : '...' }}")
