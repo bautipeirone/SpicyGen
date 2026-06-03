@@ -1,0 +1,240 @@
+module IMAP4rev1_gpt;
+
+import spicy;
+
+const Atom = /[^()\{ \x00-\x1f\x7f%*"\\\]\r\n]+/;
+const Tag = /[^+()\{ \x00-\x1f\x7f%*"\\\]\r\n]+/;
+const NumberToken = /[0-9]+/;
+const QuotedChunk = /([^"\\\r\n]|\\["\\])*/;
+
+type Nil = unit {
+    value: b"NIL";
+};
+
+type Quoted = unit {
+    : b"\"";
+    value: QuotedChunk;
+    : b"\"";
+};
+
+type LiteralPrefix = unit {
+    : b"{";
+    count: NumberToken;
+    : b"}";
+    : b"\r\n";
+};
+
+type Literal = unit {
+    prefix: LiteralPrefix;
+    data: bytes &size=self.prefix.count.to_uint();
+};
+
+type StringValue = unit {
+    switch {
+        -> quoted: Quoted;
+        -> literal: Literal;
+    };
+};
+
+type NString = unit {
+    switch {
+        -> nil: Nil;
+        -> string_value: StringValue;
+    };
+};
+
+type AString = unit {
+    switch {
+        -> string_value: StringValue;
+        -> atom: Atom;
+    };
+};
+
+type Mailbox = unit {
+    value: AString;
+};
+
+type Number = unit {
+    value: NumberToken;
+};
+
+type RespTextCoded = unit {
+    response_code: bytes &until=b"]";
+    : b" ";
+    text: bytes &until=b"\r\n" &eod;
+};
+
+type RespText = unit {
+    first: bytes &size=1;
+    switch (self.first) {
+        b"[" -> coded: RespTextCoded;
+        * -> plain_rest: bytes &until=b"\r\n" &eod;
+    };
+};
+
+type StatusOk = unit { status: b"OK"; : b" "; text: RespText; };
+type StatusNo = unit { status: b"NO"; : b" "; text: RespText; };
+type StatusBad = unit { status: b"BAD"; : b" "; text: RespText; };
+type StatusPreauth = unit { status: b"PREAUTH"; : b" "; text: RespText; };
+type StatusBye = unit { status: b"BYE"; : b" "; text: RespText; };
+
+type CapabilityData = unit {
+    name: b"CAPABILITY";
+    rest: bytes &until=b"\r\n" &eod;
+};
+
+type FlagsData = unit {
+    name: b"FLAGS";
+    : b" ";
+    flags: bytes &until=b"\r\n" &eod;
+};
+
+type ListData = unit {
+    name: b"LIST";
+    : b" ";
+    attributes: bytes &until=b" ";
+    delimiter: NString;
+    : b" ";
+    mailbox: Mailbox;
+    : b"\r\n";
+};
+
+type LsubData = unit {
+    name: b"LSUB";
+    : b" ";
+    attributes: bytes &until=b" ";
+    delimiter: NString;
+    : b" ";
+    mailbox: Mailbox;
+    : b"\r\n";
+};
+
+type SearchData = unit {
+    name: b"SEARCH";
+    results: bytes &until=b"\r\n" &eod;
+};
+
+type StatusData = unit {
+    name: b"STATUS";
+    : b" ";
+    mailbox: Mailbox;
+    : b" ";
+    attributes: bytes &until=b"\r\n" &eod;
+};
+
+type NumberedKind = unit {
+    switch {
+        -> exists_data: NumberedExists;
+        -> recent_data: NumberedRecent;
+        -> expunge_data: NumberedExpunge;
+        -> fetch_data: NumberedFetch;
+    };
+};
+
+type NumberedExists = unit { name: b"EXISTS"; : b"\r\n"; };
+type NumberedRecent = unit { name: b"RECENT"; : b"\r\n"; };
+type NumberedExpunge = unit { name: b"EXPUNGE"; : b"\r\n"; };
+type NumberedFetch = unit { name: b"FETCH"; : b" "; attributes: bytes &until=b"\r\n" &eod; };
+
+type NumberedData = unit {
+    count: Number;
+    : b" ";
+    kind: NumberedKind;
+};
+
+type UntaggedPayload = unit {
+    switch {
+        -> ok: StatusOk;
+        -> no: StatusNo;
+        -> bad: StatusBad;
+        -> preauth: StatusPreauth;
+        -> bye: StatusBye;
+        -> capability: CapabilityData;
+        -> flags: FlagsData;
+        -> list_data: ListData;
+        -> lsub_data: LsubData;
+        -> search: SearchData;
+        -> status: StatusData;
+        -> numbered: NumberedData;
+    };
+};
+
+type StarLine = unit {
+    : b"*";
+    : b" ";
+    payload: UntaggedPayload;
+};
+
+type ContinueReq = unit {
+    : b"+";
+    : b" ";
+    data: bytes &until=b"\r\n" &eod;
+};
+
+type StatusAfterKeyword = unit {
+    : b" ";
+    text: RespText;
+};
+
+type EmptyTail = unit {
+    : b"\r\n";
+};
+
+type SpaceTail = unit {
+    : b" ";
+    rest: bytes &until=b"\r\n";
+};
+
+type SpaceTailEod = unit {
+    : b" ";
+    rest: bytes &eod;
+};
+
+type TaggedLine = unit {
+    tag: Tag;
+    : b" ";
+    keyword: Atom;
+    switch (self.keyword) {
+        b"OK" -> ok_text: StatusAfterKeyword;
+        b"NO" -> no_text: StatusAfterKeyword;
+        b"BAD" -> bad_text: StatusAfterKeyword;
+        b"CAPABILITY" -> capability_cmd: EmptyTail;
+        b"NOOP" -> noop_cmd: EmptyTail;
+        b"LOGOUT" -> logout_cmd: EmptyTail;
+        b"STARTTLS" -> starttls_cmd: EmptyTail;
+        b"CHECK" -> check_cmd: EmptyTail;
+        b"CLOSE" -> close_cmd: EmptyTail;
+        b"EXPUNGE" -> expunge_cmd: EmptyTail;
+        b"AUTHENTICATE" -> auth_cmd: SpaceTail;
+        b"LOGIN" -> login_cmd: SpaceTail;
+        b"APPEND" -> append_cmd: SpaceTailEod;
+        b"CREATE" -> create_cmd: SpaceTail;
+        b"DELETE" -> delete_cmd: SpaceTail;
+        b"EXAMINE" -> examine_cmd: SpaceTail;
+        b"SELECT" -> select_cmd: SpaceTail;
+        b"SUBSCRIBE" -> subscribe_cmd: SpaceTail;
+        b"UNSUBSCRIBE" -> unsubscribe_cmd: SpaceTail;
+        b"RENAME" -> rename_cmd: SpaceTail;
+        b"LIST" -> list_cmd: SpaceTail;
+        b"LSUB" -> lsub_cmd: SpaceTail;
+        b"STATUS" -> status_cmd: SpaceTail;
+        b"COPY" -> copy_cmd: SpaceTail;
+        b"FETCH" -> fetch_cmd: SpaceTail;
+        b"STORE" -> store_cmd: SpaceTail;
+        b"SEARCH" -> search_cmd: SpaceTail;
+        b"UID" -> uid_cmd: SpaceTail;
+        * -> x_cmd: SpaceTail;
+    };
+};
+
+type Message = unit {
+    switch {
+        -> star: StarLine;
+        -> continuation: ContinueReq;
+        -> tagged: TaggedLine;
+    };
+};
+
+public type IMAPMessage = unit {
+    messages: Message[] &eod;
+};

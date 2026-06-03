@@ -80,6 +80,11 @@
     "spec_type": "rfc",
     "rfc_id": "2236"
   },
+  "imap4": {
+    "type": "text",
+    "spec_type": "rfc",
+    "rfc_id": "3501"
+  },
   "ipv4": {
     "type": "binary",
     "spec_type": "rfc",
