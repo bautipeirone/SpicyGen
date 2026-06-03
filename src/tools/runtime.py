@@ -119,6 +119,9 @@ class SemanticCheckResult:
             lines.append("")
             lines.append("Packets tested:")
             for v in self.verdicts:
+                if v.passed:
+                    continue
+
                 lines.append(f"- {v.packet_path}: {'PASS' if v.passed else 'FAIL'}")
                 lines.append(f"Expected: {'ACCEPT' if v.expected_accept else 'REJECT'}")
                 lines.append(f"Actual: {'ACCEPTED' if v.actual_accept else 'REJECTED'}")
@@ -157,7 +160,11 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
         return None
 
     if packet_type == ProtocolType.TEXT:
-        packet = data.decode("utf-8", errors="replace")
+        packet = (
+            data.decode("utf-8", errors="replace")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+        )
         if not packet:
             return "<empty>"
         return packet

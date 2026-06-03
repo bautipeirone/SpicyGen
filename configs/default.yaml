@@ -7,5 +7,5 @@ llm:
 # Agent parameters
 agent:
     max_retries: 15
-    show_packet_representation: false
+    show_packet_representation: true
     show_parsing_tree: false

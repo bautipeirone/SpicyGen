@@ -24,6 +24,7 @@ so parsing a whole packet like `data: bytes &eod` is not allowed.
 ### Fields
 * Each field inside a unit has a type and an optional name. The type defines how that field will be parsed from raw input data. If a field has a name, it can later be referenced to access its value via `self.fieldName`. Consequently, all fields with semantic meanings have names, while those which are unlikely to be relevant later do not (e.g., whitespace). Fields like this are called anonymous, and can be used for special packet structures that do not correspond to packet fields (i.e. mandatory bytes at start of field, padding). You should always declare them like `: Type;`, this is, omit the name but not the colons.
 * Fields of integer type can be either signed (`intN`) or unsigned (`uintN`). In either case, N determines the number of bytes being parsed.
+* Boolean values are `True` and `False`.
 * You can use `void` as type for empty fields (i.e. 0 byte fields).
 * Fields may use the `&convert=EXPR` attribute to transform the read input. Inside the expression, `self` can be used to reference the state of the unit (i.e. `self.opcode`) and `$$` references to the read input that will be transformed (i.e. `&convert=$$.to_uint(16)`). It is very common to use `&convert` to cast a field into an enum like `op: uint8 &convert=Opcode($$)`.
 * Conditional fields are implemented by appending an `if(COND)` to the field declaration.
