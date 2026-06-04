@@ -1,0 +1,113 @@
+module IPv6_gpt;
+
+import spicy;
+
+type NextHeader = enum {
+    HopByHopOptions = 0,
+    ICMP = 1,
+    IGMP = 2,
+    IPv4 = 4,
+    TCP = 6,
+    UDP = 17,
+    IPv6 = 41,
+    Routing = 43,
+    Fragment = 44,
+    GRE = 47,
+    ESP = 50,
+    AH = 51,
+    ICMPv6 = 58,
+    NoNextHeader = 59,
+    DestinationOptions = 60,
+    Mobility = 135,
+    HIP = 139,
+    Shim6 = 140,
+};
+
+type OpaquePayload = unit(remaining: uint16) {
+    data: bytes &size=remaining;
+};
+
+type NoNextHeaderPayload = unit {
+    : void;
+};
+
+type HopByHopOptionsHeader = unit(remaining: uint16) {
+    next_header: uint8 &convert=NextHeader($$);
+    hdr_ext_len: uint8;
+    options: bytes &size=((self.hdr_ext_len + 1) * 8 - 2);
+    next: HeaderChain(self.next_header, remaining - ((self.hdr_ext_len + 1) * 8)) if (remaining > ((self.hdr_ext_len + 1) * 8));
+};
+
+type RoutingHeader = unit(remaining: uint16) {
+    next_header: uint8 &convert=NextHeader($$);
+    hdr_ext_len: uint8;
+    routing_type: uint8;
+    segments_left: uint8;
+    routing_data: bytes &size=((self.hdr_ext_len + 1) * 8 - 4);
+    next: HeaderChain(self.next_header, remaining - ((self.hdr_ext_len + 1) * 8)) if (remaining > ((self.hdr_ext_len + 1) * 8));
+};
+
+type FragmentHeader = unit(remaining: uint16) {
+    next_header: uint8 &convert=NextHeader($$);
+    reserved: uint8;
+    fragment_bits: bitfield(16) {
+        fragment_offset: 0..12;
+        res: 13..14;
+        m_flag: 15;
+    } &bit-order=spicy::BitOrder::MSB0;
+    identification: uint32;
+    next: HeaderChain(self.next_header, remaining - 8) if (remaining > 8);
+};
+
+type AuthenticationHeader = unit(remaining: uint16) {
+    next_header: uint8 &convert=NextHeader($$);
+    payload_len: uint8;
+    reserved: uint16;
+    spi: uint32;
+    sequence_number: uint32;
+    authentication_data: bytes &size=((self.payload_len + 2) * 4 - 12);
+    next: HeaderChain(self.next_header, remaining - ((self.payload_len + 2) * 4)) if (remaining > ((self.payload_len + 2) * 4));
+};
+
+type DestinationOptionsHeader = unit(remaining: uint16) {
+    next_header: uint8 &convert=NextHeader($$);
+    hdr_ext_len: uint8;
+    options: bytes &size=((self.hdr_ext_len + 1) * 8 - 2);
+    next: HeaderChain(self.next_header, remaining - ((self.hdr_ext_len + 1) * 8)) if (remaining > ((self.hdr_ext_len + 1) * 8));
+};
+
+type EncapsulatingSecurityPayload = unit(remaining: uint16) {
+    payload: bytes &size=remaining;
+};
+
+type HeaderChain = unit(next_header: NextHeader, remaining: uint16) {
+    switch (next_header) {
+        NextHeader::HopByHopOptions -> hop_by_hop: HopByHopOptionsHeader(remaining);
+        NextHeader::Routing -> routing: RoutingHeader(remaining);
+        NextHeader::Fragment -> fragment: FragmentHeader(remaining);
+        NextHeader::AH -> authentication: AuthenticationHeader(remaining);
+        NextHeader::ESP -> esp: EncapsulatingSecurityPayload(remaining);
+        NextHeader::DestinationOptions -> destination_options: DestinationOptionsHeader(remaining);
+        NextHeader::NoNextHeader -> no_next_header: NoNextHeaderPayload;
+        NextHeader::IPv6 -> ipv6: IPv6Packet;
+        * -> upper_layer: OpaquePayload(remaining);
+    };
+};
+
+type IPv6Packet = unit {
+    version_class_flow: bitfield(32) {
+        version: 0..3;
+        traffic_class: 4..11;
+        flow_label: 12..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    payload_length: uint16;
+    next_header: uint8 &convert=NextHeader($$);
+    hop_limit: uint8;
+    source_address: addr &ipv6;
+    destination_address: addr &ipv6;
+    payload: HeaderChain(self.next_header, self.payload_length) if (self.payload_length > 0);
+};
+
+public type IPv6 = unit {
+    packet: IPv6Packet;
+};

@@ -1,0 +1,135 @@
+module ICMPv4_gpt;
+
+import spicy;
+
+type ICMPv4Type = enum {
+    EchoReply = 0,
+    DestinationUnreachable = 3,
+    SourceQuench = 4,
+    Redirect = 5,
+    Echo = 8,
+    RouterAdvertisement = 9,
+    RouterSolicitation = 10,
+    TimeExceeded = 11,
+    ParameterProblem = 12,
+    Timestamp = 13,
+    TimestampReply = 14,
+    InformationRequest = 15,
+    InformationReply = 16,
+    AddressMaskRequest = 17,
+    AddressMaskReply = 18,
+};
+
+type EchoMessage = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    data: bytes &eod;
+};
+
+type QuotedInternetDatagram = unit {
+    data: bytes &eod;
+};
+
+type DestinationUnreachableFragNeededMessage = unit {
+    unused: uint16;
+    next_hop_mtu: uint16;
+    quoted_datagram: QuotedInternetDatagram;
+};
+
+type DestinationUnreachableOtherMessage = unit {
+    unused: uint32;
+    quoted_datagram: QuotedInternetDatagram;
+};
+
+type DestinationUnreachableMessage = unit(code: uint8) {
+    switch ( code ) {
+        4 -> frag_needed: DestinationUnreachableFragNeededMessage;
+        * -> other: DestinationUnreachableOtherMessage;
+    };
+};
+
+type SourceQuenchMessage = unit {
+    unused: uint32;
+    quoted_datagram: QuotedInternetDatagram;
+};
+
+type RedirectMessage = unit {
+    gateway_internet_address: addr &ipv4;
+    quoted_datagram: QuotedInternetDatagram;
+};
+
+type RouterAddressEntry = unit(address_entry_size: uint8) {
+    router_address: addr &ipv4 if ( address_entry_size > 0 );
+    preference_level: uint32 if ( address_entry_size > 1 );
+    extra: bytes &size=(address_entry_size * 4 - 8) if ( address_entry_size > 2 );
+};
+
+type RouterAdvertisementMessage = unit {
+    num_addresses: uint8;
+    address_entry_size: uint8;
+    lifetime: uint16 &convert=cast<interval>($$);
+    entries: RouterAddressEntry(self.address_entry_size)[self.num_addresses];
+    data: bytes &eod;
+};
+
+type RouterSolicitationMessage = unit {
+    reserved: uint32;
+    data: bytes &eod;
+};
+
+type TimeExceededMessage = unit {
+    unused: uint32;
+    quoted_datagram: QuotedInternetDatagram;
+};
+
+type ParameterProblemMessage = unit(code: uint8) {
+    pointer: uint8;
+    data_field: bytes &size=3;
+    quoted_datagram: QuotedInternetDatagram;
+};
+
+type TimestampMessage = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    originate_timestamp: uint32 &convert=cast<interval>($$);
+    receive_timestamp: uint32 &convert=cast<interval>($$);
+    transmit_timestamp: uint32 &convert=cast<interval>($$);
+    data: bytes &eod;
+};
+
+type InformationMessage = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    data: bytes &eod;
+};
+
+type AddressMaskMessage = unit {
+    identifier: uint16;
+    sequence_number: uint16;
+    address_mask: addr &ipv4;
+    data: bytes &eod;
+};
+
+public type ICMPv4 = unit {
+    type_value: uint8 &convert=ICMPv4Type($$);
+    code: uint8;
+    checksum: uint16;
+    switch ( self.type_value ) {
+        ICMPv4Type::EchoReply -> echo_reply: EchoMessage;
+        ICMPv4Type::DestinationUnreachable -> destination_unreachable: DestinationUnreachableMessage(self.code);
+        ICMPv4Type::SourceQuench -> source_quench: SourceQuenchMessage;
+        ICMPv4Type::Redirect -> redirect: RedirectMessage;
+        ICMPv4Type::Echo -> echo: EchoMessage;
+        ICMPv4Type::RouterAdvertisement -> router_advertisement: RouterAdvertisementMessage;
+        ICMPv4Type::RouterSolicitation -> router_solicitation: RouterSolicitationMessage;
+        ICMPv4Type::TimeExceeded -> time_exceeded: TimeExceededMessage;
+        ICMPv4Type::ParameterProblem -> parameter_problem: ParameterProblemMessage(self.code);
+        ICMPv4Type::Timestamp,
+        ICMPv4Type::TimestampReply -> timestamp: TimestampMessage;
+        ICMPv4Type::InformationRequest,
+        ICMPv4Type::InformationReply -> information: InformationMessage;
+        ICMPv4Type::AddressMaskRequest,
+        ICMPv4Type::AddressMaskReply -> address_mask: AddressMaskMessage;
+        * -> data: bytes &eod;
+    };
+};

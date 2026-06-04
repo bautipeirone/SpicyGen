@@ -1,0 +1,47 @@
+module HTTP1_1_gpt;
+
+import spicy;
+
+const Token = /[^ \t\r\n]+/;
+const HeaderName = /[^:\r\n]+/;
+const WhiteSpace = /[ \t]+/;
+const OptionalWhiteSpace = /[ \t]*/;
+const CRLF = /\r\n/;
+const HTTPVersion = /HTTP\/[0-9]\.[0-9]/;
+const Method = /GET|HEAD|POST|PUT|DELETE|CONNECT|OPTIONS|TRACE|PATCH/;
+const RequestTarget = /[^ \t\r\n]+/;
+const ReasonPhrase = /[^\r\n]*/;
+
+type RequestLine = unit {
+    method: Method;
+    : WhiteSpace;
+    target: RequestTarget;
+    : WhiteSpace;
+    version: HTTPVersion;
+    : CRLF;
+};
+
+type StatusLine = unit {
+    version: HTTPVersion;
+    : WhiteSpace;
+    status_code: /[0-9][0-9][0-9]/;
+    : OptionalWhiteSpace;
+    reason_phrase: bytes &until=b"\r\n";
+};
+
+type Header = unit {
+    name: HeaderName;
+    : b":";
+    : OptionalWhiteSpace;
+    value: bytes &until=b"\r\n";
+};
+
+public type HTTPMessage = unit {
+    switch {
+        -> request_line: RequestLine;
+        -> status_line: StatusLine;
+    };
+    headers: Header[];
+    : CRLF;
+    body: bytes &eod;
+};

@@ -1,0 +1,200 @@
+module DHCP_gpt;
+
+import spicy;
+
+type BootpOp = enum {
+    BOOTREQUEST = 1,
+    BOOTREPLY = 2,
+};
+
+type DHCPMessageType = enum {
+    DHCPDISCOVER = 1,
+    DHCPOFFER = 2,
+    DHCPREQUEST = 3,
+    DHCPDECLINE = 4,
+    DHCPACK = 5,
+    DHCPNAK = 6,
+    DHCPRELEASE = 7,
+    DHCPINFORM = 8,
+};
+
+type OptionCode = enum {
+    Pad = 0,
+    SubnetMask = 1,
+    TimeOffset = 2,
+    Router = 3,
+    TimeServer = 4,
+    NameServer = 5,
+    DomainNameServer = 6,
+    LogServer = 7,
+    CookieServer = 8,
+    LPRServer = 9,
+    ImpressServer = 10,
+    ResourceLocationServer = 11,
+    HostName = 12,
+    BootFileSize = 13,
+    MeritDumpFile = 14,
+    DomainName = 15,
+    SwapServer = 16,
+    RootPath = 17,
+    ExtensionsPath = 18,
+    IPForwardingEnableDisable = 19,
+    NonLocalSourceRoutingEnableDisable = 20,
+    PolicyFilter = 21,
+    MaximumDatagramReassemblySize = 22,
+    DefaultIPTimeToLive = 23,
+    PathMTUAgingTimeout = 24,
+    PathMTUPlateauTable = 25,
+    InterfaceMTU = 26,
+    AllSubnetsAreLocal = 27,
+    BroadcastAddress = 28,
+    PerformMaskDiscovery = 29,
+    MaskSupplier = 30,
+    PerformRouterDiscovery = 31,
+    RouterSolicitationAddress = 32,
+    StaticRoute = 33,
+    TrailerEncapsulation = 34,
+    ARPCacheTimeout = 35,
+    EthernetEncapsulation = 36,
+    TCPDefaultTTL = 37,
+    TCPKeepaliveInterval = 38,
+    TCPKeepaliveGarbage = 39,
+    NetworkInformationServiceDomain = 40,
+    NetworkInformationServers = 41,
+    NetworkTimeProtocolServers = 42,
+    VendorSpecificInformation = 43,
+    NetBIOSOverTCPIPNameServer = 44,
+    NetBIOSOverTCPIPDatagramDistributionServer = 45,
+    NetBIOSOverTCPIPNodeType = 46,
+    NetBIOSOverTCPIPScope = 47,
+    XWindowSystemFontServer = 48,
+    XWindowSystemDisplayManager = 49,
+    RequestedIPAddress = 50,
+    IPAddressLeaseTime = 51,
+    OptionOverload = 52,
+    DHCPMessageType = 53,
+    ServerIdentifier = 54,
+    ParameterRequestList = 55,
+    Message = 56,
+    MaximumDHCPMessageSize = 57,
+    RenewalTimeValue = 58,
+    RebindingTimeValue = 59,
+    ClassIdentifier = 60,
+    ClientIdentifier = 61,
+};
+
+type PolicyFilterEntry = unit {
+    address: addr &ipv4;
+    mask: addr &ipv4;
+};
+
+type StaticRouteEntry = unit {
+    destination: addr &ipv4;
+    router: addr &ipv4;
+};
+
+type ClientIdentifierOption = unit(len: uint8) {
+    hw_type: uint8;
+    identifier: bytes &size=(len - 1);
+};
+
+type DHCPOption = unit {
+    code: uint8 &convert=OptionCode($$) &requires=($$ != 255);
+
+    switch (self.code) {
+        OptionCode::Pad -> : void;
+        * -> {
+            len: uint8;
+
+            switch (self.code) {
+                OptionCode::SubnetMask -> subnet_mask: addr &ipv4;
+                OptionCode::TimeOffset -> time_offset: int32 &convert=cast<interval>($$);
+                OptionCode::Router -> routers: (addr &ipv4)[self.len / 4];
+                OptionCode::TimeServer -> time_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::NameServer -> name_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::DomainNameServer -> domain_name_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::LogServer -> log_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::CookieServer -> cookie_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::LPRServer -> lpr_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::ImpressServer -> impress_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::ResourceLocationServer -> resource_location_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::HostName -> host_name: bytes &size=self.len &convert=$$.decode();
+                OptionCode::BootFileSize -> boot_file_size: uint16;
+                OptionCode::MeritDumpFile -> merit_dump_file: bytes &size=self.len &convert=$$.decode();
+                OptionCode::DomainName -> domain_name: bytes &size=self.len &convert=$$.decode();
+                OptionCode::SwapServer -> swap_server: addr &ipv4;
+                OptionCode::RootPath -> root_path: bytes &size=self.len &convert=$$.decode();
+                OptionCode::ExtensionsPath -> extensions_path: bytes &size=self.len &convert=$$.decode();
+                OptionCode::IPForwardingEnableDisable -> ip_forwarding_enable_disable: uint8;
+                OptionCode::NonLocalSourceRoutingEnableDisable -> non_local_source_routing_enable_disable: uint8;
+                OptionCode::PolicyFilter -> policy_filters: PolicyFilterEntry[self.len / 8];
+                OptionCode::MaximumDatagramReassemblySize -> maximum_datagram_reassembly_size: uint16;
+                OptionCode::DefaultIPTimeToLive -> default_ip_time_to_live: uint8;
+                OptionCode::PathMTUAgingTimeout -> path_mtu_aging_timeout: uint32 &convert=cast<interval>($$);
+                OptionCode::PathMTUPlateauTable -> path_mtu_plateau_table: uint16[self.len / 2];
+                OptionCode::InterfaceMTU -> interface_mtu: uint16;
+                OptionCode::AllSubnetsAreLocal -> all_subnets_are_local: uint8;
+                OptionCode::BroadcastAddress -> broadcast_address: addr &ipv4;
+                OptionCode::PerformMaskDiscovery -> perform_mask_discovery: uint8;
+                OptionCode::MaskSupplier -> mask_supplier: uint8;
+                OptionCode::PerformRouterDiscovery -> perform_router_discovery: uint8;
+                OptionCode::RouterSolicitationAddress -> router_solicitation_address: addr &ipv4;
+                OptionCode::StaticRoute -> static_routes: StaticRouteEntry[self.len / 8];
+                OptionCode::TrailerEncapsulation -> trailer_encapsulation: uint8;
+                OptionCode::ARPCacheTimeout -> arp_cache_timeout: uint32 &convert=cast<interval>($$);
+                OptionCode::EthernetEncapsulation -> ethernet_encapsulation: uint8;
+                OptionCode::TCPDefaultTTL -> tcp_default_ttl: uint8;
+                OptionCode::TCPKeepaliveInterval -> tcp_keepalive_interval: uint32 &convert=cast<interval>($$);
+                OptionCode::TCPKeepaliveGarbage -> tcp_keepalive_garbage: uint8;
+                OptionCode::NetworkInformationServiceDomain -> network_information_service_domain: bytes &size=self.len &convert=$$.decode();
+                OptionCode::NetworkInformationServers -> network_information_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::NetworkTimeProtocolServers -> network_time_protocol_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::VendorSpecificInformation -> vendor_specific_information: bytes &size=self.len;
+                OptionCode::NetBIOSOverTCPIPNameServer -> netbios_over_tcpip_name_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::NetBIOSOverTCPIPDatagramDistributionServer -> netbios_over_tcpip_datagram_distribution_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::NetBIOSOverTCPIPNodeType -> netbios_over_tcpip_node_type: uint8;
+                OptionCode::NetBIOSOverTCPIPScope -> netbios_over_tcpip_scope: bytes &size=self.len &convert=$$.decode();
+                OptionCode::XWindowSystemFontServer -> x_window_system_font_servers: (addr &ipv4)[self.len / 4];
+                OptionCode::XWindowSystemDisplayManager -> x_window_system_display_managers: (addr &ipv4)[self.len / 4];
+                OptionCode::RequestedIPAddress -> requested_ip_address: addr &ipv4;
+                OptionCode::IPAddressLeaseTime -> ip_address_lease_time: uint32 &convert=cast<interval>($$);
+                OptionCode::OptionOverload -> option_overload: uint8;
+                OptionCode::DHCPMessageType -> dhcp_message_type: uint8 &convert=DHCPMessageType($$);
+                OptionCode::ServerIdentifier -> server_identifier: addr &ipv4;
+                OptionCode::ParameterRequestList -> parameter_request_list: uint8[self.len];
+                OptionCode::Message -> message: bytes &size=self.len &convert=$$.decode();
+                OptionCode::MaximumDHCPMessageSize -> maximum_dhcp_message_size: uint16;
+                OptionCode::RenewalTimeValue -> renewal_time_value: uint32 &convert=cast<interval>($$);
+                OptionCode::RebindingTimeValue -> rebinding_time_value: uint32 &convert=cast<interval>($$);
+                OptionCode::ClassIdentifier -> class_identifier: bytes &size=self.len &convert=$$.decode();
+                OptionCode::ClientIdentifier -> client_identifier: ClientIdentifierOption(self.len);
+                * -> data: bytes &size=self.len;
+            };
+        }
+    };
+};
+
+public type DHCPMessage = unit {
+    op: uint8 &convert=BootpOp($$);
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16 &convert=cast<interval>($$);
+    flags: bitfield(16) {
+        broadcast: 0;
+        reserved: 1..15;
+    } &bit-order=spicy::BitOrder::MSB0;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=self.hlen;
+    chaddr_padding: bytes &size=(16 - self.hlen);
+    server_name: bytes &size=64 &convert=$$.split1(b"\0")[0].decode();
+    boot_filename: bytes &size=128 &convert=$$.split1(b"\0")[0].decode();
+    magic_cookie: b"\x63\x82\x53\x63";
+    options: DHCPOption[];
+    end_option: uint8(255);
+    padding: bytes &eod;
+};
