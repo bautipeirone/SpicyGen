@@ -16,6 +16,7 @@ from pathlib import Path
 import argparse
 import time
 import json
+from typing import Any
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -94,6 +95,41 @@ def get_default_instructions_file(target_language_name: str, protocol_type: Prot
     return get_target_language(target_language_name).instructions_path_for(protocol_type)
 
 
+def infer_spec_source(spec_file: Path | None) -> str:
+    if spec_file is None:
+        return "protocol_spec"
+    return str(spec_file)
+
+
+def build_metrics(
+    *,
+    model: str,
+    protocol_name: str,
+    target_language_name: str,
+    success: bool,
+    spec_source: str,
+    refinement_stats: dict[str, Any],
+    elapsed_time_s: float,
+    usage: dict[str, Any] | None,
+) -> dict[str, Any]:
+    return {
+        "model": model,
+        "protocol": protocol_name,
+        "target_language": target_language_name,
+        "success": success,
+        "spec_source": spec_source,
+        "positive_packets": refinement_stats["positive_packets"],
+        "negative_packets": refinement_stats["negative_packets"],
+        "max_total_retries": refinement_stats["max_total_retries"],
+        "best_iteration": refinement_stats["best_iteration"],
+        "termination_reason": refinement_stats["termination_reason"],
+        "first_successful_compile_iteration": refinement_stats["first_successful_compile_iteration"],
+        "iterations": refinement_stats["iterations"],
+        "time_elapsed_s": round(elapsed_time_s, 2),
+        "usage": usage,
+    }
+
+
 def main() -> None:
     args = parse_args()
     runtime_log_path = args.debug_dir / "runtime.log" if args.debug_dir else None
@@ -145,7 +181,7 @@ def main() -> None:
     )
 
     start_time = time.time()
-    content, success, attempts, conversation_usage = run_refinement_loop(
+    content, success, refinement_stats, conversation_usage = run_refinement_loop(
         llm_config, system_instruction, spec_content,
         protocol=protocol,
         target_language=target_language,
@@ -154,15 +190,16 @@ def main() -> None:
     )
     elapsed_time = time.time() - start_time
 
-    metrics = {
-        "model": args.model,
-        "protocol": protocol.name,
-        "target_language": target_language.name,
-        "success": success,
-        "attempts": attempts,
-        "time_elapsed_s": round(elapsed_time, 2),
-        "usage": conversation_usage,
-    }
+    metrics = build_metrics(
+        model=args.model,
+        protocol_name=protocol.name,
+        target_language_name=target_language.name,
+        success=success,
+        spec_source=infer_spec_source(args.spec_file),
+        refinement_stats=refinement_stats,
+        elapsed_time_s=elapsed_time,
+        usage=conversation_usage,
+    )
 
     if args.metrics_file:
         with args.metrics_file.open("w") as f:

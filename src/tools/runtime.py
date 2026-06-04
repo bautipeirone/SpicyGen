@@ -181,21 +181,11 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
     return None
 
 
-def run_parser_check(
-    parser_source: str | Path,
-    runtime: RuntimeAdapter,
-    protocol: Protocol,
-    include_parse_tree_summary: bool,
-    debug_info: dict[str, Path | None] | None = None,
-) -> SemanticCheckResult:
-    """Run a parser against all packets for *protocol* found on disk."""
-    protocol_name = protocol.name
+def get_protocol_packet_paths(protocol_name: str) -> tuple[list[str], list[str]]:
+    """Return relative accept/reject packet paths for a protocol."""
     protocol_dir = _RAW_BASE_DIR / protocol_name
     accept_dir = protocol_dir / "positive"
     reject_dir = protocol_dir / "negative"
-
-    build_dir = debug_info.get("build_dir") if debug_info else None
-    errors_path = debug_info.get("errors_path") if debug_info else None
 
     accept_packets = sorted(
         str(path.relative_to(_RAW_BASE_DIR))
@@ -207,6 +197,25 @@ def run_parser_check(
         for path in reject_dir.rglob("*.bin")
         if path.is_file()
     ) if reject_dir.exists() else []
+
+    return accept_packets, reject_packets
+
+
+def run_parser_check(
+    parser_source: str | Path,
+    runtime: RuntimeAdapter,
+    protocol: Protocol,
+    include_parse_tree_summary: bool,
+    debug_info: dict[str, Path | None] | None = None,
+) -> SemanticCheckResult:
+    """Run a parser against all packets for *protocol* found on disk."""
+    protocol_name = protocol.name
+    protocol_dir = _RAW_BASE_DIR / protocol_name
+
+    build_dir = debug_info.get("build_dir") if debug_info else None
+    errors_path = debug_info.get("errors_path") if debug_info else None
+
+    accept_packets, reject_packets = get_protocol_packet_paths(protocol_name)
 
     result = SemanticCheckResult(protocol=protocol)
 

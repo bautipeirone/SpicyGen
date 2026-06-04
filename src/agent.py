@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from src.tools.compiler import run_grammar_compiler
-from src.tools.runtime import run_parser_check_from_code
+from src.tools.runtime import get_protocol_packet_paths, run_parser_check_from_code
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from src.tools.extraction import extract_intervals
 from src.protocol import Protocol
@@ -33,6 +33,25 @@ class State:
     success: bool = False
     best_score: int = 0
     best_code: str | None = None
+    best_iteration: int | None = None
+    termination_reason: str | None = None
+    iterations: list["IterationStats"] = field(default_factory=list)
+
+
+@dataclass
+class IterationStats:
+    compiled: bool = False
+    positive_accepted: int = 0
+    negative_accepted: int = 0
+    changed_from_previous: bool = False
+
+    def as_dict(self) -> dict[str, bool | int]:
+        return {
+            "compiled": self.compiled,
+            "positive_accepted": self.positive_accepted,
+            "negative_accepted": self.negative_accepted,
+            "changed_from_previous": self.changed_from_previous,
+        }
 
 
 def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retrieve (e.g., '1035')"]) -> str:
@@ -168,10 +187,10 @@ def run_refinement_loop(
     target_language: TargetLanguage,
     agent_config: dict,
     debug_dir: Path | None = None,
-) -> tuple[str, bool, int, dict[str, CostSummary]]:
+) -> tuple[str, bool, dict[str, Any], dict[str, CostSummary] | None]:
     """Run the compile-feedback agent loop using Autogen.
 
-    Returns a tuple of (grammar_code, compiled_successfully, attempts, cost_summary).
+    Returns a tuple of (grammar_code, completed_successfully, refinement_stats, cost_summary).
     """
     max_retries = agent_config.get("max_retries")
     rfc_retrieval_tool_enabled = agent_config.get("enable_rfc_retrieval_tool")
@@ -190,15 +209,22 @@ def run_refinement_loop(
         errors_dir.mkdir(parents=True, exist_ok=True)
         build_dir.mkdir(parents=True, exist_ok=True)
 
+    positive_packets, negative_packets = get_protocol_packet_paths(protocol.name)
     state = State(protocol=protocol)
 
     def compile_grammar(code: Annotated[str, "The grammar code to compile"]) -> str:
         cleaned_code = target_language.response_cleaner(code)
         if not cleaned_code:
             cleaned_code = code # Fallback just in case
-        
+
+        previous_code = state.last_code
         state.attempt += 1
         state.last_code = cleaned_code
+        state.iterations.append(
+            IterationStats(
+                changed_from_previous=(state.attempt > 1 and cleaned_code != previous_code),
+            )
+        )
         step_path = (
             refinement_dir / f"Grammar_{state.attempt}{target_language.source_extension}"
             if refinement_dir else None
@@ -213,6 +239,7 @@ def run_refinement_loop(
         result = run_grammar_compiler(cleaned_code, target_language.compile_fn, target_language.source_extension, debug_info=debug_info)
 
         if result.success:
+            state.iterations[-1].compiled = True
             logger.info(f"Compilation succeeded on attempt {state.attempt}.")
             return "SUCCESS"
 
@@ -220,8 +247,9 @@ def run_refinement_loop(
         logger.error(f"Compilation Errors:\n{result.errors}\n")
 
         if state.attempt >= max_retries:
+            state.termination_reason = "max_retries"
             logger.warning(f"Reached max compilation attempts ({max_retries}). Stopping.")
-            return f"{COMPILATION_FEEDBACK_TEMPLATE.format(errors=result.errors)}\n\nThis was the last allowed attempt. Please say TERMINATE."
+            return "This was the last allowed attempt. Please say TERMINATE."
 
         return COMPILATION_FEEDBACK_TEMPLATE.format(errors=result.errors)
 
@@ -247,6 +275,9 @@ def run_refinement_loop(
             include_parse_tree_summary=include_parse_tree_summary,
             debug_info=debug_info,
         )
+        if state.iterations:
+            state.iterations[-1].positive_accepted = check_result.accept_passed
+            state.iterations[-1].negative_accepted = check_result.reject_passed
 
         if check_result.setup_error:
             logger.warning(f"Runtime setup FAILED for '{state.protocol.name}'.")
@@ -258,14 +289,16 @@ def run_refinement_loop(
             return f"No packets registered for protocol '{state.protocol.name}'. Say TERMINATE if the grammar compiled successfully."
 
         score = check_result.score
-        if score > state.best_score:
+        if score > state.best_score or state.best_iteration is None:
             state.best_score = score
             state.best_code = cleaned_code
+            state.best_iteration = state.attempt
             logger.info(f"New best score: {score} on attempt {state.attempt}.")
 
         summary = check_result.summary(show_packet_representation=show_packet_representation)
         if check_result.all_passed:
             state.success = True
+            state.termination_reason = "success"
             logger.info(f"Runtime check PASSED for '{state.protocol.name}'.")
             return f"All packets parsed correctly. Say TERMINATE."
         else:
@@ -346,7 +379,28 @@ def run_refinement_loop(
         )
     except Exception as e:
         logger.error(f"Agent loop terminated with an exception: {e}")
+        state.termination_reason = "runtime_exception"
+
+    if state.termination_reason is None:
+        state.termination_reason = "agent_terminated"
 
     code_to_return = state.best_code if state.best_code is not None else state.last_code
     cost_summary = extract_cost_summary(chat_result.cost) if chat_result is not None else None
-    return code_to_return, state.success, state.attempt, cost_summary
+    first_successful_compile_iteration = next(
+        (
+            index
+            for index, iteration in enumerate(state.iterations, start=1)
+            if iteration.compiled
+        ),
+        None,
+    )
+    refinement_stats = {
+        "positive_packets": len(positive_packets),
+        "negative_packets": len(negative_packets),
+        "max_total_retries": max_retries,
+        "best_iteration": state.best_iteration,
+        "termination_reason": state.termination_reason,
+        "first_successful_compile_iteration": first_successful_compile_iteration,
+        "iterations": [iteration.as_dict() for iteration in state.iterations],
+    }
+    return code_to_return, state.success, refinement_stats, cost_summary

@@ -4,6 +4,8 @@ These are pure-function tests for utility and preprocessing logic that
 is likely to be edited as the project evolves.
 """
 
+from pathlib import Path
+
 import pytest
 
 from src.utils import (
@@ -21,6 +23,7 @@ from src.tools._3d.wrapper import (
 )
 from src.usage import merge_usage_reports
 from preprocess_spec import compute_info_stats
+from generate_grammar import build_metrics, infer_spec_source
 
 
 # ---------------------------------------------------------------------------
@@ -135,6 +138,73 @@ class TestComputeInfoStats:
         info = {"type": "text", "port": 80}
         stats = compute_info_stats(info)
         assert "transport" in stats["missing_fields"]
+
+
+# ---------------------------------------------------------------------------
+# build_metrics
+# ---------------------------------------------------------------------------
+
+class TestBuildMetrics:
+
+    def test_includes_iteration_log_and_summary_fields(self):
+        metrics = build_metrics(
+            model="test-model",
+            protocol_name="dns",
+            target_language_name="spicy",
+            success=True,
+            spec_source="preprocessed_summary",
+            refinement_stats={
+                "positive_packets": 12,
+                "negative_packets": 3,
+                "max_total_retries": 5,
+                "best_iteration": 2,
+                "termination_reason": "success",
+                "first_successful_compile_iteration": 2,
+                "iterations": [
+                    {
+                        "compiled": False,
+                        "positive_accepted": 0,
+                        "negative_accepted": 0,
+                        "changed_from_previous": False,
+                    },
+                    {
+                        "compiled": True,
+                        "positive_accepted": 11,
+                        "negative_accepted": 2,
+                        "changed_from_previous": True,
+                    },
+                ],
+            },
+            elapsed_time_s=1.234,
+            usage={"total": {"tokens": 42}},
+        )
+
+        assert metrics["model"] == "test-model"
+        assert metrics["protocol"] == "dns"
+        assert metrics["target_language"] == "spicy"
+        assert metrics["success"] is True
+        assert metrics["spec_source"] == "preprocessed_summary"
+        assert metrics["positive_packets"] == 12
+        assert metrics["negative_packets"] == 3
+        assert metrics["max_total_retries"] == 5
+        assert metrics["best_iteration"] == 2
+        assert metrics["termination_reason"] == "success"
+        assert metrics["first_successful_compile_iteration"] == 2
+        assert metrics["iterations"][0]["compiled"] is False
+        assert metrics["iterations"][1]["positive_accepted"] == 11
+        assert metrics["iterations"][1]["negative_accepted"] == 2
+        assert metrics["iterations"][1]["changed_from_previous"] is True
+        assert "attempts" not in metrics
+        assert metrics["time_elapsed_s"] == 1.23
+
+
+class TestInferSpecSource:
+
+    def test_defaults_to_protocol_spec(self):
+        assert infer_spec_source(None) == "protocol_spec"
+
+    def test_detects_custom_spec_file(self):
+        assert infer_spec_source(Path("/tmp/custom.txt")) == "/tmp/custom.txt"
 
 
 # ---------------------------------------------------------------------------
