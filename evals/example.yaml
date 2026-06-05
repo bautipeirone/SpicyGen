@@ -1,0 +1,55 @@
+# Example evaluation configuration for run_eval.py
+#
+# This file defines an evaluation "matrix": every combination of
+# (protocol × model × config × target_language) will be executed as an
+# individual run of generate_grammar.py.
+#
+# Usage:
+#   python run_eval.py evals/example.yaml
+#   python run_eval.py evals/example.yaml --dry-run
+#   python run_eval.py evals/example.yaml --debug
+#   python run_eval.py evals/example.yaml --resume --eval-dir outputs/20260605_...
+
+# Human-readable name for this evaluation session.
+# Used in the output directory name and summary.
+name: "binary-protocols-comparison"
+
+# Optional note for context (appears in README.md and summary.md).
+note: "Compare Gemini vs Qwen on core binary protocols with RFC retrieval enabled"
+
+# Global defaults applied to every protocol unless overridden.
+defaults:
+  models:
+    - "gemini-3.5-flash"
+    - "qwen3-coder"
+  configs:
+    - "configs/default.yaml"
+  target_languages:
+    - "spicy"
+  # Set to true to run all protocols without a specification file.
+  # Can be overridden per-protocol.
+  no_spec: false
+
+# Protocol-specific configuration.
+# Each key is a protocol name (must exist in protocol_index.json).
+# Values can override any of the global defaults.
+protocols:
+  dhcp:
+    # Use a custom spec file for this protocol
+    spec_file: "specs/dhcp-summary.txt"
+
+  dns:
+    # Empty object = use all global defaults (index spec)
+    {}
+
+  tftp:
+    # Run without any specification
+    no_spec: true
+
+  http1.1:
+    # Override models and configs just for HTTP
+    models:
+      - "gpt-5.4"
+    configs:
+      - "configs/default.yaml"
+    spec_file: "http1.1-empty.txt"

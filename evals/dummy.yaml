@@ -1,0 +1,54 @@
+# Example evaluation configuration for run_eval.py
+#
+# This file defines an evaluation "matrix": every combination of
+# (protocol × model × config × target_language) will be executed as an
+# individual run of generate_grammar.py.
+#
+# Usage:
+#   python run_eval.py evals/example.yaml
+#   python run_eval.py evals/example.yaml --dry-run
+#   python run_eval.py evals/example.yaml --debug
+#   python run_eval.py evals/example.yaml --resume --eval-dir outputs/20260605_...
+
+# Human-readable name for this evaluation session.
+# Used in the output directory name and summary.
+name: "Test evaluation framework"
+
+# Optional note for context (appears in README.md and summary.md).
+note: "Run 3 protocols with 2 models with different target languages and specs."
+
+# Global defaults applied to every protocol unless overridden.
+defaults:
+  models:
+    - "gemini-3.1-flash"
+    - "qwen3-coder"
+  configs:
+    - "configs/default.yaml"
+  target_languages:
+    - "spicy"
+  # Set to true to run all protocols without a specification file.
+  # Can be overridden per-protocol.
+  no_spec: false
+
+# Protocol-specific configuration.
+# Each key is a protocol name (must exist in protocol_index.json).
+# Values can override any of the global defaults.
+protocols:
+  tftp:
+    # Run without any specification
+    target_languages:
+      - "spicy"
+      - "3d"
+
+    no_spec: true
+
+  dhcp:
+    # Use a custom spec file for this protocol
+    {}
+
+  ipv4:
+    # Empty object = use all global defaults (index spec)
+    models:
+      - "gpt-oss"
+
+    spec_file: "deprecated/specs/ipv4-header-format.txt"
