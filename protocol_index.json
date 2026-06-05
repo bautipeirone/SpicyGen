@@ -1,71 +1,84 @@
 {
   "arp": {
+    "full_name": "Address Resolution Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "826"
   },
   "babel": {
+    "full_name": "Babel Routing Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "8966"
   },
   "bfd": {
+    "full_name": "Bidirectional Forwarding Detection Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "5880"
   },
   "bgp": {
+    "full_name": "Border Gateway Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "1105"
   },
   "bpv7": {
+    "full_name": "Bundle Protocol version 7",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "9171"
   },
   "dccp": {
+    "full_name": "Datagram Congestion Control Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "4340"
   },
   "dhcp": {
+    "full_name": "Dynamic Host Configuration Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "2131"
   },
   "dns": {
+    "full_name": "Domain Name System",
     "type": "binary",
     "spec_type": "rfc",
-    "rfc_id": "1035",
-    "local_spec_file": "specs/dns-grammar.txt"
+    "rfc_id": "1035"
   },
   "dtls": {
+    "full_name": "Datagram Transport Layer Security Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "6347"
   },
   "ftp": {
+    "full_name": "File Transfer Protocol",
     "type": "text",
     "spec_type": "rfc",
     "rfc_id": "959"
   },
   "hap": {
+    "full_name": "Host Access Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "907"
   },
   "http1.1": {
+    "full_name": "Hyper Text Transfer Protocol 1.1",
     "type": "text",
     "spec_type": "rfc",
     "rfc_id": "2616"
   },
   "icmpv4": {
+    "full_name": "Internet Control Message Protocol version 4",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "792"
   },
   "icmpv6": {
+    "full_name": "Internet Control Message Protocol version 6",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "4443"
@@ -76,41 +89,49 @@
     "rfc_id": "1413"
   },
   "igmpv2": {
+    "full_name": "Internet Group Management Protocol version 2",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "2236"
   },
   "imap4": {
+    "full_name": "Internet Message Access Protocol version 4",
     "type": "text",
     "spec_type": "rfc",
     "rfc_id": "3501"
   },
   "ipv4": {
+    "full_name": "Internet Protocol version 4",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "791"
   },
   "ipv6": {
+    "full_name": "Internet Protocol version 6",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "2460"
   },
   "irc": {
+    "full_name": "Internet Relay Chat Protocol",
     "type": "text",
     "spec_type": "rfc",
     "rfc_id": "1459"
   },
   "ldap": {
+    "full_name": "Lightweight Directory Access Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "4511"
   },
   "ntp": {
+    "full_name": "Network Time Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "5905"
   },
   "ospfv3": {
+    "full_name": "Open Shortest Path First version 3",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "5340"
@@ -121,41 +142,49 @@
     "rfc_id": "1258"
   },
   "rtp": {
+    "full_name": "Real-Time Transport Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "3550"
   },
   "rtsp": {
+    "full_name": "Real-Time Streaming Protocol",
     "type": "text",
     "spec_type": "rfc",
     "rfc_id": "2326"
   },
   "sip": {
+    "full_name": "Session Initiation Protocol",
     "type": "text",
     "spec_type": "rfc",
     "rfc_id": "3261"
   },
   "smtp": {
+    "full_name": "Simple Mail Transfer Protocol",
     "type": "text",
     "spec_type": "rfc",
     "rfc_id": "5321"
   },
   "spp": {
+    "full_name": "Space Packet Protocol",
     "type": "binary",
     "spec_type": "bluebook",
     "local_spec_file": "specs/spp-bluebook.txt"
   },
   "ssh": {
+    "full_name": "Secure Shell",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "4253"
   },
   "tc-sdlp": {
+    "full_name": "Telecommand Space Data Link Protocol",
     "type": "binary",
     "spec_type": "bluebook",
     "local_spec_file": "specs/tc-sdlp-bluebook.txt"
   },
   "tcp": {
+    "full_name": "Transmission Control Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "793"
@@ -166,26 +195,31 @@
     "rfc_id": "854"
   },
   "tftp": {
+    "full_name": "Trivial File Transfer Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "1350"
   },
   "tm-sdlp": {
+    "full_name": "Telemetry Space Data Link Protocol",
     "type": "binary",
     "spec_type": "bluebook",
     "local_spec_file": "specs/tm-sdlp-bluebook.txt"
   },
   "tpkt": {
+    "full_name": "The ISO Transport Service over TCP",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "2126"
   },
   "udp": {
+    "full_name": "User Datagram Protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "768"
   },
   "vxlan": {
+    "full_name": "Virtual Extensible LAN protocol",
     "type": "binary",
     "spec_type": "rfc",
     "rfc_id": "7348"

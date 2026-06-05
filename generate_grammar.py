@@ -8,7 +8,7 @@ from src.target_language import (
     get_target_language,
     list_supported_target_languages,
 )
-from src.prompts import build_refinement_system_message
+from src.prompts import build_refinement_system_message, build_empty_spec_prompt
 from src.utils import load_file, read_config
 from src.logger import enable_runtime_log_file, logger
 from src.protocol import load_protocol, load_spec, ProtocolType
@@ -17,6 +17,13 @@ import argparse
 import time
 import json
 from typing import Any
+from enum import StrEnum
+
+class SpecSource(StrEnum):
+    SPEC_FILE = "Specification file"
+    NO_SPEC = "No specification"
+    INDEX = "Index spefication"
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -67,6 +74,11 @@ def parse_args() -> argparse.Namespace:
         help="Directory to save debug information like refinement steps and compilation errors for each attempt (optional)",
     )
     parser.add_argument(
+        "--no-spec",
+        action="store_true",
+        help="Dont use a specification file for this protocol."
+    )
+    parser.add_argument(
         "--spec-file",
         type=Path,
         default=None,
@@ -95,10 +107,14 @@ def get_default_instructions_file(target_language_name: str, protocol_type: Prot
     return get_target_language(target_language_name).instructions_path_for(protocol_type)
 
 
-def infer_spec_source(spec_file: Path | None) -> str:
-    if spec_file is None:
-        return "protocol_spec"
-    return str(spec_file)
+def infer_spec_source(spec_source: SpecSource, spec_file: Path | None) -> str:
+    match spec_source:
+        case SpecSource.SPEC_FILE:
+            return str(spec_file)
+        case SpecSource.INDEX:
+            return "index"
+        case SpecSource.NO_SPEC:
+            return "no specification"
 
 
 def build_metrics(
@@ -125,6 +141,7 @@ def build_metrics(
         "termination_reason": refinement_stats["termination_reason"],
         "first_successful_compile_iteration": refinement_stats["first_successful_compile_iteration"],
         "iterations": refinement_stats["iterations"],
+        "retrieved_rfcs": refinement_stats["retrieved_rfcs"],
         "time_elapsed_s": round(elapsed_time_s, 2),
         "usage": usage,
     }
@@ -136,6 +153,14 @@ def main() -> None:
     enable_runtime_log_file(runtime_log_path)
 
     target_language = get_target_language(args.target_language)
+    if args.spec_file and args.no_spec:
+        logger.warning("Both specification file and --no-spec flag provided. Defaulting to specification file.")
+
+    spec_source = SpecSource.INDEX
+    if args.spec_file:
+        spec_source = SpecSource.SPEC_FILE
+    elif args.no_spec:
+        spec_source = SpecSource.NO_SPEC
 
     logger.info(
         f"Generating grammar for {args.protocol} using {args.model} targeting {target_language.display_name}"
@@ -145,7 +170,8 @@ def main() -> None:
     logger.debug(f"Output file: {args.output_file}")
     logger.debug(f"Debug dir: {args.debug_dir}")
     logger.debug(f"Config file: {args.config}")
-    logger.debug(f"Spec file override: {args.spec_file}")
+    logger.debug(f"Spec file source: {spec_source}")
+    if spec_source == SpecSource.SPEC_FILE: logger.debug(f"Spec file: {args.spec_file}")
 
     protocol = load_protocol(args.protocol)
     if protocol is None:
@@ -159,11 +185,13 @@ def main() -> None:
 
     target_language_context = load_file(instructions_file)
 
-    if args.spec_file:
-        logger.info(f"Using custom spec file: {args.spec_file}")
-        spec_content = load_file(args.spec_file)
-    else:
-        spec_content = load_spec(protocol)
+    match spec_source:
+        case SpecSource.SPEC_FILE:
+            spec_content = load_file(args.spec_file)
+        case SpecSource.INDEX:
+            spec_content = load_spec(protocol)
+        case SpecSource.NO_SPEC:
+            spec_content = build_empty_spec_prompt(protocol.name, protocol_long_name=protocol.full_name)
 
     if spec_content is None:
         logger.error(f"No specification content found for protocol '{protocol.name}'.")
@@ -195,7 +223,7 @@ def main() -> None:
         protocol_name=protocol.name,
         target_language_name=target_language.name,
         success=success,
-        spec_source=infer_spec_source(args.spec_file),
+        spec_source=infer_spec_source(spec_source, args.spec_file),
         refinement_stats=refinement_stats,
         elapsed_time_s=elapsed_time,
         usage=conversation_usage,

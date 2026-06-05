@@ -25,6 +25,7 @@ class ProtocolSpecType(Enum):
 @dataclass
 class Protocol:
     name: str
+    full_name: str | None
     type: ProtocolType
     spec_type: ProtocolSpecType | None
     spec_id: str | None  # Can refer to RFC ID, IEEE standard number, etc.
@@ -61,8 +62,9 @@ def load_protocol(protocol_name: str, index_path: Path | None = None) -> Protoco
     entry = index[protocol_name]
     return Protocol(
         name=protocol_name,
-        type=ProtocolType(entry.get("type", "text")),
-        spec_type=ProtocolSpecType(entry.get("spec_type")) if entry.get("spec_type") else None,
+        full_name=entry.get("full_name"),
+        type=ProtocolType(entry.get("type")),
+        spec_type=ProtocolSpecType(entry.get("spec_type")),
         spec_id=entry.get("rfc_id"),
         local_spec_file=Path(entry["local_spec_file"]) if entry.get("local_spec_file") else None,
     )

@@ -77,6 +77,10 @@ IMPORTANT WORKFLOW — follow these steps in order:
 {rfc_retrieval_tool_hint}
 """
 
+EMPTY_SPEC_PROMPT = """
+The protocol is {protocol_name}. There is no specification available.
+Construct an initial protocol hypothesis from general protocol knowledge, but treat it as untrusted.
+"""
 
 def build_agent_loop_instructions(
     target_language: TargetLanguage,
@@ -113,3 +117,12 @@ def build_refinement_system_message(
         rfc_retrieval_tool_enabled=rfc_retrieval_tool_enabled,
     )
     return f"{base_prompt}{target_language_context}{loop_instructions}"
+
+
+def build_empty_spec_prompt(
+  protocol_name: str,
+  protocol_long_name: str | None
+) -> str:
+    if protocol_long_name:
+        protocol_name = f"{protocol_name} ({protocol_long_name})"
+    return EMPTY_SPEC_PROMPT.format(protocol_name=protocol_name)
