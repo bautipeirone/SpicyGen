@@ -36,6 +36,7 @@ class State:
     best_iteration: int | None = None
     termination_reason: str | None = None
     iterations: list["IterationStats"] = field(default_factory=list)
+    retrieved_rfcs: list[str] | None = None
 
 
 @dataclass
@@ -52,14 +53,6 @@ class IterationStats:
             "negative_accepted": self.negative_accepted,
             "changed_from_previous": self.changed_from_previous,
         }
-
-
-def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retrieve (e.g., '1035')"]) -> str:
-    logger.debug("Retrieving RFC with ID: %s", rfc_id)
-    rfc_text = retrieve_rfc_by_id(rfc_id)
-    if rfc_text is None:
-        return f"Could not retrieve RFC {rfc_id}."
-    return clean_rfc_text(rfc_text)
 
 
 def query_llm_once(llm_config: dict, system_prompt: str, user_message: str) -> tuple[str, dict[str, Any] | None]:
@@ -210,7 +203,15 @@ def run_refinement_loop(
         build_dir.mkdir(parents=True, exist_ok=True)
 
     positive_packets, negative_packets = get_protocol_packet_paths(protocol.name)
-    state = State(protocol=protocol)
+    state = State(protocol=protocol, retrieved_rfcs=[] if rfc_retrieval_tool_enabled else None)
+
+    def retrieve_rfc_by_id_wrapper(rfc_id: Annotated[str, "The ID of the RFC to retrieve (e.g., '1035')"]) -> str:
+        logger.debug("Retrieving RFC with ID: %s", rfc_id)
+        state.retrieved_rfcs.append(rfc_id)
+        rfc_text = retrieve_rfc_by_id(rfc_id)
+        if rfc_text is None:
+            return f"Could not retrieve RFC {rfc_id}."
+        return clean_rfc_text(rfc_text)
 
     def compile_grammar(code: Annotated[str, "The grammar code to compile"]) -> str:
         cleaned_code = target_language.response_cleaner(code)
@@ -402,5 +403,6 @@ def run_refinement_loop(
         "termination_reason": state.termination_reason,
         "first_successful_compile_iteration": first_successful_compile_iteration,
         "iterations": [iteration.as_dict() for iteration in state.iterations],
+        "retrieved_rfcs": state.retrieved_rfcs
     }
     return code_to_return, state.success, refinement_stats, cost_summary
