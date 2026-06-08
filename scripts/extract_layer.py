@@ -81,34 +81,42 @@ def make_file_stem(protocol_name, protocol_class):
     return re.sub(r"[^0-9a-zA-Z]+", "_", preferred_name).strip("_").lower() or "packet"
 
 
-def extract_protocol_packets(input_capture, output_dir, protocol_name):
-    if not os.path.isfile(input_capture):
-        raise FileNotFoundError(f"The input file '{input_capture}' was not found.")
+def get_capture_files(path: str) -> list[str]:
+    if os.path.isfile(path):
+        return [path]
+    return [ os.path.join(path, capture_file) for capture_file in os.listdir(path) ]
+
+
+def extract_protocol_packets(input_path, output_dir, protocol_name):
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"The input file '{input_path}' was not found.")
 
     load_base_layers()
     protocol_class = resolve_protocol(protocol_name)
     file_stem = make_file_stem(protocol_name, protocol_class)
+    capture_files = get_capture_files(input_path)
 
     os.makedirs(output_dir, exist_ok=True)
 
     print(
-        f"Processing '{input_capture}' and extracting '{protocol_class.__name__}' "
+        f"Processing {len(capture_files)} capture files and extracting '{protocol_class.__name__}' "
         f"layers into '{output_dir}'..."
     )
 
     count = 0
-    with PcapReader(input_capture) as capture:
-        for pkt in capture:
-            if not pkt.haslayer(protocol_class):
-                continue
+    for capture_file in capture_files:
+        with PcapReader(capture_file) as capture:
+            for pkt in capture:
+                if not pkt.haslayer(protocol_class):
+                    continue
 
-            target_layer = pkt[protocol_class]
-            output_file = os.path.join(output_dir, f"packet_{file_stem}_{count}.bin")
+                target_layer = pkt[protocol_class]
+                output_file = os.path.join(output_dir, f"packet_{file_stem}_{count}.bin")
 
-            with open(output_file, "wb") as bin_file:
-                bin_file.write(bytes(target_layer))
+                with open(output_file, "wb") as bin_file:
+                    bin_file.write(bytes(target_layer))
 
-            count += 1
+                count += 1
 
     print(f"Extraction complete. Saved {count} packet(s) to '{output_dir}'.")
     return count
@@ -122,8 +130,8 @@ def build_parser():
         )
     )
     parser.add_argument(
-        "input_pcap",
-        help="Path to the input capture (.pcap, .pcapng, .pcap.gz, .pcapng.gz, ...)",
+        "input_path",
+        help="Path to the input capture or directory with capture files (.pcap, .pcapng, .pcap.gz, .pcapng.gz, ...)",
     )
     parser.add_argument(
         "-p",
@@ -149,7 +157,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        extract_protocol_packets(args.input_pcap, args.output_dir, args.protocol)
+        extract_protocol_packets(args.input_path, args.output_dir, args.protocol)
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
