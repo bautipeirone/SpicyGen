@@ -1,4 +1,6 @@
 import argparse
+import concurrent.futures
+import hashlib
 import importlib
 import os
 import re
@@ -84,39 +86,108 @@ def make_file_stem(protocol_name, protocol_class):
 def get_capture_files(path: str) -> list[str]:
     if os.path.isfile(path):
         return [path]
-    return [ os.path.join(path, capture_file) for capture_file in os.listdir(path) ]
+    capture_files = []
+    for capture_file in sorted(os.listdir(path)):
+        full_path = os.path.join(path, capture_file)
+        if os.path.isfile(full_path):
+            capture_files.append(full_path)
+    return capture_files
 
 
-def extract_protocol_packets(input_path, output_dir, protocol_name):
-    if not os.path.exists(input_path):
-        raise FileNotFoundError(f"The input file '{input_path}' was not found.")
+def build_output_file_name(file_stem, capture_file, capture_index, packet_index):
+    capture_stem = os.path.splitext(os.path.basename(capture_file))[0]
+    capture_stem = re.sub(r"[^0-9a-zA-Z]+", "_", capture_stem).strip("_").lower() or "capture"
+    return f"packet_{file_stem}_{capture_stem}_{capture_index}_{packet_index}.bin"
 
+
+def write_packet_bytes(output_dir, output_name, payload):
+    output_file = os.path.join(output_dir, output_name)
+
+    try:
+        with open(output_file, "xb") as bin_file:
+            bin_file.write(payload)
+        return output_file
+    except FileExistsError:
+        # Keep parallel extraction safe even if a filename already exists from
+        # a previous run or from unexpected overlapping capture names.
+        digest = hashlib.sha1(payload).hexdigest()[:12]
+        base_name = os.path.splitext(output_name)[0]
+        for suffix in range(1000):
+            alternate_name = f"{base_name}_{digest}_{suffix}.bin"
+            alternate_path = os.path.join(output_dir, alternate_name)
+            try:
+                with open(alternate_path, "xb") as bin_file:
+                    bin_file.write(payload)
+                return alternate_path
+            except FileExistsError:
+                continue
+        raise FileExistsError(f"Could not find a unique output filename for '{output_name}'.")
+
+
+def extract_packets_from_capture(capture_file, capture_index, protocol_class, file_stem, output_dir):
+    count = 0
+
+    with PcapReader(capture_file) as capture:
+        for pkt in capture:
+            if not pkt.haslayer(protocol_class):
+                continue
+
+            target_layer = pkt[protocol_class]
+            output_name = build_output_file_name(file_stem, capture_file, capture_index, count)
+            write_packet_bytes(output_dir, output_name, bytes(target_layer))
+            count += 1
+
+    return count
+
+
+def extract_packets_from_capture_worker(capture_file, capture_index, protocol_name, output_dir):
     load_base_layers()
     protocol_class = resolve_protocol(protocol_name)
     file_stem = make_file_stem(protocol_name, protocol_class)
+    return extract_packets_from_capture(
+        capture_file,
+        capture_index,
+        protocol_class,
+        file_stem,
+        output_dir,
+    )
+
+
+def extract_protocol_packets(input_path, output_dir, protocol_name, workers=None):
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"The input file '{input_path}' was not found.")
+
     capture_files = get_capture_files(input_path)
 
     os.makedirs(output_dir, exist_ok=True)
 
+    load_base_layers()
+    protocol_class = resolve_protocol(protocol_name)
+
+    if not capture_files:
+        print("No capture files found to process.")
+        return 0
+
+    max_workers = workers or min(len(capture_files), (os.cpu_count() or 1))
+    max_workers = max(1, max_workers)
+
     print(
         f"Processing {len(capture_files)} capture files and extracting '{protocol_class.__name__}' "
-        f"layers into '{output_dir}'..."
+        f"layers with {max_workers} workers into '{output_dir}'..."
     )
 
-    count = 0
-    for capture_file in capture_files:
-        with PcapReader(capture_file) as capture:
-            for pkt in capture:
-                if not pkt.haslayer(protocol_class):
-                    continue
-
-                target_layer = pkt[protocol_class]
-                output_file = os.path.join(output_dir, f"packet_{file_stem}_{count}.bin")
-
-                with open(output_file, "wb") as bin_file:
-                    bin_file.write(bytes(target_layer))
-
-                count += 1
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+        futures = [
+            executor.submit(
+                extract_packets_from_capture_worker,
+                capture_file,
+                capture_index,
+                protocol_name,
+                output_dir,
+            )
+            for capture_index, capture_file in enumerate(capture_files)
+        ]
+        count = sum(future.result() for future in concurrent.futures.as_completed(futures))
 
     print(f"Extraction complete. Saved {count} packet(s) to '{output_dir}'.")
     return count
@@ -139,7 +210,7 @@ def build_parser():
         default="ipv6",
         help=(
             "Protocol layer to extract (default: ipv6). Examples: ipv4, ipv6, tcp, "
-            "udp, dns, dhcp, arp, icmp, icmpv6, DNS, or "
+            "udp, dns, dhcp, arp, icmp, icmpv6, or "
             "scapy.layers.inet6.IPv6ExtHdrFragment."
         ),
     )
@@ -149,6 +220,13 @@ def build_parser():
         default="extracted_raw_packets",
         help="Output directory (default: extracted_raw_packets)",
     )
+    parser.add_argument(
+        "-j",
+        "--workers",
+        type=int,
+        default=None,
+        help="Number of capture files to process in parallel (default: CPU count, capped by file count)",
+    )
     return parser
 
 
@@ -157,7 +235,9 @@ def main():
     args = parser.parse_args()
 
     try:
-        extract_protocol_packets(args.input_path, args.output_dir, args.protocol)
+        if args.workers is not None and args.workers < 1:
+            raise ValueError("--workers must be at least 1.")
+        extract_protocol_packets(args.input_path, args.output_dir, args.protocol, workers=args.workers)
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
