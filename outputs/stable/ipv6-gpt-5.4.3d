@@ -1,0 +1,61 @@
+#define IPV6_ADDR_LEN 16
+
+typedef struct _ipv6_address {
+  UINT8BE octets[IPV6_ADDR_LEN];
+} ipv6_address;
+
+entrypoint typedef struct _IPv6Header {
+  UINT32BE version_traffic_class_flow_label;
+  UINT16BE payload_length;
+  UINT8BE next_header;
+  UINT8BE hop_limit;
+  ipv6_address source_address;
+  ipv6_address destination_address;
+  UINT8BE payload[:byte-size payload_length];
+} IPv6Header;
+
+entrypoint typedef struct _IPv6HopByHopOptionsHeader {
+  UINT8BE next_header;
+  UINT8BE hdr_ext_len { hdr_ext_len <= 30 };
+  UINT8BE options[:byte-size (hdr_ext_len + 1) * 8 - 2];
+} IPv6HopByHopOptionsHeader;
+
+entrypoint typedef struct _IPv6DestinationOptionsHeader {
+  UINT8BE next_header;
+  UINT8BE hdr_ext_len { hdr_ext_len <= 30 };
+  UINT8BE options[:byte-size (hdr_ext_len + 1) * 8 - 2];
+} IPv6DestinationOptionsHeader;
+
+entrypoint typedef struct _IPv6RoutingHeader {
+  UINT8BE next_header;
+  UINT8BE hdr_ext_len { hdr_ext_len <= 30 };
+  UINT8BE routing_type;
+  UINT8BE segments_left;
+  UINT8BE type_specific_data[:byte-size (hdr_ext_len + 1) * 8 - 4];
+} IPv6RoutingHeader;
+
+entrypoint typedef struct _IPv6RoutingHeaderType0 {
+  UINT8BE next_header;
+  UINT8BE hdr_ext_len { hdr_ext_len <= 31 };
+  UINT8BE routing_type;
+  UINT8BE segments_left;
+  UINT32BE reserved;
+  UINT8BE addresses[:byte-size hdr_ext_len * 8];
+} IPv6RoutingHeaderType0;
+
+entrypoint typedef struct _IPv6FragmentHeader {
+  UINT8BE next_header;
+  UINT8BE reserved;
+  UINT16BE fragment_offset_and_flags;
+  UINT32BE identification;
+} IPv6FragmentHeader;
+
+entrypoint typedef struct _IPv6OptionTLV {
+  UINT8BE option_type;
+  UINT8BE opt_data_len;
+  UINT8BE option_data[opt_data_len];
+} IPv6OptionTLV;
+
+entrypoint typedef struct _IPv6Pad1Option {
+  UINT8BE option_type;
+} IPv6Pad1Option;

@@ -1,0 +1,26 @@
+typedef struct _IPv4_Packet {
+  UINT8BE version : 4;
+  UINT8BE ihl : 4 { ihl >= 5 };
+  UINT8BE tos_precedence : 3;
+  UINT8BE tos_delay : 1;
+  UINT8BE tos_throughput : 1;
+  UINT8BE tos_reliability : 1;
+  UINT8BE tos_reserved : 2;
+  UINT16BE total_length { total_length >= ihl * 4 };
+  UINT16BE identification;
+  UINT16BE flags_reserved : 1;
+  UINT16BE flags_df : 1;
+  UINT16BE flags_mf : 1;
+  UINT16BE fragment_offset : 13;
+  UINT8BE ttl;
+  UINT8BE protocol;
+  UINT16BE checksum;
+  UINT32BE src_addr;
+  UINT32BE dst_addr;
+  UINT8BE options_and_padding[:byte-size (ihl * 4 - 20)];
+  UINT8BE data[:byte-size (total_length - ihl * 4)];
+} IPv4_Packet;
+
+entrypoint typedef struct _IPv4_Packet_Wrapper {
+  IPv4_Packet packet;
+} IPv4_Packet_Wrapper;

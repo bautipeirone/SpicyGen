@@ -1,0 +1,73 @@
+#define ICMP_ECHO_REPLY 0
+#define ICMP_DEST_UNREACHABLE 3
+#define ICMP_SOURCE_QUENCH 4
+#define ICMP_REDIRECT 5
+#define ICMP_ECHO 8
+#define ICMP_TIME_EXCEEDED 11
+#define ICMP_PARAMETER_PROBLEM 12
+#define ICMP_TIMESTAMP 13
+#define ICMP_TIMESTAMP_REPLY 14
+#define ICMP_INFORMATION_REQUEST 15
+#define ICMP_INFORMATION_REPLY 16
+
+typedef struct _DestinationUnreachableBody {
+  UINT32BE unused;
+} DestinationUnreachableBody;
+
+typedef struct _SourceQuenchBody {
+  UINT32BE unused;
+} SourceQuenchBody;
+
+typedef struct _RedirectBody {
+  UINT32BE gateway_internet_address;
+} RedirectBody;
+
+typedef struct _TimeExceededBody {
+  UINT32BE unused;
+} TimeExceededBody;
+
+typedef struct _ParameterProblemBody {
+  UINT8BE parameter_pointer;
+  UINT8BE unused[3];
+} ParameterProblemBody;
+
+typedef struct _EchoBody {
+  UINT16BE identifier;
+  UINT16BE sequence_number;
+} EchoBody;
+
+typedef struct _TimestampBody {
+  UINT16BE identifier;
+  UINT16BE sequence_number;
+  UINT32BE originate_timestamp;
+  UINT32BE receive_timestamp;
+  UINT32BE transmit_timestamp;
+} TimestampBody;
+
+typedef struct _InformationBody {
+  UINT16BE identifier;
+  UINT16BE sequence_number;
+} InformationBody;
+
+casetype _ICMPv4Body (UINT8BE message_type) {
+  switch(message_type) {
+    case ICMP_ECHO_REPLY: EchoBody echo_reply;
+    case ICMP_DEST_UNREACHABLE: DestinationUnreachableBody destination_unreachable;
+    case ICMP_SOURCE_QUENCH: SourceQuenchBody source_quench;
+    case ICMP_REDIRECT: RedirectBody redirect;
+    case ICMP_ECHO: EchoBody echo;
+    case ICMP_TIME_EXCEEDED: TimeExceededBody time_exceeded;
+    case ICMP_PARAMETER_PROBLEM: ParameterProblemBody parameter_problem;
+    case ICMP_TIMESTAMP: TimestampBody timestamp;
+    case ICMP_TIMESTAMP_REPLY: TimestampBody timestamp_reply;
+    case ICMP_INFORMATION_REQUEST: InformationBody information_request;
+    case ICMP_INFORMATION_REPLY: InformationBody information_reply;
+  }
+} ICMPv4Body;
+
+entrypoint typedef struct _ICMPv4 {
+  UINT8BE message_type;
+  UINT8BE code;
+  UINT16BE checksum;
+  ICMPv4Body(message_type) body;
+} ICMPv4;

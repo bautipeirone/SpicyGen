@@ -1,0 +1,16 @@
+entrypoint typedef struct _IPv4 {
+  UINT8BE version;
+  UINT8BE ihl;
+  UINT8BE type_of_service;
+  UINT16BE total_length;
+  UINT16BE identification;
+  UINT8BE flags;
+  UINT16BE fragment_offset;
+  UINT8BE time_to_live;
+  UINT8BE protocol;
+  UINT16BE header_checksum;
+  UINT32BE source_address;
+  UINT32BE destination_address;
+  UINT8BE options_and_padding[:byte-size 0];
+  UINT8BE payload[:byte-size 0];
+} IPv4;

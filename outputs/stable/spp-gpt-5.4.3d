@@ -1,0 +1,29 @@
+typedef struct _UserDataOnly(UINT16BE packet_data_length) {
+  UINT8 user_data_field[:byte-size ((UINT32BE) packet_data_length) + 1];
+} UserDataOnly;
+
+typedef struct _SecondaryHeaderAndUserData(UINT16BE packet_data_length) {
+  UINT8 packet_secondary_header_and_user_data[:byte-size ((UINT32BE) packet_data_length) + 1];
+} SecondaryHeaderAndUserData;
+
+casetype _PacketDataField(UINT16BE secondary_header_flag, UINT16BE packet_data_length) {
+  switch(secondary_header_flag) {
+    case 0:
+      UserDataOnly(packet_data_length) user_data_only;
+    case 1:
+      SecondaryHeaderAndUserData(packet_data_length) secondary_header_and_user_data;
+    default:
+      unit Empty;
+  }
+} PacketDataField;
+
+entrypoint typedef struct _Packet {
+  UINT16BE packet_version_number : 3;
+  UINT16BE packet_type : 1;
+  UINT16BE secondary_header_flag : 1;
+  UINT16BE apid : 11;
+  UINT16BE sequence_flags : 2;
+  UINT16BE packet_sequence_count_or_name : 14;
+  UINT16BE packet_data_length;
+  PacketDataField(secondary_header_flag, packet_data_length) packet_data_field;
+} Packet;

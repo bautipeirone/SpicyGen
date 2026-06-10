@@ -1,0 +1,7 @@
+entrypoint typedef struct _UDPDatagram {
+  UINT16BE sourcePort;
+  UINT16BE destPort;
+  UINT16BE length { length >= 8 };
+  UINT16BE checksum;
+  UINT8BE data[:byte-size (length - 8)];
+} UDPDatagram;

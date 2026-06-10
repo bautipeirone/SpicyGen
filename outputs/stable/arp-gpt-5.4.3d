@@ -1,0 +1,11 @@
+entrypoint typedef struct _Arpframe {
+  UINT16BE ar_hrd;
+  UINT16BE ar_pro;
+  UINT8BE ar_hln;
+  UINT8BE ar_pln;
+  UINT16BE ar_op;
+  UINT8BE ar_sha[ar_hln];
+  UINT8BE ar_spa[ar_pln];
+  UINT8BE ar_tha[ar_hln];
+  UINT8BE ar_tpa[ar_pln];
+} Arpframe;
