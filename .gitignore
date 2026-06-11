@@ -23,6 +23,7 @@ outputs/*
 !outputs/CHANGELOG.md
 
 debug/
+tmp/
 
 # Extra
 deprecated/

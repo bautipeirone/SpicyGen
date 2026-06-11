@@ -39,9 +39,9 @@ By default, `generate_grammar.py` resolves the protocol specification using the 
 This is highly useful for isolated manual testing, debugging custom prompts, or validating how the LLM reacts to specific cuts of the specification.
 
 ## Docker Usage
-You can use the provided `Dockerfile` to run the benchmark script in an isolated environment containing all the necessary dependencies.
+You can use the provided Dockerfiles to run the benchmark script in isolated environments. The shared Python application setup lives in `docker/install_app.sh`, while each runtime has its own Dockerfile so it can build on the base image that best matches its toolchain.
 
-1. Build the Docker image:
+1. Build the default Python runtime image:
 ```bash
 docker build -t grammar-generator .
 ```
@@ -50,6 +50,30 @@ docker build -t grammar-generator .
 ```bash
 docker run --rm --env-file .env -v $(pwd)/outputs:/app/outputs grammar-generator -m "gemini-3.1-flash" -p "dhcp dns"
 ```
+
+### Backend-Specific Images
+Use the runtime-specific Dockerfiles when you want to build an image with a backend toolchain included:
+
+```bash
+docker build -f Dockerfile.spicy -t grammar-generator:spicy .
+docker build -f Dockerfile.3d -t grammar-generator:3d .
+```
+
+The intended pattern is:
+- `runtime`: Python app and shared utilities only.
+- `runtime-spicy`: Python app plus the Spicy toolchain.
+- `runtime-3d`: Python app plus the EverParse/3D toolchain, built directly on the EverParse image so `3d.exe` matches its required system libraries.
+
+The Spicy image currently installs the official Debian 12 Spicy package from a pinned release. You can override the version or the package URL at build time:
+
+```bash
+docker build -f Dockerfile.spicy --build-arg SPICY_VERSION=v1.16.0 -t grammar-generator:spicy .
+docker build -f Dockerfile.spicy --build-arg SPICY_DEB_URL=https://github.com/zeek/spicy/releases/download/v1.16.0/spicy_linux_debian12.deb -t grammar-generator:spicy .
+```
+
+If you are building on a non-`amd64` platform, you may need to override `SPICY_DEB_URL` to a compatible artifact or build the image for `linux/amd64`.
+
+This is usually cleaner than forcing multiple backend runtimes into one image, because each final image stays explicit and can follow the system libraries expected by its toolchain.
 
 ## Testing
 To run unit tests and integration tests run `pytest`.

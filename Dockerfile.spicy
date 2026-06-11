@@ -1,0 +1,25 @@
+FROM python:3.12-slim-bookworm
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+ARG SPICY_VERSION=v1.16.0
+ARG SPICY_DEB_URL=https://github.com/zeek/spicy/releases/download/${SPICY_VERSION}/spicy_linux_debian12.deb
+
+ENV PATH="/opt/spicy/bin:${PATH}"
+
+COPY docker/install_app.sh /tmp/install_app.sh
+COPY requirements.txt .
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl g++ make \
+    && curl -fsSL "${SPICY_DEB_URL}" -o /tmp/spicy.deb \
+    && apt-get install -y --no-install-recommends /tmp/spicy.deb \
+    && rm -f /tmp/spicy.deb \
+    && rm -rf /var/lib/apt/lists/* \
+    && /bin/sh /tmp/install_app.sh
+
+COPY . .
+
+ENTRYPOINT ["python", "generate_grammar.py"]
