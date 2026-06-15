@@ -669,6 +669,10 @@ def create_zeek_package(
     if zkg_meta_path.exists():
         update_zkg_meta(zkg_meta_path, analyzer_name)
 
+    build_dir = package_dir / "build"
+    build_dir.mkdir(exist_ok=True)
+    subprocess.run("make", cwd=build_dir)
+
     if usage:
         print(f"  LLM usage: {json.dumps(usage)}")
 
