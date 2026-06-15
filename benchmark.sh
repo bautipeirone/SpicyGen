@@ -138,9 +138,6 @@ run_grammar_generator() {
   fi
 }
 
-############ INITIALIZATION #############
-source "$PWD/../venv/bin/activate"
-
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 RUN_OUT_DIR="$BASE_OUTPUT_PATH/$TIMESTAMP"
 mkdir -p "$RUN_OUT_DIR"
