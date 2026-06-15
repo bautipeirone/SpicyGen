@@ -22,7 +22,7 @@ from enum import StrEnum
 class SpecSource(StrEnum):
     SPEC_FILE = "Specification file"
     NO_SPEC = "No specification"
-    INDEX = "Index spefication"
+    INDEX = "Index specification"
 
 
 def parse_args() -> argparse.Namespace:

@@ -114,6 +114,7 @@ class TestLoadSpec:
         """When the local_spec_file path doesn't exist and there's no RFC fallback."""
         protocol = Protocol(
             name="ghost",
+            full_name=None,
             type=ProtocolType.BINARY,
             spec_type=ProtocolSpecType.BLUEBOOK,
             spec_id=None,

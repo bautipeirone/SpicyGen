@@ -23,7 +23,7 @@ from src.tools._3d.wrapper import (
 )
 from src.usage import merge_usage_reports
 from preprocess_spec import compute_info_stats
-from generate_grammar import build_metrics, infer_spec_source
+from generate_grammar import build_metrics, infer_spec_source, SpecSource
 
 
 # ---------------------------------------------------------------------------
@@ -174,6 +174,7 @@ class TestBuildMetrics:
                         "changed_from_previous": True,
                     },
                 ],
+                "retrieved_rfcs": None
             },
             elapsed_time_s=1.234,
             usage={"total": {"tokens": 42}},
@@ -201,10 +202,13 @@ class TestBuildMetrics:
 class TestInferSpecSource:
 
     def test_defaults_to_protocol_spec(self):
-        assert infer_spec_source(None) == "protocol_spec"
+        assert infer_spec_source(SpecSource.INDEX, None) == "index"
 
     def test_detects_custom_spec_file(self):
-        assert infer_spec_source(Path("/tmp/custom.txt")) == "/tmp/custom.txt"
+        assert infer_spec_source(SpecSource.SPEC_FILE, Path("/tmp/custom.txt")) == "/tmp/custom.txt"
+
+    def test_detects_no_spec_file(self):
+        assert infer_spec_source(SpecSource.NO_SPEC, None) == "no specification"
 
 
 # ---------------------------------------------------------------------------
