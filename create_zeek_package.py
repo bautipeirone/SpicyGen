@@ -26,6 +26,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 import contextlib
@@ -34,6 +35,7 @@ from git import Repo
 from dotenv import load_dotenv
 
 from src.agent import query_llm_once
+from src.logger import enable_runtime_log_file, logger
 from src.providers import get_autogen_config
 from src.utils import read_config
 
@@ -195,7 +197,8 @@ def run_zkg_create(
         "--user-var", f"unit_resp={entry_unit}",
     ]
 
-    print(f"  Running: {' '.join(cmd)}")
+    logger.info("Running zkg create for package scaffold")
+    logger.debug("zkg create command: %s", " ".join(cmd))
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(
@@ -458,7 +461,7 @@ def generate_zeek_files_with_llm(
     last_error: str | None = None
 
     for attempt in range(1, max_retries + 1):
-        print(f"    LLM attempt {attempt}/{max_retries}")
+        logger.info("LLM attempt %s/%s", attempt, max_retries)
         response, usage = query_llm_once(
             llm_config=llm_config,
             system_prompt=system_prompt,
@@ -495,11 +498,12 @@ def generate_zeek_files_with_llm(
             files=files,
         )
         if compile_errors is None:
-            print("    spicyz compilation succeeded")
+            logger.info("spicyz compilation succeeded")
             return files, summarize_usage_records(usage_records)
 
         last_error = compile_errors
-        print("    spicyz compilation failed; feeding errors back to the LLM")
+        logger.warning("spicyz compilation failed; feeding errors back to the LLM")
+        logger.debug("spicyz compilation errors:\n%s", compile_errors)
         if attempt < max_retries:
             user_message = build_zeek_generation_prompt(
                 spicy_source=spicy_source,
@@ -515,8 +519,46 @@ def generate_zeek_files_with_llm(
     if last_files is None:
         raise RuntimeError(f"LLM did not produce valid Zeek files: {last_error}")
 
-    print("    Returning last generated files after exhausting spicyz retries")
+    logger.warning("Returning last generated files after exhausting spicyz retries")
     return last_files, summarize_usage_records(usage_records)
+
+
+def build_metrics(
+    *,
+    model: str,
+    package_name: str,
+    package_dir: Path,
+    spicy_info: SpicyParserInfo,
+    analyzer_name: str,
+    metadata: ProtocolMetadata,
+    elapsed_time_s: float,
+    usage: dict | None,
+) -> dict:
+    """Build a metrics payload for Zeek package generation."""
+    return {
+        "model": model,
+        "package_name": package_name,
+        "package_dir": str(package_dir),
+        "spicy_module": spicy_info.module_name,
+        "entry_unit": spicy_info.entry_unit,
+        "analyzer_name": analyzer_name,
+        "selected_transport": metadata.transport,
+        "transport_candidates": metadata.transports,
+        "port": metadata.port,
+        "time_elapsed_s": round(elapsed_time_s, 2),
+        "usage": usage,
+    }
+
+
+def save_metrics(path: Path, payload: dict) -> None:
+    """Persist Zeek package metrics to disk."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w") as fh:
+            json.dump(payload, fh, indent=2)
+            fh.write("\n")
+    except OSError as exc:
+        raise SystemExit(f"Unable to write metrics to {path}: {exc}") from exc
 
 
 def generate_readme(package_name: str, analyzer_name: str) -> str:
@@ -547,9 +589,11 @@ def update_zkg_meta(meta_path: Path, analyzer_name: str) -> None:
 
 
 def install_plugin(package_dir: Path):
+    logger.info("Installing generated Zeek package from %s", package_dir)
     # Clean dirty worktree
     repo = Repo(package_dir)
     if repo.is_dirty(untracked_files=True):
+        logger.info("Package worktree is dirty; creating an automatic cleanup commit")
         repo.git.add(".")
         repo.index.commit("Automatic Commit: clean working tree.")
     
@@ -596,6 +640,7 @@ def generate_trace_test_file(trace_file: Path, analyzer_name: str, parser_event:
 
 def setup_tests(analyzer_name: str, package_dir: Path, trace_dir: Path | None):
     testing_dir = package_dir / "testing"
+    logger.info("Preparing generated tests in %s", testing_dir)
 
     with contextlib.suppress(FileNotFoundError):
         os.remove(testing_dir / "tests" / "standalone.spicy")
@@ -604,6 +649,7 @@ def setup_tests(analyzer_name: str, package_dir: Path, trace_dir: Path | None):
     parser_event = "message" # TODO
 
     if trace_dir is not None:
+        logger.info("Generating trace-based tests from %s", trace_dir)
         for trace_file in os.listdir(trace_dir):
             trace_stem = os.path.splitext(trace_file)[0]
             test_trace_path = testing_dir / "tests" / f"{trace_stem}.zeek"
@@ -614,6 +660,7 @@ def setup_tests(analyzer_name: str, package_dir: Path, trace_dir: Path | None):
                 generate_trace_test_file(trace_file=trace_file, analyzer_name=analyzer_name, parser_event=parser_event)
             )
 
+    logger.info("Updating btest baselines for generated package")
     subprocess.run([
         "btest",
         "-c",
@@ -655,6 +702,18 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help="Directory where the package will be created.",
+    )
+    parser.add_argument(
+        "--debug-dir",
+        type=Path,
+        default=None,
+        help="Directory to save runtime logs for package generation.",
+    )
+    parser.add_argument(
+        "--metrics-file",
+        type=Path,
+        default=None,
+        help="Path to output metrics JSON for package generation.",
     )
     parser.add_argument(
         "--traces-dir",
@@ -707,6 +766,7 @@ def create_zeek_package(
     output_dir: Path,
     model: str,
     config_path: Path | None = None,
+    metrics_file: Path | None = None,
     zeek_max_retries: int = 5,
     zeek_compile_check: bool = True,
     name_override: str | None = None,
@@ -736,6 +796,7 @@ def create_zeek_package(
         The path to the created package directory.
     """
     # ── Phase 1: Parse the Spicy file ──────────────────────────────────
+    start_time = time.time()
     spicy_info = parse_spicy_file(spicy_file)
     analyzer_name = derive_analyzer_name(spicy_info.module_name)
     metadata = ProtocolMetadata.from_json(metadata_file)
@@ -746,15 +807,15 @@ def create_zeek_package(
     if package_dir.exists():
         raise FileExistsError(f"Package directory already exists: {package_dir}")
 
-    print(f"Creating Zeek package '{package_name}'")
-    print(f"  Module:    {spicy_info.module_name}")
-    print(f"  Unit:      {spicy_info.entry_unit}")
-    print(f"  Analyzer:  {analyzer_name}")
-    print(f"  Transport: {metadata.transport.upper()}")
+    logger.info("Creating Zeek package '%s'", package_name)
+    logger.info("Module: %s", spicy_info.module_name)
+    logger.info("Unit: %s", spicy_info.entry_unit)
+    logger.info("Analyzer: %s", analyzer_name)
+    logger.info("Transport: %s", metadata.transport.upper())
     if len(metadata.transports) > 1:
-        print(f"  Transport candidates: {', '.join(metadata.transports)}")
-    print(f"  Port:      {metadata.port}")
-    print(f"  Model:     {model}")
+        logger.info("Transport candidates: %s", ", ".join(metadata.transports))
+    logger.info("Port: %s", metadata.port)
+    logger.info("Model: %s", model)
 
     # ── Phase 2: Scaffold with zkg ─────────────────────────────────────
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -771,10 +832,10 @@ def create_zeek_package(
     # Overwrite the template placeholder with the real parser.
     analyzer_spicy = package_dir / "analyzer" / f"{a_lower}.spicy"
     shutil.copy2(spicy_info.source_path, analyzer_spicy)
-    print(f"  Copied parser => {analyzer_spicy.relative_to(output_dir)}")
+    logger.info("Copied parser to %s", analyzer_spicy.relative_to(output_dir))
 
     # ── Phase 4: Generate Zeek integration files with the LLM ──────────
-    print("  Generating Zeek integration files with the LLM...")
+    logger.info("Generating Zeek integration files with the LLM")
     generated_files, usage = generate_zeek_files_with_llm(
         spicy_info=spicy_info,
         analyzer_name=analyzer_name,
@@ -804,6 +865,7 @@ def create_zeek_package(
 
     build_dir = package_dir / "build"
     build_dir.mkdir(exist_ok=True)
+    logger.info("Configuring and building generated analyzer in %s", build_dir)
     subprocess.run(["cmake", ".."], cwd=build_dir)
     subprocess.run(["make"], cwd=build_dir)
 
@@ -814,21 +876,48 @@ def create_zeek_package(
         install_plugin(package_dir)
 
     if usage:
-        print(f"  LLM usage: {json.dumps(usage)}")
+        logger.info("LLM usage: %s", json.dumps(usage))
 
-    print(f"\nPackage created at: {package_dir}")
+    metrics = build_metrics(
+        model=model,
+        package_name=package_name,
+        package_dir=package_dir,
+        spicy_info=spicy_info,
+        analyzer_name=analyzer_name,
+        metadata=metadata,
+        elapsed_time_s=time.time() - start_time,
+        usage=usage,
+    )
+    if metrics_file:
+        save_metrics(metrics_file, metrics)
+        logger.info("Saved metrics to %s", metrics_file)
+
+    logger.info("Package created at: %s", package_dir)
 
     return package_dir
 
 
 def main() -> None:
     args = parse_args()
+    runtime_log_path = args.debug_dir / "runtime.log" if args.debug_dir else None
+    enable_runtime_log_file(runtime_log_path)
+
+    logger.info("Creating Zeek package from %s using model %s", args.spicy_file, args.model)
+    logger.debug("Metadata file: %s", args.metadata)
+    logger.debug("Output dir: %s", args.output_dir)
+    logger.debug("Debug dir: %s", args.debug_dir)
+    logger.debug("Metrics file: %s", args.metrics_file)
+    logger.debug("Config file: %s", args.config)
+    logger.debug("Traces dir: %s", args.traces_dir)
+    logger.debug("Zeek max retries: %s", args.zeek_max_retries)
+    logger.debug("Skip Zeek compile check: %s", args.skip_zeek_compile_check)
+    logger.debug("Skip installation: %s", args.skip_installation)
 
     if not args.spicy_file.exists():
-        print(f"Error: Spicy file not found: {args.spicy_file}", file=sys.stderr)
+        logger.error("Spicy file not found: %s", args.spicy_file)
         sys.exit(1)
     if not args.metadata.exists():
-        print(f"Error: Metadata file not found: {args.metadata}", file=sys.stderr)
+        logger.error("Metadata file not found: %s", args.metadata)
         sys.exit(1)
 
     try:
@@ -838,6 +927,7 @@ def main() -> None:
             output_dir=args.output_dir,
             model=args.model,
             config_path=args.config,
+            metrics_file=args.metrics_file,
             zeek_max_retries=args.zeek_max_retries,
             zeek_compile_check=not args.skip_zeek_compile_check,
             name_override=args.name,
@@ -845,7 +935,7 @@ def main() -> None:
             install_on_success=not args.skip_installation
         )
     except (ValueError, RuntimeError, FileExistsError) as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        logger.error("Zeek package creation failed: %s", exc)
         sys.exit(1)
 
 

@@ -84,6 +84,36 @@ def test_build_zeek_generation_prompt_includes_constraints_and_feedback():
     assert "old evt" in prompt
 
 
+def test_build_metrics_includes_package_generation_summary(tmp_path):
+    spicy_file = tmp_path / "dns.spicy"
+    spicy_file.write_text("module DNS_gpt;\npublic type Message = unit {};\n")
+    spicy_info = czp.SpicyParserInfo("DNS_gpt", "Message", spicy_file)
+    metadata = czp.ProtocolMetadata(
+        transport="udp",
+        port=53,
+        transports=["udp", "tcp"],
+    )
+
+    metrics = czp.build_metrics(
+        model="test-model",
+        package_name="spicy-dns",
+        package_dir=tmp_path / "spicy-dns",
+        spicy_info=spicy_info,
+        analyzer_name="DNS",
+        metadata=metadata,
+        elapsed_time_s=12.345,
+        usage={"attempts": [{"attempt": 1, "usage": {"tokens": 42}}]},
+    )
+
+    assert metrics["model"] == "test-model"
+    assert metrics["package_name"] == "spicy-dns"
+    assert metrics["spicy_module"] == "DNS_gpt"
+    assert metrics["selected_transport"] == "udp"
+    assert metrics["transport_candidates"] == ["udp", "tcp"]
+    assert metrics["time_elapsed_s"] == 12.35
+    assert metrics["usage"]["attempts"][0]["usage"]["tokens"] == 42
+
+
 def test_try_compile_zeek_files_invokes_spicyz(tmp_path, monkeypatch):
     spicy_file = tmp_path / "dns.spicy"
     spicy_file.write_text("module DNS_gpt;\npublic type Message = unit {};\n")
