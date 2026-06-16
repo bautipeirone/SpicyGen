@@ -11,6 +11,25 @@ def test_derive_analyzer_name_strips_known_model_suffix():
     assert czp.derive_analyzer_name("VXLAN") == "VXLAN"
 
 
+def test_protocol_metadata_selects_first_zeek_supported_transport(tmp_path):
+    metadata_file = tmp_path / "metadata.json"
+    metadata_file.write_text('{"transport":["sctp","udp","tcp"],"port":53}')
+
+    metadata = czp.ProtocolMetadata.from_json(metadata_file)
+
+    assert metadata.transport == "tcp"
+    assert metadata.transports == ["sctp", "udp", "tcp"]
+    assert metadata.port == 53
+
+
+def test_protocol_metadata_rejects_unsupported_transport_lists(tmp_path):
+    metadata_file = tmp_path / "metadata.json"
+    metadata_file.write_text('{"transport":["sctp","dccp"],"port":53}')
+
+    with pytest.raises(ValueError, match="No Zeek-supported transport"):
+        czp.ProtocolMetadata.from_json(metadata_file)
+
+
 def test_parse_llm_bundle_accepts_plain_json():
     bundle = czp.parse_llm_bundle(
         '{"evt":"evt content","zeek_spicy":"spicy content","main_zeek":"zeek content"}'

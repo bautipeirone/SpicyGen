@@ -26,8 +26,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+import contextlib
+from git import Repo
 
 from dotenv import load_dotenv
 
@@ -50,18 +52,52 @@ class ProtocolMetadata:
     """
     transport: str  # "tcp" or "udp"
     port: int       # well-known port number (0 means placeholder / unknown)
+    transports: list[str] = field(default_factory=list)
 
     @classmethod
     def from_json(cls, path: Path) -> ProtocolMetadata:
         with open(path) as f:
             data = json.load(f)
-        transport = data.get("transport", "").lower()
-        if transport not in ("tcp", "udp"):
+
+        raw_transports = data.get("transport", [])
+        if isinstance(raw_transports, str):
+            raw_transports = [raw_transports]
+        elif not isinstance(raw_transports, list):
             raise ValueError(
-                f"Invalid transport '{data.get('transport')}' in {path}. "
-                "Must be 'tcp' or 'udp'."
+                f"Invalid transport value '{raw_transports}' in {path}. "
+                "Expected a list of transport protocol names."
             )
-        return cls(transport=transport, port=int(data.get("port", 0)))
+
+        transports: list[str] = []
+        for transport in raw_transports:
+            if not isinstance(transport, str):
+                raise ValueError(
+                    f"Invalid transport entry {transport!r} in {path}."
+                    "Transport entries must be strings."
+                )
+            normalized = transport.strip().lower()
+            if normalized:
+                transports.append(normalized)
+
+        selected_transport = cls.select_zeek_transport(transports, path)
+        return cls(
+            transport=selected_transport,
+            port=int(data.get("port", 0)),
+            transports=transports
+        )
+
+    @staticmethod
+    def select_zeek_transport(transports: list[str], path: Path) -> str:
+        "Select TCP when available, otherwise use UDP."
+        if "tcp" in transports:
+            return "tcp"
+        elif "udp" in transports:
+            return "udp"
+
+        raise ValueError(
+            f"No Zeek-supported transport found in {path}. "
+            f"Expected at least one of tcp or udp, got: {transports!r}."
+        )
 
 
 @dataclass
@@ -502,12 +538,90 @@ def update_zkg_meta(meta_path: Path, analyzer_name: str) -> None:
         content,
         flags=re.MULTILINE)
     content = re.sub(
-        r"^description\s*=.*$",
+        r"^description\s*=.*\n.*$",
         f"description = Spicy-based Zeek analyzer for the {analyzer_name} protocol (auto-generated)",
         content,
         flags=re.MULTILINE,
     )
     meta_path.write_text(content)
+
+
+def install_plugin(package_dir: Path):
+    # Clean dirty worktree
+    repo = Repo(package_dir)
+    if repo.is_dirty(untracked_files=True):
+        repo.git.add(".")
+        repo.index.commit("Automatic Commit: clean working tree.")
+    
+    # Install package
+    subprocess.run([
+        "zkg",
+        "--user",
+        "install", ".",
+        "--force",
+        "--user-var", "proceed=y"
+      ],
+      cwd=package_dir
+    )
+
+    # Try package run
+    ...
+
+
+# ---------------------------------------------------------------------------
+# Tests generation and setup
+# ---------------------------------------------------------------------------
+TRACE_TEST_FILE = """
+# @TEST-DOC: Test Zeek parsing a trace file through the SPACE_PACKET_PROTOCOL analyzer.
+#
+# @TEST-EXEC: zeek -Cr ${{TRACES}}/{trace_file} ${{PACKAGE}} %INPUT >output
+# @TEST-EXEC: btest-diff output
+# @TEST-EXEC: btest-diff {output_log}
+
+event {analyzer_name}::{parser_event}(c: connection, is_orig: bool, payload: string)
+	{{
+	print fmt("Testing SPACE_PACKET_PROTOCOL: [%s] [orig_h=%s, orig_p=%s, resp_h=%s, resp_p=%s] %s", (
+	    is_orig ? "request" : "reply" ), c$id$orig_h, c$id$orig_p,
+	    c$id$resp_h, c$id$resp_p, payload);
+	}}
+"""
+
+def generate_trace_test_file(trace_file: Path, analyzer_name: str, parser_event: str) -> str:
+    return TRACE_TEST_FILE.format(
+        trace_file=str(trace_file),
+        analyzer_name=analyzer_name,
+        parser_event=parser_event,
+        output_log=f"{analyzer_name.lower()}.log"
+    )
+
+def setup_tests(analyzer_name: str, package_dir: Path, trace_dir: Path | None):
+    testing_dir = package_dir / "testing"
+
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(testing_dir / "tests" / "standalone.spicy")
+        os.remove(testing_dir / "tests" / "trace.zeek")
+
+    parser_event = "message" # TODO
+
+    if trace_dir is not None:
+        for trace_file in os.listdir(trace_dir):
+            trace_stem = os.path.splitext(trace_file)[0]
+            test_trace_path = testing_dir / "tests" / f"{trace_stem}.zeek"
+            # Copy original trace file to Traces directory
+            shutil.copy2(trace_dir / trace_file, testing_dir / "Traces")
+            # Generate zeek test file for trace
+            test_trace_path.write_text(
+                generate_trace_test_file(trace_file=trace_file, analyzer_name=analyzer_name, parser_event=parser_event)
+            )
+
+    subprocess.run([
+        "btest",
+        "-c",
+        "btest.cfg",
+        "-U"
+      ],
+      cwd=testing_dir
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -528,19 +642,25 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "spicy_file",
         type=Path,
-        help="Path to the generated .spicy parser file",
+        help="Path to the generated .spicy parser file.",
     )
     parser.add_argument(
         "--metadata",
         type=Path,
         required=True,
-        help="Path to JSON file with protocol metadata (transport, port)",
+        help="Path to JSON file with protocol metadata (transport array, port).",
     )
     parser.add_argument(
         "--output-dir",
         type=Path,
         required=True,
-        help="Directory where the package will be created",
+        help="Directory where the package will be created.",
+    )
+    parser.add_argument(
+        "--traces-dir",
+        type=Path,
+        required=False,
+        help="Directory with traces to generate tests."
     )
     parser.add_argument(
         "--model",
@@ -568,6 +688,11 @@ def parse_args() -> argparse.Namespace:
         help="Skip spicyz validation and use the first valid JSON response from the LLM.",
     )
     parser.add_argument(
+        "--skip-installation",
+        action="store_true",
+        help="Dont run the installation process, only generate the package structure and files."
+    )
+    parser.add_argument(
         "--name",
         type=str,
         default=None,
@@ -585,6 +710,8 @@ def create_zeek_package(
     zeek_max_retries: int = 5,
     zeek_compile_check: bool = True,
     name_override: str | None = None,
+    traces_dir: Path | None = None,
+    install_on_success: bool = True
 ) -> Path:
     """Create a Zeek package from a Spicy parser and metadata.
 
@@ -598,6 +725,10 @@ def create_zeek_package(
         Parent directory where the package folder will be created.
     name_override : str, optional
         Override for the package name.
+    traces_dir: Path, optional
+        Directory with traces to use as automatic generated tests.
+    install_on_success: bool
+        Install as local zeek plugin if successful.
 
     Returns
     -------
@@ -620,6 +751,8 @@ def create_zeek_package(
     print(f"  Unit:      {spicy_info.entry_unit}")
     print(f"  Analyzer:  {analyzer_name}")
     print(f"  Transport: {metadata.transport.upper()}")
+    if len(metadata.transports) > 1:
+        print(f"  Transport candidates: {', '.join(metadata.transports)}")
     print(f"  Port:      {metadata.port}")
     print(f"  Model:     {model}")
 
@@ -671,7 +804,14 @@ def create_zeek_package(
 
     build_dir = package_dir / "build"
     build_dir.mkdir(exist_ok=True)
-    subprocess.run("make", cwd=build_dir)
+    subprocess.run(["cmake", ".."], cwd=build_dir)
+    subprocess.run(["make"], cwd=build_dir)
+
+    setup_tests(analyzer_name, package_dir, traces_dir)
+
+    # Optionally install package locally
+    if install_on_success:
+        install_plugin(package_dir)
 
     if usage:
         print(f"  LLM usage: {json.dumps(usage)}")
@@ -701,6 +841,8 @@ def main() -> None:
             zeek_max_retries=args.zeek_max_retries,
             zeek_compile_check=not args.skip_zeek_compile_check,
             name_override=args.name,
+            traces_dir=args.traces_dir,
+            install_on_success=not args.skip_installation
         )
     except (ValueError, RuntimeError, FileExistsError) as exc:
         print(f"Error: {exc}", file=sys.stderr)

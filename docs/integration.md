@@ -13,7 +13,7 @@ python create_zeek_package.py <spicy_file> --metadata <json_file> --output-dir <
 ### Metadata JSON format
 
 ```json
-{"transport": "udp", "port": 53}
+{"transport": ["udp", "tcp"], "port": 53}
 ```
 
 Maps to the `ProtocolMetadata` dataclass:
@@ -21,8 +21,9 @@ Maps to the `ProtocolMetadata` dataclass:
 ```python
 @dataclass
 class ProtocolMetadata:
-    transport: str  # "tcp" or "udp"
-    port: int       # well-known port number
+    transport: str         # selected Zeek transport ("tcp" or "udp")
+    port: int              # well-known port number
+    transports: list[str]  # original ordered transport candidates
 ```
 
 ### What the script does (5 phases)
