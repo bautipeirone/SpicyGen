@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Pipeline orchestrator for protocol grammar extraction.
 
-Creates an isolated workspace and runs ``preprocess_spec.py`` and
-``generate_grammar.py`` as subprocesses, routing every artifact into the
-workspace directory tree.
+Creates an isolated workspace and runs ``preprocess_spec.py``,
+``generate_grammar.py``, and optionally ``create_zeek_package.py`` as
+subprocesses, routing every artifact into the workspace directory tree.
 
 Usage examples::
 
-    # Full pipeline (preprocess → grammar)
+    # Full pipeline (preprocess → grammar → zeek-package)
     python pipeline.py run dns -m gemini-3.1-flash
 
     # Scaffold the workspace without running anything
@@ -16,9 +16,15 @@ Usage examples::
     # Run a single step
     python pipeline.py run dns -m gemini-3.1-flash --only preprocess
     python pipeline.py run dns -m gemini-3.1-flash --only grammar
+    python pipeline.py run dns -m gemini-3.1-flash --only zeek-package
 
     # Re-run only failed/pending steps
     python pipeline.py run dns -m gemini-3.1-flash --resume
+
+    # Pass extra flags to individual steps
+    python pipeline.py run dns -m gemini-3.1-flash \\
+        --grammar-args "--no-spec --instructions-file prompts/custom.md" \\
+        --zeek-args "--traces-dir data/dns/traces --skip-installation"
 
     # Show workspace statuses
     python pipeline.py status
@@ -28,6 +34,7 @@ Usage examples::
 from __future__ import annotations
 
 import argparse
+import shlex
 import subprocess
 import sys
 import time
@@ -44,11 +51,13 @@ from src.workspace import (
     ALL_STEPS,
     STEP_GRAMMAR,
     STEP_PREPROCESS,
+    STEP_ZEEK_PACKAGE,
     create_workspace,
     find_workspaces,
     grammar_paths,
     load_manifest,
     preprocess_paths,
+    zeek_package_paths,
     update_step,
 )
 
@@ -61,6 +70,7 @@ def _run_preprocess(
     workspace_dir: Path,
     protocol: str,
     model: str,
+    extra_args: list[str] | None = None,
 ) -> int:
     """Run ``preprocess_spec.py`` and route outputs into the workspace."""
     paths = preprocess_paths(workspace_dir)
@@ -74,6 +84,8 @@ def _run_preprocess(
         "--report-file",    str(paths["report"]),
         "--debug-dir",      str(paths["debug_dir"]),
     ]
+    if extra_args:
+        cmd.extend(extra_args)
 
     logger.info(f"[preprocess] Running: {' '.join(cmd)}")
     started_at = datetime.now(timezone.utc).isoformat()
@@ -112,27 +124,23 @@ def _run_grammar(
     protocol: str,
     model: str,
     target_language: str,
-    config: Path | None = None,
-    spec_file: Path | None = None,
+    extra_args: list[str] | None = None,
 ) -> int:
     """Run ``generate_grammar.py`` and route outputs into the workspace.
 
-    If *spec_file* is not given explicitly, the runner checks whether the
-    preprocess step produced a ``summary.txt`` in this workspace and uses
-    it automatically.  When no preprocessed summary is available, the
-    grammar generator falls back to its default spec resolution via
-    ``protocol_index.json``.
+    The runner auto-detects the preprocessed summary (``summary.txt``) from
+    the workspace and passes it via ``--spec-file`` unless the caller
+    already included ``--spec-file`` or ``--no-spec`` in *extra_args*.
     """
     language = get_target_language(target_language)
     paths = grammar_paths(workspace_dir, output_extension=language.source_extension)
     paths["debug_dir"].mkdir(parents=True, exist_ok=True)
 
-    # Auto-detect the preprocessed summary when no explicit spec_file is given.
-    if spec_file is None:
-        candidate = preprocess_paths(workspace_dir)["summary"]
-        if candidate.exists():
-            spec_file = candidate
-            logger.info(f"[grammar] Using preprocessed summary: {spec_file}")
+    # Auto-detect the preprocessed summary, but only when the caller hasn't
+    # explicitly provided --spec-file or --no-spec in extra_args.
+    spec_override = False
+    if extra_args:
+        spec_override = any(tok in extra_args for tok in ("--spec-file", "--no-spec"))
 
     cmd = [
         sys.executable, "generate_grammar.py",
@@ -144,11 +152,14 @@ def _run_grammar(
         "--debug-dir",    str(paths["debug_dir"]),
     ]
 
-    if spec_file is not None:
-        cmd.extend(["--spec-file", str(spec_file)])
+    if not spec_override:
+        candidate = preprocess_paths(workspace_dir)["summary"]
+        if candidate.exists():
+            cmd.extend(["--spec-file", str(candidate)])
+            logger.info(f"[grammar] Using preprocessed summary: {candidate}")
 
-    if config is not None:
-        cmd.extend(["--config", str(config)])
+    if extra_args:
+        cmd.extend(extra_args)
 
     logger.info(f"[grammar] Running: {' '.join(cmd)}")
     started_at = datetime.now(timezone.utc).isoformat()
@@ -178,6 +189,107 @@ def _run_grammar(
             error=f"Process exited with code {result.returncode}",
         )
         logger.error(f"[grammar] Failed with exit code {result.returncode}.")
+
+    return result.returncode
+
+
+def _run_zeek_package(
+    workspace_dir: Path,
+    protocol: str,
+    model: str,
+    extra_args: list[str] | None = None,
+) -> int:
+    """Run ``create_zeek_package.py`` and route outputs into the workspace.
+
+    Auto-detects the grammar output (.spicy) and preprocessed metadata
+    (info.json) from the workspace.  Both must exist or the step is skipped
+    with an error.  Any additional flags (``--traces-dir``,
+    ``--skip-installation``, etc.) should be provided via *extra_args*.
+    """
+    paths = zeek_package_paths(workspace_dir)
+    g_paths = grammar_paths(workspace_dir)
+    p_paths = preprocess_paths(workspace_dir)
+    paths["debug_dir"].mkdir(parents=True, exist_ok=True)
+
+    spicy_file = g_paths["output"]
+    metadata_file = p_paths["info"]
+
+    if not spicy_file.exists():
+        logger.error(
+            f"[zeek-package] Grammar output not found at {spicy_file}. "
+            "Run the grammar step first."
+        )
+        update_step(
+            workspace_dir, STEP_ZEEK_PACKAGE,
+            status="failed",
+            error=f"Grammar output not found: {spicy_file}",
+        )
+        return 1
+
+    if not metadata_file.exists():
+        logger.error(
+            f"[zeek-package] Protocol metadata not found at {metadata_file}. "
+            "Run the preprocess step first (with info extraction enabled)."
+        )
+        update_step(
+            workspace_dir, STEP_ZEEK_PACKAGE,
+            status="failed",
+            error=f"Metadata file not found: {metadata_file}",
+        )
+        return 1
+
+    cmd = [
+        sys.executable, "create_zeek_package.py",
+        str(spicy_file),
+        "--metadata",    str(metadata_file),
+        "--output-dir",  str(paths["output_dir"]),
+        "--metrics-file", str(paths["metrics"]),
+        "--debug-dir",    str(paths["debug_dir"]),
+        "-m",            model,
+    ]
+    if extra_args:
+        cmd.extend(extra_args)
+
+    logger.info(f"[zeek-package] Running: {' '.join(cmd)}")
+    started_at = datetime.now(timezone.utc).isoformat()
+    update_step(workspace_dir, STEP_ZEEK_PACKAGE, status="running", started_at=started_at)
+
+    result = subprocess.run(cmd, cwd=str(Path(__file__).resolve().parent))
+    finished_at = datetime.now(timezone.utc).isoformat()
+
+    if result.returncode == 0:
+        # Discover the created package directory (create_zeek_package names it spicy-<analyzer>).
+        created_packages = [
+            d for d in paths["output_dir"].iterdir()
+            if d.is_dir() and d.name != ".gitkeep"
+        ]
+        outputs = {
+            "output_dir": str(paths["output_dir"]),
+        }
+        if paths["metrics"].exists():
+            outputs["metrics"] = str(paths["metrics"])
+        if created_packages:
+            outputs["package_dir"] = str(created_packages[0])
+
+        update_step(
+            workspace_dir, STEP_ZEEK_PACKAGE,
+            status="success",
+            exit_code=result.returncode,
+            started_at=started_at,
+            finished_at=finished_at,
+            outputs=outputs,
+        )
+        logger.info("[zeek-package] Completed successfully.")
+    else:
+        update_step(
+            workspace_dir, STEP_ZEEK_PACKAGE,
+            status="failed",
+            exit_code=result.returncode,
+            started_at=started_at,
+            finished_at=finished_at,
+            error=f"Process exited with code {result.returncode}",
+        )
+        logger.error(f"[zeek-package] Failed with exit code {result.returncode}.")
 
     return result.returncode
 
@@ -254,9 +366,14 @@ def cmd_run(args: argparse.Namespace) -> int:
     overall_start = time.time()
     exit_code = 0
 
+    # Parse passthrough args for each step.
+    preprocess_extra = shlex.split(args.preprocess_args) if args.preprocess_args else None
+    grammar_extra = shlex.split(args.grammar_args) if args.grammar_args else None
+    zeek_extra = shlex.split(args.zeek_args) if args.zeek_args else None
+
     # ---- Preprocess ----
     if STEP_PREPROCESS in steps_to_run:
-        rc = _run_preprocess(workspace_dir, args.protocol, args.model)
+        rc = _run_preprocess(workspace_dir, args.protocol, args.model, extra_args=preprocess_extra)
         if rc != 0:
             exit_code = rc
             if not args.keep_going:
@@ -270,7 +387,21 @@ def cmd_run(args: argparse.Namespace) -> int:
             args.protocol,
             args.model,
             args.target_language,
-            config=args.config,
+            extra_args=grammar_extra,
+        )
+        if rc != 0:
+            exit_code = rc
+            if not args.keep_going:
+                logger.error("Grammar generation failed. Stopping pipeline (use --keep-going to continue).")
+                return exit_code
+
+    # ---- Zeek package ----
+    if STEP_ZEEK_PACKAGE in steps_to_run:
+        rc = _run_zeek_package(
+            workspace_dir,
+            args.protocol,
+            args.model,
+            extra_args=zeek_extra,
         )
         if rc != 0:
             exit_code = rc
@@ -295,8 +426,8 @@ def cmd_status(args: argparse.Namespace) -> int:
         return 0
 
     # Table header
-    print(f"{'Protocol':<12} {'Model':<22} {'Language':<12} {'Timestamp':<18} {'Preprocess':<14} {'Grammar':<14}")
-    print("-" * 96)
+    print(f"{'Protocol':<12} {'Model':<22} {'Language':<12} {'Timestamp':<18} {'Preprocess':<14} {'Grammar':<14} {'Zeek Pkg':<14}")
+    print("-" * 110)
 
     for ws in workspaces:
         try:
@@ -310,12 +441,14 @@ def cmd_status(args: argparse.Namespace) -> int:
         ts = ws.name  # timestamp directory name
         pre_status = m["steps"].get(STEP_PREPROCESS, {}).get("status", "—")
         gram_status = m["steps"].get(STEP_GRAMMAR, {}).get("status", "—")
+        zeek_status = m["steps"].get(STEP_ZEEK_PACKAGE, {}).get("status", "—")
 
         # Colorise statuses for terminal readability
         pre_display = _colorise_status(pre_status)
         gram_display = _colorise_status(gram_status)
+        zeek_display = _colorise_status(zeek_status)
 
-        print(f"{proto:<12} {model:<22} {target_language:<12} {ts:<18} {pre_display:<23} {gram_display:<23}")
+        print(f"{proto:<12} {model:<22} {target_language:<12} {ts:<18} {pre_display:<23} {gram_display:<23} {zeek_display:<23}")
 
     return 0
 
@@ -386,11 +519,33 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Continue to the next step even if the current one fails.",
     )
+    # ---- Step-specific passthrough arguments ----
     run_parser.add_argument(
-        "--config", "-c",
-        type=Path,
+        "--preprocess-args",
+        type=str,
         default=None,
-        help="Config file for the grammar generation step.",
+        help=(
+            "Extra arguments forwarded verbatim to preprocess_spec.py. "
+            'Example: --preprocess-args "--no-info"'
+        ),
+    )
+    run_parser.add_argument(
+        "--grammar-args",
+        type=str,
+        default=None,
+        help=(
+            "Extra arguments forwarded verbatim to generate_grammar.py. "
+            'Example: --grammar-args "--no-spec --config configs/default.yaml"'
+        ),
+    )
+    run_parser.add_argument(
+        "--zeek-args",
+        type=str,
+        default=None,
+        help=(
+            "Extra arguments forwarded verbatim to create_zeek_package.py. "
+            'Example: --zeek-args "--traces-dir data/dns/traces --skip-installation"'
+        ),
     )
 
     # ---- status ----

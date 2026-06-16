@@ -19,6 +19,7 @@ from src.workspace import (
     preprocess_paths,
     save_manifest,
     update_step,
+    zeek_package_paths,
 )
 
 
@@ -180,3 +181,11 @@ class TestPathHelpers:
         paths = grammar_paths(ws, output_extension=".3d")
 
         assert paths["output"].name == "output.3d"
+
+    def test_zeek_package_paths(self, tmp_workspace):
+        ws = create_workspace("dns", "m", base_dir=tmp_workspace)
+        paths = zeek_package_paths(ws)
+
+        assert paths["output_dir"].name == "zeek-package"
+        assert paths["metrics"].name == "metrics.json"
+        assert paths["debug_dir"].name == "debug"

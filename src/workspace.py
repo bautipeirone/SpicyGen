@@ -20,6 +20,8 @@ Typical layout::
                 │   ├── metrics.json
                 │   ├── runtime.log
                 │   └── debug/
+                ├── zeek-package/    # Zeek plugin scaffold
+                │   └── spicy-<protocol>/
                 └── pipeline.log
 """
 
@@ -36,12 +38,14 @@ from src.logger import logger
 # Fixed sub-directory names inside a workspace.
 _PREPROCESS_DIR = "preprocess"
 _GRAMMAR_DIR = "grammar"
+_ZEEK_PACKAGE_DIR = "zeek-package"
 _MANIFEST_FILENAME = "manifest.json"
 
 # Step names recognised by the pipeline.
 STEP_PREPROCESS = "preprocess"
 STEP_GRAMMAR = "grammar"
-ALL_STEPS = (STEP_PREPROCESS, STEP_GRAMMAR)
+STEP_ZEEK_PACKAGE = "zeek-package"
+ALL_STEPS = (STEP_PREPROCESS, STEP_GRAMMAR, STEP_ZEEK_PACKAGE)
 
 
 # ---------------------------------------------------------------------------
@@ -133,6 +137,7 @@ def create_workspace(
     # Create sub-directories for each step.
     (workspace_dir / _PREPROCESS_DIR).mkdir(exist_ok=True)
     (workspace_dir / _GRAMMAR_DIR).mkdir(exist_ok=True)
+    (workspace_dir / _ZEEK_PACKAGE_DIR).mkdir(exist_ok=True)
 
     manifest = _initial_manifest(protocol, model, target_language, workspace_dir)
     save_manifest(workspace_dir, manifest)
@@ -161,6 +166,16 @@ def grammar_paths(workspace_dir: Path, output_extension: str = ".spicy") -> dict
     d = workspace_dir / _GRAMMAR_DIR
     return {
         "output": d / f"output{output_extension}",
+        "metrics": d / "metrics.json",
+        "debug_dir": d / "debug",
+    }
+
+
+def zeek_package_paths(workspace_dir: Path) -> dict[str, Path]:
+    """Return a dict of canonical output paths for the zeek-package step."""
+    d = workspace_dir / _ZEEK_PACKAGE_DIR
+    return {
+        "output_dir": d,
         "metrics": d / "metrics.json",
         "debug_dir": d / "debug",
     }
