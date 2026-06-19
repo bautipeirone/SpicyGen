@@ -36,6 +36,20 @@ def get_spicy_parse_tree_summary(parse_result: ParseResult) -> str | None:
     actual_tree = parse_spicy_output(parse_result.parse_tree)
     expected_tree = parse_spicy_output(expected_tree)
 
+    actual_fields = actual_tree.get_parse_tree_fields()
+    expected_fields = expected_tree.get_parse_tree_fields()
+    logger.debug(f"Number of fields in parse tree: {len(actual_fields)}, expected: {len(expected_fields)}")
+    logger.debug(f"Fields in parse tree: {actual_fields}")
+    logger.debug(f"Expected fields: {expected_fields}")
+    
+    # This is probably a signal that the parser is trivial, i.e. unit { data: bytes &eod }
+    if len(actual_fields) == 1:
+        return (
+            f"Parse tree contains only one leaf field ({actual_fields[0]!r}). "
+            f"This likely means the parser is not extracting the message structure in enough detail. "
+            f"Expected fields: {expected_fields}."
+        )
+
     parse_tree_diffs = [str(mismatch) for mismatch in compare_parse_trees(actual_tree, expected_tree)]
     if not parse_tree_diffs:
         return None

@@ -246,7 +246,7 @@ def run_parser_check(
         verdict = PacketVerdict(
             packet_path=rel_path,
             expected_accept=True,
-            actual_accept=parse_result.success,
+            actual_accept=parse_result.success and parse_tree_summary is None,
             error=parse_result.error,
             parse_tree_summary=parse_tree_summary,
         )

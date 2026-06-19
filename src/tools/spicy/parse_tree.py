@@ -43,6 +43,9 @@ class FieldUnit:
     type: str
     value: dict[str, ParseTreeField]
 
+    def get_parse_tree_fields(self) -> list[str]:
+        return sum([ child.get_parse_tree_fields() for child in self.value.values() ], [])
+
     def __repr__(self) -> str:
         field_names = list(self.value.keys())
         preview = ", ".join(field_names[:4])
@@ -57,6 +60,9 @@ class FieldString:
     name: str
     value: str
 
+    def get_parse_tree_fields(self) -> list[str]:
+        return [self.name]
+
     def __repr__(self) -> str:
         preview = self.value[:40] + ("..." if len(self.value) > 40 else "")
         location = self.name or "<value>"
@@ -66,6 +72,10 @@ class FieldString:
 class FieldArray:
     name: str
     value: list[ParseTreeField]
+
+    def get_parse_tree_fields(self) -> list[str]:
+        # Concat list of fields from children
+        return sum([ child.get_parse_tree_fields() for child in self.value ], [])
 
     def __repr__(self) -> str:
         items = [repr(item) for item in self.value[:2]]
@@ -79,6 +89,9 @@ class FieldArray:
 class FieldBitfield:
     name: str
     value: dict[str, FieldString]
+
+    def get_parse_tree_fields(self) -> list[str]:
+        return sum([ child.get_parse_tree_fields() for child in self.value.values() ], [])
 
     def __repr__(self) -> str:
         entries = [f"{key}={field.value!r}" for key, field in list(self.value.items())[:8]]
