@@ -17,8 +17,7 @@ def test_protocol_metadata_selects_first_zeek_supported_transport(tmp_path):
 
     metadata = czp.ProtocolMetadata.from_json(metadata_file)
 
-    assert metadata.transport == "tcp"
-    assert metadata.transports == ["sctp", "udp", "tcp"]
+    assert metadata.transports == ["udp", "tcp"]
     assert metadata.port == 53
 
 
@@ -71,8 +70,7 @@ def test_build_zeek_generation_prompt_includes_constraints_and_feedback():
         module_name="DNS_gpt",
         analyzer_name="DNS",
         entry_unit="Message",
-        transport="udp",
-        port=53,
+        transports=["udp"],
         compile_errors="bad evt syntax",
         previous_files=previous_files,
     )
@@ -89,7 +87,6 @@ def test_build_metrics_includes_package_generation_summary(tmp_path):
     spicy_file.write_text("module DNS_gpt;\npublic type Message = unit {};\n")
     spicy_info = czp.SpicyParserInfo("DNS_gpt", "Message", spicy_file)
     metadata = czp.ProtocolMetadata(
-        transport="udp",
         port=53,
         transports=["udp", "tcp"],
     )
@@ -108,7 +105,6 @@ def test_build_metrics_includes_package_generation_summary(tmp_path):
     assert metrics["model"] == "test-model"
     assert metrics["package_name"] == "spicy-dns"
     assert metrics["spicy_module"] == "DNS_gpt"
-    assert metrics["selected_transport"] == "udp"
     assert metrics["transport_candidates"] == ["udp", "tcp"]
     assert metrics["time_elapsed_s"] == 12.35
     assert metrics["usage"]["attempts"][0]["usage"]["tokens"] == 42
@@ -179,7 +175,7 @@ def test_generate_zeek_files_retries_after_compile_failure(tmp_path, monkeypatch
     spicy_file = tmp_path / "dns.spicy"
     spicy_file.write_text("module DNS_gpt;\npublic type Message = unit {};\n")
     spicy_info = czp.SpicyParserInfo("DNS_gpt", "Message", spicy_file)
-    metadata = czp.ProtocolMetadata(transport="udp", port=53)
+    metadata = czp.ProtocolMetadata(port=53)
     instructions_file = tmp_path / "INTEGRATION.md"
     instructions_file.write_text("Use correct Zeek integration syntax.")
     responses = [

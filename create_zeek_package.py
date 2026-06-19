@@ -52,7 +52,6 @@ class ProtocolMetadata:
     Loaded from a JSON file.  The structure is intentionally minimal;
     additional fields can be added as the pipeline evolves.
     """
-    transport: str  # "tcp" or "udp"
     port: int       # well-known port number (0 means placeholder / unknown)
     transports: list[str] = field(default_factory=list)
 
@@ -62,43 +61,18 @@ class ProtocolMetadata:
             data = json.load(f)
 
         raw_transports = data.get("transport", [])
-        if isinstance(raw_transports, str):
-            raw_transports = [raw_transports]
-        elif not isinstance(raw_transports, list):
+        allowed_transports = ["udp", "tcp"]
+        transports = list(filter(lambda t: t.strip().lower() in allowed_transports, raw_transports))
+
+        if not transports:
             raise ValueError(
-                f"Invalid transport value '{raw_transports}' in {path}. "
-                "Expected a list of transport protocol names."
-            )
-
-        transports: list[str] = []
-        for transport in raw_transports:
-            if not isinstance(transport, str):
-                raise ValueError(
-                    f"Invalid transport entry {transport!r} in {path}."
-                    "Transport entries must be strings."
-                )
-            normalized = transport.strip().lower()
-            if normalized:
-                transports.append(normalized)
-
-        selected_transport = cls.select_zeek_transport(transports, path)
-        return cls(
-            transport=selected_transport,
-            port=int(data.get("port", 0)),
-            transports=transports
-        )
-
-    @staticmethod
-    def select_zeek_transport(transports: list[str], path: Path) -> str:
-        "Select TCP when available, otherwise use UDP."
-        if "tcp" in transports:
-            return "tcp"
-        elif "udp" in transports:
-            return "udp"
-
-        raise ValueError(
             f"No Zeek-supported transport found in {path}. "
             f"Expected at least one of tcp or udp, got: {transports!r}."
+        )
+
+        return cls(
+            port=int(data.get("port", 0)),
+            transports=transports
         )
 
 
@@ -273,8 +247,7 @@ def build_zeek_generation_prompt(
     module_name: str,
     analyzer_name: str,
     entry_unit: str,
-    transport: str,
-    port: int,
+    transports: list[str],
     compile_errors: str | None = None,
     previous_files: ZeekIntegrationFiles | None = None,
     response_error: str | None = None,
@@ -286,8 +259,8 @@ def build_zeek_generation_prompt(
         "CONSTRAINTS (follow exactly):\n"
         f"- The parser module is: {module_name}\n"
         f"- The Zeek integration module MUST be: Zeek_{analyzer_name}\n"
-        f"- The analyzer name in .evt MUST be: {analyzer_name}\n"
-        f"- Transport: {transport.upper()}, Port: {port}\n"
+        f"- The analyzers name in .evt MUST start with: {analyzer_name}\n"
+        f"- Transports: {[ transport.upper() for transport in transports ]}\n"
         f"- The .evt MUST import both {module_name} and Zeek_{analyzer_name}\n"
         f"- Entry unit: {module_name}::{entry_unit}\n"
         f"- In main.zeek, the Zeek module MUST be: {analyzer_name}\n"
@@ -452,8 +425,7 @@ def generate_zeek_files_with_llm(
         module_name=spicy_info.module_name,
         analyzer_name=analyzer_name,
         entry_unit=spicy_info.entry_unit,
-        transport=metadata.transport,
-        port=metadata.port,
+        transports=metadata.transports
     )
 
     usage_records: list[dict | None] = []
@@ -481,8 +453,7 @@ def generate_zeek_files_with_llm(
                 module_name=spicy_info.module_name,
                 analyzer_name=analyzer_name,
                 entry_unit=spicy_info.entry_unit,
-                transport=metadata.transport,
-                port=metadata.port,
+                transports=metadata.transports,
                 response_error=last_error,
                 previous_response=response,
             )
@@ -510,8 +481,7 @@ def generate_zeek_files_with_llm(
                 module_name=spicy_info.module_name,
                 analyzer_name=analyzer_name,
                 entry_unit=spicy_info.entry_unit,
-                transport=metadata.transport,
-                port=metadata.port,
+                transports=metadata.transports,
                 compile_errors=compile_errors,
                 previous_files=files,
             )
@@ -521,6 +491,21 @@ def generate_zeek_files_with_llm(
 
     logger.warning("Returning last generated files after exhausting spicyz retries")
     return last_files, summarize_usage_records(usage_records)
+
+
+def generate_protocol_signatures(analyzer_name: str, metadata: ProtocolMetadata) -> str:
+    signatures = ""
+    for transport in metadata.transports:
+        transport_signature = (
+            f"signature dpd_{analyzer_name.lower()}_{transport.lower()} {{\n"
+            f"  ip-proto == {transport}\n"
+            f"{f'  dst-port == {metadata.port}\n' if metadata.port else ''}"
+            f"  enable \"{analyzer_name}_{transport.upper()}\"\n"
+            "}\n"
+        )
+        signatures += transport_signature
+
+    return signatures
 
 
 def build_metrics(
@@ -542,7 +527,6 @@ def build_metrics(
         "spicy_module": spicy_info.module_name,
         "entry_unit": spicy_info.entry_unit,
         "analyzer_name": analyzer_name,
-        "selected_transport": metadata.transport,
         "transport_candidates": metadata.transports,
         "port": metadata.port,
         "time_elapsed_s": round(elapsed_time_s, 2),
@@ -811,17 +795,16 @@ def create_zeek_package(
     logger.info("Module: %s", spicy_info.module_name)
     logger.info("Unit: %s", spicy_info.entry_unit)
     logger.info("Analyzer: %s", analyzer_name)
-    logger.info("Transport: %s", metadata.transport.upper())
-    if len(metadata.transports) > 1:
-        logger.info("Transport candidates: %s", ", ".join(metadata.transports))
+    logger.info("Transports: %s", [ transport.upper() for transport in metadata.transports ])
     logger.info("Port: %s", metadata.port)
     logger.info("Model: %s", model)
 
     # ── Phase 2: Scaffold with zkg ─────────────────────────────────────
     output_dir.mkdir(parents=True, exist_ok=True)
+    # zkg create only takes one transport, so we use the first one declared as default
     run_zkg_create(
         package_dir, package_name, analyzer_name,
-        metadata.transport, spicy_info.entry_unit,
+        metadata.transports[0], spicy_info.entry_unit,
     )
 
     # zkg creates files using lowercase analyzer name (e.g. dns.spicy, dns.evt,
@@ -846,6 +829,8 @@ def create_zeek_package(
         compile_check=zeek_compile_check,
     )
 
+    protocol_signatures = generate_protocol_signatures(analyzer_name, metadata)
+
     evt_path = package_dir / "analyzer" / f"{a_lower}.evt"
     evt_path.write_text(generated_files.evt)
 
@@ -855,6 +840,9 @@ def create_zeek_package(
     main_zeek_path = package_dir / "scripts" / "main.zeek"
     main_zeek_path.write_text(generated_files.main_zeek)
 
+    dpd_path = package_dir / "scripts" / "dpd.sig"
+    dpd_path.write_text(protocol_signatures)
+    
     # ── Phase 5: Update metadata ───────────────────────────────────────
     readme_path = package_dir / "README"
     readme_path.write_text(generate_readme(package_name, analyzer_name))
