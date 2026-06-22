@@ -1,0 +1,11 @@
+module UDP_gpt;
+
+import spicy;
+
+public type UDP = unit {
+    source_port: uint16;
+    destination_port: uint16;
+    length: uint16;
+    checksum: uint16;
+    data: bytes &size=(self.length - 8);
+};

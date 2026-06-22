@@ -1,0 +1,54 @@
+module TCP_gpt;
+
+import spicy;
+
+type TCP_Option_Kind = enum {
+    EndOfOptionList = 0,
+    NoOperation = 1,
+    MaximumSegmentSize = 2
+};
+
+type TCP_Option = unit {
+    kind: uint8 &convert=TCP_Option_Kind($$);
+
+    switch ( self.kind ) {
+        TCP_Option_Kind::EndOfOptionList -> : void;
+        TCP_Option_Kind::NoOperation -> : void;
+        TCP_Option_Kind::MaximumSegmentSize -> {
+            length: uint8;
+            max_seg_size: uint16;
+        }
+        * -> {
+            length: uint8;
+            data: bytes &size=(self.length - 2);
+        }
+    };
+};
+
+type TCP_Options = unit(length: uint64) {
+    options: TCP_Option[] &size=length;
+};
+
+public type TCP = unit {
+    source_port: uint16;
+    destination_port: uint16;
+    sequence_number: uint32;
+    acknowledgment_number: uint32;
+
+    offset_flags: bitfield(16) {
+        data_offset: 0..3;
+        reserved: 4..9;
+        urg: 10;
+        ack: 11;
+        psh: 12;
+        rst: 13;
+        syn: 14;
+        fin: 15;
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    window: uint16;
+    checksum: uint16;
+    urgent_pointer: uint16;
+    options: TCP_Options(self.offset_flags.data_offset * 4 - 20) if (self.offset_flags.data_offset * 4 > 20);
+    data: bytes &eod;
+};

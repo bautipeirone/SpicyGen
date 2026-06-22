@@ -1,0 +1,278 @@
+module DTLS_gpt;
+
+import spicy;
+
+type ContentType = enum {
+    change_cipher_spec = 20,
+    alert = 21,
+    handshake = 22,
+    application_data = 23,
+};
+
+type HandshakeType = enum {
+    hello_request = 0,
+    client_hello = 1,
+    server_hello = 2,
+    hello_verify_request = 3,
+    certificate = 11,
+    server_key_exchange = 12,
+    certificate_request = 13,
+    server_hello_done = 14,
+    certificate_verify = 15,
+    client_key_exchange = 16,
+    finished = 20,
+};
+
+type AlertLevel = enum {
+    warning = 1,
+    fatal = 2,
+};
+
+type AlertDescription = enum {
+    close_notify = 0,
+    unexpected_message = 10,
+    bad_record_mac = 20,
+    decryption_failed_RESERVED = 21,
+    record_overflow = 22,
+    decompression_failure = 30,
+    handshake_failure = 40,
+    no_certificate_RESERVED = 41,
+    bad_certificate = 42,
+    unsupported_certificate = 43,
+    certificate_revoked = 44,
+    certificate_expired = 45,
+    certificate_unknown = 46,
+    illegal_parameter = 47,
+    unknown_ca = 48,
+    access_denied = 49,
+    decode_error = 50,
+    decrypt_error = 51,
+    export_restriction_RESERVED = 60,
+    protocol_version = 70,
+    insufficient_security = 71,
+    internal_error = 80,
+    user_canceled = 90,
+    no_renegotiation = 100,
+    unsupported_extension = 110,
+};
+
+type CompressionMethod = enum {
+    null = 0,
+};
+
+type HashAlgorithm = enum {
+    none = 0,
+    md5 = 1,
+    sha1 = 2,
+    sha224 = 3,
+    sha256 = 4,
+    sha384 = 5,
+    sha512 = 6,
+};
+
+type SignatureAlgorithm = enum {
+    anonymous = 0,
+    rsa = 1,
+    dsa = 2,
+    ecdsa = 3,
+};
+
+type ClientCertificateType = enum {
+    rsa_sign = 1,
+    dss_sign = 2,
+    rsa_fixed_dh = 3,
+    dss_fixed_dh = 4,
+    rsa_ephemeral_dh_RESERVED = 5,
+    dss_ephemeral_dh_RESERVED = 6,
+    fortezza_dms_RESERVED = 20,
+};
+
+type ProtocolVersion = unit {
+    major: uint8;
+    minor: uint8;
+};
+
+type Random = unit {
+    gmt_unix_time: uint32;
+    random_bytes: bytes &size=28;
+};
+
+type SessionID = unit {
+    length: uint8;
+    session_id: bytes &size=self.length;
+};
+
+type CipherSuite = unit {
+    id: uint16;
+};
+
+type CipherSuites = unit {
+    length: uint16;
+    suites: CipherSuite[] &size=self.length;
+};
+
+type CompressionMethodValue = unit {
+    method: uint8 &convert=CompressionMethod($$);
+};
+
+type CompressionMethods = unit {
+    length: uint8;
+    methods: CompressionMethodValue[] &size=self.length;
+};
+
+type SignatureAndHashAlgorithm = unit {
+    hash: uint8 &convert=HashAlgorithm($$);
+    signature: uint8 &convert=SignatureAlgorithm($$);
+};
+
+type SupportedSignatureAlgorithms = unit {
+    length: uint16;
+    algorithms: SignatureAndHashAlgorithm[] &size=self.length;
+};
+
+type HelloRequest = unit {
+};
+
+type ClientHello = unit {
+    client_version: ProtocolVersion;
+    random: Random;
+    session_id: SessionID;
+    cookie_length: uint8;
+    cookie: bytes &size=self.cookie_length;
+    cipher_suites: CipherSuites;
+    compression_methods: CompressionMethods;
+    extensions_data: bytes &eod;
+};
+
+type ServerHello = unit {
+    server_version: ProtocolVersion;
+    random: Random;
+    session_id: SessionID;
+    cipher_suite: CipherSuite;
+    compression_method: uint8 &convert=CompressionMethod($$);
+    extensions_data: bytes &eod;
+};
+
+type HelloVerifyRequest = unit {
+    server_version: ProtocolVersion;
+    cookie_length: uint8;
+    cookie: bytes &size=self.cookie_length;
+};
+
+type Certificate = unit {
+    certificate_list_length_hi: uint8;
+    certificate_list_length_mid: uint8;
+    certificate_list_length_lo: uint8;
+    certificate_list: bytes &size=(cast<uint64>(self.certificate_list_length_hi) * 65536 + cast<uint64>(self.certificate_list_length_mid) * 256 + cast<uint64>(self.certificate_list_length_lo));
+};
+
+type ServerKeyExchange = unit {
+    body: bytes &eod;
+};
+
+type DistinguishedName = unit {
+    length: uint16;
+    name: bytes &size=self.length;
+};
+
+type DistinguishedNames = unit {
+    length: uint16;
+    names: DistinguishedName[] &size=self.length;
+};
+
+type ClientCertificateTypeValue = unit {
+    certificate_type: uint8 &convert=ClientCertificateType($$);
+};
+
+type ClientCertificateTypes = unit {
+    length: uint8;
+    certificate_types: ClientCertificateTypeValue[] &size=self.length;
+};
+
+type CertificateRequest = unit {
+    certificate_types: ClientCertificateTypes;
+    supported_signature_algorithms: SupportedSignatureAlgorithms;
+    certificate_authorities: DistinguishedNames;
+};
+
+type ServerHelloDone = unit {
+};
+
+type DigitallySigned = unit {
+    algorithm: SignatureAndHashAlgorithm;
+    signature_length: uint16;
+    signature: bytes &size=self.signature_length;
+};
+
+type CertificateVerify = unit {
+    signed_data: DigitallySigned;
+};
+
+type ClientKeyExchange = unit {
+    body: bytes &eod;
+};
+
+type Finished = unit {
+    verify_data: bytes &eod;
+};
+
+type HandshakeMessage = unit {
+    msg_type: uint8 &convert=HandshakeType($$);
+    length_hi: uint8;
+    length_mid: uint8;
+    length_lo: uint8;
+    message_seq: uint16;
+    fragment_offset_hi: uint8;
+    fragment_offset_mid: uint8;
+    fragment_offset_lo: uint8;
+    fragment_length_hi: uint8;
+    fragment_length_mid: uint8;
+    fragment_length_lo: uint8;
+    switch ( self.msg_type ) {
+        HandshakeType::hello_request -> hello_request: HelloRequest &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::client_hello -> client_hello: ClientHello &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::server_hello -> server_hello: ServerHello &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::hello_verify_request -> hello_verify_request: HelloVerifyRequest &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::certificate -> certificate: Certificate &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::server_key_exchange -> server_key_exchange: ServerKeyExchange &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::certificate_request -> certificate_request: CertificateRequest &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::server_hello_done -> server_hello_done: ServerHelloDone &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::certificate_verify -> certificate_verify: CertificateVerify &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::client_key_exchange -> client_key_exchange: ClientKeyExchange &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        HandshakeType::finished -> finished: Finished &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+        * -> raw_body: bytes &size=(cast<uint64>(self.fragment_length_hi) * 65536 + cast<uint64>(self.fragment_length_mid) * 256 + cast<uint64>(self.fragment_length_lo));
+    };
+};
+
+type Alert = unit {
+    level: uint8 &convert=AlertLevel($$);
+    description: uint8 &convert=AlertDescription($$);
+};
+
+type ChangeCipherSpec = unit {
+    type_value: uint8;
+};
+
+type RecordFragment = unit(content_type: ContentType, epoch: uint16, record_length: uint16) {
+    ciphertext: bytes &size=record_length if ( epoch > 0 );
+    handshakes: HandshakeMessage[] &size=record_length if ( epoch == 0 && content_type == ContentType::handshake );
+    alert: Alert &size=record_length if ( epoch == 0 && content_type == ContentType::alert );
+    change_cipher_spec: ChangeCipherSpec &size=record_length if ( epoch == 0 && content_type == ContentType::change_cipher_spec );
+    application_data: bytes &size=record_length if ( epoch == 0 && content_type == ContentType::application_data );
+    raw_data: bytes &size=record_length if ( epoch == 0 && content_type != ContentType::handshake && content_type != ContentType::alert && content_type != ContentType::change_cipher_spec && content_type != ContentType::application_data );
+};
+
+type DTLSRecord = unit {
+    type_value: uint8 &convert=ContentType($$);
+    version: ProtocolVersion;
+    epoch: uint16;
+    sequence_number_hi: uint16;
+    sequence_number_mid: uint16;
+    sequence_number_lo: uint16;
+    length: uint16;
+    fragment: RecordFragment(self.type_value, self.epoch, self.length);
+};
+
+public type DTLS = unit {
+    records: DTLSRecord[] &eod;
+};
