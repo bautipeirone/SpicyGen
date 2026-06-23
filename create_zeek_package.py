@@ -500,6 +500,7 @@ def generate_protocol_signatures(analyzer_name: str, metadata: ProtocolMetadata)
             f"signature dpd_{analyzer_name.lower()}_{transport.lower()} {{\n"
             f"  ip-proto == {transport}\n"
             f"{f'  dst-port == {metadata.port}\n' if metadata.port else ''}"
+            f"  event \"{analyzer_name}_{transport.upper()} signature matched\"\n"
             f"  enable \"{analyzer_name}_{transport.upper()}\"\n"
             "}\n"
         )
