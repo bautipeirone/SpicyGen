@@ -35,6 +35,7 @@ from git import Repo
 from dotenv import load_dotenv
 
 from src.agent import query_llm_once
+from src.tools.spicy.preprocess import SpicyParserInfo, parse_spicy_file
 from src.logger import enable_runtime_log_file, logger
 from src.providers import get_autogen_config
 from src.utils import read_config
@@ -75,15 +76,6 @@ class ProtocolMetadata:
             transports=transports
         )
 
-
-@dataclass
-class SpicyParserInfo:
-    """Information extracted from a Spicy parser file."""
-    module_name: str   # e.g. "DNS_gpt"
-    entry_unit: str    # e.g. "Message"
-    source_path: Path  # absolute path to the .spicy file
-
-
 @dataclass
 class ZeekIntegrationFiles:
     """LLM-generated Zeek integration file contents."""
@@ -98,28 +90,6 @@ class ZeekIntegrationFiles:
 
 # Known LLM model name tokens that may appear as a suffix in module names.
 _MODEL_TOKENS = {"gpt", "gemini", "qwen", "claude"}
-
-
-def parse_spicy_file(path: Path) -> SpicyParserInfo:
-    """Extract the module name and public entry-point unit from a .spicy file."""
-    content = path.read_text()
-
-    module_match = re.search(r"^module\s+(\w+)\s*;", content, re.MULTILINE)
-    if not module_match:
-        raise ValueError(f"No 'module' declaration found in {path}")
-
-    unit_match = re.search(
-        r"^public\s+type\s+(\w+)\s*=\s*unit", content, re.MULTILINE
-    )
-    if not unit_match:
-        raise ValueError(f"No 'public type ... = unit' found in {path}")
-
-    return SpicyParserInfo(
-        module_name=module_match.group(1),
-        entry_unit=unit_match.group(1),
-        source_path=path.resolve(),
-    )
-
 
 def derive_analyzer_name(module_name: str) -> str:
     """Derive a clean analyzer name by stripping the LLM model suffix.

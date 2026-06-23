@@ -1,7 +1,47 @@
 import re
+from dataclasses import dataclass
+from pathlib import Path
 from .reserved_keywords import RESERVED_KEYWORDS, REPLACE_KEYWORDS_MAP
 from typing import TypedDict
 from src.utils import strip_code_fences
+
+@dataclass
+class SpicyParserInfo:
+    """Information extracted from a Spicy parser file."""
+    module_name: str   # e.g. "DNS_gpt"
+    entry_unit: str    # e.g. "Message"
+    entry_unit_args: list[tuple[str, str, str | None]] # List of arguments for main entrypoint. Each tuple is name, type and optional default value
+    source_path: Path  # absolute path to the .spicy file
+
+def parse_spicy_file(path: Path) -> SpicyParserInfo:
+    """Extract the module name and public entry-point unit from a .spicy file."""
+    content = path.read_text()
+
+    module_match = re.search(r"^module\s+(\w+)\s*;", content, re.MULTILINE)
+    if not module_match:
+        raise ValueError(f"No 'module' declaration found in {path}")
+
+    unit_match = re.search(
+        r"^public\s+type\s+(\w+)\s*=\s*unit(\((.*)\))?", content, re.MULTILINE
+    )
+
+    if not unit_match:
+        raise ValueError(f"No 'public type ... = unit' found in {path}")
+
+    entry_unit_args = []
+    if unit_match.group(2):
+        for args in unit_match.group(2).lstrip('(').rstrip(')').split(','):
+            name, rest = args.split(':')
+            _type, _, default = rest.partition('=')
+            arg = (name.strip(), _type.strip(), default.strip() if default else None)
+            entry_unit_args.append(arg)
+
+    return SpicyParserInfo(
+        module_name=module_match.group(1),
+        entry_unit=unit_match.group(1),
+        entry_unit_args=entry_unit_args,
+        source_path=path.resolve(),
+    )
 
 def clean_spicy_response(text: str) -> str:
     """Strip markdown fences and leading non-grammar lines from Spicy output."""
