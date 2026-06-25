@@ -27,8 +27,28 @@ class ParserArgument:
     """An external value required by a generated parser entry point."""
 
     name: str
-    type: str
+    type: str | dict[str, str]
     description: str | None = None
+    # type_overrides: dict[str, str] = field(default_factory=dict)
+
+    def type_for(self, target_language: str) -> str:
+        match self.type:
+            case str():
+                return self.type
+            case dict():
+                if target_language in self.type:
+                    return self.type[target_language]
+                else:
+                    raise ValueError(
+                        f"Type for target language '{target_language}' not found in type overrides for argument '{self.name}'."
+                    )
+
+    def for_language(self, target_language: str) -> "ParserArgument":
+        return ParserArgument(
+            name=self.name,
+            type=self.type_for(target_language),
+            description=self.description,
+        )
 
 
 @dataclass
@@ -39,7 +59,7 @@ class Protocol:
     spec_type: ProtocolSpecType | None
     spec_id: str | None  # Can refer to RFC ID, IEEE standard number, etc.
     local_spec_file: Path | None
-    parser_arguments: dict[str, tuple[ParserArgument, ...]] = field(default_factory=dict)
+    parser_arguments: tuple[ParserArgument, ...] = ()
 
     @property
     def is_text_protocol(self) -> bool:
@@ -50,7 +70,7 @@ class Protocol:
         return self.type == ProtocolType.BINARY
 
     def parser_arguments_for(self, target_language: str) -> tuple[ParserArgument, ...]:
-        return self.parser_arguments.get(target_language, ())
+        return tuple(argument.for_language(target_language) for argument in self.parser_arguments)
 
 
 def load_protocol_index(index_path: Path | None = None) -> dict:
@@ -73,17 +93,14 @@ def load_protocol(protocol_name: str, index_path: Path | None = None) -> Protoco
         logger.warning(f"Protocol '{protocol_name}' not found in index.")
         return None
     entry = index[protocol_name]
-    parser_arguments = {
-        language: tuple(
-            ParserArgument(
-                name=argument["name"],
-                type=argument["type"],
-                description=argument.get("description"),
-            )
-            for argument in arguments
+    parser_arguments = tuple(
+        ParserArgument(
+            name=argument["name"],
+            type=argument["type"],
+            description=argument.get("description")
         )
-        for language, arguments in entry.get("parser_arguments", {}).items()
-    }
+        for argument in entry.get("parser_arguments", [])
+    )
     return Protocol(
         name=protocol_name,
         full_name=entry.get("full_name"),

@@ -109,7 +109,7 @@ def test_packet_precompile_writes_wrapper_and_selects_it(tmp_path, monkeypatch):
         spec_type=ProtocolSpecType.BLUEBOOK,
         spec_id=None,
         local_spec_file=None,
-        parser_arguments={"spicy": ARGUMENTS},
+        parser_arguments=ARGUMENTS,
     )
     captured = {}
 
@@ -163,7 +163,7 @@ def test_runtime_reuses_wrapper_for_identical_packet_arguments(tmp_path, monkeyp
         spec_type=ProtocolSpecType.BLUEBOOK,
         spec_id=None,
         local_spec_file=None,
-        parser_arguments={"spicy": ARGUMENTS},
+        parser_arguments=ARGUMENTS,
     )
 
     result = run_parser_check(tmp_path / "parser.spicy", runtime, protocol, False)

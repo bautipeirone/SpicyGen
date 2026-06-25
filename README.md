@@ -97,14 +97,24 @@ Add a new key with the protocol's short name. Required fields include:
 
 #### External Parser Arguments
 
-If parsing depends on managed configuration that is not encoded in packet bytes, declare a target-specific argument contract in the protocol entry:
+If parsing depends on managed configuration that is not encoded in packet bytes, declare a protocol-level argument contract in the protocol entry:
 
 ```json
-"parser_arguments": {
-  "spicy": [
-    {"name": "frame_length", "type": "uint64", "description": "Configured frame length."},
-    {"name": "has_fecf", "type": "bool", "description": "Whether an FECF is present."}
-  ]
+"parser_arguments": [
+  {"name": "frame_length", "type": "uint64", "description": "Configured frame length."},
+  {"name": "has_fecf", "type": "bool", "description": "Whether an FECF is present."}
+]
+```
+
+The default `type` is used for every target language. If one backend needs a different concrete type spelling, it can be overriden per language:
+
+```json
+{
+  "name": "frame_length",
+  "type": {
+    "spicy": "uint64",
+    "3d": "uint32"
+  }
 }
 ```
 
@@ -117,4 +127,4 @@ Store each packet's values next to its bytes in `<packet>.bin.args.json`:
 }
 ```
 
-The argument names and types form the contract presented to the LLM. At runtime, the generated parser signature and sidecar keys are validated against that contract. Values are bound by name and reordered to match the generated signature before a packet-specific wrapper is compiled. Spicy sidecars support `bool`, signed and unsigned 8/16/32/64-bit integers, `string`, `real`, and `double`.
+The argument names and target-resolved types form the contract presented to the LLM. At runtime, the generated parser signature and sidecar keys are validated against that contract. Values are bound by name and reordered to match the generated signature before a packet-specific wrapper is compiled. Spicy sidecars support `bool`, signed and unsigned 8/16/32/64-bit integers, `string`, `real`, and `double`.

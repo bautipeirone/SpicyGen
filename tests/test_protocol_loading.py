@@ -82,9 +82,31 @@ class TestLoadProtocol:
         assert text.is_text_protocol is True
         assert text.is_binary_protocol is False
 
-    def test_loads_target_specific_parser_arguments(self):
+    def test_loads_protocol_level_parser_arguments(self):
         protocol = load_protocol("tm-sdlp")
         assert protocol is not None
+        assert protocol.parser_arguments == (
+            ParserArgument(
+                name="transfer_frame_length",
+                type="uint64",
+                description="The configured fixed transfer-frame length in octets.",
+            ),
+            ParserArgument(
+                name="security_header_length",
+                type="uint64",
+                description="The configured security-header length in octets.",
+            ),
+            ParserArgument(
+                name="security_trailer_length",
+                type="uint64",
+                description="The configured security-trailer length in octets.",
+            ),
+            ParserArgument(
+                name="has_frame_error_control_field",
+                type="bool",
+                description="Whether the managed channel includes a Frame Error Control Field.",
+            ),
+        )
         assert protocol.parser_arguments_for("spicy") == (
             ParserArgument(
                 name="transfer_frame_length",
@@ -106,6 +128,33 @@ class TestLoadProtocol:
                 type="bool",
                 description="Whether the managed channel includes a Frame Error Control Field.",
             ),
+        )
+
+    def test_parser_argument_type_override_is_resolved_per_language(self, tmp_path):
+        index = {
+            "test": {
+                "type": "binary",
+                "spec_type": "bluebook",
+                "parser_arguments": [
+                    {
+                        "name": "frame_length",
+                        "type": {
+                            "spicy": "uint64",
+                            "3d": "uint32"
+                        }
+                    }
+                ],
+            }
+        }
+        index_path = tmp_path / "protocol_index.json"
+        index_path.write_text(json.dumps(index))
+
+        protocol = load_protocol("test", index_path=index_path)
+
+        assert protocol is not None
+        assert protocol.parser_arguments_for("spicy") == (ParserArgument("frame_length", "uint64"),)
+        assert protocol.parser_arguments_for("3d") == (
+            ParserArgument("frame_length", "uint32"),
         )
 
     def test_parser_argument_contract_is_added_to_generation_prompt(self):
