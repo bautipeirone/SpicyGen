@@ -45,6 +45,13 @@ exactly the following fields:
   "layer": "<application|session|transport|network|link| or null>",
   "encoding": <ASN.1|CBOR|... or null>",
   "checksum": <Internet Checksum|CRC16|CRC32|HMAC-SHA1|... or null>",
+  "parser_arguments": [
+    {
+      "name": "<snake_case_argument_name>",
+      "type": "<bool|int|uint|string|bytes|float>",
+      "description": "<short description of the external context value>"
+    }
+  ]
 }
 
 Rules:
@@ -57,6 +64,15 @@ Rules:
 - "layer" is the layer of the OSI model the protocol belongs to.
 - "encoding" is the encoding of the protocol message (e.g. "ASN.1", "CBOR", ...).
 - "checksum" is the checksum algorithm used in the protocol header, or null if not applicable.
+- "parser_arguments" is an array of external parser parameters required to parse packets when
+  the value is managed configuration or session context that is NOT encoded in packet bytes.
+  Use [] if packet bytes contain enough information to parse the protocol. Examples include
+  configured fixed frame length, presence/absence of optional managed headers, security
+  header/trailer lengths, negotiated options, or link/channel settings. Do NOT include normal
+  packet fields, transport metadata, values inferable from packet length fields, checksums,
+  source/destination addresses, or ports. Argument names MUST be stable snake_case identifiers.
+  Argument types MUST be neutral, target-language-independent types: bool, int, uint, string,
+  bytes, or float. Do NOT output target-specific types such as uint64, uint32, or size_t.
 """
 
 BASE_GENERATION_PROMPT = """You are a communication protocol's specialist called {name}, and your job is to extract message structures from RFC specifications.

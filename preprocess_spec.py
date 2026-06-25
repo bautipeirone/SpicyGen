@@ -15,7 +15,15 @@ import re
 import time
 from typing import Any
 
-EXPECTED_INFO_FIELDS = ("type", "port", "transport", "layer", "encoding", "checksum")
+EXPECTED_INFO_FIELDS = (
+    "type",
+    "port",
+    "transport",
+    "layer",
+    "encoding",
+    "checksum",
+    "parser_arguments",
+)
 
 def compute_info_stats(info: dict[str, Any]) -> dict[str, Any]:
     present_fields = [field for field in EXPECTED_INFO_FIELDS if field in info]
@@ -35,6 +43,11 @@ def compute_info_stats(info: dict[str, Any]) -> dict[str, Any]:
         "null_or_empty_fields": len(null_fields),
         "missing_fields": [field for field in EXPECTED_INFO_FIELDS if field not in info],
         "transport_count": len(info.get("transport", [])) if isinstance(info.get("transport"), list) else 0,
+        "parser_argument_count": (
+            len(info.get("parser_arguments", []))
+            if isinstance(info.get("parser_arguments"), list)
+            else 0
+        ),
         "valid_json_object": "raw_response" not in info,
     }
     return stats
@@ -68,7 +81,7 @@ def extract_protocol_info(
         info = json.loads(raw)
     except json.JSONDecodeError:
         logger.warning("LLM response was not valid JSON; attempting to extract JSON substring.")
-        match = re.search(r"\{.*?\}", raw, re.DOTALL)
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
             info = json.loads(match.group())
         else:

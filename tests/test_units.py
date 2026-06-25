@@ -22,6 +22,7 @@ from src.tools._3d.wrapper import (
     normalize_identifier,
 )
 from src.usage import merge_usage_reports
+from src.prompts import EXTRACT_INFO_SYSTEM_PROMPT
 from preprocess_spec import compute_info_stats
 from generate_grammar import build_metrics, infer_spec_source, SpecSource
 
@@ -118,14 +119,22 @@ class TestComputeInfoStats:
             "layer": "application",
             "encoding": None,
             "checksum": None,
+            "parser_arguments": [
+                {
+                    "name": "frame_length",
+                    "type": "uint",
+                    "description": "Configured frame length.",
+                }
+            ],
         }
         stats = compute_info_stats(info)
-        assert stats["expected_fields"] == 6
-        assert stats["present_fields"] == 6
-        assert stats["populated_fields"] == 4
+        assert stats["expected_fields"] == 7
+        assert stats["present_fields"] == 7
+        assert stats["populated_fields"] == 5
         assert stats["null_or_empty_fields"] == 2
         assert stats["missing_fields"] == []
         assert stats["transport_count"] == 2
+        assert stats["parser_argument_count"] == 1
         assert stats["valid_json_object"] is True
 
     def test_raw_response_fallback(self):
@@ -138,6 +147,23 @@ class TestComputeInfoStats:
         info = {"type": "text", "port": 80}
         stats = compute_info_stats(info)
         assert "transport" in stats["missing_fields"]
+        assert "parser_arguments" in stats["missing_fields"]
+        assert stats["parser_argument_count"] == 0
+
+    def test_empty_parser_arguments_is_counted_as_empty_metadata(self):
+        info = {
+            "type": "binary",
+            "port": None,
+            "transport": [],
+            "layer": None,
+            "encoding": None,
+            "checksum": None,
+            "parser_arguments": [],
+        }
+        stats = compute_info_stats(info)
+        assert stats["parser_argument_count"] == 0
+        assert "parser_arguments" not in stats["missing_fields"]
+        assert stats["null_or_empty_fields"] == 6
 
 
 # ---------------------------------------------------------------------------
