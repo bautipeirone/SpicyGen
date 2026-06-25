@@ -1,5 +1,5 @@
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from src.utils import load_file
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from enum import Enum
@@ -22,6 +22,15 @@ class ProtocolSpecType(Enum):
     IEEE_STD = "ieee_std"
 
 
+@dataclass(frozen=True)
+class ParserArgument:
+    """An external value required by a generated parser entry point."""
+
+    name: str
+    type: str
+    description: str | None = None
+
+
 @dataclass
 class Protocol:
     name: str
@@ -30,6 +39,7 @@ class Protocol:
     spec_type: ProtocolSpecType | None
     spec_id: str | None  # Can refer to RFC ID, IEEE standard number, etc.
     local_spec_file: Path | None
+    parser_arguments: dict[str, tuple[ParserArgument, ...]] = field(default_factory=dict)
 
     @property
     def is_text_protocol(self) -> bool:
@@ -38,6 +48,9 @@ class Protocol:
     @property
     def is_binary_protocol(self) -> bool:
         return self.type == ProtocolType.BINARY
+
+    def parser_arguments_for(self, target_language: str) -> tuple[ParserArgument, ...]:
+        return self.parser_arguments.get(target_language, ())
 
 
 def load_protocol_index(index_path: Path | None = None) -> dict:
@@ -60,6 +73,17 @@ def load_protocol(protocol_name: str, index_path: Path | None = None) -> Protoco
         logger.warning(f"Protocol '{protocol_name}' not found in index.")
         return None
     entry = index[protocol_name]
+    parser_arguments = {
+        language: tuple(
+            ParserArgument(
+                name=argument["name"],
+                type=argument["type"],
+                description=argument.get("description"),
+            )
+            for argument in arguments
+        )
+        for language, arguments in entry.get("parser_arguments", {}).items()
+    }
     return Protocol(
         name=protocol_name,
         full_name=entry.get("full_name"),
@@ -67,6 +91,7 @@ def load_protocol(protocol_name: str, index_path: Path | None = None) -> Protoco
         spec_type=ProtocolSpecType(entry.get("spec_type")),
         spec_id=entry.get("rfc_id"),
         local_spec_file=Path(entry["local_spec_file"]) if entry.get("local_spec_file") else None,
+        parser_arguments=parser_arguments,
     )
 
 

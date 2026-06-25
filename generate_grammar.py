@@ -206,6 +206,7 @@ def main() -> None:
         target_language_context=target_language_context,
         target_language=target_language,
         rfc_retrieval_tool_enabled=agent_config.get("enable_rfc_retrieval_tool", False),
+        protocol=protocol,
     )
 
     start_time = time.time()

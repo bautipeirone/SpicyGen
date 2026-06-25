@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from .reserved_keywords import RESERVED_KEYWORDS, REPLACE_KEYWORDS_MAP
 from typing import TypedDict
@@ -10,8 +10,8 @@ class SpicyParserInfo:
     """Information extracted from a Spicy parser file."""
     module_name: str   # e.g. "DNS_gpt"
     entry_unit: str    # e.g. "Message"
-    entry_unit_args: list[tuple[str, str, str | None]] # List of arguments for main entrypoint. Each tuple is name, type and optional default value
     source_path: Path  # absolute path to the .spicy file
+    entry_unit_args: list[tuple[str, str, str | None]] = field(default_factory=list)
 
 def parse_spicy_file(path: Path) -> SpicyParserInfo:
     """Extract the module name and public entry-point unit from a .spicy file."""
@@ -22,7 +22,9 @@ def parse_spicy_file(path: Path) -> SpicyParserInfo:
         raise ValueError(f"No 'module' declaration found in {path}")
 
     unit_match = re.search(
-        r"^public\s+type\s+(\w+)\s*=\s*unit(\((.*)\))?", content, re.MULTILINE
+        r"^public\s+type\s+(\w+)\s*=\s*unit\s*(?:\((.*?)\))?\s*\{",
+        content,
+        re.MULTILINE | re.DOTALL,
     )
 
     if not unit_match:
@@ -30,8 +32,8 @@ def parse_spicy_file(path: Path) -> SpicyParserInfo:
 
     entry_unit_args = []
     if unit_match.group(2):
-        for args in unit_match.group(2).lstrip('(').rstrip(')').split(','):
-            name, rest = args.split(':')
+        for args in unit_match.group(2).split(','):
+            name, rest = args.split(':', maxsplit=1)
             _type, _, default = rest.partition('=')
             arg = (name.strip(), _type.strip(), default.strip() if default else None)
             entry_unit_args.append(arg)
@@ -39,8 +41,8 @@ def parse_spicy_file(path: Path) -> SpicyParserInfo:
     return SpicyParserInfo(
         module_name=module_match.group(1),
         entry_unit=unit_match.group(1),
-        entry_unit_args=entry_unit_args,
         source_path=path.resolve(),
+        entry_unit_args=entry_unit_args,
     )
 
 def clean_spicy_response(text: str) -> str:

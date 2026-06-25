@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from src.protocol import (
+    ParserArgument,
     Protocol,
     ProtocolType,
     ProtocolSpecType,
@@ -16,6 +17,8 @@ from src.protocol import (
     load_protocol_index,
     load_spec,
 )
+from src.prompts import build_refinement_system_message
+from src.target_language import get_target_language
 
 
 # ---------------------------------------------------------------------------
@@ -78,6 +81,46 @@ class TestLoadProtocol:
         text = load_protocol("http1.1")
         assert text.is_text_protocol is True
         assert text.is_binary_protocol is False
+
+    def test_loads_target_specific_parser_arguments(self):
+        protocol = load_protocol("tm-sdlp")
+        assert protocol is not None
+        assert protocol.parser_arguments_for("spicy") == (
+            ParserArgument(
+                name="transfer_frame_length",
+                type="uint64",
+                description="The configured fixed transfer-frame length in octets.",
+            ),
+            ParserArgument(
+                name="security_header_length",
+                type="uint64",
+                description="The configured security-header length in octets.",
+            ),
+            ParserArgument(
+                name="security_trailer_length",
+                type="uint64",
+                description="The configured security-trailer length in octets.",
+            ),
+            ParserArgument(
+                name="has_frame_error_control_field",
+                type="bool",
+                description="Whether the managed channel includes a Frame Error Control Field.",
+            ),
+        )
+
+    def test_parser_argument_contract_is_added_to_generation_prompt(self):
+        protocol = load_protocol("tm-sdlp")
+        prompt = build_refinement_system_message(
+            model_name="test",
+            target_language_context="language instructions",
+            target_language=get_target_language("spicy"),
+            rfc_retrieval_tool_enabled=False,
+            protocol=protocol,
+        )
+
+        assert "EXTERNAL PARSER ARGUMENT CONTRACT" in prompt
+        assert "- transfer_frame_length: uint64" in prompt
+        assert "- has_frame_error_control_field: bool" in prompt
 
 
 class TestLoadProtocolWithCustomIndex:

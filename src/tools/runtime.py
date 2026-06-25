@@ -25,11 +25,14 @@ class ParseResult:
 @dataclass(frozen=True)
 class RuntimeArtifact:
     path: Path
+    parser_name: str | None = None
     cleanup: Callable[[], None] | None = None
 
 
-type ParseFunction = Callable[[Path, Path], ParseResult]
+type ParseFunction = Callable[[Path, Path, str | None], ParseResult]
 type PrepareParserFunction = Callable[[Path, Path | None], RuntimeArtifact]
+type PreparePacketParserFunction = Callable[[Path, Path, Protocol, Path | None], RuntimeArtifact]
+type PacketParserCacheKey = Callable[[Path], str]
 type ParseResultSummarizer = Callable[[ParseResult], str | None]
 
 
@@ -37,6 +40,9 @@ type ParseResultSummarizer = Callable[[ParseResult], str | None]
 class RuntimeAdapter:
     parse_packet: ParseFunction
     prepare_parser: PrepareParserFunction | None = None
+    prepare_packet_parser: PreparePacketParserFunction | None = None
+    packet_parser_cache_key: PacketParserCacheKey | None = None
+    packet_argument_language: str | None = None
     summarize_parse_result: ParseResultSummarizer | None = None
 
     @property
@@ -47,10 +53,36 @@ class RuntimeAdapter:
     def supports_parse_tree_summary(self) -> bool:
         return self.summarize_parse_result is not None
 
+    def requires_packet_parser(self, protocol: Protocol) -> bool:
+        return (
+            self.prepare_packet_parser is not None
+            and self.packet_argument_language is not None
+            and bool(protocol.parser_arguments_for(self.packet_argument_language))
+        )
+
     def build_parser(self, source_path: Path, build_dir: Path | None = None) -> RuntimeArtifact:
         if self.prepare_parser is None:
             return RuntimeArtifact(path=source_path)
         return self.prepare_parser(source_path, build_dir)
+
+    def build_packet_parser(
+        self,
+        source_path: Path,
+        packet_path: Path,
+        protocol: Protocol,
+        build_dir: Path | None = None,
+    ) -> RuntimeArtifact:
+        if self.prepare_packet_parser is None:
+            return self.build_parser(source_path, build_dir)
+        return self.prepare_packet_parser(source_path, packet_path, protocol, build_dir)
+
+    def run_parser(self, artifact: RuntimeArtifact, packet_path: Path) -> ParseResult:
+        return self.parse_packet(artifact.path, packet_path, artifact.parser_name)
+
+    def packet_cache_key(self, packet_path: Path) -> str:
+        if self.packet_parser_cache_key is None:
+            return str(packet_path)
+        return self.packet_parser_cache_key(packet_path)
 
     def summarize_result(self, parse_result: ParseResult) -> str | None:
         if self.summarize_parse_result is None:
@@ -223,14 +255,17 @@ def run_parser_check(
         logger.warning(f"No raw packet directory found for protocol '{protocol_name}' at {protocol_dir}")
         return result
 
-    try:
-        parser_artifact = runtime.build_parser(Path(parser_source), build_dir)
-    except RuntimeError as exc:
-        result.setup_error = str(exc)
-        if errors_path:
-            errors_path.write_text(result.setup_error)
-        logger.error(f"Runtime setup failed for '{protocol_name}': {result.setup_error}")
-        return result
+    packet_specific_parser = runtime.requires_packet_parser(protocol)
+    parser_artifact: RuntimeArtifact | None = None
+    if not packet_specific_parser:
+        try:
+            parser_artifact = runtime.build_parser(Path(parser_source), build_dir)
+        except RuntimeError as exc:
+            result.setup_error = str(exc)
+            if errors_path:
+                errors_path.write_text(result.setup_error)
+            logger.error(f"Runtime setup failed for '{protocol_name}': {result.setup_error}")
+            return result
 
     logger.info(
         f"Semantic check for '{protocol_name}': "
@@ -238,44 +273,73 @@ def run_parser_check(
     )
 
     errors_log: list[str] = []
+    packet_artifacts: dict[str, RuntimeArtifact] = {}
 
-    for rel_path in accept_packets:
+    def parse_packet(rel_path: str) -> ParseResult:
         abs_path = _RAW_BASE_DIR / rel_path
-        parse_result = runtime.parse_packet(parser_artifact.path, abs_path)
-        parse_tree_summary = runtime.summarize_result(parse_result) if include_parse_tree_summary else None
+        artifact = parser_artifact
+        if packet_specific_parser:
+            cache_key = runtime.packet_cache_key(abs_path)
+            artifact = packet_artifacts.get(cache_key)
+            if artifact is None:
+                packet_build_dir = (
+                    build_dir / f"variant_{len(packet_artifacts):03d}" if build_dir else None
+                )
+                artifact = runtime.build_packet_parser(
+                    Path(parser_source),
+                    abs_path,
+                    protocol,
+                    packet_build_dir,
+                )
+                packet_artifacts[cache_key] = artifact
+
+        assert artifact is not None
+        return runtime.run_parser(artifact, abs_path)
+
+    for packet_index, rel_path in enumerate(accept_packets + reject_packets):
+        expected_accept = packet_index < len(accept_packets)
+        try:
+            parse_result = parse_packet(rel_path)
+        except RuntimeError as exc:
+            result.setup_error = f"Packet '{rel_path}': {exc}"
+            if errors_path:
+                errors_path.write_text(result.setup_error)
+            logger.error(f"Runtime setup failed for '{protocol_name}': {result.setup_error}")
+            break
+
+        parse_tree_summary = (
+            runtime.summarize_result(parse_result)
+            if expected_accept and include_parse_tree_summary
+            else None
+        )
         verdict = PacketVerdict(
             packet_path=rel_path,
-            expected_accept=True,
-            actual_accept=parse_result.success and parse_tree_summary is None,
+            expected_accept=expected_accept,
+            actual_accept=(
+                parse_result.success and parse_tree_summary is None
+                if expected_accept
+                else parse_result.success
+            ),
             error=parse_result.error,
-            parse_tree_summary=parse_tree_summary,
+            parse_tree_summary=parse_tree_summary if expected_accept else None,
         )
         result.verdicts.append(verdict)
         if parse_result.error:
             errors_log.append(parse_result.error.strip())
         if not verdict.passed:
-            logger.warning(f"FAIL (accept): {rel_path} was rejected. stderr: {parse_result.error.strip()}")
+            if expected_accept:
+                logger.warning(f"FAIL (accept): {rel_path} was rejected. stderr: {parse_result.error.strip()}")
+            else:
+                logger.warning(f"FAIL (reject): {rel_path} was accepted but should have been rejected.")
 
-    for rel_path in reject_packets:
-        abs_path = _RAW_BASE_DIR / rel_path
-        parse_result = runtime.parse_packet(parser_artifact.path, abs_path)
-        verdict = PacketVerdict(
-            packet_path=rel_path,
-            expected_accept=False,
-            actual_accept=parse_result.success,
-            error=parse_result.error,
-        )
-        result.verdicts.append(verdict)
-        if parse_result.error:
-            errors_log.append(parse_result.error.strip())
-        if not verdict.passed:
-            logger.warning(f"FAIL (reject): {rel_path} was accepted but should have been rejected.")
-
-    if errors_log and errors_path:
+    if errors_log and errors_path and result.setup_error is None:
         errors_path.write_text("\n".join(errors_log))
 
-    if parser_artifact.cleanup is not None:
+    if parser_artifact is not None and parser_artifact.cleanup is not None:
         parser_artifact.cleanup()
+    for artifact in packet_artifacts.values():
+        if artifact.cleanup is not None:
+            artifact.cleanup()
 
     logger.debug(f"Semantic check result: {result.summary()}")
     return result

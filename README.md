@@ -94,3 +94,27 @@ Add a new key with the protocol's short name. Required fields include:
 - `spec_type`: The origin of the specification (e.g., `rfc` or `bluebook`).
 - `rfc_id`: The RFC number (if `spec_type` is `rfc`).
 - `local_spec_file`: (Optional) Path to a specific local text file to use instead of fetching an RFC.
+
+#### External Parser Arguments
+
+If parsing depends on managed configuration that is not encoded in packet bytes, declare a target-specific argument contract in the protocol entry:
+
+```json
+"parser_arguments": {
+  "spicy": [
+    {"name": "frame_length", "type": "uint64", "description": "Configured frame length."},
+    {"name": "has_fecf", "type": "bool", "description": "Whether an FECF is present."}
+  ]
+}
+```
+
+Store each packet's values next to its bytes in `<packet>.bin.args.json`:
+
+```json
+{
+  "frame_length": 16,
+  "has_fecf": true
+}
+```
+
+The argument names and types form the contract presented to the LLM. At runtime, the generated parser signature and sidecar keys are validated against that contract. Values are bound by name and reordered to match the generated signature before a packet-specific wrapper is compiled. Spicy sidecars support `bool`, signed and unsigned 8/16/32/64-bit integers, `string`, `real`, and `double`.

@@ -58,7 +58,11 @@ def prepare_everparse_parser(grammar_file: Path, build_dir: Path | None = None) 
     return RuntimeArtifact(path=output_exec, cleanup=cleanup)
 
 
-def run_everparse_parser(parser_file: Path, packet_file: Path) -> ParseResult:
+def run_everparse_parser(
+    parser_file: Path,
+    packet_file: Path,
+    parser_name: str | None = None,
+) -> ParseResult:
     """Run an EverParse parser and return the result."""
     logger.info(f"Running EverParse parser: {parser_file} {packet_file.name}")
 

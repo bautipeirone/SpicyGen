@@ -464,7 +464,7 @@ def generate_zeek_files_with_llm(
 
 
 def generate_protocol_signatures(analyzer_name: str, metadata: ProtocolMetadata) -> str:
-    signatures = ""
+    signatures = []
     for transport in metadata.transports:
         transport_signature = (
             f"signature dpd_{analyzer_name.lower()}_{transport.lower()} {{\n"
@@ -474,9 +474,9 @@ def generate_protocol_signatures(analyzer_name: str, metadata: ProtocolMetadata)
             f"  enable \"{analyzer_name}_{transport.upper()}\"\n"
             "}\n"
         )
-        signatures += transport_signature
+        signatures.append(transport_signature)
 
-    return signatures
+    return "\n".join(signatures)
 
 
 def build_metrics(

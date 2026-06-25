@@ -1,3 +1,4 @@
+from src.protocol import Protocol
 from src.target_language import TargetLanguage
 
 SUMMARIZE_SPEC_SYSTEM_PROMPT = """\
@@ -110,13 +111,29 @@ def build_refinement_system_message(
     target_language_context: str,
     target_language: TargetLanguage,
     rfc_retrieval_tool_enabled: bool,
+    protocol: Protocol | None = None,
 ) -> str:
     base_prompt = BASE_GENERATION_PROMPT.format(name=model_name)
     loop_instructions = build_agent_loop_instructions(
         target_language,
         rfc_retrieval_tool_enabled=rfc_retrieval_tool_enabled,
     )
-    return f"{base_prompt}{target_language_context}{loop_instructions}"
+    parser_arguments = protocol.parser_arguments_for(target_language.name) if protocol else ()
+    argument_contract = ""
+    if parser_arguments:
+        lines = [
+            "\nEXTERNAL PARSER ARGUMENT CONTRACT:\n",
+            "The public entry unit MUST declare exactly the following external parameters. ",
+            "Use each name and type verbatim. These values describe context that is not present ",
+            "in packet bytes; do not replace them with parsed fields or constants. Runtime packet ",
+            "metadata supplies their values by name, so declaration order is not significant.\n",
+        ]
+        for argument in parser_arguments:
+            description = f" - {argument.description}" if argument.description else ""
+            lines.append(f"- {argument.name}: {argument.type}{description}\n")
+        argument_contract = "".join(lines)
+
+    return f"{base_prompt}{target_language_context}{argument_contract}{loop_instructions}"
 
 
 def build_empty_spec_prompt(

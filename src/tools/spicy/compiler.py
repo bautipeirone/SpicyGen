@@ -11,8 +11,17 @@ def run_spicy_compiler(grammar_file: str, *args) -> subprocess.CompletedProcess:
         text=True,
     )
 
-def compile_to_hlto(grammar_file: Path, output_path: Path) -> CompileResult:
-    result = run_spicy_compiler(str(grammar_file), "-o", str(output_path))
+def compile_to_hlto(
+    grammar_file: Path,
+    output_path: Path,
+    additional_sources: tuple[Path, ...] = (),
+) -> CompileResult:
+    result = run_spicy_compiler(
+        str(grammar_file),
+        *[str(path) for path in additional_sources],
+        "-o",
+        str(output_path),
+    )
     if result.returncode != 0:
         error = result.stderr.strip() or "Unknown pre-compilation error."
         return CompileResult(success=False, errors=error)

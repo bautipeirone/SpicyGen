@@ -181,7 +181,36 @@
     "full_name": "Telecommand Space Data Link Protocol",
     "type": "binary",
     "spec_type": "bluebook",
-    "local_spec_file": "specs/tc-sdlp-bluebook.txt"
+    "local_spec_file": "specs/tc-sdlp-bluebook.txt",
+    "parser_arguments": {
+      "spicy": [
+        {
+          "name": "has_segment_header",
+          "type": "bool",
+          "description": "Whether the managed channel includes a Segment Header."
+        },
+        {
+          "name": "has_fcef",
+          "type": "bool",
+          "description": "Whether the managed channel includes a Frame Error Control Field."
+        },
+        {
+          "name": "is_return_link",
+          "type": "bool",
+          "description": "Whether the managed channel transmits Communications Link Control Word."
+        },
+        {
+          "name": "security_header_length",
+          "type": "uint64",
+          "description": "Length in bytes for the security header, 0 if not present."
+        },
+        {
+          "name": "security_trailer_length",
+          "type": "uint64",
+          "description": "Length in bytes for the security trailer, 0 if not present."
+        }
+      ]
+    }
   },
   "tcp": {
     "full_name": "Transmission Control Protocol",
@@ -204,7 +233,31 @@
     "full_name": "Telemetry Space Data Link Protocol",
     "type": "binary",
     "spec_type": "bluebook",
-    "local_spec_file": "specs/tm-sdlp-bluebook.txt"
+    "local_spec_file": "specs/tm-sdlp-bluebook.txt",
+    "parser_arguments": {
+      "spicy": [
+        {
+          "name": "transfer_frame_length",
+          "type": "uint64",
+          "description": "The configured fixed transfer-frame length in octets."
+        },
+        {
+          "name": "security_header_length",
+          "type": "uint64",
+          "description": "The configured security-header length in octets."
+        },
+        {
+          "name": "security_trailer_length",
+          "type": "uint64",
+          "description": "The configured security-trailer length in octets."
+        },
+        {
+          "name": "has_frame_error_control_field",
+          "type": "bool",
+          "description": "Whether the managed channel includes a Frame Error Control Field."
+        }
+      ]
+    }
   },
   "tpkt": {
     "full_name": "The ISO Transport Service over TCP",
