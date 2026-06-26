@@ -1,0 +1,2 @@
+Category: IHL length mismatch
+Invalid Reason: IHL=6 (24 bytes) but only 20 bytes present, so header is incomplete

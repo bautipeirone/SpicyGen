@@ -1,0 +1,2 @@
+Category: truncated_payload
+Invalid Reason: The UDP Length field says 9 octets, but only 8 octets are present, so the datagram is truncated by one byte.

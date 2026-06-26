@@ -1,0 +1,2 @@
+Category: missing_required_header
+Invalid Reason: RTSP requires `Content-Length` in all messages that carry a message body; this ANNOUNCE includes a body but omits `Content-Length`.

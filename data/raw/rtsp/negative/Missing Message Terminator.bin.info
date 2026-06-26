@@ -1,0 +1,2 @@
+Category: Message-Termination
+Invalid Reason: RTSP messages must be terminated by an empty line (CRLF) after the header block

@@ -1,0 +1,2 @@
+Category: missing_required_header
+Invalid Reason: Every RTSP request and response must include a `CSeq` header; this otherwise valid PLAY request omits it.

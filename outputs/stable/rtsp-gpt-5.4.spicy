@@ -1,0 +1,190 @@
+module RTSP_gpt;
+
+import spicy;
+
+const WhiteSpace = /[ \t]+/;
+const OptionalWhiteSpace = /[ \t]*/;
+const LineEnd = /\r\n|\r|\n/;
+const FieldValue = /[^\r\n]*/;
+const Digits = /[0-9]+/;
+const ReasonText = /[^\r\n]*/;
+const RequestURI = /\*|[^ \t\r\n]+/;
+
+type RTSPVersion = unit {
+    : b"RTSP";
+    : b"/";
+    major: Digits;
+    : b".";
+    minor: Digits;
+};
+
+type BodyMethod = unit {
+    name: /ANNOUNCE|SET_PARAMETER/;
+};
+
+type NoBodyMethod = unit {
+    name: /DESCRIBE|GET_PARAMETER|OPTIONS|PAUSE|PLAY|RECORD|REDIRECT|SETUP|TEARDOWN/;
+};
+
+type RequestLineWithBody = unit {
+    method: BodyMethod;
+    : WhiteSpace;
+    uri: RequestURI;
+    : WhiteSpace;
+    version: RTSPVersion;
+    : LineEnd;
+};
+
+type RequestLineWithoutBody = unit {
+    method: NoBodyMethod;
+    : WhiteSpace;
+    uri: RequestURI;
+    : WhiteSpace;
+    version: RTSPVersion;
+    : LineEnd;
+};
+
+type StatusLine = unit {
+    version: RTSPVersion;
+    : WhiteSpace;
+    status_code: /[0-9][0-9][0-9]/;
+    : WhiteSpace;
+    reason_phrase: ReasonText;
+    : LineEnd;
+};
+
+type AcceptHeader = unit { name: b"Accept"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type AcceptEncodingHeader = unit { name: b"Accept-Encoding"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type AcceptLanguageHeader = unit { name: b"Accept-Language"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type AllowHeader = unit { name: b"Allow"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type AuthorizationHeader = unit { name: b"Authorization"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type BandwidthHeader = unit { name: b"Bandwidth"; : b":"; : OptionalWhiteSpace; bandwidth: Digits; : LineEnd; };
+type BlocksizeHeader = unit { name: b"Blocksize"; : b":"; : OptionalWhiteSpace; blocksize: Digits; : LineEnd; };
+type CacheControlHeader = unit { name: b"Cache-Control"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ConferenceHeader = unit { name: b"Conference"; : b":"; : OptionalWhiteSpace; conference_id: FieldValue; : LineEnd; };
+type ConnectionHeader = unit { name: b"Connection"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ContentBaseHeader = unit { name: b"Content-Base"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ContentEncodingHeader = unit { name: b"Content-Encoding"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ContentLanguageHeader = unit { name: b"Content-Language"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ContentLengthHeader = unit { name: b"Content-Length"; : b":"; : OptionalWhiteSpace; length: Digits &convert=$$.to_uint(); : LineEnd; };
+type ContentLocationHeader = unit { name: b"Content-Location"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ContentTypeHeader = unit { name: b"Content-Type"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type CSeqHeader = unit { name: b"CSeq"; : b":"; : OptionalWhiteSpace; sequence: Digits; : LineEnd; };
+type DateHeader = unit { name: b"Date"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ExpiresHeader = unit { name: b"Expires"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type FromHeader = unit { name: b"From"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type IfModifiedSinceHeader = unit { name: b"If-Modified-Since"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type LastModifiedHeader = unit { name: b"Last-Modified"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type LocationHeader = unit { name: b"Location"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ProxyAuthenticateHeader = unit { name: b"Proxy-Authenticate"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ProxyRequireHeader = unit { name: b"Proxy-Require"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type PublicHeader = unit { name: b"Public"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type RangeHeader = unit { name: b"Range"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type RefererHeader = unit { name: b"Referer"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type RequireHeader = unit { name: b"Require"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type RetryAfterHeader = unit { name: b"Retry-After"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type RTPInfoHeader = unit { name: b"RTP-Info"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ScaleHeader = unit { name: b"Scale"; : b":"; : OptionalWhiteSpace; value: /-?[0-9]+(\.[0-9]*)?/; : LineEnd; };
+type ServerHeader = unit { name: b"Server"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type SessionHeader = unit { name: b"Session"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type SpeedHeader = unit { name: b"Speed"; : b":"; : OptionalWhiteSpace; value: /[0-9]+(\.[0-9]*)?/; : LineEnd; };
+type TimestampHeader = unit { name: b"Timestamp"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type TransportHeader = unit { name: b"Transport"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type UnsupportedHeader = unit { name: b"Unsupported"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type UserAgentHeader = unit { name: b"User-Agent"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type VaryHeader = unit { name: b"Vary"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type ViaHeader = unit { name: b"Via"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+type WWWAuthenticateHeader = unit { name: b"WWW-Authenticate"; : b":"; : OptionalWhiteSpace; value: FieldValue; : LineEnd; };
+
+type HeaderNoContentLength = unit {
+    switch {
+        -> accept_encoding: AcceptEncodingHeader;
+        -> accept_language: AcceptLanguageHeader;
+        -> accept: AcceptHeader;
+        -> allow: AllowHeader;
+        -> authorization: AuthorizationHeader;
+        -> bandwidth: BandwidthHeader;
+        -> blocksize: BlocksizeHeader;
+        -> cache_control: CacheControlHeader;
+        -> conference: ConferenceHeader;
+        -> connection: ConnectionHeader;
+        -> content_base: ContentBaseHeader;
+        -> content_encoding: ContentEncodingHeader;
+        -> content_language: ContentLanguageHeader;
+        -> content_location: ContentLocationHeader;
+        -> content_type: ContentTypeHeader;
+        -> date: DateHeader;
+        -> expires: ExpiresHeader;
+        -> from_header: FromHeader;
+        -> if_modified_since: IfModifiedSinceHeader;
+        -> last_modified: LastModifiedHeader;
+        -> location: LocationHeader;
+        -> proxy_authenticate: ProxyAuthenticateHeader;
+        -> proxy_require: ProxyRequireHeader;
+        -> public_header: PublicHeader;
+        -> range: RangeHeader;
+        -> referer: RefererHeader;
+        -> require: RequireHeader;
+        -> retry_after: RetryAfterHeader;
+        -> rtp_info: RTPInfoHeader;
+        -> scale: ScaleHeader;
+        -> server: ServerHeader;
+        -> session: SessionHeader;
+        -> speed: SpeedHeader;
+        -> timestamp: TimestampHeader;
+        -> transport: TransportHeader;
+        -> unsupported: UnsupportedHeader;
+        -> user_agent: UserAgentHeader;
+        -> vary: VaryHeader;
+        -> via: ViaHeader;
+        -> www_authenticate: WWWAuthenticateHeader;
+    };
+};
+
+type Header = unit {
+    switch {
+        -> content_length: ContentLengthHeader;
+        -> other: HeaderNoContentLength;
+    };
+};
+
+type RequestWithBody = unit {
+    request_line: RequestLineWithBody;
+    cseq: CSeqHeader;
+    headers_before_length: HeaderNoContentLength[];
+    content_length: ContentLengthHeader;
+    headers_after_length: HeaderNoContentLength[];
+    : LineEnd;
+    body: bytes &size=self.content_length.length;
+};
+
+type RequestWithoutBody = unit {
+    request_line: RequestLineWithoutBody;
+    cseq: CSeqHeader;
+    headers: Header[];
+    : LineEnd;
+};
+
+type Response = unit {
+    status_line: StatusLine;
+    cseq: CSeqHeader;
+    headers: Header[];
+    : LineEnd;
+    body: bytes &eod;
+};
+
+type InterleavedBinary = unit {
+    : b"$";
+    channel: uint8;
+    length: uint16;
+    data: bytes &size=self.length;
+};
+
+public type RTSP = unit {
+    switch {
+        -> interleaved: InterleavedBinary;
+        -> response: Response;
+        -> request_with_body: RequestWithBody;
+        -> request: RequestWithoutBody;
+    };
+};

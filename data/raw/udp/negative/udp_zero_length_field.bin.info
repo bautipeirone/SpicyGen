@@ -1,0 +1,2 @@
+Category: invalid_length
+Invalid Reason: The UDP Length field is 0, which is invalid under RFC 768 because the length must include the 8-byte header and therefore cannot be less than 8.

@@ -1,0 +1,2 @@
+Category: truncated_field
+Invalid Reason: A UDP header is always 8 octets, but this packet is only 7 octets long, so the 16-bit Checksum field is incomplete.

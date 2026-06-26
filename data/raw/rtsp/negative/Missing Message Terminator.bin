@@ -1,0 +1,1 @@
+TEARDOWN rtsp://example.com/media RTSP/1.0\r\nCSeq: 8\r\nSession: 12345678

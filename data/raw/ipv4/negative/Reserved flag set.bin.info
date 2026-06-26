@@ -1,0 +1,2 @@
+Category: Flags
+Invalid Reason: Reserved flag (bit 0) is set to 1, but must be zero

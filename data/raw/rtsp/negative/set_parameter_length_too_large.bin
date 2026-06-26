@@ -1,0 +1,7 @@
+SET_PARAMETER rtsp://example.com/device RTSP/1.0
+CSeq: 5
+Session: 12345678
+Content-Type: text/parameters
+Content-Length: 21
+
+volume: 10

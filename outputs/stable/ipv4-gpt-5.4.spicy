@@ -1,0 +1,94 @@
+module INTERNET_PROTOCOL_gpt;
+
+import spicy;
+
+type SecurityOption = unit {
+    length: uint8;
+    security: uint16;
+    compartments: uint16;
+    handling_restrictions: uint16;
+    transmission_control_code: bytes &size=3;
+};
+
+type RouteOption = unit {
+    length: uint8;
+    pointer: uint8;
+    route_data: (addr &ipv4)[] &size=(self.length - 3);
+};
+
+type StreamIdentifierOption = unit {
+    length: uint8;
+    stream_id: uint16;
+};
+
+type TimestampOverflowFlag = unit {
+    fields: bitfield(8) {
+        overflow: 0..3;
+        flag: 4..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type TimestampOption = unit {
+    length: uint8;
+    pointer: uint8;
+    overflow_flag: TimestampOverflowFlag;
+    timestamp_data: bytes &size=(self.length - 4);
+};
+
+type GenericOption = unit {
+    length: uint8;
+    data: bytes &size=(self.length - 2);
+};
+
+type IPOption = unit {
+    option_type: bitfield(8) {
+        copied: 0;
+        option_class: 1..2;
+        option_number: 3..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    security: SecurityOption if (self.option_type.option_class == 0 && self.option_type.option_number == 2);
+    loose_source_route: RouteOption if (self.option_type.option_class == 0 && self.option_type.option_number == 3);
+    record_route: RouteOption if (self.option_type.option_class == 0 && self.option_type.option_number == 7);
+    stream_identifier: StreamIdentifierOption if (self.option_type.option_class == 0 && self.option_type.option_number == 8);
+    strict_source_route: RouteOption if (self.option_type.option_class == 0 && self.option_type.option_number == 9);
+    timestamp: TimestampOption if (self.option_type.option_class == 2 && self.option_type.option_number == 4);
+    generic: GenericOption if (!((self.option_type.option_class == 0 && self.option_type.option_number == 0) || (self.option_type.option_class == 0 && self.option_type.option_number == 1) || (self.option_type.option_class == 0 && (self.option_type.option_number == 2 || self.option_type.option_number == 3 || self.option_type.option_number == 7 || self.option_type.option_number == 8 || self.option_type.option_number == 9)) || (self.option_type.option_class == 2 && self.option_type.option_number == 4)));
+};
+
+public type IPv4Packet = unit {
+    version_ihl: bitfield(8) {
+        version: 0..3;
+        ihl: 4..7;
+    } &bit-order=spicy::BitOrder::MSB0 &requires=(self.version_ihl.version == 4);
+
+    type_of_service: bitfield(8) {
+        precedence: 0..2;
+        delay: 3;
+        throughput: 4;
+        reliability: 5;
+        reserved: 6..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    total_length: uint16;
+    identification: uint16;
+    flags_fragment_offset: bitfield(16) {
+        reserved: 0;
+        dont_fragment: 1;
+        more_fragments: 2;
+        fragment_offset: 3..15;
+    } &bit-order=spicy::BitOrder::MSB0 &requires=(self.flags_fragment_offset.reserved == 0);
+
+    : void &requires=(self.total_length >= (self.version_ihl.ihl * 4));
+    : void &requires=(!(self.flags_fragment_offset.dont_fragment == 1 && self.flags_fragment_offset.fragment_offset != 0));
+
+    time_to_live: uint8 &convert=cast<interval>($$);
+    protocol: uint8;
+    header_checksum: uint16 &requires=($$ != 0);
+    source_address: addr &ipv4;
+    destination_address: addr &ipv4;
+    options: IPOption[] &size=((self.version_ihl.ihl * 4) - 20);
+    payload: bytes &size=(self.total_length - (self.version_ihl.ihl * 4));
+    : void &requires=(!(self.protocol == 6 && (self.total_length - (self.version_ihl.ihl * 4)) < 20 && (self.total_length - (self.version_ihl.ihl * 4)) != 0));
+    trailing_data: bytes &eod &requires=($$ == b"");
+};

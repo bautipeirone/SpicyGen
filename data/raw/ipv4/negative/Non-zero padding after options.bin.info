@@ -1,0 +1,2 @@
+Category: Options padding
+Invalid Reason: Padding bytes after the No-Operation option are non-zero (must be zero)
