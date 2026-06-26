@@ -76,3 +76,7 @@ def strip_code_fences(text: str) -> str:
     if not text:
         return ""
     return text.strip().strip("```").strip()
+
+def strip_response_fences(raw: str) -> str:
+    _, _, content = raw.strip().rpartition("</think>")
+    return strip_code_fences(content)

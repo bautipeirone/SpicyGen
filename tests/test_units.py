@@ -4,6 +4,7 @@ These are pure-function tests for utility and preprocessing logic that
 is likely to be edited as the project evolves.
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -22,8 +23,15 @@ from src.tools._3d.wrapper import (
     normalize_identifier,
 )
 from src.usage import merge_usage_reports
-from src.prompts import EXTRACT_INFO_SYSTEM_PROMPT
-from preprocess_spec import compute_info_stats
+from src.prompts import EXTRACT_INFO_SYSTEM_PROMPT, NEGATIVE_PACKETS_SYSTEM_PROMPT_TEMPLATE
+from src.protocol import Protocol, ProtocolSpecType, ProtocolType
+from preprocess_spec import (
+    compute_info_stats,
+    compute_negative_packet_stats,
+    packet_field_description,
+    packets_to_jsonl,
+    parse_negative_packet_response,
+)
 from generate_grammar import build_metrics, infer_spec_source, SpecSource
 
 
@@ -165,6 +173,77 @@ class TestComputeInfoStats:
         assert "parser_arguments" not in stats["missing_fields"]
         assert stats["null_or_empty_fields"] == 6
 
+
+# ---------------------------------------------------------------------------
+# negative packet generation helpers
+# ---------------------------------------------------------------------------
+
+class TestNegativePacketHelpers:
+
+    def test_binary_packet_field_description_requests_byte_array(self):
+        protocol = Protocol("dhcp", None, ProtocolType.BINARY, ProtocolSpecType.RFC, "2131", None)
+        description = packet_field_description(protocol)
+
+        assert "array of decimal byte values" in description
+        assert "0 to 255" in description
+
+    def test_text_packet_field_description_requests_raw_string(self):
+        protocol = Protocol("http1.1", None, ProtocolType.TEXT, ProtocolSpecType.RFC, "2616", None)
+        description = packet_field_description(protocol)
+
+        assert "JSON string" in description
+        assert "\\r\\n" in description
+
+    def test_parse_jsonl_binary_packets(self):
+        protocol = Protocol("dhcp", None, ProtocolType.BINARY, ProtocolSpecType.RFC, "2131", None)
+        raw = (
+            '{"name":"bad_cookie","protocol":"DHCP","packet":[1,2,3],'
+            '"invalidity_category":"invalid_magic_cookie","reason":"bad cookie"}\n'
+        )
+
+        packets = parse_negative_packet_response(raw, protocol)
+
+        assert packets[0]["packet"] == [1, 2, 3]
+
+    def test_parse_json_array_text_packets(self):
+        protocol = Protocol("http1.1", None, ProtocolType.TEXT, ProtocolSpecType.RFC, "2616", None)
+        raw = json.dumps(
+            {
+                "name": "http_invalid_method",
+                "protocol": "HTTP1.1",
+                "packet": "TEST / HTTP/1.1\r\n",
+                "invalidity_category": "invalid_request_method",
+                "reason": "Wrong method used in HTTP request.",
+            }
+        )
+
+        packets = parse_negative_packet_response(raw, protocol)
+
+        assert packets[0]["packet"] == "TEST / HTTP/1.1\r\n"
+
+    def test_packets_to_jsonl_escapes_text_packet(self):
+        packet = {
+            "name": "http_invalid_method",
+            "protocol": "HTTP1.1",
+            "packet": "TEST / HTTP/1.1\r\n",
+            "invalidity_category": "invalid_request_method",
+            "reason": "Wrong method used in HTTP request.",
+        }
+
+        jsonl = packets_to_jsonl([packet])
+
+        assert jsonl.count("\n") == 1
+        assert json.loads(jsonl)["packet"] == "TEST / HTTP/1.1\r\n"
+
+    def test_compute_negative_packet_stats_counts_categories(self):
+        stats = compute_negative_packet_stats([
+            {"invalidity_category": "invalid_length"},
+            {"invalidity_category": "invalid_length"},
+            {"invalidity_category": "missing_terminator"},
+        ])
+
+        assert stats["packet_count"] == 3
+        assert stats["invalidity_category_count"] == 2
 
 # ---------------------------------------------------------------------------
 # build_metrics

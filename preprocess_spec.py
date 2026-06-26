@@ -3,11 +3,11 @@ load_dotenv()
 
 from src.providers import get_autogen_config
 from src.logger import logger, enable_runtime_log_file
-from src.protocol import load_protocol, load_spec
-from src.prompts import EXTRACT_INFO_SYSTEM_PROMPT
+from src.protocol import Protocol, load_protocol, load_spec
+from src.prompts import EXTRACT_INFO_SYSTEM_PROMPT, NEGATIVE_PACKETS_SYSTEM_PROMPT_TEMPLATE
 from src.usage import merge_usage_reports
 from src.agent import query_llm_once, summarize_spec
-from src.utils import write_json_file, compute_text_stats
+from src.utils import write_json_file, compute_text_stats, strip_response_fences
 from pathlib import Path
 import argparse
 import json
@@ -23,6 +23,14 @@ EXPECTED_INFO_FIELDS = (
     "encoding",
     "checksum",
     "parser_arguments",
+)
+
+NEGATIVE_PACKET_FIELDS = (
+    "name",
+    "protocol",
+    "packet",
+    "invalidity_category",
+    "reason",
 )
 
 def compute_info_stats(info: dict[str, Any]) -> dict[str, Any]:
@@ -78,7 +86,8 @@ def extract_protocol_info(
     raw, usage_report = query_llm_once(llm_config, EXTRACT_INFO_SYSTEM_PROMPT, user_message)
 
     try:
-        info = json.loads(raw)
+        response = strip_response_fences(raw)
+        info = json.loads(response)
     except json.JSONDecodeError:
         logger.warning("LLM response was not valid JSON; attempting to extract JSON substring.")
         match = re.search(r"\{.*\}", raw, re.DOTALL)
@@ -89,6 +98,125 @@ def extract_protocol_info(
             info = {"raw_response": raw}
 
     return info, usage_report
+
+
+def packet_field_description(protocol: Protocol) -> str:
+    if protocol.is_binary_protocol:
+        return (
+            "a JSON array of decimal byte values in wire order. Each value MUST "
+            "be an integer from 0 to 255. Do not use hex strings, base64, nested "
+            "arrays, or comments."
+        )
+    return (
+        "a JSON string containing the exact raw text message bytes. Preserve "
+        "protocol line endings with JSON escapes such as \\r\\n. Do not use a "
+        "byte array for text protocols."
+    )
+
+
+def compute_negative_packet_stats(packets: list[dict[str, Any]]) -> dict[str, Any]:
+    categories = sorted(
+        {
+            packet.get("invalidity_category")
+            for packet in packets
+            if isinstance(packet.get("invalidity_category"), str)
+        }
+    )
+    return {
+        "packet_count": len(packets),
+        "invalidity_category_count": len(categories),
+        "invalidity_categories": categories,
+    }
+
+
+def parse_negative_packet_response(raw: str, protocol: Protocol) -> list[dict[str, Any]]:
+    """Parse and validate JSONL negative packet output from the LLM."""
+    text = strip_response_fences(raw)
+    if not text:
+        logger.error("negative packet response was empty")
+        return []
+
+    packets: list[dict[str, Any]] = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            parsed_line = json.loads(line)
+            packets.append(parsed_line)
+        except json.JSONDecodeError as exc:
+            logger.error(f"negative packet JSONL line {line_number} is invalid JSON: {exc}")
+
+    for index, packet in enumerate(packets, start=1):
+        if not isinstance(packet, dict):
+            logger.error(f"negative packet #{index} must be a JSON object")
+        missing = [field for field in NEGATIVE_PACKET_FIELDS if field not in packet]
+        if missing:
+            logger.warning(f"negative packet #{index} is missing field(s): {', '.join(missing)}")
+        for field in ("name", "protocol", "invalidity_category", "reason"):
+            if not isinstance(packet[field], str) or not packet[field].strip():
+                logger.warning(f"negative packet #{index} field {field!r} must be a non-empty string")
+        value = packet["packet"]
+        if protocol.is_binary_protocol:
+            if (
+                not isinstance(value, list)
+                or not all(isinstance(byte, int) and 0 <= byte <= 255 for byte in value)
+            ):
+                logger.error(f"negative packet #{index} field 'packet' must be an array of byte integers")
+        elif not isinstance(value, str):
+            logger.error(f"negative packet #{index} field 'packet' must be a string for text protocols")
+
+    return packets
+
+
+def packets_to_jsonl(packets: list[dict[str, Any]]) -> str:
+    return "".join(
+        json.dumps(packet, ensure_ascii=False, separators=(",", ":")) + "\n"
+        for packet in packets
+    )
+
+
+def generate_negative_packets(
+    llm_config: dict,
+    protocol: Protocol,
+    spec_content: str | None,
+    count: int,
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    """Use the LLM to generate close-to-valid invalid packets for a protocol."""
+    if count < 1:
+        logger.error(f"negative packet count must be at least 1, recevied {count}")
+        return ([], None)
+
+    protocol_label = protocol.name
+    if protocol.full_name:
+        protocol_label = f"{protocol.name} ({protocol.full_name})"
+
+    system_prompt = NEGATIVE_PACKETS_SYSTEM_PROMPT_TEMPLATE.format(
+        protocol=protocol_label,
+        count=count,
+        packet_field_description=packet_field_description(protocol),
+    )
+    if spec_content:
+        user_message = (
+            f"Protocol: {protocol_label}\n\n"
+            f"Specification content:\n{spec_content}"
+        )
+    else:
+        user_message = (
+            f"Protocol: {protocol_label}\n\n"
+            "No specification is available. Use your training data to generate "
+            "close-to-valid invalid packets."
+        )
+
+    logger.info(f"Generating {count} negative packet(s): {protocol.name}")
+    raw, usage_report = query_llm_once(llm_config, system_prompt, user_message)
+    packets = parse_negative_packet_response(raw, protocol)
+    if len(packets) != count:
+        logger.warning(
+            "Expected %s negative packet(s), but LLM produced %s.",
+            count,
+            len(packets),
+        )
+    return packets, usage_report
 
 
 def parse_args() -> argparse.Namespace:
@@ -117,6 +245,11 @@ def parse_args() -> argparse.Namespace:
         help="Skip the spec summarization step.",
     )
     parser.add_argument(
+        "--no-negatives",
+        action="store_true",
+        help="Skip the negative packet generation step.",
+    )
+    parser.add_argument(
         "--info-output",
         type=Path,
         default=None,
@@ -127,6 +260,18 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Path to write the filtered spec summary (default: stdout).",
+    )
+    parser.add_argument(
+        "--negative-output",
+        type=Path,
+        default=None,
+        help="Path to write generated negative packets as JSONL (default: stdout).",
+    )
+    parser.add_argument(
+        "--negative-count",
+        type=int,
+        default=10,
+        help="Number of negative packets to request (default: 10).",
     )
     parser.add_argument(
         "--report-file",
@@ -153,6 +298,8 @@ def main() -> None:
     logger.info(f"Preprocessing spec for '{args.protocol}' using model '{args.model}'")
     logger.debug(f"Info output: {args.info_output}")
     logger.debug(f"Summary output: {args.summary_output}")
+    logger.debug(f"Negative output: {args.negative_output}")
+    logger.debug(f"Negative count: {args.negative_count}")
     logger.debug(f"Report file: {args.report_file}")
     logger.debug(f"Debug dir: {args.debug_dir}")
 
@@ -179,6 +326,10 @@ def main() -> None:
             },
             "summary": {
                 "enabled": not args.no_summary,
+                "completed": False,
+            },
+            "negative_packets": {
+                "enabled": not args.no_negatives,
                 "completed": False,
             },
         },
@@ -237,9 +388,38 @@ def main() -> None:
                 print(f"=== {protocol.name} specification summary ===")
                 print(summary)
 
+    # Generate negative packets
+    if not args.no_negatives:
+        negatives_started_at = time.time()
+        packets, negatives_usage = generate_negative_packets(
+            llm_config,
+            protocol,
+            spec_content,
+            args.negative_count,
+        )
+        negatives_jsonl = packets_to_jsonl(packets)
+        negatives_elapsed = round(time.time() - negatives_started_at, 2)
+        report["steps"]["negative_packets"] = {
+            "enabled": True,
+            "completed": True,
+            "time_elapsed_s": negatives_elapsed,
+            "stats": compute_negative_packet_stats(packets),
+            "usage": negatives_usage,
+        }
+        if args.negative_output:
+            try:
+                args.negative_output.write_text(negatives_jsonl)
+                logger.info(f"Negative packets written to {args.negative_output}")
+            except OSError as exc:
+                raise SystemExit(f"Unable to write to {args.negative_output}: {exc}") from exc
+        else:
+            print(f"=== {protocol.name} generated negative packets ===")
+            print(negatives_jsonl, end="")
+
     combined_usage = merge_usage_reports(
         report["steps"]["info"].get("usage") if isinstance(report["steps"]["info"], dict) else None,
         report["steps"]["summary"].get("usage") if isinstance(report["steps"]["summary"], dict) else None,
+        report["steps"]["negative_packets"].get("usage") if isinstance(report["steps"]["negative_packets"], dict) else None,
     )
     report["usage"] = combined_usage
 

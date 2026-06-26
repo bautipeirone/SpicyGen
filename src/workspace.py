@@ -13,6 +13,7 @@ Typical layout::
                 ├── preprocess/
                 │   ├── info.json
                 │   ├── summary.txt
+                │   ├── negative-packets.jsonl
                 │   ├── report.json
                 │   └── extraction.log
                 ├── grammar/
@@ -156,6 +157,7 @@ def preprocess_paths(workspace_dir: Path) -> dict[str, Path]:
     return {
         "info": d / "info.json",
         "summary": d / "summary.txt",
+        "negative_packets": d / "negative-packets.jsonl",
         "report": d / "report.json",
         "debug_dir": d,
     }

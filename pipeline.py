@@ -81,6 +81,7 @@ def _run_preprocess(
         "-m", model,
         "--info-output",    str(paths["info"]),
         "--summary-output", str(paths["summary"]),
+        "--negative-output", str(paths["negative_packets"]),
         "--report-file",    str(paths["report"]),
         "--debug-dir",      str(paths["debug_dir"]),
     ]

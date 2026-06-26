@@ -34,7 +34,7 @@ After you have marked all the relevant intervals, say "TERMINATE" to end the con
 
 EXTRACT_INFO_SYSTEM_PROMPT = """\
 You are a communication protocol expert. Your task is to extract metadata about \
-a network protocol from the given RFC text and/or your training data.
+a network protocol from the given RFC text and/or general protocol knowledge.
 
 You MUST respond with a single JSON object (no markdown, no extra text) with \
 exactly the following fields:
@@ -73,6 +73,26 @@ Rules:
   source/destination addresses, or ports. Argument names MUST be stable snake_case identifiers.
   Argument types MUST be neutral, target-language-independent types: bool, int, uint, string,
   bytes, or float. Do NOT output target-specific types such as uint64, uint32, or size_t.
+"""
+
+NEGATIVE_PACKETS_SYSTEM_PROMPT_TEMPLATE = """\
+Your task is to generate negative test packets for {protocol} from the given RFC
+text and/or general protocol knowledge.
+
+Output JSONL only. Produce exactly {count} objects.
+
+Each object must contain:
+- name
+- protocol
+- packet: {packet_field_description}
+- invalidity_category
+- reason
+
+Rules:
+- Each packet must be close to valid.
+- Each packet must violate exactly one protocol rule.
+- Do not generate random garbage.
+- Prefer boundary cases: invalid length, truncated field, illegal enum value, missing terminator, inconsistent count, invalid checksum, forbidden flag combination.
 """
 
 BASE_GENERATION_PROMPT = """You are a communication protocol's specialist called {name}, and your job is to extract message structures from RFC specifications.
