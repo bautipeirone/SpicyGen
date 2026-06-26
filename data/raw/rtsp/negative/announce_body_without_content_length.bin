@@ -1,0 +1,5 @@
+ANNOUNCE rtsp://server.example.com/live RTSP/1.0
+CSeq: 4
+Content-Type: application/sdp
+
+v=0

@@ -1,0 +1,2 @@
+Category: IHL
+Invalid Reason: Internet Header Length is 4 (20 bytes), below the minimum of 5 (20 bytes)

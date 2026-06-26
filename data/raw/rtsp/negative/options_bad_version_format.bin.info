@@ -1,0 +1,2 @@
+Category: invalid_version
+Invalid Reason: The RTSP-Version syntax is `RTSP/` followed by `1*DIGIT "." 1*DIGIT`; `RTSP/1` is missing the required minor version component.

@@ -1,0 +1,2 @@
+Category: Total Length
+Invalid Reason: Total Length field is 16 bytes, less than the header size of 20 bytes

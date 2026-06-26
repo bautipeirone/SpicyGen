@@ -1,0 +1,3 @@
+PLAY rtsp://example.com/media RTSP/1.0
+Session: 12345678
+

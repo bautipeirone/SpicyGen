@@ -1,0 +1,2 @@
+Category: Fragmentation
+Invalid Reason: Don't-Fragment flag is 1 while Fragment Offset is non-zero, which is prohibited
