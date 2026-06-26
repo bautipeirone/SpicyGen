@@ -159,6 +159,12 @@ class SemanticCheckResult:
                 lines.append(f"Actual: {'ACCEPTED' if v.actual_accept else 'REJECTED'}")
 
                 packet_repr = get_packet_representation(_RAW_BASE_DIR / v.packet_path, self.protocol.type) if show_packet_representation else None
+                packet_info = get_packet_info(_RAW_BASE_DIR / v.packet_path)
+
+                if packet_info is not None:
+                    lines.append("Packet information:")
+                    lines.append(packet_info)
+
                 if packet_repr is not None:
                     lines.append("Packet representation:")
                     lines.append(packet_repr)
@@ -212,6 +218,14 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
 
     return None
 
+def get_packet_info(packet_path: str | Path) -> str | None:
+    packet_info_path = f"{packet_path}.info"
+    try:
+        with open(packet_info_path, "r") as f:
+            info = f.read()
+    except OSError:
+        return None
+    return info
 
 def get_protocol_packet_paths(protocol_name: str) -> tuple[list[str], list[str]]:
     """Return relative accept/reject packet paths for a protocol."""
