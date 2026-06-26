@@ -159,6 +159,12 @@ class SemanticCheckResult:
                 lines.append(f"Actual: {'ACCEPTED' if v.actual_accept else 'REJECTED'}")
 
                 packet_repr = get_packet_representation(_RAW_BASE_DIR / v.packet_path, self.protocol.type) if show_packet_representation else None
+                packet_info = get_packet_info(_RAW_BASE_DIR / v.packet_path)
+
+                if packet_info is not None:
+                    lines.append("Packet information:")
+                    lines.append(packet_info)
+
                 if packet_repr is not None:
                     lines.append("Packet representation:")
                     lines.append(packet_repr)
