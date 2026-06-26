@@ -212,6 +212,14 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
 
     return None
 
+def get_packet_info(packet_path: str | Path) -> str | None:
+    packet_info_path = f"{packet_path}.info"
+    try:
+        with open(packet_info_path, "r") as f:
+            info = f.read()
+    except OSError:
+        return None
+    return info
 
 def get_protocol_packet_paths(protocol_name: str) -> tuple[list[str], list[str]]:
     """Return relative accept/reject packet paths for a protocol."""

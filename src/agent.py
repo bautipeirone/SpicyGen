@@ -328,7 +328,11 @@ def run_refinement_loop(
         is_termination_msg=lambda msg: (msg.get("content") and msg.get("content", "").strip().endswith("TERMINATE")) or state.attempt > max_retries,
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call
-        default_auto_reply="Please use the `compile_grammar` tool to check if the grammar compiles. If it does not compile, correct the errors. If you think the grammar is perfect or cannot be fixed, say TERMINATE.",
+        default_auto_reply=(
+            "Please use the `compile_grammar` tool to check if the grammar compiles."
+            "If it does not compile, correct the errors. Then, run `parse_packets` to test the parser."
+            "If all tests pass, say TERMINATE.",
+        )
     )
     
     autogen.agentchat.register_function(
@@ -358,7 +362,7 @@ def run_refinement_loop(
         name="parse_packets",
         description=(
             "Run the grammar against known accept/reject packets for the current protocol. "
-            "Use this AFTER a successful compilation to verify semantic correctness."
+            "Use this AFTER each successful compilation to verify semantic correctness."
         ),
     )
 
