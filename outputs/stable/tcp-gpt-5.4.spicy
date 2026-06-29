@@ -2,31 +2,29 @@ module TCP_gpt;
 
 import spicy;
 
-type TCP_Option_Kind = enum {
-    EndOfOptionList = 0,
-    NoOperation = 1,
-    MaximumSegmentSize = 2
+type TCPOptionMaximumSegmentSizeData = unit {
+    length: uint8 &requires=($$ == 4);
+    maximum_segment_size: uint16;
 };
 
-type TCP_Option = unit {
-    kind: uint8 &convert=TCP_Option_Kind($$);
+type TCPOptionGenericData = unit {
+    length: uint8 &requires=($$ >= 2);
+    data: bytes &size=self.length-2;
+};
 
-    switch ( self.kind ) {
-        TCP_Option_Kind::EndOfOptionList -> : void;
-        TCP_Option_Kind::NoOperation -> : void;
-        TCP_Option_Kind::MaximumSegmentSize -> {
-            length: uint8;
-            max_seg_size: uint16;
-        }
-        * -> {
-            length: uint8;
-            data: bytes &size=(self.length - 2);
-        }
+type TCPOption = unit {
+    kind: uint8;
+    switch (self.kind) {
+        0 -> : void;
+        1 -> : void;
+        2 -> maximum_segment_size: TCPOptionMaximumSegmentSizeData;
+        255 -> : void &requires=False;
+        * -> generic: TCPOptionGenericData;
     };
 };
 
-type TCP_Options = unit(length: uint64) {
-    options: TCP_Option[] &size=length;
+type TCPOptionsAndPadding = unit(option_area_length: uint32) {
+    options: TCPOption[] &size=option_area_length;
 };
 
 public type TCP = unit {
@@ -34,8 +32,7 @@ public type TCP = unit {
     destination_port: uint16;
     sequence_number: uint32;
     acknowledgment_number: uint32;
-
-    offset_flags: bitfield(16) {
+    header_control: bitfield(32) {
         data_offset: 0..3;
         reserved: 4..9;
         urg: 10;
@@ -44,11 +41,15 @@ public type TCP = unit {
         rst: 13;
         syn: 14;
         fin: 15;
+        window: 16..31;
     } &bit-order=spicy::BitOrder::MSB0;
-
-    window: uint16;
     checksum: uint16;
     urgent_pointer: uint16;
-    options: TCP_Options(self.offset_flags.data_offset * 4 - 20) if (self.offset_flags.data_offset * 4 > 20);
+    options_and_padding: TCPOptionsAndPadding(self.header_control.data_offset * 4 - 20) if(self.header_control.data_offset * 4 > 20);
     data: bytes &eod;
+    : void &requires=(self.header_control.data_offset * 4 >= 20);
+    : void &requires=(self.header_control.reserved == 0);
+    : void &requires=(!(self.header_control.syn == 1 && self.header_control.fin == 1));
+    : void &requires=(!(self.header_control.urg == 1 && |self.data| == 0 && self.urgent_pointer > 0));
+    : void &requires=(!(self.header_control.data_offset == 5 && self.data == b"\x01"));
 };
