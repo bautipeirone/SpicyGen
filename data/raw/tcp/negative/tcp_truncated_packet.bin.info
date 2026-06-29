@@ -1,0 +1,2 @@
+Category: truncated_packet
+Invalid Reason: The packet ends after 19 bytes, missing the final byte of the urgent‑pointer field; the segment is incomplete.

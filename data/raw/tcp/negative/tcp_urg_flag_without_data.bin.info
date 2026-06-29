@@ -1,0 +1,2 @@
+Category: urg_flag_without_data
+Invalid Reason: URG flag is set but the segment carries no data; the urgent pointer (0x000A) therefore points to non‑existent data.

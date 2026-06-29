@@ -1,0 +1,2 @@
+Category: Method token invalid
+Invalid Reason: Method 'FOO' is not a registered HTTP method (RFC 2616 Section 5.1.1)

@@ -1,0 +1,2 @@
+Category: Request-Line syntax
+Invalid Reason: Request-Line must have spaces separating method, URI, and HTTP-Version (RFC 2616 Section 5.1)

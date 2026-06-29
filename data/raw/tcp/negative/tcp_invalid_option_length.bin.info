@@ -1,0 +1,2 @@
+Category: invalid_option_length
+Invalid Reason: MSS option specifies a length of 3 bytes, which is illegal (the length must be 4 and match the option data size).

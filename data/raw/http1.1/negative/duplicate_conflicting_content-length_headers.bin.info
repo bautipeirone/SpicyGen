@@ -1,0 +1,2 @@
+Category: Multiple conflicting header fields
+Invalid Reason: Multiple Content-Length headers with different values are not allowed (RFC 2616 Section 4.4)

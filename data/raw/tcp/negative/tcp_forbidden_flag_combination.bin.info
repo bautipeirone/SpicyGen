@@ -1,0 +1,2 @@
+Category: forbidden_flag_combination
+Invalid Reason: Both SYN (0x02) and FIN (0x01) flags are set simultaneously, which is prohibited.

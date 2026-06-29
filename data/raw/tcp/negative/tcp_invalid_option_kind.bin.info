@@ -1,0 +1,2 @@
+Category: invalid_option_kind
+Invalid Reason: Option kind 255 is undefined; an unknown option type appears in the TCP options field.

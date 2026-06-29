@@ -1,0 +1,2 @@
+Category: Missing required header
+Invalid Reason: All HTTP/1.1 requests must include a Host header field (RFC 2616 Section 14.23)
