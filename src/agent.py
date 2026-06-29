@@ -336,8 +336,8 @@ def run_refinement_loop(
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call
         default_auto_reply=(
-            "Please use the `validate_grammar` tool to check if the grammar compiles and test it against protocol packets."
-            "If all tests pass, say TERMINATE.",
+            "Please use the `validate_grammar` tool to check if the grammar compiles and test it against protocol packets. "
+            "If all tests pass, say TERMINATE."
         )
     )
     
