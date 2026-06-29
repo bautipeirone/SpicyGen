@@ -89,6 +89,81 @@ public type Foo = unit {
     ```
   * &eod: Parses elements until the end of the input stream is reached.
   * &size=N: Parses the vector from the subsequent N bytes of input data.
+  * &until=COND: Parses elements until COND becomes true for the most recently parsed element. Inside the condition, `$$` references that element.
+
+### Parser state, hooks, and structural constraints
+Use unit variables when the parser must remember information that is not a direct input field, such as whether a body is present, a derived body length, a selected delivery mode, or a value extracted from earlier headers. Variables are declared inside a unit with `var`:
+```
+type Message = unit {
+    headers: (Header(self))[];
+    : CRLF;
+    body: bytes &size=self.content_length if ( self.has_body );
+
+    var has_body: bool = False;
+    var content_length: uint64 = 0;
+};
+```
+Use `&optional` on a variable when the value may not have been seen yet. Check for presence with `self?.field` before reading it:
+```
+type Message = unit {
+    headers: (Header(self))[];
+    : CRLF;
+    body: bytes &size=self.content_length if ( self?.content_length );
+
+    var content_length: uint64 &optional;
+};
+```
+Units can receive parameters. Use `inout` when a subunit must update state in its parent while it parses. This is useful for structural constraints like "if this header appears, parse the following body as length-delimited":
+```
+type Header = unit(inout msg: Message) {
+    name: HeaderName;
+    : b":";
+    value: bytes &until=b"\r\n";
+
+    on value {
+        local name = self.name.upper();
+
+        if ( name == b"CONTENT-LENGTH" ) {
+            msg.content_length = self.value.to_uint();
+            msg.has_body = True;
+        }
+    }
+};
+```
+Use `on FIELD { ... }` hooks to react once a field has been parsed, and `on %init { ... }` to initialize state from unit parameters before fields parse. Use `on FIELD` after repeated fields or delimiter fields when a decision depends on all data parsed so far.
+```
+type Message = unit(body_default: bool) {
+    headers: (Header(self))[];
+    end_of_headers: CRLF;
+    body: bytes &size=self.content_length if ( self.has_body );
+
+    var has_body: bool;
+    var content_length: uint64 = 0;
+
+    on %init {
+        self.has_body = body_default;
+    }
+
+    on end_of_headers {
+        if ( self.content_length > 0 )
+            self.has_body = True;
+    }
+};
+```
+For structural constraints, prefer deriving explicit parser state and then using that state in `if`, `&size`, `&until`, `switch`, or `&requires`. This is better than parsing everything as opaque bytes. Examples include checking mandatory magic values, validating version ranges, selecting a body format from a header, or parsing trailer headers only when a chunked transfer encoding was seen.
+
+When a condition is invalid for the protocol and the packet must be rejected, use `throw "error message";` from a hook or a switch branch. Use `if` only for optional fields that are legitimately absent; do not use `if` to silently accept malformed packets. Use `&requires` for simple field-local constraints, and use `throw` when the condition depends on derived state or needs custom logic.
+```
+type Message = unit {
+    version: uint8 &requires=($$ = 1);
+    flags: uint8;
+
+    on flags {
+        if ( (self.flags & 0xf0) != 0 )
+            throw "reserved flag bits are set";
+    }
+};
+```
 
 ## Line Based Parsing
 This section describes common and reusable patterns for parsing line-based protocols. 
@@ -97,7 +172,11 @@ These are common regex definitions to use.
 const Token      = /[^ \t\r\n]+/;
 const HeaderName  = /[^:\r\n]+/;
 const WhiteSpace = /[ \t]+/;
-const CRLF    = /\r\n/;
+const OptionalWhiteSpace = /[ \t]*/;
+const CRLF    = /\r?\n/;
+const RestOfLine = /[^\r\n]*/;
+const Integer = /[0-9]+/;
+const HexInteger = /[0-9a-fA-F]+/;
 ```
 Their usage is highly encouraged to achieve correct parsing. When reading a value until the end of line, using the `&until` attribute is prefered.
 This is an example of how to parse the `key: value` header style that is very common among text protocols.
@@ -109,15 +188,85 @@ import spicy;
 const Token      = /[^ \t\r\n]+/;
 const HeaderName  = /[^:\r\n]+/;
 const WhiteSpace = /[ \t]+/;
-const CRLF    = /\r\n/;
+const CRLF    = /\r?\n/;
 
 public type KeyValue = unit {
-	key: HeaderName;
+  key: HeaderName;
   : b":";
   : WhiteSpace;
   value: bytes &until=b"\r\n";
 };
 ```
+For HTTP-like protocols, use a parent message unit to collect headers and let each header update the parent state. Then parse the body according to that state after the blank line:
+```
+type DeliveryMode = enum { EndOfData, Length, Chunked };
+
+type Message = unit(body_default: bool) {
+    headers: (Header(self))[];
+    end_of_headers: CRLF;
+
+    switch ( self.delivery_mode ) {
+      DeliveryMode::Length  -> body: bytes &size=self.content_length if ( self.has_body );
+      DeliveryMode::Chunked -> chunks: Chunk[] &until=($$.length == 0) if ( self.has_body );
+      * -> : void;
+    };
+
+    var has_body: bool;
+    var content_length: uint64 = 0;
+    var delivery_mode: DeliveryMode = DeliveryMode::EndOfData;
+    var content_type: bytes &optional;
+    var transfer_encoding: bytes &optional;
+
+    on %init {
+        self.has_body = body_default;
+    }
+
+    on end_of_headers {
+        if ( self.content_length > 0 )
+            self.delivery_mode = DeliveryMode::Length;
+
+        if ( self?.transfer_encoding && self.transfer_encoding != b"chunked" )
+            throw "unsupported transfer encoding";
+    }
+};
+
+type Header = unit(inout msg: Message) {
+    name: HeaderName;
+    : /:[\t ]*/;
+    content: RestOfLine;
+    : CRLF;
+
+    on content {
+        local name = self.name.upper();
+
+        if ( name == b"CONTENT-LENGTH" ) {
+            msg.content_length = self.content.to_uint();
+            msg.has_body = True;
+        }
+
+        if ( name == b"TRANSFER-ENCODING" && self.content == b"chunked" ) {
+            msg.transfer_encoding = self.content;
+            msg.delivery_mode = DeliveryMode::Chunked;
+            msg.has_body = True;
+        }
+
+        if ( name == b"TRANSFER-ENCODING" && self.content != b"chunked" )
+            msg.transfer_encoding = self.content;
+
+        if ( name == b"CONTENT-TYPE" )
+            msg.content_type = self.content;
+    }
+};
+
+type Chunk = unit {
+    length: HexInteger &convert=$$.to_uint(16);
+    : CRLF;
+    data: bytes &size=self.length if ( self.length > 0 );
+    : CRLF if ( self.length > 0 );
+};
+```
+This pattern also works for trailers: parse trailer headers with the same `Header(msg)` unit when they should update the same message state.
+
 This is the desired pattern for branching between requests and replies. Note that for this to work, methods MUST be listed explictly, so that the look ahead parsing works correctly, parsing with Token is wrong here.
 ```
 type RequestLine = unit {

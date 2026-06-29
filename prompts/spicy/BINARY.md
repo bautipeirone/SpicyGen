@@ -86,6 +86,76 @@ public type Foo = unit {
     ```
   * &eod: Parses elements until the end of the input stream is reached.
   * &size=N: Parses the vector from the subsequent N bytes of input data.
+  * &until=COND: Parses elements until COND becomes true for the most recently parsed element. Inside the condition, `$$` references that element.
+
+### Parser state, hooks, and structural constraints
+Use unit variables when the parser must remember information that is not a direct input field, such as a derived payload length, whether an optional section is present, a selected payload format, a checksum seen in a footer, or values extracted from an options list. Variables are declared inside a unit with `var`:
+```
+type Frame = unit {
+    header: Header(self);
+    payload: bytes &size=self.payload_length if ( self.has_payload );
+
+    var has_payload: bool = False;
+    var payload_length: uint64 = 0;
+};
+```
+Use `&optional` on a variable when the value may not have been seen yet. Check for presence with `self?.field` before reading it:
+```
+type Frame = unit {
+    header: Header(self);
+    payload: bytes &size=self.payload_length if ( self?.payload_length );
+
+    var payload_length: uint64 &optional;
+};
+```
+Units can receive parameters. Use `inout` when a subunit must update state in its parent while it parses. This is useful for structural constraints like "if this option appears, the following payload is compressed" or "if this flag is set, parse a trailer":
+```
+type Header = unit(inout frame: Frame) {
+    magic: b"\x12\x34";
+    flags: uint8;
+    length: uint16;
+
+    on length {
+        frame.payload_length = self.length;
+        frame.has_payload = self.length > 0;
+    }
+};
+```
+Use `on FIELD { ... }` hooks to react once a field has been parsed, and `on %init { ... }` to initialize state from unit parameters before fields parse. Use hooks to derive state before later fields use it in `if`, `&size`, `&until`, `switch`, or `&requires`:
+```
+type Frame = unit(default_payload: bool) {
+    header: Header(self);
+    payload: Payload(self) if ( self.has_payload );
+
+    var has_payload: bool;
+    var payload_length: uint64 = 0;
+    var compressed: bool = False;
+
+    on %init {
+        self.has_payload = default_payload;
+    }
+};
+
+type Payload = unit(inout frame: Frame) {
+    data: bytes &size=frame.payload_length;
+};
+```
+For structural constraints, prefer deriving explicit parser state and then using that state in later fields. Examples include validating magic values, enforcing version ranges with `&requires`, checking that a length field controls exactly the following payload, choosing a payload subunit from a type field, or making an optional footer depend on a flag.
+
+When a condition is invalid for the protocol and the packet must be rejected, use `throw "error message";` from a hook or a switch branch. Use `if` only for optional fields that are legitimately absent; do not use `if` to silently accept malformed packets. Use `&requires` for simple field-local constraints, and use `throw` when the condition depends on derived state or needs custom logic.
+```
+type Frame = unit {
+    version: uint8 &requires=($$ = 1);
+    flags: uint8;
+    length: uint16;
+    payload: bytes &size=self.length if ( self.length > 0 );
+
+    on length {
+        if ( (self.flags & 0xf0) != 0 )
+            throw "reserved flag bits are set";
+    }
+};
+```
 
 ## Important considerations
 * For multi-byte integer values, it is important to consider the byte order for parsing. Network byte order (i.e., big-endian) is the default. To change byte order, use field attributes.
