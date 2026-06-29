@@ -104,13 +104,10 @@ Retrieve any additional information you need from other RFCs so the grammar is a
 
 AGENT_LOOP_INSTRUCTIONS_TEMPLATE = """
 IMPORTANT WORKFLOW — follow these steps in order:
-
-1. Write the grammar and use the `compile_grammar` tool to check if it compiles.
-2. If ``compile_grammar`` returns SUCCESS, use the `parse_packets` tool with the same grammar code to verify it against known protocol packets.
-   - If all packets pass, say TERMINATE.
-   - If some packets fail, fix the grammar and go back to step 1.{runtime_hint}
-3. If ``compile_grammar`` returns errors, fix the grammar and try again.
-4. If there are no packets registered for this protocol, you will be told so — in that case say TERMINATE after a successful compilation.
+1. Write the grammar and use the `validate_grammar` tool.
+2. If validation returns errors or packet failures, fix the grammar and call `validate_grammar` again.{runtime_hint}
+3. If validation succeeds, say TERMINATE.
+4. If validation reports no packets are registered, say TERMINATE after successful compilation.
 {rfc_retrieval_tool_hint}
 """
 

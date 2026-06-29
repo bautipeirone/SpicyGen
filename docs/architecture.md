@@ -9,14 +9,14 @@ The core of the system is in `src/agent.py`, which leverages the AutoGen framewo
 
 ## Tools Available to the LLM
 The developer agent is equipped with specific tools to validate and improve the grammars it generates:
-1. **`compile_grammar`**: Compiles the generated source using the compiler configured for the selected target language. If compilation fails, the exact compiler errors are returned to the LLM so it can correct the code in the next turn.
-2. **`parse_packets`**: If the grammar compiles successfully, this tool verifies semantic correctness by running the target language's runtime packet checker against a set of known accept/reject packets for the protocol. The LLM receives detailed runtime logs if parsing fails.
-3. **`retrieve_rfc_by_id`**: Allows the LLM to fetch related RFC documents on-the-fly to clarify dependencies or specific types (e.g., retrieving RFC 1035 for DNS).
+1. **`validate_grammar`**: It first compiles the generated source using the compiler configured for the selected target language. If compilation fails, the exact compiler errors are returned to the LLM so it can correct the code in the next turn. If the grammar compiles successfully, this tool verifies semantic correctness by running the target language's runtime packet checker against a set of known accept/reject packets for the protocol. The LLM receives detailed runtime logs if parsing fails.
+2. **`retrieve_rfc_by_id`**: Allows the LLM to fetch related RFC documents on-the-fly to clarify dependencies or specific types (e.g., retrieving RFC 1035 for DNS).
 
 ## Workflow
 1. The script (`generate_grammar.py`) initializes the system prompt, target language backend, and the initial protocol specification.
 2. The developer agent writes a draft grammar.
-3. It uses `compile_grammar`. If it fails, the agent reads the errors and tries again.
-4. Once compilation succeeds, it uses `parse_packets`. If any packets fail to parse correctly, the agent receives feedback and goes back to adjusting the code.
-5. This refinement loop continues until all packets pass (success), or the `max_retries` limit (configured in `config.yaml`) is reached.
-6. The system returns the best performing grammar code and comprehensive metrics about the run.
+3. It uses `validate_grammar`. If it fails, the agent reads the errors and tries again. `validate_grammar` internally works like:
+   1. Call `compile_grammar` to run compilation and return syntax errors.
+   2. Once compilation succeeds, it uses `parse_packets`. If any packets fail to parse correctly, the agent receives feedback and goes back to adjusting the code.
+4. This refinement loop continues until all packets pass (success), or the `max_retries` limit (configured in `config.yaml`) is reached.
+5. The system returns the best performing grammar code and comprehensive metrics about the run.
