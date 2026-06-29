@@ -23,7 +23,7 @@ RUNTIME_FEEDBACK_TEMPLATE = """The grammar you produced failed to parse the foll
 
 {errors}
 
-Please fix the grammar to handle these packets correctly, then use compile_grammar again."""
+Please fix the grammar to handle these packets correctly, then use validate_grammar again."""
 
 @dataclass
 class State:
@@ -306,6 +306,13 @@ def run_refinement_loop(
             logger.warning(f"Runtime check FAILED for '{state.protocol.name}'.")
             return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
+    def validate_grammar(code: Annotated[str, "The grammar code to compile and verify against packets"]) -> str:
+        compilation_result = compile_grammar(code)
+        if compilation_result != 'SUCCESS':
+            return compilation_result
+        parsing_result = parse_packets(code)
+        return parsing_result
+
     if show_parsing_tree and not include_parse_tree_summary:
         logger.info(
             f"{target_language.display_name} does not provide parse tree summaries; runtime feedback will include accept/reject errors only."
@@ -329,20 +336,20 @@ def run_refinement_loop(
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call
         default_auto_reply=(
-            "Please use the `compile_grammar` tool to check if the grammar compiles."
-            "If it does not compile, correct the errors. Then, run `parse_packets` to test the parser."
+            "Please use the `validate_grammar` tool to check if the grammar compiles and test it against protocol packets."
             "If all tests pass, say TERMINATE.",
         )
     )
     
     autogen.agentchat.register_function(
-        compile_grammar,
+        validate_grammar,
         caller=assistant,
         executor=user_proxy,
-        name="compile_grammar",
+        name="validate_grammar",
         description=(
-            f"Compile a {target_language.display_name} grammar string. "
-            "Returns SUCCESS if compilation succeeds, otherwise returns compilation errors."
+            f"Validate a {target_language.display_name} grammar for the current protocol. This compiles the grammar and tests it"
+            "against known accept/reject packets. Returns success when the grammar compiles and all"
+            "packet checks pass; otherwise returns compiler or runtime feedback."
         ),
     )
 
@@ -355,16 +362,6 @@ def run_refinement_loop(
             description="Retrieve an RFC text by its ID (e.g., '1035').",
         )
 
-    autogen.agentchat.register_function(
-        parse_packets,
-        caller=assistant,
-        executor=user_proxy,
-        name="parse_packets",
-        description=(
-            "Run the grammar against known accept/reject packets for the current protocol. "
-            "Use this AFTER each successful compilation to verify semantic correctness."
-        ),
-    )
 
     initial_prompt = "\n".join([spec_content, "Please output the grammar and verify it with the given tools."])
 
