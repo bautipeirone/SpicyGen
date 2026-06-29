@@ -1,0 +1,2 @@
+Category: Conflicting length headers
+Invalid Reason: Message must not contain both Transfer-Encoding and Content-Length (RFC 2616 Section 4.4)

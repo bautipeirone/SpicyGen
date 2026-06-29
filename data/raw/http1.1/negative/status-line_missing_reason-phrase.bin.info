@@ -1,0 +1,2 @@
+Category: Status-Line syntax
+Invalid Reason: Status-Line must include Reason-Phrase after status code (RFC 2616 Section 6.1)

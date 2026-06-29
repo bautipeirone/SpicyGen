@@ -1,0 +1,2 @@
+Category: header_length_mismatch
+Invalid Reason: Data offset field indicates a 20‑byte header, yet an extra No‑Operation byte is present, making the actual header longer than declared.

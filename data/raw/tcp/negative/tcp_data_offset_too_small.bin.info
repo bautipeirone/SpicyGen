@@ -1,0 +1,2 @@
+Category: data_offset_too_small
+Invalid Reason: Data offset field is 4, indicating a 16‑byte header, which is smaller than the mandatory 20‑byte TCP header.

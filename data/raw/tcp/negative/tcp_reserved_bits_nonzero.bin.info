@@ -1,0 +1,2 @@
+Category: reserved_bits_nonzero
+Invalid Reason: Reserved bits (low 4 bits of the Data Offset byte) are set to 0x5; they must be zero according to RFC 793.

@@ -1,0 +1,2 @@
+Category: Header field token invalid
+Invalid Reason: Header field name contains '@', which is not allowed in token syntax (RFC 2616 Section 4.2)

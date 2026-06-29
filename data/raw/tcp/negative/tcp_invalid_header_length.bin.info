@@ -1,0 +1,2 @@
+Category: invalid_header_length
+Invalid Reason: Data offset field (6) indicates a 24‑byte header but the packet provides only the minimum 20 bytes, causing a truncated header.

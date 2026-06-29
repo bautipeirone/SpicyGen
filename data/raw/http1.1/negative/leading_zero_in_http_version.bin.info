@@ -1,0 +1,2 @@
+Category: HTTP-Version format
+Invalid Reason: HTTP version numbers must not contain leading zeros (RFC 2616 Section 3.1)
