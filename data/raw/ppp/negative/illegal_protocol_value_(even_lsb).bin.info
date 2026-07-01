@@ -1,0 +1,1 @@
+Invalid Reason: PPP Protocol field 0x0000 is even (LSB=0), violating the rule that all protocol values must be odd.

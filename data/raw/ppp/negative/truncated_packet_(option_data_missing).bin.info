@@ -1,0 +1,1 @@
+Invalid Reason: Length field (8) expects a full MRU option (2-byte value), but only one byte of the option data is present; the packet is truncated.

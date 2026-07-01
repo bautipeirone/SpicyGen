@@ -1,0 +1,1 @@
+Invalid Reason: Length field in LCP header (6) claims two data bytes, but no option data follows, causing length mismatch.

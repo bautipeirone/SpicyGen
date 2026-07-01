@@ -1,0 +1,1 @@
+Invalid Reason: LCP packet uses a compressed one-octet Protocol field (0x21), which is prohibited: LCP must always use the two-octet Protocol field.

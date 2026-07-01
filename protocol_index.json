@@ -142,6 +142,12 @@
     "spec_type": "rfc",
     "rfc_id": "5340"
   },
+  "ppp": {
+    "full_name": "Point-to-Point Protocol",
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "1661"
+  },
   "rlogin": {
     "type": "text",
     "spec_type": "rfc",
