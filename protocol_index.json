@@ -124,6 +124,12 @@
     "spec_type": "rfc",
     "rfc_id": "4511"
   },
+  "nsh": {
+    "full_name": "Network Service Header",
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "8300"
+  },
   "ntp": {
     "full_name": "Network Time Protocol",
     "type": "binary",

@@ -1,0 +1,108 @@
+module NSH_gpt;
+
+import spicy;
+
+type MDType = enum {
+    Reserved = 0x0,
+    Fixed = 0x1,
+    Variable = 0x2,
+    Experiment = 0xF,
+};
+
+type NextProtocol = enum {
+    IPv4 = 0x01,
+    IPv6 = 0x02,
+    Ethernet = 0x03,
+    NSH = 0x04,
+    MPLS = 0x05,
+    Experiment1 = 0xFE,
+    Experiment2 = 0xFF,
+};
+
+type BaseHeader = unit {
+    fields: bitfield(32) {
+        version: 0..1;
+        o_bit: 2;
+        unassigned_bit: 3;
+        ttl: 4..9;
+        length: 10..15;
+        unassigned_bits: 16..19;
+        md_type: 20..23 &convert=MDType($$);
+        next_protocol: 24..31 &convert=NextProtocol($$);
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    on fields {
+        if ( self.fields.version == 1 )
+            throw "reserved NSH version";
+
+        if ( self.fields.unassigned_bit != 0 )
+            throw "unassigned base-header bit set";
+
+        if ( self.fields.unassigned_bits != 0 )
+            throw "unassigned base-header bits set";
+
+        if ( self.fields.md_type != MDType::Fixed && self.fields.md_type != MDType::Variable )
+            throw "unsupported MD Type";
+
+        if ( self.fields.md_type == MDType::Fixed && self.fields.length != 6 )
+            throw "invalid length for MD Type 1";
+
+        if ( self.fields.md_type == MDType::Variable && self.fields.length < 2 )
+            throw "invalid length for MD Type 2";
+    }
+};
+
+type ServicePathHeader = unit {
+    fields: bitfield(32) {
+        service_path_identifier: 0..23;
+        service_index: 24..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    on fields {
+        if ( self.fields.service_index == 0 )
+            throw "invalid service index";
+    }
+};
+
+type FixedLengthContextHeader = unit {
+    context: bytes &size=16;
+};
+
+type VariableLengthMetadata = unit {
+    metadata_class: uint16;
+    metadata_type: uint8;
+    header_fields: bitfield(8) {
+        unassigned_bit: 0;
+        length: 1..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    metadata: bytes &size=self.header_fields.length;
+    padding: bytes &size=self.padded_length - self.header_fields.length if ( self.padded_length > self.header_fields.length );
+
+    var padded_length: uint64 = 0;
+
+    on header_fields {
+        if ( self.header_fields.unassigned_bit != 0 )
+            throw "unassigned variable metadata bit set";
+
+        self.padded_length = ((self.header_fields.length + 3) / 4) * 4;
+    }
+};
+
+public type Message = unit {
+    base_header: BaseHeader;
+    service_path_header: ServicePathHeader;
+    switch ( self.base_header.fields.md_type ) {
+        MDType::Fixed -> fixed_length_context_header: FixedLengthContextHeader;
+        MDType::Variable -> variable_length_context_headers: VariableLengthMetadata[] &size=self.context_bytes;
+        * -> : void;
+    };
+
+    var context_bytes: uint64 = 0;
+
+    on base_header {
+        if ( self.base_header.fields.length < 2 )
+            throw "invalid NSH length";
+
+        self.context_bytes = (self.base_header.fields.length * 4) - 8;
+    }
+};
