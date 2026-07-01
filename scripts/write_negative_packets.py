@@ -30,6 +30,7 @@ class NegativePacket:
         )
 
 def write_packet(packet: NegativePacket, output_dir: Path):
+    output_dir.mkdir(parents=True, exist_ok=True)
     filename = "_".join([ token.lower() for token in packet.name.split(" ") ])
     packet_path = output_dir / f"{filename}.bin"
     info_path = output_dir / f"{filename}.bin.info"
