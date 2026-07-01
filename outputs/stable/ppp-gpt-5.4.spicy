@@ -1,0 +1,175 @@
+module PPP_gpt;
+
+import spicy;
+
+type LCPCode = enum {
+    Configure_Request = 1,
+    Configure_Ack = 2,
+    Configure_Nak = 3,
+    Configure_Reject = 4,
+    Terminate_Request = 5,
+    Terminate_Ack = 6,
+    Code_Reject = 7,
+    Protocol_Reject = 8,
+    Echo_Request = 9,
+    Echo_Reply = 10,
+    Discard_Request = 11,
+};
+
+type LCPOptionType = enum {
+    Reserved = 0,
+    Maximum_Receive_Unit = 1,
+    Authentication_Protocol = 3,
+    Quality_Protocol = 4,
+    Magic_Number = 5,
+    Protocol_Field_Compression = 7,
+    Address_And_Control_Field_Compression = 8,
+};
+
+type PPPProtocol = enum {
+    Padding = 0x0001,
+    LCP = 0xc021,
+    PAP = 0xc023,
+    LQR = 0xc025,
+    CHAP = 0xc223,
+};
+
+type PPPProtocolField = unit(inout frame: PPP) {
+    first_octet: uint8;
+    second_octet: uint8 if ( (self.first_octet & 0x01) == 0 );
+
+    on first_octet {
+        if ( self.first_octet == 0x21 )
+            throw "LCP protocol field must not be compressed";
+
+        if ( (self.first_octet & 0x01) == 1 ) {
+            frame.protocol_number = self.first_octet;
+            frame.protocol = PPPProtocol(self.first_octet);
+        }
+    }
+
+    on second_octet {
+        frame.protocol_number = (cast<uint64>(self.first_octet) << 8) | cast<uint64>(self.second_octet);
+        frame.protocol = PPPProtocol(frame.protocol_number);
+    }
+
+    on %done {
+        if ( (self.first_octet & 0x01) == 0 && frame.protocol_number == 0 )
+            throw "PPP protocol value must be odd";
+    }
+};
+
+type LCPConfigureData = unit(code: LCPCode) {
+    options: LCPOption(self)[] &eod;
+
+    var authentication_protocol_count: uint64 = 0;
+    var code_value: LCPCode;
+
+    on %init {
+        self.code_value = code;
+    }
+};
+
+type LCPOption = unit(inout configure_data: LCPConfigureData) {
+    option_type: uint8 &convert=LCPOptionType($$);
+    length: uint8;
+    switch ( self.option_type ) {
+        LCPOptionType::Maximum_Receive_Unit -> {
+            maximum_receive_unit: uint16;
+            extra_data: bytes &size=(self.length - 4) if ( self.length > 4 );
+        }
+        LCPOptionType::Authentication_Protocol -> {
+            authentication_protocol: uint16;
+            data: bytes &size=(self.length - 4) if ( self.length > 4 );
+        }
+        LCPOptionType::Quality_Protocol -> {
+            quality_protocol: uint16;
+            data: bytes &size=(self.length - 4) if ( self.length > 4 );
+        }
+        LCPOptionType::Magic_Number -> {
+            magic_number: uint32;
+            extra_data: bytes &size=(self.length - 6) if ( self.length > 6 );
+        }
+        LCPOptionType::Protocol_Field_Compression -> {
+            data: bytes &size=(self.length - 2) if ( self.length > 2 );
+        }
+        LCPOptionType::Address_And_Control_Field_Compression -> {
+            data: bytes &size=(self.length - 2) if ( self.length > 2 );
+        }
+        * -> data: bytes &size=(self.length - 2) if ( self.length > 2 );
+    };
+
+    on option_type {
+        if ( self.option_type == LCPOptionType::Reserved )
+            throw "reserved LCP option type";
+
+        if ( self.option_type == LCPOptionType::Authentication_Protocol ) {
+            configure_data.authentication_protocol_count = configure_data.authentication_protocol_count + 1;
+
+            if ( configure_data.code_value == LCPCode::Configure_Request && configure_data.authentication_protocol_count > 1 )
+                throw "multiple Authentication-Protocol options in Configure-Request";
+        }
+    }
+
+    on magic_number {
+        if ( self.magic_number == 0 )
+            throw "illegal zero Magic-Number option";
+    }
+};
+
+type LCPTerminateData = unit(len: uint64) {
+    data: bytes &size=len;
+};
+
+type LCPCodeRejectData = unit(len: uint64) {
+    rejected_packet: bytes &size=len;
+};
+
+type LCPProtocolRejectData = unit(len: uint64) {
+    rejected_protocol: uint16;
+    rejected_information: bytes &size=(len - 2) if ( len > 2 );
+};
+
+type LCPEchoData = unit(len: uint64) {
+    magic_number: uint32;
+    data: bytes &size=(len - 4) if ( len > 4 );
+};
+
+type LCPPacketData = unit(code: LCPCode, len: uint64) {
+    switch ( code ) {
+        LCPCode::Configure_Request,
+        LCPCode::Configure_Ack,
+        LCPCode::Configure_Nak,
+        LCPCode::Configure_Reject -> configure_data: LCPConfigureData(code) &size=len;
+        LCPCode::Terminate_Request,
+        LCPCode::Terminate_Ack -> terminate_data: LCPTerminateData(len);
+        LCPCode::Code_Reject -> code_reject_data: LCPCodeRejectData(len);
+        LCPCode::Protocol_Reject -> protocol_reject_data: LCPProtocolRejectData(len);
+        LCPCode::Echo_Request,
+        LCPCode::Echo_Reply,
+        LCPCode::Discard_Request -> echo_data: LCPEchoData(len);
+        * -> data: bytes &size=len if ( len > 0 );
+    };
+};
+
+type LCPPacket = unit {
+    code: uint8 &convert=LCPCode($$);
+    identifier: uint8;
+    length: uint16;
+    data: LCPPacketData(self.code, self.length - 4) if ( self.length >= 4 );
+    padding: bytes &eod;
+
+    on identifier {
+        if ( self.code == LCPCode::Configure_Ack && self.identifier != 1 )
+            throw "unexpected Configure-Ack identifier";
+    }
+};
+
+public type PPP = unit {
+    protocol_field: PPPProtocolField(self);
+    lcp_packet: LCPPacket if ( self.protocol_number == 0xc021 );
+    information: bytes &eod if ( self.protocol_number != 0xc021 );
+
+    var protocol_number: uint64 = 0;
+    var protocol: PPPProtocol;
+};
