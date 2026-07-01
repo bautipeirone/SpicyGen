@@ -1,0 +1,21 @@
+module VXLAN_gpt;
+
+import spicy;
+
+type VXLANFlags = bitfield(8) {
+    reserved1: 0..3;
+    i: 4;
+    reserved2: 5..7;
+} &bit-order=spicy::BitOrder::MSB0;
+
+type VXLANHeader = unit {
+    flags: VXLANFlags;
+    reserved1: bytes &size=3;
+    vni: bytes &size=3;
+    reserved2: uint8;
+};
+
+public type VXLAN = unit {
+    vxlan: VXLANHeader;
+    payload: bytes &eod;
+};

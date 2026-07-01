@@ -1,0 +1,23 @@
+module VXLAN_gpt;
+
+import spicy;
+
+public type VXLAN = unit {
+    flags: uint8 &requires=($$ == 0x08 || $$ == 0x0c);
+
+    switch ( self.flags ) {
+        0x08 -> {
+            reserved: bytes &size=3 &requires=($$ == b"\x00\x00\x00");
+            vni: bytes &size=3;
+            reserved2: uint8 &requires=($$ == 0);
+            payload: bytes &eod;
+        }
+        0x0c -> {
+            reserved_gpe: uint16;
+            next_protocol: uint8;
+            vni_gpe: bytes &size=3;
+            reserved_gpe2: uint8;
+            payload_gpe: bytes &eod;
+        }
+    };
+};

@@ -1,0 +1,1 @@
+Invalid Reason: VXLAN header I flag is 0; the I flag must be set to 1 for a valid VXLAN packet.
