@@ -29,6 +29,12 @@
     "spec_type": "rfc",
     "rfc_id": "9171"
   },
+  "coap": {
+    "full_name": "Constrained Application Protocol",
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "7252"
+  },
   "dccp": {
     "full_name": "Datagram Congestion Control Protocol",
     "type": "binary",

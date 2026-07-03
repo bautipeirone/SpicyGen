@@ -1,0 +1,101 @@
+module CoAP_gpt;
+
+import spicy;
+
+type MessageType = enum {
+    CON = 0,
+    NON = 1,
+    ACK = 2,
+    RST = 3,
+};
+
+type HeaderBits = bitfield(8) {
+    version: 0..1;
+    msg_type: 2..3 &convert=MessageType($$);
+    token_length: 4..7;
+} &bit-order=spicy::BitOrder::MSB0;
+
+type CodeBits = bitfield(8) {
+    class_value: 0..2;
+    detail: 3..7;
+} &bit-order=spicy::BitOrder::MSB0;
+
+type OptionHeader = bitfield(8) {
+    delta_nibble: 0..3;
+    length_nibble: 4..7;
+} &bit-order=spicy::BitOrder::MSB0;
+
+type Option = unit(inout message: CoAP_gpt::Message) {
+    header: OptionHeader;
+    delta_ext_8: uint8 if ( self.header.delta_nibble == 13 );
+    delta_ext_16: uint16 if ( self.header.delta_nibble == 14 );
+    length_ext_8: uint8 if ( self.header.length_nibble == 13 );
+    length_ext_16: uint16 if ( self.header.length_nibble == 14 );
+    value: bytes &size=self.option_length;
+
+    var option_delta: uint64 = 0;
+    var option_length: uint64 = 0;
+    var option_number: uint64 = 0;
+
+    on header {
+        if ( self.header.delta_nibble == 15 )
+            throw "invalid option delta";
+
+        if ( self.header.length_nibble == 15 )
+            throw "invalid option length";
+
+        if ( self.header.delta_nibble <= 12 )
+            self.option_delta = self.header.delta_nibble;
+
+        if ( self.header.length_nibble <= 12 )
+            self.option_length = self.header.length_nibble;
+    }
+
+    on delta_ext_8 {
+        self.option_delta = 13 + self.delta_ext_8;
+    }
+
+    on delta_ext_16 {
+        self.option_delta = 269 + self.delta_ext_16;
+    }
+
+    on length_ext_8 {
+        self.option_length = 13 + self.length_ext_8;
+    }
+
+    on length_ext_16 {
+        self.option_length = 269 + self.length_ext_16;
+    }
+
+    on value {
+        self.option_number = message.last_option_number + self.option_delta;
+        message.last_option_number = self.option_number;
+    }
+};
+
+type Payload = unit {
+    marker: b"\xff";
+    data: bytes &eod;
+
+    on data {
+        if ( $$ == b"" )
+            throw "empty payload after marker";
+    }
+};
+
+type BodyItem = unit(inout message: CoAP_gpt::Message) {
+    switch {
+        -> payload: Payload;
+        -> option: Option(message);
+    };
+};
+
+public type Message = unit {
+    header: HeaderBits;
+    code: CodeBits;
+    message_id: uint16;
+    token: bytes &size=self.header.token_length;
+    body: BodyItem(self)[] &eod;
+
+    var last_option_number: uint64 = 0;
+};
