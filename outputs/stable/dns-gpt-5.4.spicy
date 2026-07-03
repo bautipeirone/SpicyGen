@@ -2,50 +2,83 @@ module DNS_gpt;
 
 import spicy;
 
-type Opcode = enum {
-    QUERY = 0,
-    IQUERY = 1,
-    STATUS = 2
-};
-
 type Rcode = enum {
     NOERROR = 0,
     FORMERR = 1,
     SERVFAIL = 2,
     NXDOMAIN = 3,
     NOTIMP = 4,
-    REFUSED = 5
+    REFUSED = 5,
 };
 
-type RRType = enum {
-    A = 1,
-    NS = 2,
-    MD = 3,
-    MF = 4,
-    CNAME = 5,
-    SOA = 6,
-    MB = 7,
-    MG = 8,
-    MR = 9,
-    NULL = 10,
-    WKS = 11,
-    PTR = 12,
-    HINFO = 13,
-    MINFO = 14,
-    MX = 15,
-    TXT = 16,
-    AXFR = 252,
-    MAILB = 253,
-    MAILA = 254,
-    ANY = 255
+const TYPE_A: uint16 = 1;
+const TYPE_NS: uint16 = 2;
+const TYPE_MD: uint16 = 3;
+const TYPE_MF: uint16 = 4;
+const TYPE_CNAME: uint16 = 5;
+const TYPE_SOA: uint16 = 6;
+const TYPE_MB: uint16 = 7;
+const TYPE_MG: uint16 = 8;
+const TYPE_MR: uint16 = 9;
+const TYPE_NULL: uint16 = 10;
+const TYPE_WKS: uint16 = 11;
+const TYPE_PTR: uint16 = 12;
+const TYPE_HINFO: uint16 = 13;
+const TYPE_MINFO: uint16 = 14;
+const TYPE_MX: uint16 = 15;
+const TYPE_TXT: uint16 = 16;
+const TYPE_AAAA: uint16 = 28;
+const TYPE_LOC: uint16 = 29;
+
+const QTYPE_AXFR: uint16 = 252;
+const QTYPE_MAILB: uint16 = 253;
+const QTYPE_MAILA: uint16 = 254;
+const QTYPE_ANY: uint16 = 255;
+
+const CLASS_IN: uint16 = 1;
+const CLASS_CS: uint16 = 2;
+const CLASS_CH: uint16 = 3;
+const CLASS_HS: uint16 = 4;
+const QCLASS_ANY: uint16 = 255;
+
+type DomainNameComponent = unit {
+    length_octet: uint8;
+    label_data: bytes &size=self.label_length if ( self.is_label );
+    pointer_second_octet: uint8 if ( self.is_pointer );
+
+    var is_label: bool = False;
+    var is_pointer: bool = False;
+    var is_root: bool = False;
+    var is_terminal: bool = False;
+    var label_length: uint64 = 0;
+
+    on length_octet {
+        if ( (self.length_octet & 0xc0) == 0xc0 ) {
+            self.is_pointer = True;
+            self.is_terminal = True;
+        }
+        else if ( (self.length_octet & 0xc0) == 0x00 ) {
+            if ( self.length_octet == 0 ) {
+                self.is_root = True;
+                self.is_terminal = True;
+            }
+            else {
+                self.is_label = True;
+                self.label_length = self.length_octet;
+            }
+        }
+        else
+            throw "invalid domain name component";
+    }
+
+    on pointer_second_octet {
+        if ( self.pointer_second_octet == 255 )
+            throw "invalid compression pointer offset";
+    }
 };
 
-type RRClass = enum {
-    IN = 1,
-    CS = 2,
-    CH = 3,
-    HS = 4,
-    ANY = 255
+type DomainName = unit {
+    components: DomainNameComponent[] &until=($$.is_terminal);
 };
 
 type CharacterString = unit {
@@ -53,21 +86,11 @@ type CharacterString = unit {
     data: bytes &size=self.length;
 };
 
-type DomainName = unit {
-    length: bitfield(8) {
-        tag: 0..1;
-        value: 2..7;
-    } &bit-order=spicy::BitOrder::MSB0;
-    label: bytes &size=self.length.value if (self.length.tag == 0 && self.length.value > 0);
-    pointer_low: uint8 if (self.length.tag == 3);
-    suffix: DomainName if (self.length.tag == 0 && self.length.value > 0);
-};
-
-type Header = unit {
+type DNSHeader = unit {
     id: uint16;
     flags: bitfield(16) {
         qr: 0;
-        opcode: 1..4 &convert=Opcode($$);
+        opcode: 1..4;
         aa: 5;
         tc: 6;
         rd: 7;
@@ -79,126 +102,162 @@ type Header = unit {
     ancount: uint16;
     nscount: uint16;
     arcount: uint16;
+
+    on flags {
+        if ( self.flags.opcode > 2 )
+            throw "invalid opcode";
+
+        if ( self.flags.z != 0 )
+            throw "reserved Z bits must be zero";
+    }
 };
 
 type Question = unit {
     qname: DomainName;
-    qtype: uint16 &convert=RRType($$);
-    qclass: uint16 &convert=RRClass($$);
+    qtype: uint16;
+    qclass: uint16;
+
+    on qtype {
+        if ( self.qtype != TYPE_A && self.qtype != TYPE_NS && self.qtype != TYPE_MD && self.qtype != TYPE_MF && self.qtype != TYPE_CNAME && self.qtype != TYPE_SOA && self.qtype != TYPE_MB && self.qtype != TYPE_MG && self.qtype != TYPE_MR && self.qtype != TYPE_NULL && self.qtype != TYPE_WKS && self.qtype != TYPE_PTR && self.qtype != TYPE_HINFO && self.qtype != TYPE_MINFO && self.qtype != TYPE_MX && self.qtype != TYPE_TXT && self.qtype != TYPE_AAAA && self.qtype != TYPE_LOC && self.qtype != QTYPE_AXFR && self.qtype != QTYPE_MAILB && self.qtype != QTYPE_MAILA && self.qtype != QTYPE_ANY )
+            throw "invalid qtype";
+    }
+
+    on qclass {
+        if ( self.qclass != CLASS_IN && self.qclass != CLASS_CS && self.qclass != CLASS_CH && self.qclass != CLASS_HS && self.qclass != QCLASS_ANY )
+            throw "invalid qclass";
+    }
 };
 
-type CNAME_RDATA = unit {
+type CNAME_RData = unit {
     cname: DomainName;
 };
 
-type HINFO_RDATA = unit {
+type HINFO_RData = unit {
     cpu: CharacterString;
     os: CharacterString;
 };
 
-type MB_RDATA = unit {
+type MB_RData = unit {
     madname: DomainName;
 };
 
-type MD_RDATA = unit {
+type MD_RData = unit {
     madname: DomainName;
 };
 
-type MF_RDATA = unit {
+type MF_RData = unit {
     madname: DomainName;
 };
 
-type MG_RDATA = unit {
+type MG_RData = unit {
     mgmname: DomainName;
 };
 
-type MINFO_RDATA = unit {
+type MINFO_RData = unit {
     rmailbx: DomainName;
     emailbx: DomainName;
 };
 
-type MR_RDATA = unit {
+type MR_RData = unit {
     newname: DomainName;
 };
 
-type MX_RDATA = unit {
+type MX_RData = unit {
     preference: uint16;
     exchange: DomainName;
 };
 
-type NULL_RDATA = unit(rdlength: uint16) {
-    anything: bytes &size=rdlength;
+type NULL_RData = unit(length: uint16) {
+    anything: bytes &size=length;
 };
 
-type NS_RDATA = unit {
+type NS_RData = unit {
     nsdname: DomainName;
 };
 
-type PTR_RDATA = unit {
+type PTR_RData = unit {
     ptrdname: DomainName;
 };
 
-type SOA_RDATA = unit {
+type SOA_RData = unit {
     mname: DomainName;
     rname: DomainName;
     serial: uint32;
     refresh: uint32 &convert=cast<interval>($$);
     retry: uint32 &convert=cast<interval>($$);
     expire: uint32 &convert=cast<interval>($$);
-    minimum: uint32;
+    minimum: uint32 &convert=cast<interval>($$);
 };
 
-type TXT_RDATA = unit(rdlength: uint16) {
-    txt_data: CharacterString[] &size=rdlength;
+type TXT_RData = unit(length: uint16) {
+    txt_data: CharacterString[] &size=length;
 };
 
-type A_RDATA = unit {
+type A_RData = unit {
     address: addr &ipv4;
 };
 
-type WKS_RDATA = unit(rdlength: uint16) {
+type AAAA_RData = unit {
+    address: addr &ipv6;
+};
+
+type LOC_RData = unit {
+    version: uint8;
+    size: uint8;
+    horiz_pre: uint8;
+    vert_pre: uint8;
+    latitude: uint32;
+    longitude: uint32;
+    altitude: uint32;
+};
+
+type WKS_RData = unit(length: uint16) {
     address: addr &ipv4;
     protocol: uint8;
-    bitmap: bytes &size=(rdlength - 5);
-};
-
-type Unknown_RDATA = unit(rdlength: uint16) {
-    data: bytes &size=rdlength;
-};
-
-type RData = unit(rdlength: uint16, rr_type: RRType) {
-    switch (rr_type) {
-        RRType::A -> a: A_RDATA;
-        RRType::NS -> ns: NS_RDATA;
-        RRType::MD -> md: MD_RDATA;
-        RRType::MF -> mf: MF_RDATA;
-        RRType::CNAME -> cname: CNAME_RDATA;
-        RRType::SOA -> soa: SOA_RDATA;
-        RRType::MB -> mb: MB_RDATA;
-        RRType::MG -> mg: MG_RDATA;
-        RRType::MR -> mr: MR_RDATA;
-        RRType::NULL -> null_rr: NULL_RDATA(rdlength);
-        RRType::WKS -> wks: WKS_RDATA(rdlength);
-        RRType::PTR -> ptr: PTR_RDATA;
-        RRType::HINFO -> hinfo: HINFO_RDATA;
-        RRType::MINFO -> minfo: MINFO_RDATA;
-        RRType::MX -> mx: MX_RDATA;
-        RRType::TXT -> txt: TXT_RDATA(rdlength);
-        * -> unknown: Unknown_RDATA(rdlength);
-    };
+    bitmap: bytes &size=(length - 5);
 };
 
 type ResourceRecord = unit {
     name: DomainName;
-    rr_type: uint16 &convert=RRType($$);
-    rr_class: uint16 &convert=RRClass($$);
+    rr_type: uint16;
+    class_value: uint16;
     ttl: uint32 &convert=cast<interval>($$);
     rdlength: uint16;
-    rdata: RData(self.rdlength, self.rr_type);
+    switch ( self.rr_type ) {
+        TYPE_A -> a: A_RData;
+        TYPE_NS -> ns: NS_RData;
+        TYPE_MD -> md: MD_RData;
+        TYPE_MF -> mf: MF_RData;
+        TYPE_CNAME -> cname: CNAME_RData;
+        TYPE_SOA -> soa: SOA_RData;
+        TYPE_MB -> mb: MB_RData;
+        TYPE_MG -> mg: MG_RData;
+        TYPE_MR -> mr: MR_RData;
+        TYPE_NULL -> null_rr: NULL_RData(self.rdlength);
+        TYPE_WKS -> wks: WKS_RData(self.rdlength);
+        TYPE_PTR -> ptr: PTR_RData;
+        TYPE_HINFO -> hinfo: HINFO_RData;
+        TYPE_MINFO -> minfo: MINFO_RData;
+        TYPE_MX -> mx: MX_RData;
+        TYPE_TXT -> txt: TXT_RData(self.rdlength);
+        TYPE_AAAA -> aaaa: AAAA_RData;
+        TYPE_LOC -> loc: LOC_RData;
+        * -> rdata: bytes &size=self.rdlength;
+    };
+
+    on rr_type {
+        if ( self.rr_type != TYPE_A && self.rr_type != TYPE_NS && self.rr_type != TYPE_MD && self.rr_type != TYPE_MF && self.rr_type != TYPE_CNAME && self.rr_type != TYPE_SOA && self.rr_type != TYPE_MB && self.rr_type != TYPE_MG && self.rr_type != TYPE_MR && self.rr_type != TYPE_NULL && self.rr_type != TYPE_WKS && self.rr_type != TYPE_PTR && self.rr_type != TYPE_HINFO && self.rr_type != TYPE_MINFO && self.rr_type != TYPE_MX && self.rr_type != TYPE_TXT && self.rr_type != TYPE_AAAA && self.rr_type != TYPE_LOC )
+            throw "invalid rr type";
+    }
+
+    on class_value {
+        if ( self.class_value != CLASS_IN && self.class_value != CLASS_CS && self.class_value != CLASS_CH && self.class_value != CLASS_HS )
+            throw "invalid rr class";
+    }
 };
 
 public type Message = unit {
-    header: Header;
+    header: DNSHeader;
     questions: Question[self.header.qdcount];
     answers: ResourceRecord[self.header.ancount];
     authorities: ResourceRecord[self.header.nscount];

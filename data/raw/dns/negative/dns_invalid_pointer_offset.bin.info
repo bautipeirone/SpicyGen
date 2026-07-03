@@ -1,0 +1,1 @@
+Invalid Reason: Compression pointer references an offset (255) beyond the actual message length, which is illegal.

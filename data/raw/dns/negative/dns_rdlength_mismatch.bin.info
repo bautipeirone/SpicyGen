@@ -1,0 +1,1 @@
+Invalid Reason: RDLENGTH field specifies 4 bytes of RDATA but only 2 bytes are provided, causing inconsistency between length and actual data.

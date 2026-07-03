@@ -1,0 +1,1 @@
+Invalid Reason: QDCOUNT is 1 but the packet ends before any question data is present, causing a length mismatch.
