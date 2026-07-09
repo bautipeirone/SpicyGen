@@ -5,7 +5,7 @@ import pytest
 
 from src.protocol import ParserArgument, Protocol, ProtocolSpecType, ProtocolType
 from src.tools.compiler import CompileResult
-from src.tools.runtime import ParseResult, RuntimeAdapter, RuntimeArtifact, run_parser_check
+from src.tools.runtime import ParseResult, RuntimeAdapter, RuntimeArtifact, run_parser_check, ParsingConfig
 from src.tools.spicy.preprocess import parse_spicy_file
 from src.tools.spicy.runtime import (
     bind_packet_arguments,
@@ -166,7 +166,8 @@ def test_runtime_reuses_wrapper_for_identical_packet_arguments(tmp_path, monkeyp
         parser_arguments=ARGUMENTS,
     )
 
-    result = run_parser_check(tmp_path / "parser.spicy", runtime, protocol, False)
+    parsing_config = ParsingConfig(negative_packets_enabled=False, include_parse_tree_summary=False)
+    result = run_parser_check(tmp_path / "parser.spicy", runtime, protocol, parsing_config=parsing_config)
 
     assert result.all_passed
     assert len(result.verdicts) == 2
