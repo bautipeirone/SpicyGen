@@ -249,7 +249,7 @@ def main() -> None:
 
 if __name__ == "__main__":
     try:
-        main()
+        exit(main())
     except Exception as e:
         logger.error(f"Grammar generation failed: {e}")
         exit(1)
