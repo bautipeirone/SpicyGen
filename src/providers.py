@@ -26,7 +26,7 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
             "config_list": [{
                 "model": model_name,
                 "api_key": os.getenv("OLLAMA_API_KEY", ""),
-                "base_url": "https://ollama.com/v1"
+                "base_url": os.environ["OLLAMA_HOST_ENDPOINT"]
             }]
         }
     elif provider_name == "openai":
