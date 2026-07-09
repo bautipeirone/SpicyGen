@@ -2,8 +2,8 @@
 """
 Evaluation runner for generate_grammar.py.
 
-Executes a configurable matrix of (protocol × model × config × target_language)
-runs, tracks state for resume/retry, and produces aggregated reports.
+Executes a configurable matrix of (protocol × model × config × target_language × sample)
+runs, tracks state for resume/retry, and produces aggregated reports with pass@k.
 
 Usage:
     python run_eval.py evals/example.yaml
@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 import textwrap
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
@@ -46,6 +47,7 @@ GLOBAL_DEFAULT_MODELS: list[str] = []
 GLOBAL_DEFAULT_CONFIGS: list[str] = []
 GLOBAL_DEFAULT_TARGET_LANGUAGES: list[str] = ["spicy"]
 GLOBAL_DEFAULT_NO_SPEC: bool = False
+GLOBAL_DEFAULT_SAMPLES: int = 1
 
 
 # ---------------------------------------------------------------------------
@@ -61,11 +63,20 @@ class RunSpec:
     target_language: str
     spec_file: str | None     # Custom spec file override, or None
     no_spec: bool             # Run without specification
+    sample: int = 1           # Sample index (1-based)
+    total_samples: int = 1    # Total samples for this configuration
+
+    @property
+    def base_id(self) -> str:
+        """Configuration identity without sample index (for grouping)."""
+        config_label = Path(self.config).stem if self.config else "noconfig"
+        return f"{self.protocol}__{self.model}__{config_label}__{self.target_language}"
 
     @property
     def run_id(self) -> str:
-        config_label = Path(self.config).stem if self.config else "noconfig"
-        return f"{self.protocol}__{self.model}__{config_label}__{self.target_language}"
+        if self.total_samples > 1:
+            return f"{self.base_id}__s{self.sample}"
+        return self.base_id
 
 
 @dataclass
@@ -127,6 +138,7 @@ def expand_matrix(config: dict[str, Any]) -> list[RunSpec]:
     default_target_langs = defaults.get("target_languages", GLOBAL_DEFAULT_TARGET_LANGUAGES)
     default_no_spec = defaults.get("no_spec", GLOBAL_DEFAULT_NO_SPEC)
     default_spec_file = defaults.get("spec_file", None)
+    default_samples = defaults.get("samples", GLOBAL_DEFAULT_SAMPLES)
 
     runs: list[RunSpec] = []
 
@@ -139,6 +151,7 @@ def expand_matrix(config: dict[str, Any]) -> list[RunSpec]:
         target_langs = proto_config.get("target_languages", default_target_langs)
         no_spec = proto_config.get("no_spec", default_no_spec)
         spec_file = proto_config.get("spec_file", default_spec_file)
+        samples = proto_config.get("samples", default_samples)
 
         if not models:
             raise ValueError(
@@ -153,14 +166,17 @@ def expand_matrix(config: dict[str, Any]) -> list[RunSpec]:
         for model in models:
             for cfg in configs:
                 for tl in target_langs:
-                    runs.append(RunSpec(
-                        protocol=protocol_name,
-                        model=model,
-                        config=cfg,
-                        target_language=tl,
-                        spec_file=spec_file,
-                        no_spec=no_spec,
-                    ))
+                    for s in range(1, samples + 1):
+                        runs.append(RunSpec(
+                            protocol=protocol_name,
+                            model=model,
+                            config=cfg,
+                            target_language=tl,
+                            spec_file=spec_file,
+                            no_spec=no_spec,
+                            sample=s,
+                            total_samples=samples,
+                        ))
 
     return runs
 
@@ -266,7 +282,7 @@ def execute_run(
             (run_dir / "stderr.txt").write_text(result.stderr)
 
         if result.returncode != 0:
-            error_msg = result.stderr.strip()[-500:] if result.stderr else f"Exit code {result.returncode}"
+            error_msg = result.stderr.strip()[-300:] if result.stderr else f"Exit code {result.returncode}"
             return False, error_msg
 
         return True, None
@@ -314,6 +330,49 @@ def write_report_jsonl(eval_dir: Path, metrics: list[dict[str, Any]]) -> None:
 # Summary generation
 # ---------------------------------------------------------------------------
 
+def _compute_pass_at_k(n: int, c: int, k: int) -> float:
+    """
+    Compute the unbiased pass@k estimator.
+
+    Uses the formula: pass@k = 1 - C(n-c, k) / C(n, k)
+    where n = total samples, c = successful samples, k = the k value.
+
+    Reference: Chen et al., "Evaluating Large Language Models Trained on Code", 2021.
+    """
+    if n < k:
+        return float(c > 0)  # Can't draw k from n < k; fall back to simple check
+    if c == 0:
+        return 0.0
+    if c >= n:
+        return 1.0
+    # Use log-space to avoid overflow with large combinatorial values
+    # pass@k = 1 - prod_{i=0}^{k-1} (n-c-i) / (n-i)
+    result = 1.0
+    for i in range(k):
+        result *= (n - c - i) / (n - i)
+    return 1.0 - result
+
+
+def _group_metrics_by_base_id(metrics: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    """
+    Group metrics by their base configuration (without sample index).
+
+    The base_id is recovered by stripping the trailing '__sN' suffix from run_id,
+    if present.
+    """
+    groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for m in metrics:
+        run_id = m.get("run_id", "")
+        # Strip sample suffix: "proto__model__cfg__lang__s3" -> "proto__model__cfg__lang"
+        parts = run_id.rsplit("__", 1)
+        if len(parts) == 2 and parts[1].startswith("s") and parts[1][1:].isdigit():
+            base_id = parts[0]
+        else:
+            base_id = run_id
+        groups[base_id].append(m)
+    return dict(groups)
+
+
 def generate_summary(
     eval_dir: Path,
     config: dict[str, Any],
@@ -321,7 +380,7 @@ def generate_summary(
     metrics: list[dict[str, Any]],
     model_index: dict[str, Any],
 ) -> None:
-    """Generate a human-readable summary.md with comparison tables."""
+    """Generate a human-readable summary.md with comparison tables and pass@k."""
     lines: list[str] = []
     name = config.get("name", "Unnamed Evaluation")
     note = config.get("note", "")
@@ -357,22 +416,39 @@ def generate_summary(
         (eval_dir / SUMMARY_FILENAME).write_text("\n".join(lines))
         return
 
-    # --- Results table ---
+    # --- Group metrics by base configuration ---
+    grouped = _group_metrics_by_base_id(metrics)
+    has_samples = any(len(samples) > 1 for samples in grouped.values())
+
+    # --- Individual Results table ---
     lines.append("## Results")
     lines.append("")
-    lines.append(
-        "| Protocol | Model | Config | Target | Success | Iterations | "
-        "Best Iter | Compile@1 | Time (s) | Cost ($) |"
-    )
-    lines.append(
-        "|----------|-------|--------|--------|---------|------------|"
-        "-----------|-----------|----------|----------|"
-    )
+
+    if has_samples:
+        lines.append(
+            "| Protocol | Model | Config | Target | Sample | Success | Iterations | "
+            "Best Iter | Compile@1 | Time (s) | Cost ($) |"
+        )
+        lines.append(
+            "|----------|-------|--------|--------|--------|---------|------------|"
+            "-----------|-----------|----------|----------|"
+        )
+    else:
+        lines.append(
+            "| Protocol | Model | Config | Target | Success | Iterations | "
+            "Best Iter | Compile@1 | Time (s) | Cost ($) |"
+        )
+        lines.append(
+            "|----------|-------|--------|--------|---------|------------|"
+            "-----------|-----------|----------|----------|"
+        )
 
     for m in metrics:
         protocol = m.get("protocol", "?")
         model = m.get("model", "?")
-        config_label = m.get("run_id", "").split("__")[2] if "__" in m.get("run_id", "") else "?"
+        run_id = m.get("run_id", "")
+        parts = run_id.split("__")
+        config_label = parts[2] if len(parts) > 2 else "?"
         target = m.get("target_language", "?")
         success = "✅" if m.get("success") else "❌"
         iterations = len(m.get("iterations", []))
@@ -382,12 +458,76 @@ def generate_summary(
         cost = _extract_cost(m)
         cost_str = f"{cost:.4f}" if cost is not None else "—"
 
-        lines.append(
-            f"| {protocol} | {model} | {config_label} | {target} | {success} | "
-            f"{iterations} | {best_iter} | {first_compile} | {elapsed} | {cost_str} |"
-        )
+        if has_samples:
+            # Extract sample number from run_id
+            sample_str = parts[-1] if parts[-1].startswith("s") else "—"
+            lines.append(
+                f"| {protocol} | {model} | {config_label} | {target} | {sample_str} | {success} | "
+                f"{iterations} | {best_iter} | {first_compile} | {elapsed} | {cost_str} |"
+            )
+        else:
+            lines.append(
+                f"| {protocol} | {model} | {config_label} | {target} | {success} | "
+                f"{iterations} | {best_iter} | {first_compile} | {elapsed} | {cost_str} |"
+            )
 
     lines.append("")
+
+    # --- Aggregated results across samples (pass@k) ---
+    if has_samples:
+        lines.append("## Aggregated Results (across samples)")
+        lines.append("")
+
+        # Determine k values to report: always include 1, and the max sample count
+        all_sample_counts = sorted(set(len(s) for s in grouped.values()))
+        k_values = sorted(set([1] + all_sample_counts))
+        # Filter to only k values that make sense (k <= n for at least one group)
+        k_values = [k for k in k_values if k > 0]
+
+        pass_at_k_headers = " ".join(f"| pass@{k} " for k in k_values)
+        pass_at_k_seps = " ".join(f"|---------" for k in k_values)
+
+        lines.append(
+            f"| Protocol | Model | Config | Target | Samples | Successes | "
+            f"Avg Iters | Avg Time (s) | Avg Cost ($) {pass_at_k_headers}|"
+        )
+        lines.append(
+            f"|----------|-------|--------|--------|---------|-----------|-----------|---"
+            f"----------|-------------- {pass_at_k_seps}|"
+        )
+
+        for base_id, sample_metrics in sorted(grouped.items()):
+            parts = base_id.split("__")
+            protocol = parts[0] if len(parts) > 0 else "?"
+            model = parts[1] if len(parts) > 1 else "?"
+            config_label = parts[2] if len(parts) > 2 else "?"
+            target = parts[3] if len(parts) > 3 else "?"
+
+            n = len(sample_metrics)
+            c = sum(1 for m in sample_metrics if m.get("success"))
+            avg_iters = sum(len(m.get("iterations", [])) for m in sample_metrics) / n
+            avg_time = sum(m.get("time_elapsed_s", 0) for m in sample_metrics) / n
+            costs = [_extract_cost(m) for m in sample_metrics]
+            valid_costs = [c for c in costs if c is not None]
+            avg_cost = sum(valid_costs) / len(valid_costs) if valid_costs else None
+            avg_cost_str = f"{avg_cost:.4f}" if avg_cost is not None else "—"
+
+            pass_at_k_values = []
+            for k in k_values:
+                if k <= n:
+                    val = _compute_pass_at_k(n, c, k)
+                    pass_at_k_values.append(f"{val:.2%}")
+                else:
+                    pass_at_k_values.append("—")
+
+            pass_at_k_cells = " | ".join(pass_at_k_values)
+
+            lines.append(
+                f"| {protocol} | {model} | {config_label} | {target} | {n} | {c} | "
+                f"{avg_iters:.1f} | {avg_time:.1f} | {avg_cost_str} | {pass_at_k_cells} |"
+            )
+
+        lines.append("")
 
     # --- Per-model aggregate stats ---
     lines.append("## Per-Model Statistics")
@@ -510,12 +650,16 @@ def write_readme(eval_dir: Path, config: dict[str, Any], runs: list[RunSpec], de
     models = sorted(set(r.model for r in runs))
     configs = sorted(set(r.config or "default" for r in runs))
     target_langs = sorted(set(r.target_language for r in runs))
+    max_samples = max((r.total_samples for r in runs), default=1)
+    unique_configs = len(set(r.base_id for r in runs))
 
     content = textwrap.dedent(f"""\
     # Evaluation: {name}
 
     - **Timestamp:** {eval_dir.name}
     - **Total runs:** {len(runs)}
+    - **Unique configurations:** {unique_configs}
+    - **Samples per config:** {max_samples}
     - **Protocols:** {', '.join(protocols)}
     - **Models:** {', '.join(models)}
     - **Configs:** {', '.join(configs)}
@@ -605,13 +749,22 @@ def parse_args() -> argparse.Namespace:
 
 def print_matrix(runs: list[RunSpec]) -> None:
     """Pretty-print the run matrix for --dry-run."""
-    print(f"\n{'='*70}")
-    print(f"  EVALUATION MATRIX — {len(runs)} runs")
-    print(f"{'='*70}\n")
+    unique_configs = len(set(r.base_id for r in runs))
+    max_samples = max((r.total_samples for r in runs), default=1)
 
-    header = f"  {'#':<4} {'Protocol':<15} {'Model':<22} {'Config':<18} {'Target':<8} {'Spec'}"
-    print(header)
-    print(f"  {'—'*4} {'—'*15} {'—'*22} {'—'*18} {'—'*8} {'—'*20}")
+    print(f"\n{'='*80}")
+    print(f"  EVALUATION MATRIX — {len(runs)} runs ({unique_configs} configs × {max_samples} sample(s))")
+    print(f"{'='*80}\n")
+
+    has_samples = max_samples > 1
+    if has_samples:
+        header = f"  {'#':<4} {'Protocol':<15} {'Model':<22} {'Config':<18} {'Target':<8} {'Sample':<8} {'Spec'}"
+        print(header)
+        print(f"  {'—'*4} {'—'*15} {'—'*22} {'—'*18} {'—'*8} {'—'*8} {'—'*20}")
+    else:
+        header = f"  {'#':<4} {'Protocol':<15} {'Model':<22} {'Config':<18} {'Target':<8} {'Spec'}"
+        print(header)
+        print(f"  {'—'*4} {'—'*15} {'—'*22} {'—'*18} {'—'*8} {'—'*20}")
 
     for i, run in enumerate(runs, 1):
         config_label = Path(run.config).stem if run.config else "—"
@@ -622,10 +775,15 @@ def print_matrix(runs: list[RunSpec]) -> None:
         else:
             spec_label = "index"
 
-        print(f"  {i:<4} {run.protocol:<15} {run.model:<22} {config_label:<18} "
-              f"{run.target_language:<8} {spec_label}")
+        if has_samples:
+            sample_label = f"{run.sample}/{run.total_samples}"
+            print(f"  {i:<4} {run.protocol:<15} {run.model:<22} {config_label:<18} "
+                  f"{run.target_language:<8} {sample_label:<8} {spec_label}")
+        else:
+            print(f"  {i:<4} {run.protocol:<15} {run.model:<22} {config_label:<18} "
+                  f"{run.target_language:<8} {spec_label}")
 
-    print(f"\n{'='*70}\n")
+    print(f"\n{'='*80}\n")
 
 
 def run_evaluation(

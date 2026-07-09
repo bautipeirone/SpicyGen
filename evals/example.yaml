@@ -29,6 +29,9 @@ defaults:
   # Set to true to run all protocols without a specification file.
   # Can be overridden per-protocol.
   no_spec: false
+  # Number of times to run each (protocol × model × config × target_language)
+  # combination. The summary will include pass@k statistics. Default: 1.
+  samples: 3
 
 # Protocol-specific configuration.
 # Each key is a protocol name (must exist in protocol_index.json).
