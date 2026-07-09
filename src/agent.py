@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from src.tools.compiler import run_grammar_compiler
-from src.tools.runtime import get_protocol_packet_paths, run_parser_check_from_code
+from src.tools.runtime import get_protocol_packet_paths, run_parser_check_from_code, ParsingConfig
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from src.tools.extraction import extract_intervals
 from src.protocol import Protocol
@@ -187,6 +187,7 @@ def run_refinement_loop(
     """
     max_retries = agent_config.get("max_retries")
     rfc_retrieval_tool_enabled = agent_config.get("enable_rfc_retrieval_tool")
+    negative_packets_enabled = agent_config.get("enable_negative_packets")
     show_packet_representation = agent_config.get("show_packet_representation")
     show_parsing_tree = agent_config.get("show_parsing_tree")
     include_parse_tree_summary = show_parsing_tree and target_language.supports_parse_tree_summary
@@ -268,12 +269,17 @@ def run_refinement_loop(
             f"Running runtime check for protocol '{state.protocol.name}' using {target_language.display_name}..."
         )
 
+        parsing_config = ParsingConfig(
+            negative_packets_enabled=negative_packets_enabled,
+            include_parse_tree_summary=include_parse_tree_summary
+        )
+
         check_result = run_parser_check_from_code(
             cleaned_code,
             target_language.runtime,
             state.protocol,
             target_language.source_extension,
-            include_parse_tree_summary=include_parse_tree_summary,
+            parsing_config=parsing_config,
             debug_info=debug_info,
         )
         if state.iterations:
@@ -398,7 +404,7 @@ def run_refinement_loop(
     )
     refinement_stats = {
         "positive_packets": len(positive_packets),
-        "negative_packets": len(negative_packets),
+        "negative_packets": len(negative_packets) if negative_packets_enabled else 0,
         "max_total_retries": max_retries,
         "best_iteration": state.best_iteration,
         "termination_reason": state.termination_reason,

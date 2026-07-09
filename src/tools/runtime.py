@@ -13,14 +13,19 @@ _RAW_BASE_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 # Data classes
 # ---------------------------------------------------------------------------
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
+class ParsingConfig:
+    """Parse check configurations"""
+    negative_packets_enabled: bool = True
+    include_parse_tree_summary: bool = False
+
+@dataclass(frozen=True)
 class ParseResult:
     """Result of running a parser on a single packet."""
     packet_path: str
     success: bool
     error: str
     parse_tree: str | None = None
-
 
 @dataclass(frozen=True)
 class RuntimeArtifact:
@@ -218,6 +223,7 @@ def get_packet_representation(packet_path: str | Path, packet_type: ProtocolType
 
     return None
 
+
 def get_packet_info(packet_path: str | Path) -> str | None:
     packet_info_path = f"{packet_path}.info"
     try:
@@ -226,6 +232,7 @@ def get_packet_info(packet_path: str | Path) -> str | None:
     except OSError:
         return None
     return info
+
 
 def get_protocol_packet_paths(protocol_name: str) -> tuple[list[str], list[str]]:
     """Return relative accept/reject packet paths for a protocol."""
@@ -251,17 +258,22 @@ def run_parser_check(
     parser_source: str | Path,
     runtime: RuntimeAdapter,
     protocol: Protocol,
-    include_parse_tree_summary: bool,
+    parsing_config: ParsingConfig | None = None,
     debug_info: dict[str, Path | None] | None = None,
 ) -> SemanticCheckResult:
     """Run a parser against all packets for *protocol* found on disk."""
     protocol_name = protocol.name
     protocol_dir = _RAW_BASE_DIR / protocol_name
 
+    if parsing_config is None:
+        parsing_config = ParsingConfig()
+
     build_dir = debug_info.get("build_dir") if debug_info else None
     errors_path = debug_info.get("errors_path") if debug_info else None
 
     accept_packets, reject_packets = get_protocol_packet_paths(protocol_name)
+    if not parsing_config.negative_packets_enabled: # Overwrite the list of reject packets so they are "disabled".
+        reject_packets = []
 
     result = SemanticCheckResult(protocol=protocol)
 
@@ -323,7 +335,7 @@ def run_parser_check(
 
         parse_tree_summary = (
             runtime.summarize_result(parse_result)
-            if expected_accept and include_parse_tree_summary
+            if expected_accept and parsing_config.include_parse_tree_summary
             else None
         )
         verdict = PacketVerdict(
@@ -364,7 +376,7 @@ def run_parser_check_from_code(
     runtime: RuntimeAdapter,
     protocol: Protocol,
     source_extension: str,
-    include_parse_tree_summary: bool = False,
+    parsing_config: ParsingConfig | None = None,
     debug_info: dict[str, Path | None] | None = None,
 ) -> SemanticCheckResult:
     """Write *grammar_code* to a temp file, then run :func:`run_parser_check`."""
@@ -377,6 +389,6 @@ def run_parser_check_from_code(
             tmp.name,
             runtime,
             protocol,
-            include_parse_tree_summary,
+            parsing_config=parsing_config,
             debug_info=debug_info,
         )
