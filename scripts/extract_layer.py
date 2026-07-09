@@ -12,7 +12,7 @@ from scapy.utils import PcapReader
 
 COMMON_PROTOCOL_ALIASES = {
     "arp": ("scapy.layers.l2", "ARP"),
-    "dhcp": ("scapy.layers.dhcp", "DHCP"),
+    "dhcp": ("scapy.layers.dhcp", "BOOTP"),
     "dns": ("scapy.layers.dns", "DNS"),
     "icmp": ("scapy.layers.inet", "ICMP"),
     "icmpv6": ("scapy.layers.inet6", "_ICMPv6"),
