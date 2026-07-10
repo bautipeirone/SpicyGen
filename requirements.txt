@@ -93,6 +93,7 @@ regex==2026.3.32
 requests==2.33.1
 rich==13.9.4
 rpds-py==0.30.0
+scapy==2.7.0
 scikit-learn==1.8.0
 scipy==1.17.1
 six==1.17.0
