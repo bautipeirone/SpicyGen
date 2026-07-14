@@ -1,0 +1,117 @@
+module RTSP_gpt;
+
+import spicy;
+
+const HeaderName = /[^:\r\n]+/;
+const WhiteSpace = /[ \t]+/;
+const CRLF = /\r?\n/;
+const Integer = /[0-9]+/;
+const VersionDigits = /[0-9]+/;
+const FieldValue = /[^\r\n]*/;
+const ReasonText = /[^\r\n]*/;
+const MethodToken = /DESCRIBE|ANNOUNCE|GET_PARAMETER|OPTIONS|PAUSE|PLAY|RECORD|REDIRECT|SETUP|SET_PARAMETER|TEARDOWN/;
+const RequestUri = /\*|[^ \t\r\n]+/;
+
+type Header = unit(inout msg: RTSPControl) {
+    name: HeaderName;
+    : /:[\t ]*/;
+    value: FieldValue;
+    : CRLF;
+
+    on value {
+        local n = self.name.upper();
+
+        if ( n == b"CSEQ" )
+            msg.has_cseq = True;
+
+        if ( n == b"CONTENT-LENGTH" ) {
+            msg.has_content_length = True;
+            msg.content_length = self.value.to_uint();
+        }
+    }
+};
+
+type RequestLine = unit {
+    method: MethodToken;
+    : WhiteSpace;
+    request_uri: RequestUri;
+    : WhiteSpace;
+    protocol_name: b"RTSP";
+    : b"/";
+    major: VersionDigits;
+    : b".";
+    minor: VersionDigits;
+    : CRLF;
+};
+
+type StatusLine = unit {
+    protocol_name: b"RTSP";
+    : b"/";
+    major: VersionDigits;
+    : b".";
+    minor: VersionDigits;
+    : WhiteSpace;
+    status_code: /[0-9][0-9][0-9]/;
+    : WhiteSpace;
+    reason_phrase: ReasonText;
+    : CRLF;
+};
+
+type RTSPRequest = unit(inout msg: RTSPControl) {
+    request_line: RequestLine;
+    headers: Header(msg)[];
+    end_of_headers: CRLF;
+
+    on end_of_headers {
+        if ( ! msg.has_cseq )
+            throw "missing CSeq header";
+    }
+};
+
+type RTSPResponse = unit(inout msg: RTSPControl) {
+    status_line: StatusLine;
+    headers: Header(msg)[];
+    end_of_headers: CRLF;
+
+    on end_of_headers {
+        if ( ! msg.has_cseq )
+            throw "missing CSeq header";
+    }
+};
+
+type RTSPControl = unit {
+    switch {
+        -> response: RTSPResponse(self);
+        -> request: RTSPRequest(self);
+    };
+
+    body: bytes &size=self.content_length if ( self.has_content_length && self.content_length > 0 );
+    trailing: bytes &eod;
+
+    var has_cseq: bool = False;
+    var has_content_length: bool = False;
+    var content_length: uint64 = 0;
+
+    on trailing {
+        if ( self.trailing != b"" ) {
+            if ( ! self.has_content_length )
+                throw "message body without Content-Length";
+
+            throw "unexpected trailing data";
+        }
+    }
+};
+
+type InterleavedBinaryData = unit {
+    : b"$";
+    channel: uint8;
+    length: uint16;
+    data: bytes &size=self.length;
+};
+
+public type RTSP = unit {
+    switch {
+        -> interleaved: InterleavedBinaryData;
+        -> message: RTSPControl;
+    };
+};

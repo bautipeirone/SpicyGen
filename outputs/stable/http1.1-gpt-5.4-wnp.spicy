@@ -1,0 +1,197 @@
+module HTTP_gpt;
+
+import spicy;
+
+const Token = /[^()<>@,;:\\"\/\[\]?={} \t\r\n]+/;
+const HeaderName = /[^()<>@,;:\\"\/\[\]?={} \t\r\n]+/;
+const WhiteSpace = /[ \t]+/;
+const OptionalWhiteSpace = /[ \t]*/;
+const CRLF = /\r?\n/;
+const RestOfLine = /[^\r\n]*/;
+const Integer = /[0-9]+/;
+const VersionInteger = /0|[1-9][0-9]*/;
+const HexInteger = /[0-9a-fA-F]+/;
+
+type HTTPVersion = unit {
+    : b"HTTP/";
+    major: VersionInteger &convert=$$.to_uint();
+    : b".";
+    minor: VersionInteger &convert=$$.to_uint();
+};
+
+type Method = unit {
+    switch {
+        -> options: b"OPTIONS";
+        -> get: b"GET";
+        -> head: b"HEAD";
+        -> post: b"POST";
+        -> put: b"PUT";
+        -> del: b"DELETE";
+        -> trace: b"TRACE";
+        -> connect: b"CONNECT";
+        -> patch: b"PATCH";
+    };
+};
+
+type AbsoluteURI = unit {
+    scheme: /[A-Za-z][A-Za-z0-9+.-]*/;
+    : b":";
+    rest: Token;
+};
+
+type Authority = unit {
+    host: /[^:\r\n ]+/;
+    switch {
+        -> { : b":"; port_value: Integer &convert=$$.to_uint(); }
+        -> { : void; }
+    };
+};
+
+type RequestURI = unit {
+    switch {
+        -> star: b"*";
+        -> absolute: AbsoluteURI;
+        -> authority: Authority;
+        -> path: Token;
+    };
+};
+
+type RequestLine = unit {
+    method: Method;
+    : WhiteSpace;
+    uri: RequestURI;
+    : WhiteSpace;
+    version: HTTPVersion;
+    : CRLF;
+};
+
+type StatusCode = unit {
+    code: /[0-9]{3}/;
+};
+
+type StatusLine = unit {
+    version: HTTPVersion;
+    : WhiteSpace;
+    status: StatusCode;
+    : WhiteSpace;
+    reason: RestOfLine;
+    : CRLF;
+};
+
+type DeliveryMode = enum {
+    EndOfData = 1,
+    Length = 2,
+    Chunked = 3,
+};
+
+type ChunkExtension = unit {
+    : OptionalWhiteSpace;
+    : b";";
+    : OptionalWhiteSpace;
+    name: Token;
+    switch {
+        -> { : b"="; value: Token; }
+        -> { : void; }
+    };
+};
+
+type ChunkHeader = unit {
+    chunk_size: HexInteger &convert=$$.to_uint(16);
+    extensions: ChunkExtension[];
+    : CRLF;
+};
+
+type Chunk = unit {
+    header: ChunkHeader;
+    data: bytes &size=self.header.chunk_size if ( self.header.chunk_size > 0 );
+    : CRLF if ( self.header.chunk_size > 0 );
+};
+
+type Header = unit(inout msg: HTTPMessage) {
+    name: HeaderName;
+    : b":";
+    : OptionalWhiteSpace;
+
+    switch ( self.name ) {
+        b"Host" -> host_value: Authority;
+        b"Content-Length" -> content_length: Integer &convert=$$.to_uint();
+        b"Transfer-Encoding" -> transfer_encoding: Token;
+        * -> value: RestOfLine;
+    };
+
+    : CRLF;
+
+    on host_value {
+        msg.seen_host = True;
+    }
+
+    on content_length {
+        if ( msg.seen_content_length && msg.content_length != self.content_length )
+            msg.invalid = True;
+
+        if ( ! msg.seen_content_length )
+            msg.content_length = self.content_length;
+
+        msg.seen_content_length = True;
+        msg.has_body = True;
+    }
+
+    on transfer_encoding {
+        msg.seen_transfer_encoding = True;
+
+        if ( self.transfer_encoding == b"chunked" ) {
+            msg.delivery_mode = DeliveryMode::Chunked;
+            msg.has_body = True;
+        }
+    }
+};
+
+type ChunkedBody = unit(inout msg: HTTPMessage) {
+    chunks: Chunk[] &until=($$.header.chunk_size == 0);
+    trailers: (Header(msg))[];
+    : CRLF;
+};
+
+public type HTTPMessage = unit {
+    leading_crlfs: CRLF[];
+
+    switch {
+        -> response: StatusLine;
+        -> request: RequestLine;
+    };
+
+    headers: (Header(self))[];
+    : CRLF;
+
+    switch ( self.delivery_mode ) {
+        DeliveryMode::Chunked -> chunked_body: ChunkedBody(self) if ( self.has_body );
+        DeliveryMode::Length -> body_by_length: bytes &size=self.content_length if ( self.has_body );
+        * -> body_to_eod: bytes &eod if ( self.has_body );
+    };
+
+    : void &requires=(! self.invalid);
+    : void &requires=(! (self.seen_transfer_encoding && self.seen_content_length));
+    : void &requires=(! (self.is_request && self.request_is_http11) || self.seen_host);
+
+    var has_body: bool = False;
+    var content_length: uint64 = 0;
+    var delivery_mode: DeliveryMode = DeliveryMode::EndOfData;
+    var seen_content_length: bool = False;
+    var seen_transfer_encoding: bool = False;
+    var seen_host: bool = False;
+    var invalid: bool = False;
+    var is_request: bool = False;
+    var request_is_http11: bool = False;
+
+    on request {
+        self.is_request = True;
+
+        if ( self.request.version.major == 1 && self.request.version.minor == 1 )
+            self.request_is_http11 = True;
+    }
+
+    on headers {
+        if ( self.seen_content_length && self.delivery_mode == DeliveryMode::EndOfData )
+            self.delivery_mode = DeliveryMode::Length;
+    }
+};

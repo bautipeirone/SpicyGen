@@ -1,0 +1,55 @@
+module TCP_gpt;
+
+import spicy;
+
+type TCPOptionMaximumSegmentSizeData = unit {
+    length: uint8 &requires=($$ == 4);
+    maximum_segment_size: uint16;
+};
+
+type TCPOptionGenericData = unit {
+    length: uint8 &requires=($$ >= 2);
+    data: bytes &size=self.length-2;
+};
+
+type TCPOption = unit {
+    kind: uint8;
+    switch (self.kind) {
+        0 -> : void;
+        1 -> : void;
+        2 -> maximum_segment_size: TCPOptionMaximumSegmentSizeData;
+        255 -> : void &requires=False;
+        * -> generic: TCPOptionGenericData;
+    };
+};
+
+type TCPOptionsAndPadding = unit(option_area_length: uint32) {
+    options: TCPOption[] &size=option_area_length;
+};
+
+public type TCP = unit {
+    source_port: uint16;
+    destination_port: uint16;
+    sequence_number: uint32;
+    acknowledgment_number: uint32;
+    header_control: bitfield(32) {
+        data_offset: 0..3;
+        reserved: 4..9;
+        urg: 10;
+        ack: 11;
+        psh: 12;
+        rst: 13;
+        syn: 14;
+        fin: 15;
+        window: 16..31;
+    } &bit-order=spicy::BitOrder::MSB0;
+    checksum: uint16;
+    urgent_pointer: uint16;
+    options_and_padding: TCPOptionsAndPadding(self.header_control.data_offset * 4 - 20) if(self.header_control.data_offset * 4 > 20);
+    data: bytes &eod;
+    : void &requires=(self.header_control.data_offset * 4 >= 20);
+    : void &requires=(self.header_control.reserved == 0);
+    : void &requires=(!(self.header_control.syn == 1 && self.header_control.fin == 1));
+    : void &requires=(!(self.header_control.urg == 1 && |self.data| == 0 && self.urgent_pointer > 0));
+    : void &requires=(!(self.header_control.data_offset == 5 && self.data == b"\x01"));
+};
