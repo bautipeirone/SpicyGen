@@ -8,14 +8,17 @@ for protocols specifications from their RFCs.
 * Ollama, Google Gemini, or OpenAI API keys.
 
 ## Setup
-1. Install python dependencies with `pip install -r requirements.txt`
+1. Install Python dependencies with `uv sync`
 2. Set environment variables for API keys in `.env` file. Only the ones that will be used need to be setup.
 ```bash
 OLLAMA_API_KEY="ollama_api_key"
-GOOGLE_API_KEY="google_api_key"
+OLLAMA_HOST_ENDPOINT="http://localhost:11434/v1/"
+GEMINI_API_KEY="gemini_api_key"
 OPENAI_API_KEY="openai_api_key"
 ANTHROPIC_API_KEY="anthropic_api_key"
 ```
+
+For the `ollama` provider, this project is configured through AutoGen as an OpenAI-compatible client, so `OLLAMA_HOST_ENDPOINT` must point at an OpenAI-compatible Ollama endpoint such as `http://localhost:11434/v1/`.
 
 ## Usage
 The main script is `generate_grammar.py`. It is run like this:
@@ -25,6 +28,7 @@ python generate_grammar.py --model MODEL_ID --target-language spicy -o OUTPUT_FI
 The `MODEL_ID` must be one of the keys defined in `model_index.json` (e.g., `qwen3-coder` or `gemini-3.1-flash`).
 Necessary API keys required by the model's provider must be set in the `.env` file.
 The script also accepts optional parameters like `--config` to provide generation parameters, `--debug-dir` to save refinement steps, `--metrics-file`, and `--target-language` to switch the prompt/toolchain/runtime backend together.
+When the project is installed through `uv`, the same commands are also available as console scripts such as `generate-grammar`, `preprocess-spec`, `run-pipeline`, and `create-zeek-package`.
 
 Another possibility to test many models along various protocols is to use the shell script.
 ```bash
@@ -39,17 +43,7 @@ By default, `generate_grammar.py` resolves the protocol specification using the 
 This is highly useful for isolated manual testing, debugging custom prompts, or validating how the LLM reacts to specific cuts of the specification.
 
 ## Docker Usage
-You can use the provided Dockerfiles to run the benchmark script in isolated environments. The shared Python application setup lives in `docker/install_app.sh`, while each runtime has its own Dockerfile so it can build on the base image that best matches its toolchain.
-
-1. Build the default Python runtime image:
-```bash
-docker build -t grammar-generator .
-```
-
-2. Run the image, providing your `.env` file and mounting an output directory to retrieve the results. You can pass arguments directly to `benchmark.sh`:
-```bash
-docker run --rm --env-file .env -v $(pwd)/outputs:/app/outputs grammar-generator -m "gemini-3.1-flash" -p "dhcp dns"
-```
+You can use the provided Dockerfiles to run the generator in isolated environments.
 
 ### Backend-Specific Images
 Use the runtime-specific Dockerfiles when you want to build an image with a backend toolchain included:
@@ -59,12 +53,12 @@ docker build -f Dockerfile.spicy -t grammar-generator:spicy .
 docker build -f Dockerfile.3d -t grammar-generator:3d .
 ```
 
-The intended pattern is:
-- `runtime`: Python app and shared utilities only.
-- `runtime-spicy`: Python app plus the Spicy toolchain.
-- `runtime-3d`: Python app plus the EverParse/3D toolchain, built directly on the EverParse image so `3d.exe` matches its required system libraries.
+Run the installed console script you need explicitly:
 
-The Spicy image currently installs the official Debian 12 Spicy package from a pinned release. You can override the version or the package URL at build time:
+```bash
+docker run --rm --env-file .env grammar-generator:spicy generate-grammar --model gemini-3.1-flash --target-language spicy -o /tmp/dns.spicy dns
+docker run --rm --env-file .env grammar-generator:3d run-pipeline run dns -m gemini-3.1-flash -t 3d
+```
 
 ```bash
 docker build -f Dockerfile.spicy --build-arg SPICY_VERSION=v1.16.0 -t grammar-generator:spicy .
@@ -72,8 +66,6 @@ docker build -f Dockerfile.spicy --build-arg SPICY_DEB_URL=https://github.com/ze
 ```
 
 If you are building on a non-`amd64` platform, you may need to override `SPICY_DEB_URL` to a compatible artifact or build the image for `linux/amd64`.
-
-This is usually cleaner than forcing multiple backend runtimes into one image, because each final image stays explicit and can follow the system libraries expected by its toolchain.
 
 ## Testing
 To run unit tests and integration tests run `pytest`.

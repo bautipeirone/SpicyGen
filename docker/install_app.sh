@@ -17,5 +17,9 @@ if ! command -v "$PIP_BIN" >/dev/null 2>&1 && command -v pip3 >/dev/null 2>&1; t
   PIP_BIN=pip3
 fi
 
-# shellcheck disable=SC2086
-"$PIP_BIN" install ${PIP_INSTALL_ARGS:-} --no-cache-dir -r requirements.txt
+if ! command -v uv >/dev/null 2>&1; then
+  # shellcheck disable=SC2086
+  "$PIP_BIN" install ${PIP_INSTALL_ARGS:-} --no-cache-dir uv
+fi
+
+uv sync --locked --no-dev --no-install-project

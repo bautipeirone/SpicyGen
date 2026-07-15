@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grammar-generator"
+version = "0.1.0"
+description = "Grammar generation package from SpicyGen."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ag2[gemini]==0.11.4",
+    "autogen==0.11.4",
+    "autogen-agentchat==0.7.5",
+    "autogen-core==0.7.5",
+    "autogen-ext[anthropic,gemini,openai]>=0.7.5",
+    "gitpython==3.1.50",
+    "google-genai==1.69.0",
+    "pyautogen==0.10.0",
+    "python-dotenv==1.2.2",
+    "pyyaml==6.0.2",
+]
+
+[project.scripts]
+generate-grammar = "generate_grammar:main"
+preprocess-spec = "preprocess_spec:main"
+run-pipeline = "pipeline:main"
+create-zeek-package = "create_zeek_package:main"
+
+[project.optional-dependencies]
+testing = [
+    "pytest==9.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "pandas==3.0.1",
+    "rich==13.9.4",
+    "scapy==2.7.0",
+]
+
+[tool.setuptools]
+py-modules = [
+    "generate_grammar",
+    "preprocess_spec",
+    "pipeline",
+    "create_zeek_package",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+namespaces = true

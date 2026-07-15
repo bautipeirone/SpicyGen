@@ -4,14 +4,13 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV PATH="/app/.venv/bin:/opt/spicy/bin:${PATH}"
 
 ARG SPICY_VERSION=v1.16.0
 ARG SPICY_DEB_URL=https://github.com/zeek/spicy/releases/download/${SPICY_VERSION}/spicy_linux_debian12.deb
 
-ENV PATH="/opt/spicy/bin:${PATH}"
-
 COPY docker/install_app.sh /tmp/install_app.sh
-COPY requirements.txt .
+COPY pyproject.toml uv.lock ./
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl g++ make \
     && curl -fsSL "${SPICY_DEB_URL}" -o /tmp/spicy.deb \
@@ -21,5 +20,4 @@ RUN apt-get update \
     && /bin/sh /tmp/install_app.sh
 
 COPY . .
-
-ENTRYPOINT ["python", "generate_grammar.py"]
+RUN uv sync --locked --no-dev

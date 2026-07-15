@@ -5,17 +5,5 @@ __pycache__/
 .cache/
 .codex
 
-# Builds
-a.out*
-*.hlto
-
-# Runtime debug and outputs
-outputs/*
-!outputs/stable
-!outputs/wip
-!outputs/CHANGELOG.md
-
-debug/
-
-# Extra
-deprecated/
+!src/
+!*.py
