@@ -215,3 +215,75 @@ def test_generate_zeek_files_retries_after_compile_failure(tmp_path, monkeypatch
     assert "bad evt" in user_messages[1]
     assert usage["attempts"][0]["usage"] == {"tokens": 1}
     assert usage["attempts"][1]["usage"] == {"tokens": 2}
+
+
+# ---------------------------------------------------------------------------
+# replace_throw_with_logging
+# ---------------------------------------------------------------------------
+
+def test_replace_throw_with_logging_replaces_single_throw():
+    code = 'module DNS;\nthrow "bad packet";'
+    result = czp.replace_runtime_throw_with_logging(code)
+    assert 'throw' not in result
+    assert 'zeek::weird("bad packet")' in result
+
+
+def test_replace_throw_with_logging_replaces_multiple_throws():
+    code = 'module DNS;\nthrow "error one";\nthrow "error two";'
+    result = czp.replace_runtime_throw_with_logging(code)
+    assert 'throw' not in result
+    assert 'zeek::weird("error one")' in result
+    assert 'zeek::weird("error two")' in result
+
+
+def test_add_zeek_import_has_import_statement():
+    code = 'module DNS;\npublic type Message = unit {};'
+    result = czp.add_zeek_import(code)
+    assert 'import zeek;' in result
+
+
+def test_replace_throw_with_logging_no_throw_still_adds_import():
+    """Even when there are no throw statements the import must be added."""
+    code = 'module DNS;\npublic type Message = unit {};' 
+    result = czp.replace_runtime_throw_with_logging(czp.add_zeek_import(code))
+    assert 'import zeek;' in result
+    assert 'throw' not in result
+
+# ---------------------------------------------------------------------------
+# replace_require_with_logging
+# ---------------------------------------------------------------------------
+
+def test_replace_require_with_logging_replaces_field_constraint():
+    code = 'version: uint8 &requires=($$ == 1);'
+
+    result = czp.replace_require_with_logging(code)
+
+    assert '&requires' not in result
+    assert 'version: uint8' in result
+    assert 'if (!($$ == 1))' in result
+    assert 'zeek::weird("Constraint ($$ == 1) violated in field version")' in result
+
+
+def test_replace_require_with_logging_handles_unnamed_field():
+    code = ': void &requires=(self.length > 0);'
+
+    result = czp.replace_require_with_logging(code)
+
+    assert '&requires' not in result
+    assert ': void' in result
+    assert 'zeek::weird("Constraint (self.length > 0) violated")' in result
+    assert 'in field' not in result
+
+
+def test_replace_require_with_logging_replaces_all_constraints_and_escapes_quotes():
+    code = (
+        'marker: bytes &requires=($$ == b"\\x00");\n'
+        'version: uint8 &requires=($$ == 1);'
+    )
+
+    result = czp.replace_require_with_logging(code)
+
+    assert '&requires' not in result
+    assert result.count('zeek::weird(') == 2
+    assert "Constraint ($$ == b'\\x00') violated in field marker" in result
+    assert 'Constraint ($$ == 1) violated in field version' in result

@@ -111,6 +111,41 @@ def derive_analyzer_name(module_name: str) -> str:
     return module_name
 
 
+def add_zeek_import(code: str) -> str:
+    lines = code.splitlines()
+    lines.insert(1, "")
+    lines.insert(2, "import zeek;")
+    code = "\n".join(lines)
+    return code
+
+def replace_runtime_throw_with_logging(code: str) -> str:
+    def replace(m):
+        return f"zeek::weird(\"{m.group("error")}\");"
+    code = re.sub(r"throw \"(?P<error>.*)\";", replace, code)
+    return code
+
+def replace_require_with_logging(code: str) -> str:
+    def replace(m):
+        log_message = (
+            f"Constraint ({m.group("constraint")}) violated" +
+            (f" in field {m.group("field")}" if m.group("field") else "")
+        ).replace("\"", "'")
+        return (
+            f"{m.group("field") if m.group("field") else ""}: "
+            f"{m.group("prefix")} {m.group("suffix")} "
+            f"{{ if (!({m.group("constraint")})) {{ zeek::weird(\"{log_message}\"); }} }}"
+        )
+
+    # r"(?P<field>\w*):\s*(?P<prefix>.*)\s*&requires=\((?P<constraint>.*)\)\s*(?P<suffix>.*);"
+    code = re.sub(r"(?P<field>\w*):\s*(?P<prefix>.*)\s*&requires=\((?P<constraint>.*)\)\s*(?P<suffix>.*);", replace, code)
+    return code
+
+def adapt_parser_to_zeek_analyzer(code: str) -> str:
+    code = add_zeek_import(code)
+    code = replace_runtime_throw_with_logging(code)
+    code = replace_require_with_logging(code)
+    return code
+
 # ---------------------------------------------------------------------------
 # zkg invocation
 # ---------------------------------------------------------------------------
@@ -233,7 +268,7 @@ def build_zeek_generation_prompt(
         f"- Transports: {[ transport.upper() for transport in transports ]}\n"
         f"- The .evt MUST import both {module_name} and Zeek_{analyzer_name}\n"
         f"- Entry unit: {module_name}::{entry_unit}\n"
-        f"- In main.zeek, the Zeek module MUST be: {analyzer_name}\n"
+        f"- In main.zeek, the Zeek module MUST be: {module_name}\n"
         f"- Write analyzer/{analyzer_name.lower()}.evt content in the JSON key \"evt\"\n"
         f"- Write analyzer/zeek_{analyzer_name.lower()}.spicy content in the JSON key \"zeek_spicy\"\n"
         "- Write scripts/main.zeek content in the JSON key \"main_zeek\"\n\n"
@@ -571,7 +606,7 @@ def install_plugin(package_dir: Path):
 # Tests generation and setup
 # ---------------------------------------------------------------------------
 TRACE_TEST_FILE = """
-# @TEST-DOC: Test Zeek parsing a trace file through the SPACE_PACKET_PROTOCOL analyzer.
+# @TEST-DOC: Test Zeek parsing a trace file through the {analyzer_name} analyzer.
 #
 # @TEST-EXEC: zeek -Cr ${{TRACES}}/{trace_file} ${{PACKAGE}} %INPUT >output
 # @TEST-EXEC: btest-diff output
@@ -579,7 +614,7 @@ TRACE_TEST_FILE = """
 
 event {analyzer_name}::{parser_event}(c: connection, is_orig: bool, payload: string)
 	{{
-	print fmt("Testing SPACE_PACKET_PROTOCOL: [%s] [orig_h=%s, orig_p=%s, resp_h=%s, resp_p=%s] %s", (
+	print fmt("Testing {analyzer_name}: [%s] [orig_h=%s, orig_p=%s, resp_h=%s, resp_p=%s] %s", (
 	    is_orig ? "request" : "reply" ), c$id$orig_h, c$id$orig_p,
 	    c$id$resp_h, c$id$resp_p, payload);
 	}}
@@ -785,7 +820,9 @@ def create_zeek_package(
     # ── Phase 3: Copy the user's Spicy parser ─────────────────────────
     # Overwrite the template placeholder with the real parser.
     analyzer_spicy = package_dir / "analyzer" / f"{a_lower}.spicy"
-    shutil.copy2(spicy_info.source_path, analyzer_spicy)
+    parser_code = spicy_info.source_path.read_text()
+    analyzer_code = adapt_parser_to_zeek_analyzer(parser_code)
+    analyzer_spicy.write_text(analyzer_code)
     logger.info("Copied parser to %s", analyzer_spicy.relative_to(output_dir))
 
     # ── Phase 4: Generate Zeek integration files with the LLM ──────────
