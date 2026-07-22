@@ -1,0 +1,33 @@
+name: "Evaluation for the 5 simpler protocols"
+
+note: "Compare Gemini vs Qwen vs GPT-5.4 on the 5 simplest binary protocols on both Spicy and 3D."
+
+defaults:
+  models:
+    - "gemini-3.1-flash"
+    - "gpt-oss"
+    - "gpt-5.4"
+  configs:
+    - "configs/default.yaml"
+  target_languages:
+    - "spicy"
+    - "3d"
+  
+  no_spec: false
+  samples: 3
+
+protocols:
+  tftp:
+    {}
+
+  dhcp:
+    {}
+
+  udp:
+    {}
+
+  tcp:
+    spec_file: "deprecated/specs/tcp-header-format.txt"
+
+  ipv4:
+    spec_file: "deprecated/specs/ipv4-header-format.txt"
