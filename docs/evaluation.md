@@ -48,7 +48,18 @@ outputs/20260605_150423_binary-protocols-comparison/
 ```
 
 ### Resume & Retry
+
 `eval_state.json` tracks every run as `pending → running → completed|failed`.
+For a completed run, `success` records the grammar validation result from the
+run's `metrics.json`. This gives three terminal outcomes:
+
+- `status: completed, success: true` — generation completed with a valid grammar
+- `status: completed, success: false` — generation completed but exhausted its
+  iterations without a valid grammar
+- `status: failed, success: false` — the generation process failed (for example,
+  due to a timeout, network error, or malformed/missing metrics)
+
+The resume modes use `status` to select runs:
 
 - `--resume --eval-dir <path>`: skips completed, runs pending + failed
 - `--retry-failed --eval-dir <path>`: re-runs only failed runs

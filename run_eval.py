@@ -236,13 +236,25 @@ def execute_run(
     """
     Execute a single generate_grammar.py run as a subprocess.
 
-    Returns (success, error_message).
+    Returns (grammar_success, error_message).
+
+    The subprocess exit code only describes whether grammar generation ran to
+    completion.  The generated metrics file is the source of truth for whether
+    the resulting grammar passed validation.
     """
     run_dir.mkdir(parents=True, exist_ok=True)
 
     ext = get_source_extension(run.target_language)
     output_file = run_dir / f"output{ext}"
     metrics_file = run_dir / "metrics.json"
+
+    # A resumed/retried run must prove that it produced a fresh result. Without
+    # this, a zero-exit process that failed to write metrics could inherit the
+    # grammar outcome from an earlier attempt.
+    try:
+        metrics_file.unlink(missing_ok=True)
+    except OSError as exc:
+        return False, f"Unable to clear stale grammar generation metrics: {exc}"
 
     cmd = [
         sys.executable, "generate_grammar.py",
@@ -285,7 +297,18 @@ def execute_run(
             error_msg = result.stderr.strip()[-300:] if result.stderr else f"Exit code {result.returncode}"
             return False, error_msg
 
-        return True, None
+        try:
+            metrics = json.loads(metrics_file.read_text())
+        except FileNotFoundError:
+            return False, "Grammar generation completed without writing metrics.json"
+        except (json.JSONDecodeError, OSError) as exc:
+            return False, f"Unable to read grammar generation metrics: {exc}"
+
+        grammar_success = metrics.get("success")
+        if not isinstance(grammar_success, bool):
+            return False, "Grammar generation metrics are missing a boolean 'success' field"
+
+        return grammar_success, None
 
     except subprocess.TimeoutExpired:
         return False, "Run timed out after 3600 seconds"
