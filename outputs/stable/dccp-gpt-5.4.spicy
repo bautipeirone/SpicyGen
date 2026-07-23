@@ -1,0 +1,93 @@
+module DCCP_gpt;
+
+import spicy;
+
+type PacketType = enum {
+    Request = 0,
+    Response = 1,
+    Data = 2,
+    Ack = 3,
+    DataAck = 4,
+    CloseReq = 5,
+    Close = 6,
+    Reset = 7,
+    Sync = 8,
+    SyncAck = 9
+};
+
+type ResetCode = enum {
+    Unspecified = 0,
+    Closed = 1,
+    Aborted = 2,
+    NoConnection = 3,
+    PacketError = 4,
+    OptionError = 5,
+    MandatoryError = 6,
+    ConnectionRefused = 7,
+    BadServiceCode = 8,
+    TooBusy = 9,
+    BadInitCookie = 10,
+    AggressionPenalty = 11
+};
+
+type FeatureNumber = enum {
+    CCID = 1,
+    AllowShortSeqnos = 2,
+    SequenceWindow = 3,
+    ECNIncapable = 4,
+    AckRatio = 5,
+    SendAckVector = 6,
+    SendNDPCount = 7,
+    MinimumChecksumCoverage = 8,
+    CheckDataChecksum = 9
+};
+
+type GenericTypeX = unit {
+    tf: bitfield(8) {
+        res: 0..2;
+        packet_type: 3..6 &convert=PacketType($$);
+        x: 7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type AckSubheaderLong = unit {
+    ack_reserved: uint16;
+    ack_number_high: uint16;
+    ack_number_low: uint32;
+};
+
+type AckSubheaderShort = unit {
+    ack_reserved_short: uint8;
+    ack_number_low_short: bytes &size=3;
+};
+
+type ResetData = unit {
+    reset_code: uint8 &convert=ResetCode($$);
+    data1: uint8;
+    data2: uint8;
+    data3: uint8;
+};
+
+public type DCCP = unit {
+    source_port: uint16;
+    destination_port: uint16;
+    data_offset: uint8;
+    ccv_cscov: bitfield(8) {
+        ccval: 0..3;
+        cscov: 4..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    checksum: uint16;
+    type_x: GenericTypeX;
+    seq_number_high: uint16 if(self.type_x.tf.x == 1);
+    seq_number_low: uint32 if(self.type_x.tf.x == 1);
+    seq_number_low_short: bytes &size=3 if(self.type_x.tf.x == 0);
+
+    ack_subheader_long: AckSubheaderLong if(self.type_x.tf.packet_type != PacketType::Request && self.type_x.tf.packet_type != PacketType::Data && self.type_x.tf.x == 1);
+    ack_subheader_short: AckSubheaderShort if(self.type_x.tf.packet_type != PacketType::Request && self.type_x.tf.packet_type != PacketType::Data && self.type_x.tf.x == 0);
+
+    service_code: uint32 if(self.type_x.tf.packet_type == PacketType::Request || self.type_x.tf.packet_type == PacketType::Response);
+    reset_data: ResetData if(self.type_x.tf.packet_type == PacketType::Reset);
+
+    options: bytes &size=((cast<uint16>(self.data_offset) * 4) - 12 - (self.type_x.tf.x == 1 ? 4 : 0) - ((self.type_x.tf.packet_type != PacketType::Request && self.type_x.tf.packet_type != PacketType::Data) ? (self.type_x.tf.x == 1 ? 8 : 4) : 0) - ((self.type_x.tf.packet_type == PacketType::Request || self.type_x.tf.packet_type == PacketType::Response) ? 4 : 0) - (self.type_x.tf.packet_type == PacketType::Reset ? 4 : 0));
+    application_data: bytes &eod;
+};
