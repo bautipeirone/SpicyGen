@@ -90,6 +90,7 @@ Each object must contain:
 
 Rules:
 - Each packet must be close to valid.
+- Generate only the raw payload for the specified protocol. Do not encapsulate the payload within network or transport layer headers such as IP, TCP, or UDP.
 - Each packet must violate exactly one protocol rule.
 - Do not generate random garbage.
 - Prefer boundary cases: invalid length, truncated field, illegal enum value, missing terminator, inconsistent count, invalid checksum, forbidden flag combination.
