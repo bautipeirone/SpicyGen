@@ -1,0 +1,1 @@
+Invalid Reason: The RRQ mode field must contain a mode string such as netascii, octet, or mail, but this packet provides an empty mode string.

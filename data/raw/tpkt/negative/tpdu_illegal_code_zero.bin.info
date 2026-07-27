@@ -1,0 +1,1 @@
+Invalid Reason: The TPKT framing is valid, but the embedded TPDU uses an invalid TPDU code value of 0 for an ISO transport TPDU.

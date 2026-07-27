@@ -1,0 +1,1 @@
+Invalid Reason: The AS-External-LSA includes a Forwarding Address with prefix FE80::/10, but link-local addresses MUST NOT be used as forwarding addresses.

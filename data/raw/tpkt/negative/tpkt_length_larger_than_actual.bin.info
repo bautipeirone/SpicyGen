@@ -1,0 +1,1 @@
+Invalid Reason: The packet length field says 8 octets, but only 7 octets are present, so the TPDU is truncated relative to the advertised TPKT length.

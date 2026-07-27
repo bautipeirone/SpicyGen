@@ -1,0 +1,1 @@
+Invalid Reason: An NTPv4 extension field must be at least 16 octets long; this one declares and occupies only 8 octets.

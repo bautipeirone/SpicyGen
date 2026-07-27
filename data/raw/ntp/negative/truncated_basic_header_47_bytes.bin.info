@@ -1,0 +1,1 @@
+Invalid Reason: NTP basic header is 48 octets; this packet is truncated by one byte and cuts off the transmit timestamp.

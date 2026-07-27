@@ -1,0 +1,1 @@
+Invalid Reason: Expedited Data TPDU user data must be 1 to 16 octets, but this ED TPDU carries zero user-data octets.

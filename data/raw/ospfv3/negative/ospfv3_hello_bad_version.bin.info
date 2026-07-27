@@ -1,0 +1,1 @@
+Invalid Reason: The OSPF packet header Version field is 2, but OSPFv3 requires Version 3.

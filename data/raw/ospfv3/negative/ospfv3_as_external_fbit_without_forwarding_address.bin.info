@@ -1,0 +1,1 @@
+Invalid Reason: The AS-External-LSA sets the F-bit, which requires a 16-byte Forwarding Address field, but the LSA ends before that field appears.

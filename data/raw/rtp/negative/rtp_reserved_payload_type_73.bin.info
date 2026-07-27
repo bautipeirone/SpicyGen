@@ -1,0 +1,1 @@
+Invalid Reason: Payload type 73 is reserved to avoid ambiguity with RTCP header validation and is not valid for normal RTP data packets.

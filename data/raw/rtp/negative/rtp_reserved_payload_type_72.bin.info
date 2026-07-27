@@ -1,0 +1,1 @@
+Invalid Reason: Payload type 72 is reserved so the RTP header octet does not collide with RTCP SR/RR validation values; it must not be used as a normal RTP payload type.

@@ -1,0 +1,1 @@
+Invalid Reason: The TPKT protocol version field must be 3, but this packet uses version 4 while the rest of the header and TPDU are otherwise plausible.

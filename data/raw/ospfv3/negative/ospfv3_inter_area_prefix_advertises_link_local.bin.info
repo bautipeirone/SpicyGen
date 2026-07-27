@@ -1,0 +1,1 @@
+Invalid Reason: The Inter-Area-Prefix-LSA advertises a link-local prefix (FE80::/10), which RFC 5340 forbids in inter-area-prefix-LSAs.

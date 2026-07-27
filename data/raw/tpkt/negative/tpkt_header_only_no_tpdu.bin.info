@@ -1,0 +1,1 @@
+Invalid Reason: A TPKT consists of a packet header plus a TPDU; a length of 4 leaves no TPDU at all.

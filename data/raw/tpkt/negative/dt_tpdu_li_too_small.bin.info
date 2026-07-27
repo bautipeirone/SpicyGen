@@ -1,0 +1,1 @@
+Invalid Reason: A DT TPDU needs both the TPDU code octet and the DT control octet after the length indicator; LI=1 is too short for that fixed header.

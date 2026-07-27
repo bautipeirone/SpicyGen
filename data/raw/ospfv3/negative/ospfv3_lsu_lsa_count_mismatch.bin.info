@@ -1,0 +1,1 @@
+Invalid Reason: The Link State Update header says there are 2 LSAs, but only 1 LSA is present in the packet body.
