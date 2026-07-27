@@ -1,0 +1,1 @@
+Invalid Reason: In a Leave Group message, the Group Address must be the multicast group being left; zero is only valid for a General Query.

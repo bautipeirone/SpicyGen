@@ -1,0 +1,1 @@
+Invalid Reason: The first four octets of the options field must be the DHCP magic cookie 99,130,83,99, but a different cookie is present.

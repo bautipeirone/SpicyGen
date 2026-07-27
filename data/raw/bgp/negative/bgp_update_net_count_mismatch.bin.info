@@ -1,0 +1,1 @@
+Invalid Reason: Net Count is 2, but the message carries only one Network/Metric pair, making the count field inconsistent with the payload.

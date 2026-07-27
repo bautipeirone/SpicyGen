@@ -1,0 +1,1 @@
+Invalid Reason: TYPE L requires an obligatory second parameter specifying the local byte size; the command is otherwise valid but omits that decimal integer.

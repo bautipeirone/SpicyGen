@@ -1,0 +1,1 @@
+Invalid Reason: Max Response Time is meaningful only in Membership Query messages and must be set to zero in all Membership Reports.

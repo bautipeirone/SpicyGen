@@ -1,0 +1,1 @@
+Invalid Reason: Options with type greater than 31 are variable-length and their length byte must be at least 2; this option has length 1, which is nonsensical.

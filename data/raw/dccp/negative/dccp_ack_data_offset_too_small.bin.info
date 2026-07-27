@@ -1,0 +1,1 @@
+Invalid Reason: This is a DCCP-Ack packet, which requires the generic header plus a 4-byte Acknowledgement Number subheader, but Data Offset is 3 (12 bytes), smaller than the minimum 16-byte header.

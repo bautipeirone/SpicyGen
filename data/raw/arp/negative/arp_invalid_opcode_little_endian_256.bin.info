@@ -1,0 +1,1 @@
+Invalid Reason: The opcode bytes are reversed to 1,0, which encodes 256 in network byte order; RFC 826 requires high byte first and only values 1 or 2 are valid.

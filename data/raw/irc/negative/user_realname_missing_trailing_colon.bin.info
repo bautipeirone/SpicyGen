@@ -1,0 +1,1 @@
+Invalid Reason: In USER, the realname must be the last parameter and must be introduced with ':' when it contains spaces; this packet omits that required colon.

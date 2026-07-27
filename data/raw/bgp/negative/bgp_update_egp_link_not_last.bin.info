@@ -1,0 +1,1 @@
+Invalid Reason: Direction code 4 (EGP_LINK) appears before the end of the AS path list; EGP_LINK is only allowed at the end.

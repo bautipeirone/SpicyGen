@@ -1,0 +1,1 @@
+Invalid Reason: The option header uses Option Delta nibble 15 in a byte that is not the payload marker 0xFF, which RFC 7252 defines as a message format error.

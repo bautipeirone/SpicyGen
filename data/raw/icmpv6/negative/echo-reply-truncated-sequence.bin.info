@@ -1,0 +1,1 @@
+Invalid Reason: Echo Reply must contain 8 bytes minimum for Type, Code, Checksum, Identifier, and Sequence Number; this packet is 1 byte short.

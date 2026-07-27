@@ -1,0 +1,1 @@
+Invalid Reason: The Routing header uses an unrecognized Routing Type value (99) while Segments Left is non-zero, which RFC 2460 requires receivers to treat as an error.

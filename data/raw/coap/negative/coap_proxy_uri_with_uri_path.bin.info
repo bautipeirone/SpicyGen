@@ -1,0 +1,1 @@
+Invalid Reason: A request containing Proxy-Uri MUST NOT also include Uri-Host, Uri-Port, Uri-Path, or Uri-Query, but this GET includes both Uri-Path and Proxy-Uri.

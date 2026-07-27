@@ -1,0 +1,1 @@
+Invalid Reason: DCCP-Request packets MUST use extended 48-bit sequence numbers with X=1, but this packet sets X=0 and uses the short-header form.

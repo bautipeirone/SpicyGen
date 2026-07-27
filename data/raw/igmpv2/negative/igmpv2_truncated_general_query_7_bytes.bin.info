@@ -1,0 +1,1 @@
+Invalid Reason: Membership Query messages must be at least 8 octets long; this packet is a near-valid General Query truncated to 7 bytes.

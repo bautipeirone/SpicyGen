@@ -1,0 +1,1 @@
+Invalid Reason: The DHCP message type option must have length 1, but this packet encodes option 53 with length 2.

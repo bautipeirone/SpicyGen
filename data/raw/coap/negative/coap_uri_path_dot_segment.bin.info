@@ -1,0 +1,1 @@
+Invalid Reason: The Uri-Path option value is ".", but RFC 7252 states that Uri-Path values MUST NOT be "." or "..".

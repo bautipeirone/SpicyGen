@@ -1,0 +1,1 @@
+Invalid Reason: FTP commands are Telnet strings and must end with the Telnet end-of-line code; this otherwise valid USER command omits the required \r\n terminator.

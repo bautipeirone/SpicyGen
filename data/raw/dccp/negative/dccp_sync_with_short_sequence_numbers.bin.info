@@ -1,0 +1,1 @@
+Invalid Reason: DCCP-Sync packets MUST use extended 48-bit sequence numbers with X=1, but this packet sets X=0.

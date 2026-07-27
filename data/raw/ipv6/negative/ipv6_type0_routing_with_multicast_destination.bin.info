@@ -1,0 +1,1 @@
+Invalid Reason: A packet carrying a Type 0 Routing header must not have a multicast IPv6 Destination Address, but this packet uses ff02::1 as the destination.

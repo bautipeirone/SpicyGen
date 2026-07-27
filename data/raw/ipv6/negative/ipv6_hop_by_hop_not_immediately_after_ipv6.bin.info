@@ -1,0 +1,1 @@
+Invalid Reason: A Hop-by-Hop Options header is present but does not immediately follow the IPv6 header; RFC 2460 restricts Hop-by-Hop to appear only directly after the IPv6 header.

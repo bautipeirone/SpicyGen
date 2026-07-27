@@ -1,0 +1,1 @@
+Invalid Reason: This Change L option negotiates feature 3 (Sequence Window) with value 0, but valid Sequence Window values are 32 through 2^46-1, so the option value is invalid.

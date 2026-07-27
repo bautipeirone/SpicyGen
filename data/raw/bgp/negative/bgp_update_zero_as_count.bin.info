@@ -1,0 +1,1 @@
+Invalid Reason: The UPDATE message sets AS Count to 0, but RFC 1105 requires AS Count to be greater than zero.

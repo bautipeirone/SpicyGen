@@ -1,0 +1,1 @@
+Invalid Reason: Seqno Request TLV has Hop Count set to 0, but the RFC requires Hop Count to be nonzero.

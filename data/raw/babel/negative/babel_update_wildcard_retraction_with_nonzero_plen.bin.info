@@ -1,0 +1,1 @@
+Invalid Reason: Wildcard retraction uses AE 0 with infinite metric but has Plen set to 8; for AE 0 retractions, both Plen and Omitted must be 0.

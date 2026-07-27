@@ -1,0 +1,1 @@
+Invalid Reason: PING requires at least the <server1> origin parameter; a bare PING must trigger ERR_NOORIGIN.

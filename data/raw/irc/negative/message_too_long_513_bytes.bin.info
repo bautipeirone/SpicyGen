@@ -1,0 +1,1 @@
+Invalid Reason: IRC messages must not exceed 512 characters including CR-LF; this packet is 513 bytes long, exceeding the limit by exactly one byte.

@@ -1,0 +1,1 @@
+Invalid Reason: An Empty message (Code 0.00) must have TKL=0 and no bytes after the Message ID, but this ACK carries a 1-byte token.

@@ -1,0 +1,1 @@
+Invalid Reason: TKL values 9-15 are reserved and MUST be processed as a message format error; this packet is otherwise a plausible CON GET with 9 token bytes present.

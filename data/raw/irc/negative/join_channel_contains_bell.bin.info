@@ -1,0 +1,1 @@
+Invalid Reason: Channel names may not contain control-G (BEL, ASCII 7); this JOIN uses an otherwise valid channel name with a forbidden character.

@@ -1,0 +1,1 @@
+Invalid Reason: Echo messages must include both 16-bit Identifier and 16-bit Sequence Number; this packet is missing the final byte of the Sequence Number.

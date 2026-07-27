@@ -1,0 +1,1 @@
+Invalid Reason: A DHCPINFORM message must not include the 'requested IP address' option, but this packet includes option 50.

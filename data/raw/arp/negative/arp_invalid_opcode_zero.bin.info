@@ -1,0 +1,1 @@
+Invalid Reason: The ar$op field is 0, but RFC 826 only defines opcode 1 for REQUEST and 2 for REPLY.

@@ -1,0 +1,1 @@
+Invalid Reason: The Version field is 0, but RFC 7252 requires CoAP version 1; all other fields form an otherwise valid empty CON GET.

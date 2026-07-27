@@ -1,0 +1,1 @@
+Invalid Reason: Type 0 Routing header Hdr Ext Len = 2 encodes exactly one address, so Segments Left must not exceed 1; here Segments Left is 2.

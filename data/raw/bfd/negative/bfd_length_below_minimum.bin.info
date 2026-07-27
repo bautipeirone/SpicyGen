@@ -1,0 +1,1 @@
+Invalid Reason: Length field is 23, below the minimum valid BFD Control packet length of 24 bytes when authentication is absent.

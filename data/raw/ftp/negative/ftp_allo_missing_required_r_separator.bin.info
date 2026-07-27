@@ -1,0 +1,1 @@
+Invalid Reason: When ALLO includes the optional maximum record or page size, it must use the form '<SP> R <SP> <decimal-integer>'; this command omits the required ' R ' separator.

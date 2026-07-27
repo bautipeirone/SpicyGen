@@ -1,0 +1,1 @@
+Invalid Reason: The ar$hrd field is 0, but RFC 826 defines Ethernet hardware type as 1 for this packet format.

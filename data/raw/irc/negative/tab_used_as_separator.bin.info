@@ -1,0 +1,1 @@
+Invalid Reason: IRC parameters are separated only by ASCII SPACE (0x20); TAB is explicitly not whitespace in the message grammar.

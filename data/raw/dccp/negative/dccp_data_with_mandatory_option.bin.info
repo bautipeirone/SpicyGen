@@ -1,0 +1,1 @@
+Invalid Reason: Mandatory options MUST NOT be sent on DCCP-Data packets; any Mandatory received on DCCP-Data is to be ignored.

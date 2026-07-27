@@ -1,0 +1,1 @@
+Invalid Reason: In INIT-REBOOT, a DHCPREQUEST verifying a prior address must have 'ciaddr' set to zero, but this packet sets it to 192.168.1.100.

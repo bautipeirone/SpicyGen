@@ -1,0 +1,1 @@
+Invalid Reason: Route Request TLV uses wildcard AE 0 but has Plen set to 8; wildcard requests require Plen to be 0.

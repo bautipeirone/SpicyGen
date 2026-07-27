@@ -1,0 +1,1 @@
+Invalid Reason: The BOOTP/DHCP 'op' field must be 1 (BOOTREQUEST) or 2 (BOOTREPLY); value 3 is invalid.

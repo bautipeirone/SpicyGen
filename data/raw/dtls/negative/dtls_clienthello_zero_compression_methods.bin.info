@@ -1,0 +1,1 @@
+Invalid Reason: ClientHello.compression_methods has a declared vector length of 0, but DTLS inherits the TLS requirement that this vector contain at least one method.

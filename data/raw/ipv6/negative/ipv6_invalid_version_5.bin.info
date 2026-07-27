@@ -1,0 +1,1 @@
+Invalid Reason: The IPv6 Version field is 5, but RFC 2460 requires the 4-bit Version field to be exactly 6.

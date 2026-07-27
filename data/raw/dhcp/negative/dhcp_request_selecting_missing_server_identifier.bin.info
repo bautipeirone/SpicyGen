@@ -1,0 +1,1 @@
+Invalid Reason: A DHCPREQUEST in SELECTING state must include the 'server identifier' option, but this message includes only the requested IP address.

@@ -1,0 +1,1 @@
+Invalid Reason: Elapsed Time is only permitted on packet types that contain an Acknowledgement Number; DCCP-Data has no Acknowledgement Number, so this option is invalid here and must be ignored.

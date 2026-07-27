@@ -1,0 +1,1 @@
+Invalid Reason: Ack Vector options depend on the Acknowledgement Number and therefore MUST NOT appear on DCCP-Data packets, which do not carry an Acknowledgement Number.

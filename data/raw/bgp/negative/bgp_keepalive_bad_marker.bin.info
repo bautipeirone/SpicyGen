@@ -1,0 +1,1 @@
+Invalid Reason: The 16-bit Marker must be all ones; this KEEPALIVE changes only the first marker byte, causing a connection synchronization error.

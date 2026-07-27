@@ -1,0 +1,1 @@
+Invalid Reason: The Update TLV sets Omitted to 1 but there is no preceding Update with the Prefix flag set for the same address encoding, so the omitted octet cannot be reconstructed.

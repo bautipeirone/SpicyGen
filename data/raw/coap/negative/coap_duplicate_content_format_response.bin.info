@@ -1,0 +1,1 @@
+Invalid Reason: The response includes Content-Format twice even though Content-Format is not repeatable; the second occurrence is a supernumerary option occurrence.
