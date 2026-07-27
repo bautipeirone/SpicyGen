@@ -51,6 +51,8 @@ public type Foo = unit {
   hint: since `&until=DELIM` consumes the delimiter value at the end of the field, there is no need to add the delimiter as a separate follow-up field.
 * Fields that have a fixed size of N bytes but contain null terminated strings should be declared like this:
 `bytes &size=N &convert=$$.split1(b"\0")[0].decode();`. This will only retain the significant part of the field.
+* To convert raw bytes to an integer with a given byte order, use `&convert=$$.to_uint(spicy::ByteOrder::Big)` (`Little` respectively for little endian). This way one
+can parse bytes with a non-power of two size, like 3 byte integers.
 
 ### Regular Expressions
 Spicy provides POSIX-style regular expressions. Regular expression are typically of the form `/PATTERN/`, where `PATTERN` is a regular expression to match. In addition, regular expression constants can also consist of multiple patterns, separated by `|`. This creates a single regular expression constant that matches any of the patterns.
@@ -158,7 +160,7 @@ type Frame = unit {
 ```
 
 ## Important considerations
-* For multi-byte integer values, it is important to consider the byte order for parsing. Network byte order (i.e., big-endian) is the default. To change byte order, use field attributes.
+* For multi-byte integer values, it is important to consider the byte order for parsing. Network byte order (i.e., big-endian) is the default. To change byte order, use field attributes. Add `&byte-order=spicy::ByteOrder::Little;` when you need to parse an integer as little endian.
 * The following words are reserved and cant be used as field names: file, port, type, time. The following can be used to replace them: filename, port_number, type_value, time_value.
 * Booleans are denoted `True` and `False`.
 
