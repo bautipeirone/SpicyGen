@@ -1,0 +1,1 @@
+Invalid Reason: After IAC, the command byte must be one of the defined TELNET command codes. Byte 200 is not a valid TELNET command code.

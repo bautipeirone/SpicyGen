@@ -1,0 +1,1 @@
+Invalid Reason: In SSH_MSG_KEXINIT, each algorithm name-list must contain at least one algorithm name; the server_host_key_algorithms name-list is empty.

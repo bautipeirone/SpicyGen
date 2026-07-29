@@ -1,0 +1,1 @@
+Invalid Reason: The method token in the CSeq header field MUST match the request method; here the request is BYE but CSeq says INVITE.

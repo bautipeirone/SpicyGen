@@ -1,0 +1,1 @@
+Invalid Reason: A BYE request MUST NOT be sent outside of a dialog; this request has no dialog-establishing peer tag in the To header field.

@@ -1,0 +1,1 @@
+Invalid Reason: Every TELNET command starts with IAC and must include at least one following command byte. This packet ends immediately after IAC.

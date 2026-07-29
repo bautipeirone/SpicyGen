@@ -1,0 +1,1 @@
+Invalid Reason: A text line in SMTP mail data MUST NOT exceed 1000 octets including <CRLF>; this data line is 999 characters plus <CRLF>, totaling 1001 octets.

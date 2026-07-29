@@ -1,0 +1,1 @@
+Invalid Reason: SMTP lines MUST be terminated with <CRLF>; a bare LF line ending is not a valid SMTP line terminator.

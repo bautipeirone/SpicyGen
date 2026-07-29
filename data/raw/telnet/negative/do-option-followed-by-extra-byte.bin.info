@@ -1,0 +1,1 @@
+Invalid Reason: The DO 1 negotiation itself is valid, but the following lone IAC starts a new TELNET command and truncates it by omitting the required command byte.

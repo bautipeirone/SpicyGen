@@ -1,0 +1,1 @@
+Invalid Reason: All TELNET commands are at least two bytes long and start with IAC; this payload ends immediately after IAC.

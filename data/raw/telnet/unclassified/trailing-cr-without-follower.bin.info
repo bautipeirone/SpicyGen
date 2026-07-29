@@ -1,0 +1,1 @@
+Invalid Reason: A CR may not appear by itself in TELNET data; it must be immediately followed by LF or NUL, but the payload ends after CR.

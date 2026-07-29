@@ -1,0 +1,1 @@
+Invalid Reason: The EHLO argument MUST be a primary host name in fully-qualified domain name form or an address literal; the unqualified local alias "client" is not permitted.

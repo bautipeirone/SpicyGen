@@ -1,0 +1,1 @@
+Invalid Reason: Subnegotiation begins with IAC SB and must be followed by an option code before any parameters and IAC SE. This packet omits the option code.

@@ -1,0 +1,1 @@
+Invalid Reason: After IAC, command codes 240 through 255 are defined by RFC 854; 239 is not a defined TELNET command code.

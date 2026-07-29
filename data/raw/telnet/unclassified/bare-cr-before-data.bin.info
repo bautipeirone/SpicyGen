@@ -1,0 +1,1 @@
+Invalid Reason: In default NVT ASCII mode, a CR in the data stream must be followed by LF for newline or NUL for carriage-return-only; here CR is followed by printable data byte 'x'.

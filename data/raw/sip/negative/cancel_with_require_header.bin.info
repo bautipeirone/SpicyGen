@@ -1,0 +1,1 @@
+Invalid Reason: A CANCEL request MUST NOT contain Require or Proxy-Require header fields.

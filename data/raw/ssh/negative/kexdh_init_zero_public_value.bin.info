@@ -1,0 +1,1 @@
+Invalid Reason: SSH_MSG_KEXDH_INIT carries e as mpint zero, but Diffie-Hellman values e and f must be in the range [1, p-1].

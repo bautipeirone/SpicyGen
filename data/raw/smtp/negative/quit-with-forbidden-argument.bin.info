@@ -1,0 +1,1 @@
+Invalid Reason: QUIT does not accept arguments in base SMTP; adding "now" violates the command syntax for QUIT.

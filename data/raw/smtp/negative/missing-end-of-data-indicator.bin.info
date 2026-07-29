@@ -1,0 +1,1 @@
+Invalid Reason: After DATA, the message content must be terminated by the end-of-mail indicator <CRLF>.<CRLF>; this payload omits that terminator.

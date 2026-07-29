@@ -1,0 +1,1 @@
+Invalid Reason: In a REGISTER request, the Request-URI names the registrar domain and MUST NOT contain userinfo or an @ component.

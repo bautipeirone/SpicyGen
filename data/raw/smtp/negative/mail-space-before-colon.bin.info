@@ -1,0 +1,1 @@
+Invalid Reason: The MAIL command syntax is exactly "MAIL FROM:" with no spaces around the colon; inserting a space before the colon violates the command grammar.

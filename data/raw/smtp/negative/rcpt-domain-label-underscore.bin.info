@@ -1,0 +1,1 @@
+Invalid Reason: SMTP domain labels may contain only letters, digits, and hyphens; the underscore in "bad_domain.example" is forbidden.

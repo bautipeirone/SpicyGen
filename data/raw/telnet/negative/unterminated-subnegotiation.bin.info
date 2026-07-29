@@ -1,0 +1,1 @@
+Invalid Reason: A TELNET subnegotiation must be terminated by IAC SE. This SB sequence provides an option code and data but never ends with IAC SE.

@@ -1,0 +1,1 @@
+Invalid Reason: The binary packet header declares packet_length 12 and padding_length 12, leaving a negative payload length; padding_length must be less than packet_length minus one.

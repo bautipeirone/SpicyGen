@@ -1,0 +1,1 @@
+Invalid Reason: The VXLAN header is fixed at 8 bytes, but this payload provides only 7 bytes, truncating the final reserved byte.

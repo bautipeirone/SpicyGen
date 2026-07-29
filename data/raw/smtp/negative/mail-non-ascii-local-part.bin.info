@@ -1,0 +1,1 @@
+Invalid Reason: Without a negotiated extension, SMTP envelope commands MUST use US-ASCII only; the non-ASCII character in the local-part makes the MAIL command invalid.

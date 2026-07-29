@@ -1,0 +1,1 @@
+Invalid Reason: Byte 255 is IAC in TELNET and must be doubled as IAC IAC when sent as data; this payload contains a lone data 0xFF.

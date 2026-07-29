@@ -1,0 +1,1 @@
+Invalid Reason: Option negotiation commands DO, DON'T, WILL, and WON'T are three-byte sequences and require an option code as the third byte.
