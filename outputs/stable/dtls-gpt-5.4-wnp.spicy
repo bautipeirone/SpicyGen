@@ -1,0 +1,262 @@
+module DTLS_gpt;
+
+import spicy;
+
+type ContentType = enum {
+    change_cipher_spec = 20,
+    alert = 21,
+    handshake = 22,
+    application_data = 23,
+};
+
+type HandshakeType = enum {
+    hello_request = 0,
+    client_hello = 1,
+    server_hello = 2,
+    hello_verify_request = 3,
+    certificate = 11,
+    server_key_exchange = 12,
+    certificate_request = 13,
+    server_hello_done = 14,
+    certificate_verify = 15,
+    client_key_exchange = 16,
+    finished = 20,
+};
+
+type AlertLevel = enum {
+    warning = 1,
+    fatal = 2,
+};
+
+type AlertDescription = enum {
+    close_notify = 0,
+    unexpected_message = 10,
+    bad_record_mac = 20,
+    decryption_failed_RESERVED = 21,
+    record_overflow = 22,
+    decompression_failure = 30,
+    handshake_failure = 40,
+    no_certificate_RESERVED = 41,
+    bad_certificate = 42,
+    unsupported_certificate = 43,
+    certificate_revoked = 44,
+    certificate_expired = 45,
+    certificate_unknown = 46,
+    illegal_parameter = 47,
+    unknown_ca = 48,
+    access_denied = 49,
+    decode_error = 50,
+    decrypt_error = 51,
+    export_restriction_RESERVED = 60,
+    protocol_version = 70,
+    insufficient_security = 71,
+    internal_error = 80,
+    user_canceled = 90,
+    no_renegotiation = 100,
+    unsupported_extension = 110,
+};
+
+type CompressionMethod = enum {
+    null = 0,
+};
+
+type ExtensionType = enum {
+    signature_algorithms = 13,
+};
+
+type HashAlgorithm = enum {
+    none = 0,
+    md5 = 1,
+    sha1 = 2,
+    sha224 = 3,
+    sha256 = 4,
+    sha384 = 5,
+    sha512 = 6,
+};
+
+type SignatureAlgorithm = enum {
+    anonymous = 0,
+    rsa = 1,
+    dsa = 2,
+    ecdsa = 3,
+};
+
+type ClientCertificateType = enum {
+    rsa_sign = 1,
+    dss_sign = 2,
+    rsa_fixed_dh = 3,
+    dss_fixed_dh = 4,
+    rsa_ephemeral_dh_RESERVED = 5,
+    dss_ephemeral_dh_RESERVED = 6,
+    fortezza_dms_RESERVED = 20,
+};
+
+type ProtocolVersion = unit {
+    major: uint8;
+    minor: uint8;
+};
+
+type Random = unit {
+    gmt_unix_time: uint32;
+    random_bytes: bytes &size=28;
+};
+
+type SessionID = unit {
+    session_id_length: uint8;
+    session_id: bytes &size=self.session_id_length;
+};
+
+type Cookie = unit {
+    cookie_length: uint8;
+    cookie: bytes &size=self.cookie_length;
+};
+
+type CipherSuite = unit {
+    code: bytes &size=2;
+};
+
+type CompressionMethodValue = unit {
+    method: uint8 &convert=CompressionMethod($$);
+};
+
+type ClientCertificateTypeValue = unit {
+    certificate_type: uint8 &convert=ClientCertificateType($$);
+};
+
+type SignatureAndHashAlgorithm = unit {
+    hash: uint8 &convert=HashAlgorithm($$);
+    signature: uint8 &convert=SignatureAlgorithm($$);
+};
+
+type Extension = unit {
+    extension_type: uint16 &convert=ExtensionType($$);
+    extension_data_length: uint16;
+    extension_data: bytes &size=self.extension_data_length;
+};
+
+type Extensions = unit {
+    extensions_length: uint16;
+    extensions: Extension[] &size=self.extensions_length;
+};
+
+type DistinguishedName = unit {
+    distinguished_name_length: uint16;
+    distinguished_name: bytes &size=self.distinguished_name_length;
+};
+
+type HelloRequest = unit {
+};
+
+type HelloVerifyRequest = unit {
+    server_version: ProtocolVersion;
+    cookie: Cookie;
+};
+
+type ClientHello = unit(total_length: uint64) {
+    client_version: ProtocolVersion;
+    random: Random;
+    session_id: SessionID;
+    cookie: Cookie;
+    cipher_suites_length: uint16;
+    cipher_suites: CipherSuite[] &size=self.cipher_suites_length;
+    compression_methods_length: uint8;
+    compression_methods: CompressionMethodValue[self.compression_methods_length];
+    extensions: Extensions if ( total_length > 39 + self.session_id.session_id_length + self.cookie.cookie_length + self.cipher_suites_length + self.compression_methods_length );
+};
+
+type ServerHello = unit(total_length: uint64) {
+    server_version: ProtocolVersion;
+    random: Random;
+    session_id: SessionID;
+    cipher_suite: CipherSuite;
+    compression_method: uint8 &convert=CompressionMethod($$);
+    extensions: Extensions if ( total_length > 38 + self.session_id.session_id_length );
+};
+
+type Certificate = unit {
+    certificate_list_length: bytes &size=3 &convert=$$.to_uint(spicy::ByteOrder::Big);
+    certificate_list: bytes &size=self.certificate_list_length;
+};
+
+type ServerKeyExchange = unit(total_length: uint64) {
+    body: bytes &size=total_length;
+};
+
+type CertificateRequest = unit {
+    certificate_types_length: uint8;
+    certificate_types: ClientCertificateTypeValue[self.certificate_types_length];
+    supported_signature_algorithms_length: uint16;
+    supported_signature_algorithms: SignatureAndHashAlgorithm[] &size=self.supported_signature_algorithms_length;
+    certificate_authorities_length: uint16;
+    certificate_authorities: DistinguishedName[] &size=self.certificate_authorities_length;
+};
+
+type ServerHelloDone = unit {
+};
+
+type CertificateVerify = unit {
+    algorithm: SignatureAndHashAlgorithm;
+    signature_length: uint16;
+    signature: bytes &size=self.signature_length;
+};
+
+type ClientKeyExchange = unit(total_length: uint64) {
+    exchange_keys: bytes &size=total_length;
+};
+
+type Finished = unit(total_length: uint64) {
+    verify_data: bytes &size=total_length;
+};
+
+type HandshakeBody = unit(msg_type: HandshakeType, fragment_length: uint64) {
+    switch ( msg_type ) {
+        HandshakeType::hello_request -> hello_request: HelloRequest;
+        HandshakeType::client_hello -> client_hello: ClientHello(fragment_length);
+        HandshakeType::server_hello -> server_hello: ServerHello(fragment_length);
+        HandshakeType::hello_verify_request -> hello_verify_request: HelloVerifyRequest;
+        HandshakeType::certificate -> certificate: Certificate;
+        HandshakeType::server_key_exchange -> server_key_exchange: ServerKeyExchange(fragment_length);
+        HandshakeType::certificate_request -> certificate_request: CertificateRequest;
+        HandshakeType::server_hello_done -> server_hello_done: ServerHelloDone;
+        HandshakeType::certificate_verify -> certificate_verify: CertificateVerify;
+        HandshakeType::client_key_exchange -> client_key_exchange: ClientKeyExchange(fragment_length);
+        HandshakeType::finished -> finished: Finished(fragment_length);
+        * -> raw: bytes &size=fragment_length;
+    };
+};
+
+type Handshake = unit {
+    msg_type: uint8 &convert=HandshakeType($$);
+    length: bytes &size=3 &convert=$$.to_uint(spicy::ByteOrder::Big);
+    message_seq: uint16;
+    fragment_offset: bytes &size=3 &convert=$$.to_uint(spicy::ByteOrder::Big);
+    fragment_length: bytes &size=3 &convert=$$.to_uint(spicy::ByteOrder::Big);
+    body: HandshakeBody(self.msg_type, self.fragment_length) if ( self.fragment_offset == 0 && self.fragment_length == self.length );
+    fragment: bytes &size=self.fragment_length if ( self.fragment_offset != 0 || self.fragment_length != self.length );
+};
+
+type ChangeCipherSpec = unit {
+    type_value: uint8;
+};
+
+type Alert = unit {
+    level: uint8 &convert=AlertLevel($$);
+    description: uint8 &convert=AlertDescription($$);
+};
+
+type DTLSRecord = unit {
+    type_value: uint8 &convert=ContentType($$) &requires=($$ == 20 || $$ == 21 || $$ == 22 || $$ == 23);
+    version: ProtocolVersion;
+    epoch: uint16;
+    sequence_number: bytes &size=6 &convert=$$.to_uint(spicy::ByteOrder::Big);
+    length: uint16;
+
+    change_cipher_spec: ChangeCipherSpec[] &size=self.length if ( self.epoch == 0 && self.type_value == ContentType::change_cipher_spec );
+    alerts: Alert[] &size=self.length if ( self.epoch == 0 && self.type_value == ContentType::alert );
+    handshakes: Handshake[] &size=self.length if ( self.epoch == 0 && self.type_value == ContentType::handshake );
+    fragment: bytes &size=self.length if ( self.epoch != 0 || self.type_value == ContentType::application_data );
+};
+
+public type DTLSDatagram = unit {
+    records: DTLSRecord[] &eod;
+};
