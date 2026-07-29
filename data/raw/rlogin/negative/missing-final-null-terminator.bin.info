@@ -1,0 +1,1 @@
+Invalid Reason: The terminal-type/speed field is not null-terminated, so the four-string login exchange is incomplete.

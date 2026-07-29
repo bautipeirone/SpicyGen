@@ -1,2 +1,0 @@
-Category: Options length
-Invalid Reason: Header IHL=5 (no options) but payload contains a Security option with length 11, exceeding the header
