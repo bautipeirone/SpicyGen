@@ -269,13 +269,13 @@ class TestBuildMetrics:
                     {
                         "compiled": False,
                         "positive_accepted": 0,
-                        "negative_accepted": 0,
+                        "negative_rejected": 0,
                         "changed_from_previous": False,
                     },
                     {
                         "compiled": True,
                         "positive_accepted": 11,
-                        "negative_accepted": 2,
+                        "negative_rejected": 2,
                         "changed_from_previous": True,
                     },
                 ],
@@ -298,7 +298,7 @@ class TestBuildMetrics:
         assert metrics["first_successful_compile_iteration"] == 2
         assert metrics["iterations"][0]["compiled"] is False
         assert metrics["iterations"][1]["positive_accepted"] == 11
-        assert metrics["iterations"][1]["negative_accepted"] == 2
+        assert metrics["iterations"][1]["negative_rejected"] == 2
         assert metrics["iterations"][1]["changed_from_previous"] is True
         assert "attempts" not in metrics
         assert metrics["time_elapsed_s"] == 1.23

@@ -43,14 +43,14 @@ class State:
 class IterationStats:
     compiled: bool = False
     positive_accepted: int = 0
-    negative_accepted: int = 0
+    negative_rejected: int = 0
     changed_from_previous: bool = False
 
     def as_dict(self) -> dict[str, bool | int]:
         return {
             "compiled": self.compiled,
             "positive_accepted": self.positive_accepted,
-            "negative_accepted": self.negative_accepted,
+            "negative_rejected": self.negative_rejected,
             "changed_from_previous": self.changed_from_previous,
         }
 
@@ -284,7 +284,7 @@ def run_refinement_loop(
         )
         if state.iterations:
             state.iterations[-1].positive_accepted = check_result.accept_passed
-            state.iterations[-1].negative_accepted = check_result.reject_passed
+            state.iterations[-1].negative_rejected = check_result.reject_passed
 
         if check_result.setup_error:
             logger.warning(f"Runtime setup FAILED for '{state.protocol.name}'.")
