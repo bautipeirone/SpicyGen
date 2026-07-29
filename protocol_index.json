@@ -130,6 +130,12 @@
     "spec_type": "rfc",
     "rfc_id": "4511"
   },
+  "mqtt": {
+    "full_name": "Message Queuing Telemetry Transport",
+    "type": "binary",
+    "spec_type": "other",
+    "local_spec_file": "specs/mqtt-spec.txt"
+  },
   "nsh": {
     "full_name": "Network Service Header",
     "type": "binary",

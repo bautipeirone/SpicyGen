@@ -1,0 +1,1 @@
+Invalid Reason: PINGREQ has no variable header and no payload, so Remaining Length must be 0; this packet sets it to 1 and adds one extra byte.

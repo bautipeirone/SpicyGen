@@ -1,0 +1,1 @@
+Invalid Reason: For ACE authentication in MQTT v5 CONNECT, the User Name Flag must be 0; this packet sets it to 1 while using Authentication Method/Data properties.

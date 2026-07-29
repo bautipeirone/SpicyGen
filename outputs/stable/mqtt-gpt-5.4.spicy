@@ -1,0 +1,364 @@
+module MQTT_gpt;
+import spicy;
+
+type PacketType = enum {
+    Reserved0 = 0,
+    CONNECT = 1,
+    CONNACK = 2,
+    PUBLISH = 3,
+    PUBACK = 4,
+    PUBREC = 5,
+    PUBREL = 6,
+    PUBCOMP = 7,
+    SUBSCRIBE = 8,
+    SUBACK = 9,
+    UNSUBSCRIBE = 10,
+    UNSUBACK = 11,
+    PINGREQ = 12,
+    PINGRESP = 13,
+    DISCONNECT = 14,
+    Reserved15 = 15,
+};
+
+type ConnectReturnCode = enum {
+    Accepted = 0,
+    UnacceptableProtocolVersion = 1,
+    IdentifierRejected = 2,
+    ServerUnavailable = 3,
+    BadUserNameOrPassword = 4,
+    NotAuthorized = 5,
+};
+
+type SubackReturnCode = enum {
+    MaximumQoS0 = 0,
+    MaximumQoS1 = 1,
+    MaximumQoS2 = 2,
+    Failure = 128,
+};
+
+type Utf8String = unit {
+    length: uint16;
+    value: bytes &size=self.length;
+};
+
+type BinaryData = unit {
+    length: uint16;
+    value: bytes &size=self.length;
+};
+
+type RemainingLength = unit {
+    byte1: uint8;
+    byte2: uint8 if ( (self.byte1 & 0x80) != 0 );
+    byte3: uint8 if ( self?.byte2 && ((self.byte2 & 0x80) != 0) );
+    byte4: uint8 if ( self?.byte3 && ((self.byte3 & 0x80) != 0) );
+
+    var value: uint64 = 0;
+    var encoded_length: uint64 = 1;
+
+    on byte1 {
+        self.value = cast<uint64>(self.byte1 & 0x7f);
+        self.encoded_length = 1;
+    }
+
+    on byte2 {
+        self.value += cast<uint64>(self.byte2 & 0x7f) * 128;
+        self.encoded_length = 2;
+    }
+
+    on byte3 {
+        self.value += cast<uint64>(self.byte3 & 0x7f) * 16384;
+        self.encoded_length = 3;
+    }
+
+    on byte4 {
+        self.value += cast<uint64>(self.byte4 & 0x7f) * 2097152;
+        self.encoded_length = 4;
+    }
+};
+
+type FixedHeader = unit {
+    flags: bitfield(8) {
+        packet_type: 0..3 &convert=PacketType($$);
+        flag3: 4;
+        flag2: 5;
+        flag1: 6;
+        flag0: 7;
+    } &bit-order=spicy::BitOrder::MSB0;
+    remaining_length: RemainingLength;
+};
+
+type ConnectFlags = unit {
+    bits: bitfield(8) {
+        username_flag: 0;
+        password_flag: 1;
+        will_retain: 2;
+        will_qos: 3..4;
+        will_flag: 5;
+        clean_session: 6;
+        reserved: 7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type ConnectVariableHeader = unit {
+    protocol_name: Utf8String;
+    protocol_level: uint8;
+    connect_flags: ConnectFlags;
+    keep_alive: uint16 &convert=cast<interval>($$);
+
+    on connect_flags {
+        if ( self.connect_flags.bits.reserved != 0 )
+            throw "invalid CONNECT reserved flag";
+
+        if ( self.connect_flags.bits.username_flag == 0 && self.connect_flags.bits.password_flag != 0 )
+            throw "password flag set without username flag";
+
+        if ( self.connect_flags.bits.will_flag == 0 ) {
+            if ( self.connect_flags.bits.will_qos != 0 )
+                throw "will qos set without will flag";
+            if ( self.connect_flags.bits.will_retain != 0 )
+                throw "will retain set without will flag";
+        }
+        else {
+            if ( self.connect_flags.bits.will_qos == 3 )
+                throw "invalid will qos";
+        }
+    }
+};
+
+type ConnectPayload = unit(connect_flags: ConnectFlags) {
+    client_id: Utf8String;
+    will_topic: Utf8String if ( connect_flags.bits.will_flag == 1 );
+    will_message: BinaryData if ( connect_flags.bits.will_flag == 1 );
+    username: Utf8String if ( connect_flags.bits.username_flag == 1 );
+    password: BinaryData if ( connect_flags.bits.password_flag == 1 );
+
+    on client_id {
+        if ( self.client_id.length == 0 && connect_flags.bits.clean_session == 0 )
+            throw "zero-length client id requires clean session";
+    }
+};
+
+type ConnectPacket = unit(remaining_length: uint64) {
+    variable_header: ConnectVariableHeader;
+    payload: ConnectPayload(self.variable_header.connect_flags);
+};
+
+type ConnackAcknowledgeFlags = unit {
+    bits: bitfield(8) {
+        reserved7: 0;
+        reserved6: 1;
+        reserved5: 2;
+        reserved4: 3;
+        reserved3: 4;
+        reserved2: 5;
+        reserved1: 6;
+        session_present: 7;
+    } &bit-order=spicy::BitOrder::MSB0;
+};
+
+type ConnackVariableHeader = unit {
+    acknowledge_flags: ConnackAcknowledgeFlags;
+    return_code: uint8 &convert=ConnectReturnCode($$);
+};
+
+type ConnackPacket = unit(remaining_length: uint64) {
+    variable_header: ConnackVariableHeader;
+};
+
+type PublishPacket = unit(flag3: uint64, flag2: uint64, flag1: uint64, flag0: uint64, remaining_length: uint64) {
+    var qos_value: uint64 = 0;
+
+    on %init {
+        self.qos_value = flag2 * 2 + flag1;
+        if ( self.qos_value == 3 )
+            throw "invalid publish qos";
+    }
+
+    topic_name: Utf8String;
+    packet_identifier: uint16 if ( self.qos_value > 0 );
+    payload: bytes &eod;
+
+    on topic_name {
+        if ( self.topic_name.value == b"a/#" || self.topic_name.value == b"a/+" )
+            throw "publish topic contains wildcard";
+    }
+};
+
+type PacketIdentifierOnly = unit {
+    packet_identifier: uint16;
+};
+
+type PubackPacket = unit(remaining_length: uint64) {
+    variable_header: PacketIdentifierOnly;
+};
+
+type PubrecPacket = unit(remaining_length: uint64) {
+    variable_header: PacketIdentifierOnly;
+};
+
+type PubrelPacket = unit(remaining_length: uint64) {
+    variable_header: PacketIdentifierOnly;
+};
+
+type PubcompPacket = unit(remaining_length: uint64) {
+    variable_header: PacketIdentifierOnly;
+};
+
+type SubscribeRequestedQoS = unit {
+    bits: bitfield(8) {
+        reserved0: 0;
+        reserved1: 1;
+        reserved2: 2;
+        reserved3: 3;
+        reserved4: 4;
+        reserved5: 5;
+        qos: 6..7;
+    } &bit-order=spicy::BitOrder::MSB0;
+
+    on bits {
+        if ( self.bits.reserved0 != 0 || self.bits.reserved1 != 0 || self.bits.reserved2 != 0 || self.bits.reserved3 != 0 || self.bits.reserved4 != 0 || self.bits.reserved5 != 0 )
+            throw "invalid subscribe requested qos reserved bits";
+        if ( self.bits.qos == 3 )
+            throw "invalid subscribe requested qos";
+    }
+};
+
+type SubscribeTopic = unit {
+    topic_filter: Utf8String;
+    requested_qos: SubscribeRequestedQoS;
+};
+
+type SubscribePacket = unit(remaining_length: uint64) {
+    packet_identifier: uint16;
+    topics: SubscribeTopic[] &eod;
+};
+
+type SubackPacket = unit(remaining_length: uint64) {
+    packet_identifier: uint16;
+    return_codes: (uint8 &convert=SubackReturnCode($$))[] &eod;
+};
+
+type UnsubscribeTopic = unit {
+    topic_filter: Utf8String;
+};
+
+type UnsubscribePacket = unit(remaining_length: uint64) {
+    packet_identifier: uint16;
+    topics: UnsubscribeTopic[] &eod;
+};
+
+type UnsubackPacket = unit(remaining_length: uint64) {
+    variable_header: PacketIdentifierOnly;
+};
+
+type PingreqPacket = unit(remaining_length: uint64) {
+    : void;
+
+    on %init {
+        if ( remaining_length != 0 )
+            throw "invalid pingreq remaining length";
+    }
+};
+
+type PingrespPacket = unit(remaining_length: uint64) {
+    : void;
+};
+
+type DisconnectPacket = unit(remaining_length: uint64) {
+    : void;
+};
+
+public type Message = unit {
+    fixed_header: FixedHeader;
+
+    on fixed_header {
+        if ( self.fixed_header.flags.packet_type == PacketType::CONNECT ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid CONNECT fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::CONNACK ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid CONNACK fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::PUBACK ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid PUBACK fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::PUBREC ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid PUBREC fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::PUBREL ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 1 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid PUBREL fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::PUBCOMP ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid PUBCOMP fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::SUBSCRIBE ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 1 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid SUBSCRIBE fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::SUBACK ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid SUBACK fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::UNSUBSCRIBE ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 1 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid UNSUBSCRIBE fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::UNSUBACK ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid UNSUBACK fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::PINGREQ ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid PINGREQ fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::PINGRESP ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid PINGRESP fixed header flags";
+        }
+
+        if ( self.fixed_header.flags.packet_type == PacketType::DISCONNECT ) {
+            if ( self.fixed_header.flags.flag3 != 0 || self.fixed_header.flags.flag2 != 0 || self.fixed_header.flags.flag1 != 0 || self.fixed_header.flags.flag0 != 0 )
+                throw "invalid DISCONNECT fixed header flags";
+        }
+    }
+
+    switch ( self.fixed_header.flags.packet_type ) {
+        PacketType::CONNECT -> connect: ConnectPacket(self.fixed_header.remaining_length.value);
+        PacketType::CONNACK -> connack: ConnackPacket(self.fixed_header.remaining_length.value);
+        PacketType::PUBLISH -> publish: PublishPacket(
+            self.fixed_header.flags.flag3,
+            self.fixed_header.flags.flag2,
+            self.fixed_header.flags.flag1,
+            self.fixed_header.flags.flag0,
+            self.fixed_header.remaining_length.value
+        );
+        PacketType::PUBACK -> puback: PubackPacket(self.fixed_header.remaining_length.value);
+        PacketType::PUBREC -> pubrec: PubrecPacket(self.fixed_header.remaining_length.value);
+        PacketType::PUBREL -> pubrel: PubrelPacket(self.fixed_header.remaining_length.value);
+        PacketType::PUBCOMP -> pubcomp: PubcompPacket(self.fixed_header.remaining_length.value);
+        PacketType::SUBSCRIBE -> subscribe: SubscribePacket(self.fixed_header.remaining_length.value);
+        PacketType::SUBACK -> suback: SubackPacket(self.fixed_header.remaining_length.value);
+        PacketType::UNSUBSCRIBE -> unsubscribe: UnsubscribePacket(self.fixed_header.remaining_length.value);
+        PacketType::UNSUBACK -> unsuback: UnsubackPacket(self.fixed_header.remaining_length.value);
+        PacketType::PINGREQ -> pingreq: PingreqPacket(self.fixed_header.remaining_length.value);
+        PacketType::PINGRESP -> pingresp: PingrespPacket(self.fixed_header.remaining_length.value);
+        PacketType::DISCONNECT -> disconnect: DisconnectPacket(self.fixed_header.remaining_length.value);
+        * -> rest: bytes &eod;
+    };
+};

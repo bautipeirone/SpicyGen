@@ -1,0 +1,1 @@
+Invalid Reason: CONNECT sets Will QoS to 1 while Will Flag is 0; Will QoS bits must be 0 when Will Flag is not set.

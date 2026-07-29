@@ -1,0 +1,1 @@
+Invalid Reason: A zero-length ClientId is only allowed as a special case when CleanSession=1; this CONNECT uses an empty ClientId with CleanSession=0.

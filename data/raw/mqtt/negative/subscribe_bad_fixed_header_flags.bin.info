@@ -1,0 +1,1 @@
+Invalid Reason: SUBSCRIBE requires fixed-header flags 0,0,1,0; this packet uses 0,0,0,0 while the rest of the packet is otherwise valid.

@@ -1,0 +1,1 @@
+Invalid Reason: In SUBSCRIBE payload, Requested QoS must be 0, 1, or 2; this subscription requests QoS value 3.

@@ -1,0 +1,1 @@
+Invalid Reason: PUBLISH has QoS bits set to 3 (both QoS bits are 1), which is a reserved value and must not be used.

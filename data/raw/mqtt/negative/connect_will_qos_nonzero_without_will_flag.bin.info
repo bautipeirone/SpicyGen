@@ -1,0 +1,1 @@
+Invalid Reason: CONNECT sets Will Flag=0 but Will QoS=1; when Will Flag is 0, Will QoS must be 0 and no Will fields may be implied.

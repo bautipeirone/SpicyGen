@@ -1,0 +1,1 @@
+Invalid Reason: In MQTT CONNECT, the reserved least-significant bit of the Connect Flags byte must be 0; this packet sets it to 1.

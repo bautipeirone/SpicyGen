@@ -20,6 +20,7 @@ class ProtocolSpecType(Enum):
     RFC = "rfc"
     BLUEBOOK = "bluebook"
     IEEE_STD = "ieee_std"
+    OTHER = "other"
 
 
 @dataclass(frozen=True)

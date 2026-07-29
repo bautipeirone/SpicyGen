@@ -1,0 +1,1 @@
+Invalid Reason: Topic Names in PUBLISH packets must not contain wildcard characters; this topic name is "a/#".

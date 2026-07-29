@@ -1,0 +1,1 @@
+Invalid Reason: CONNECT fixed-header low nibble must be 0, and the CONNECT flags reserved bit must be 0; this packet sets the reserved CONNECT flag bit while otherwise looking like a normal CONNECT.

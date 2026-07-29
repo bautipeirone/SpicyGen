@@ -1,0 +1,1 @@
+Invalid Reason: In MQTT v3.1.1 ACE token transport, the User Name field must be prefixed with "ace" before the base64url token; this packet provides only "tok".

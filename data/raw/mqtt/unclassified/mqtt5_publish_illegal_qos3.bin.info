@@ -1,0 +1,1 @@
+Invalid Reason: PUBLISH uses QoS value 3 in the fixed header, but MQTT only permits QoS levels 0, 1, or 2.
