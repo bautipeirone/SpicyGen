@@ -24,7 +24,7 @@
 * Each field inside a unit has a type and an optional name. The type defines how that field will be parsed from raw input data. If a field has a name, it can later be referenced to access its value via `self.fieldName`. Consequently, all fields with semantic meanings have names, while those which are unlikely to be relevant later do not (e.g., whitespace). Fields like this are called anonymous, and can be used for special packet structures that do not correspond to packet fields (i.e. mandatory bytes at start of field, padding). You should always declare them like `: Type;`, this is, omit the name but not the colons.
 * Fields of integer type can be either signed (`intN`) or unsigned (`uintN`). In either case, N determines the number of bytes being parsed.
 * You can use `void` as type for empty fields (i.e. 0 byte fields).
-* Fields may use the `&convert=EXPR` attribute to transform the read input. Inside the expression, `self` can be used to reference the state of the unit (i.e. `self.opcode`) and `$$` references to the read input that will be transformed (i.e. `&convert=$$.to_uint(16)`). It is very common to use `&convert` to cast a field into an enum like `op: uint8 &convert=Opcode($$)`.
+* Fields may use the `&convert=EXPR` attribute to transform the read input. Inside the expression, `self` can be used to reference the state of the unit (i.e. `self.opcode`) and `$$` references to the read input that will be transformed (i.e. `&convert=$$.to_uint(16)`). It is very common to use `&convert` to cast a field into an enum like `op: uint8 &convert=Opcode($$)`. Use enums if possible for discrete options like op codes, options types, etc.
 * Conditional fields are implemented by appending an `if(COND)` to the field declaration.
 * Fields can have **constraints** on their values. The following example requires `x` to be greater than 2 and less than 5:
 ```
@@ -53,6 +53,7 @@ public type Foo = unit {
 `bytes &size=N &convert=$$.split1(b"\0")[0].decode();`. This will only retain the significant part of the field.
 * To convert raw bytes to an integer with a given byte order, use `&convert=$$.to_uint(spicy::ByteOrder::Big)` (`Little` respectively for little endian). This way one
 can parse bytes with a non-power of two size, like 3 byte integers.
+* Use `|bytes|` to calculate the length of a byte array.
 
 ### Regular Expressions
 Spicy provides POSIX-style regular expressions. Regular expression are typically of the form `/PATTERN/`, where `PATTERN` is a regular expression to match. In addition, regular expression constants can also consist of multiple patterns, separated by `|`. This creates a single regular expression constant that matches any of the patterns.
@@ -89,6 +90,7 @@ public type Foo = unit {
   * &eod: Parses elements until the end of the input stream is reached.
   * &size=N: Parses the vector from the subsequent N bytes of input data.
   * &until=COND: Parses elements until COND becomes true for the most recently parsed element. Inside the condition, `$$` references that element.
+* Use `|vector|` to calculate the length of the vector.
 
 ### Parser state, hooks, and structural constraints
 Use unit variables when the parser must remember information that is not a direct input field, such as a derived payload length, whether an optional section is present, a selected payload format, a checksum seen in a footer, or values extracted from an options list. Variables are declared inside a unit with `var`:

@@ -5,7 +5,7 @@
 
 ## General guidelines
 1. 3D is a binary data description language used to define validators for structured byte formats. A 3D grammar should describe the exact layout of a protocol message, including field order, field sizes, byte order, constraints, variable-length data, optional fields, and tag-dependent alternatives.
-2. Define one main `entrypoint typedef struct` for the top-level protocol data unit. Define additional helper structs, casetypes, enums, and constants globally as needed, but do not mark them as `entrypoint`.
+2. Define one main `entrypoint typedef struct` for the top-level protocol data unit. Define additional helper structs, casetypes, enums, and constants globally as needed, but do not mark them as `entrypoint`. Declare them in order so to always refer to previously defined types.
 3. Prefer one 3D type per meaningful protocol structure: headers, fixed subheaders, variable payloads, tagged alternatives, options, extension fields, etc.
 4. Every field mentioned in the protocol specification should be represented as its own field whenever possible. Do not merge multiple semantically distinct fields into one integer unless they are later exposed individually as bitfields.
 5. The grammar must reflect the wire format, not a convenient in-memory representation. 3D does not add implicit padding or alignment by default. If padding exists in the protocol, represent it explicitly as a field.
