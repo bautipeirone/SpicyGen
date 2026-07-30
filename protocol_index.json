@@ -131,7 +131,7 @@
     "rfc_id": "4511"
   },
   "mqtt": {
-    "full_name": "Message Queuing Telemetry Transport",
+    "full_name": "Message Queuing Telemetry Transport v3.1",
     "type": "binary",
     "spec_type": "other",
     "local_spec_file": "specs/mqtt-spec.txt"
