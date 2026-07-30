@@ -176,7 +176,7 @@ def main() -> None:
     protocol = load_protocol(args.protocol)
     if protocol is None:
         logger.error(f"Protocol '{args.protocol}' not found in index. Exiting.")
-        return False
+        raise RuntimeError(f"Protocol '{args.protocol}' not found in index.")
 
     instructions_file = args.instructions_file
     if instructions_file is None:
@@ -195,7 +195,7 @@ def main() -> None:
 
     if spec_content is None:
         logger.error(f"No specification content found for protocol '{protocol.name}'.")
-        return False
+        raise RuntimeError(f"No specification content found for protocol '{protocol.name}'.")
 
     llm_params, agent_config = read_config(args.config)
     llm_config = get_autogen_config(args.model, llm_params)
@@ -245,12 +245,12 @@ def main() -> None:
     else:
         print(content)
 
-    return True
+    return
 
 if __name__ == "__main__":
     try:
-        success = main()
-        exit(0 if success else 1)
+        main()
+        exit(0)
     except Exception as e:
         logger.error(f"Grammar generation failed: {e}")
         exit(1)

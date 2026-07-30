@@ -304,10 +304,11 @@ def execute_run(
         except (json.JSONDecodeError, OSError) as exc:
             return False, f"Unable to read grammar generation metrics: {exc}"
 
-        grammar_success = metrics.get("success")
-        if not isinstance(grammar_success, bool):
-            return False, "Grammar generation metrics are missing a boolean 'success' field"
+        termination_reason =  metrics.get("termination_reason", "runtime_exception")
+        if termination_reason == "runtime_exception":
+            return False, f"Grammar generation terminated due to runtime exception"
 
+        grammar_success = metrics.get("success", False)
         return grammar_success, None
 
     except subprocess.TimeoutExpired:
