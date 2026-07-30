@@ -1,0 +1,97 @@
+name: "Best Model Benchmark"
+
+note: "Benchmark on all available protocols on GPT-5.4 for frontier model performance statistics."
+
+defaults:
+  models:
+    - "gpt-5.4"
+  configs:
+    - "configs/best-model-benchmark.yaml"
+  target_languages:
+    - "spicy"
+    - "3d"
+  
+  no_spec: false
+  samples: 1
+
+
+# TODO: Only enable 3D for supported protocols?
+protocols:
+  arp:
+    {}
+  babel:
+    {}
+  bfd:
+    {}
+  bgp:
+    {}
+  coap:
+    {}
+  dccp:
+    {}
+  dhcp:
+    {}
+  dns:
+    {}
+  dtls:
+    {}
+  ftp:
+    {}
+  http1.1:
+    {}
+  icmpv4:
+    {}
+  icmpv6:
+    {}
+  ident:
+    {}
+  igmpv2:
+    {}
+  imap4:
+    {}
+  ipv4:
+    {}
+  ipv6:
+    {}
+  irc:
+    {}
+  nsh:
+    {}
+  ntp:
+    {}
+  ospfv3:
+    {}
+  ppp:
+    {}
+  rlogin:
+    {}
+  rtp:
+    {}
+  rtsp:
+    {}
+  sip:
+    {}
+  smtp:
+    {}
+  spp:
+    {}
+  ssh:
+    {}
+  tcp:
+    {}
+  tc-sdlp:
+    {}
+  telnet:
+    {}
+  tftp:
+    {}
+  tls:
+    {}
+  tm-sdlp:
+    {}
+  tpkt:
+    {}
+  udp:
+    {}
+  vxlan:
+    {}

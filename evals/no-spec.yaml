@@ -1,0 +1,43 @@
+name: "No Spec Experiment"
+
+note: "Grammar generation without specification experiment using frontier model."
+
+defaults:
+  models:
+    - "gpt-5.4"
+  configs:
+    - "configs/no-spec.yaml"
+  target_languages:
+    - "spicy"
+    # - "3d"
+  
+  no_spec: true
+  samples: 1
+
+protocols:
+  # Binary ones, ranging from simple to complex
+  tftp:
+    {}
+
+  dhcp:
+    {}
+
+  dns:
+    {}
+
+  # Text ones, ranging from simple to complex
+  ident:
+    {}
+
+  telnet:
+    {}
+
+  http1.1:
+    {}
+
+  # Recent protocols
+  babel:
+    {}
+
+  mqtt:
+    {}

@@ -1,0 +1,36 @@
+name: "LLM Models Evaluation"
+
+note: "Comparison between LLMs, ranging from smarter frontier models to smaller models, closed and open source."
+
+defaults:
+  models:
+    - "gpt-oss"
+    - "gemini-3.1-flash"
+  configs:
+    - "configs/models-comparison.yaml"
+  target_languages:
+    - "spicy"
+
+  no_spec: false
+  samples: 1
+
+protocols:
+  # Binary ones, ranging from simple to complex
+  tftp:
+    spec_file: "workspaces/tftp/gpt-5.4/20260727_153219/preprocess/summary.txt"
+
+  dhcp:
+    {}
+
+  dns:
+    spec_file: "outputs/summary/dns-gpt-5.4.txt"
+
+  # Text ones, ranging from simple to complex
+  ident:
+    spec_file: "workspaces/ident/gpt-5.4/20260724_164806/preprocess/summary.txt"
+
+  telnet:
+    {}
+
+  http1.1:
+    spec_file: "deprecated/specs/http1.1-grammar-and-headers.txt"
