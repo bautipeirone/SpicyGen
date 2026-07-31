@@ -54,6 +54,7 @@ public type Foo = unit {
 * Fields that have a fixed size of N bytes but contain null terminated strings should be declared like this:
 `bytes &size=N &convert=$$.split1(b"\0")[0].decode();`. This will only retain the significant part of the field.
 Note that `&eod` SHOULD NOT be used with `&until`, since this will be omitted.
+* Use `|bytes|` to calculate the length of a byte array.
 
 ### Regular Expressions
 Spicy provides POSIX-style regular expressions. Regular expression are typically of the form `/PATTERN/`, where `PATTERN` is a regular expression to match. In addition, regular expression constants can also consist of multiple patterns, separated by `|`. This creates a single regular expression constant that matches any of the patterns.
@@ -90,6 +91,7 @@ public type Foo = unit {
   * &eod: Parses elements until the end of the input stream is reached.
   * &size=N: Parses the vector from the subsequent N bytes of input data.
   * &until=COND: Parses elements until COND becomes true for the most recently parsed element. Inside the condition, `$$` references that element.
+* Use `|vector|` to calculate the length of the vector.
 
 ### Parser state, hooks, and structural constraints
 Use unit variables when the parser must remember information that is not a direct input field, such as whether a body is present, a derived body length, a selected delivery mode, or a value extracted from earlier headers. Variables are declared inside a unit with `var`:
