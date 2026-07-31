@@ -15,29 +15,79 @@ defaults:
   samples: 1
 
 protocols:
-  # Binary ones, ranging from simple to complex
-  tftp:
+  arp:
     {}
-
-  dhcp:
-    {}
-
-  dns:
-    {}
-
-  # Text ones, ranging from simple to complex
-  ident:
-    {}
-
-  telnet:
-    {}
-
-  http1.1:
-    {}
-
-  # Recent protocols
   babel:
     {}
-
-  mqtt:
+  bfd:
+    {}
+  bgp:
+    {}
+  coap:
+    {}
+  dccp:
+    {}
+  dhcp:
+    {}
+  dns:
+    {}
+  dtls:
+    {}
+  ftp:
+    {}
+  http1.1:
+    {}
+  icmpv4:
+    {}
+  icmpv6:
+    {}
+  ident:
+    {}
+  igmpv2:
+    {}
+  imap4:
+    {}
+  ipv4:
+    {}
+  ipv6:
+    {}
+  irc:
+    {}
+  nsh:
+    {}
+  ntp:
+    {}
+  ospfv3:
+    {}
+  ppp:
+    {}
+  rlogin:
+    {}
+  rtp:
+    {}
+  rtsp:
+    {}
+  sip:
+    {}
+  smtp:
+    {}
+  spp:
+    {}
+  ssh:
+    {}
+  tcp:
+    {}
+  tc-sdlp:
+    {}
+  telnet:
+    {}
+  tftp:
+    {}
+  tm-sdlp:
+    {}
+  tpkt:
+    {}
+  udp:
+    {}
+  vxlan:
     {}

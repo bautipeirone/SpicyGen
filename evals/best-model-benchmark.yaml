@@ -85,8 +85,6 @@ protocols:
     {}
   tftp:
     {}
-  tls:
-    {}
   tm-sdlp:
     {}
   tpkt:
