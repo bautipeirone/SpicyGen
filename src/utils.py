@@ -3,28 +3,26 @@ from pathlib import Path
 import difflib
 import json
 from typing import Any
+from src.logger import logger
+
+DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[1] / "configs" / "default.yaml"
 
 def read_config(path: Path | None) -> tuple[dict, dict]:
-    # Defaults
-    agent_config = {
-        "max_retries": 15,
-        "enable_rfc_retrieval_tool" : False,
-        "enable_negative_packets": False,
-        "show_packet_representation": False,
-        "show_parsing_tree": False
-    }
-    llm_params = {
-        "temperature": 0.0
-    }
+    if not path:
+        path = DEFAULT_CONFIG_PATH
+        logger.warning(f"Configuration file was not provided, looking for default one in path {path}")
 
-    if path and path.exists():
-        with path.open("r") as f:
-            parsed = yaml.safe_load(f)
-            if isinstance(parsed, dict):
-                if parsed.get("llm"):
-                    llm_params = parsed.get("llm")
-                if parsed.get("agent"):
-                    agent_config = parsed.get("agent")
+    if not path.exists():
+        logger.error(f"Configuration file {path} doesnt exist. Specify a valid one.")
+        raise RuntimeError(f"Configuration file {path} doesnt exist")
+    
+    with path.open("r") as f:
+        parsed = yaml.safe_load(f)
+        if isinstance(parsed, dict):
+            if parsed.get("llm"):
+                llm_params = parsed.get("llm")
+            if parsed.get("agent"):
+                agent_config = parsed.get("agent")
 
     return llm_params, agent_config
 
