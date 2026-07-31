@@ -15,18 +15,18 @@ def _run_spec(model: str = "test-model") -> run_eval.RunSpec:
     )
 
 
-def _mock_completed_process(monkeypatch, *, grammar_success: bool, returncode: int = 0):
+def _mock_completed_process(monkeypatch, *, grammar_success: bool, termination_reason: str, returncode: int = 0):
     def fake_run(cmd, **_kwargs):
         metrics_path = cmd[cmd.index("--metrics-file") + 1]
         with open(metrics_path, "w") as metrics_file:
-            json.dump({"success": grammar_success}, metrics_file)
+            json.dump({"success": grammar_success, "termination_reason": termination_reason}, metrics_file)
         return SimpleNamespace(returncode=returncode, stdout="", stderr="")
 
     monkeypatch.setattr(run_eval.subprocess, "run", fake_run)
 
 
 def test_execute_run_reads_successful_grammar_outcome(tmp_path, monkeypatch):
-    _mock_completed_process(monkeypatch, grammar_success=True)
+    _mock_completed_process(monkeypatch, grammar_success=True, termination_reason="success")
 
     success, error = run_eval.execute_run(_run_spec(), tmp_path, debug=False)
 
@@ -35,7 +35,7 @@ def test_execute_run_reads_successful_grammar_outcome(tmp_path, monkeypatch):
 
 
 def test_execute_run_treats_incorrect_grammar_as_completed(tmp_path, monkeypatch):
-    _mock_completed_process(monkeypatch, grammar_success=False)
+    _mock_completed_process(monkeypatch, grammar_success=False, termination_reason="max_retries")
 
     success, error = run_eval.execute_run(_run_spec(), tmp_path, debug=False)
 
@@ -44,7 +44,7 @@ def test_execute_run_treats_incorrect_grammar_as_completed(tmp_path, monkeypatch
 
 
 def test_execute_run_treats_nonzero_exit_as_runtime_failure(tmp_path, monkeypatch):
-    _mock_completed_process(monkeypatch, grammar_success=False, returncode=1)
+    _mock_completed_process(monkeypatch, grammar_success=False, termination_reason="runtime_exception", returncode=1)
 
     success, error = run_eval.execute_run(_run_spec(), tmp_path, debug=False)
 

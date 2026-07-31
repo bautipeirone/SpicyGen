@@ -86,6 +86,12 @@ class TestGetAutogenConfig:
             config = get_autogen_config("test-key", llm_params={"temperature": 0.7})
         assert config["temperature"] == 0.7
 
+    def test_reasoning_effort_is_added_to_model_entry(self):
+        with patch("src.providers.read_model_index", return_value=self._make_index("openai")):
+            config = get_autogen_config("test-key", llm_params={"reasoning_effort": "xhigh"})
+        assert config["config_list"][0]["reasoning_effort"] == "xhigh"
+        assert "reasoning_effort" not in config
+
 
 class TestRealModelIndex:
 

@@ -67,7 +67,14 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
     if price is not None:
         config["config_list"][0]["price"] = price
 
-    config.update(llm_params)
+    # AG2's LLMConfig only accepts a fixed set of application-level options.
+    # Provider-specific OpenAI options such as ``reasoning_effort`` must be
+    # attached to the individual model entry instead.
+    reasoning_effort = llm_params.get("reasoning_effort")
+    if reasoning_effort is not None:
+        config["config_list"][0]["reasoning_effort"] = reasoning_effort
+
+    config.update({key: value for key, value in llm_params.items() if key != "reasoning_effort"})
     return config
 
 # LEGACY CODE
