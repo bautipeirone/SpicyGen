@@ -1,0 +1,10 @@
+llm:
+    temperature: 0.0
+    reasoning_effort: "xhigh"
+
+agent:
+    max_retries: 15
+    enable_rfc_retrieval_tool: true
+    enable_negative_packets: true
+    show_packet_representation: false
+    show_parsing_tree: false
