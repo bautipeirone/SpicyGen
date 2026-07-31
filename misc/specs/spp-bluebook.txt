@@ -1,0 +1,897 @@
+CCSDS RECOMMENDED STANDARD FOR SPACE PACKET PROTOCOL
+1.6.3 CONVENTIONS
+In this document, the following convention is used to identify each bit in an N-bit field.  The
+first bit in the field to be transmitted (i.e., the most left justified when drawing a figure) is
+defined to be ‘Bit 0’; the following bit is defined to be ‘Bit 1’ and so on up to ‘Bit N–1’.
+When the field is used to express a binary value (such as a counter), the Most Significant Bit
+(MSB) shall be the first transmitted bit of the field, that is, ‘Bit 0’ (see figure 1-1).
+N-BIT DATA FIELD
+BIT 0
+BIT N-1
+FIRST BIT TRANSMITTED = MSB
+In accordance with standard data-communications practice, data fields are often grouped into
+eight-bit ‘words’ that conform to the above convention.  Throughout this Recommended
+Standard, such an eight-bit word is called an ‘octet’.
+The numbering for octets within a data structure starts with zero.
+By CCSDS convention, all ‘spare’ bits shall be permanently set to ‘0’.
+2 OVERVIEW
+2.1
+CONCEPT OF SPACE PACKET PROTOCOL
+2.1.1 ARCHITECTURE
+The Space Packet Protocol (SPP) is designed as a self-delimited carrier of a data unit (i.e., a
+Space Packet) that contains an APID used to identify the data contents, data source, and/or
+data user within a given enterprise. A typical use would be to carry data from a specific
+mission source to a mission user.  Different data types often require additional information
+(such as time) to fully utilize the contained data, and those parameters and the format of the
+data contents must be identified, in the mission context, by using the APID.
+The SPP is designed to meet the requirements of space missions to efficiently transfer space
+application data of various types and characteristics between nodes, over one or more
+subnetworks, and possibly involving one or more ground-to-space, space-to-ground, space-
+to-space, or on-board communication links.
+Figure 2-1 illustrates where the SPP can be located in the protocol stack.  The SPP is able to
+provide the functionality of an Application Layer protocol or a ‘shim’ protocol. For this
+reason, the SPP box appears twice in that figure. At the Application Layer, the SPP defines
+the Space Packet, which can be used directly by the user to contain application data.
+Additionally, the SPP, similar to the Encapsulation Packet Protocol (EPP) (reference [C8])
+can provide the functionality of a ‘shim’ protocol.
+The identification of the meaning of APID as to source or destination and the path that the
+SPP will traverse are entirely determined by the assignment of mission-specific meaning
+within the context of any given deployment. Most importantly, the SPP itself defines no path,
+network, or routing functionality and does not provide network services. Furthermore, SPP
+itself has no networking capabilities and fully relies on the services provided by the
+applicable subnetworks.
+Figure 2-1 illustrates the concept of the SPP within the CCSDS protocol stack when used
+over a space link.  User data units are incorporated in Space Packets defined in 4.1 and are
+eventually transferred over a space link using either one of the Packet Services of a Space
+Data Link Protocol (references [C3], [C4], [C5], [C7], and [C6]) or the Bundle Protocol (BP)
+service (reference [C9]) that transmits a bundle to an identified bundle endpoint.
+Management establishes which underlying protocol and service is to be used to transfer
+PDUs. It should be noted that the Coding and Synchronization sublayer of the Data Link
+Layer is not explicitly shown in the figure.
+The SPP provides a unidirectional data transfer service from a single source user application
+to one or more destination user applications through one or more subnetworks. In this
+document, a user application is intended to be an application generating (or receiving) Space
+Packets with a unique APID.
+The APID provides a single naming domain within a given mission deployment.  The APID
+can be used in a variety of ways by a mission, depending on mission needs.  It can be used to
+designate the intended destination for a stream of packets, to designate the source of a stream
+of packets, or to designate different types of packets.  The ways that the APID are used, and
+the management of the APID naming domain, are all mission-specific choices.
+If missions wish to use the APID naming domain to service, for instance, a spacecraft that
+has multiple processors, a spacecraft that is ‘fractionated’, or even a mission that includes a
+deployment of multiple spacecraft, those missions must either manage and suballocate
+assignments in the single APID naming domain within the enterprise or define a way to
+extend it using mission-specific fields in the packet secondary header.  This sort of extension
+is supported by the APID and the secondary header, but it is not defined in this protocol.
+As the data traverse the subnetworks, they are carried by subnetwork-specific mechanisms
+using protocols provided by the subnetworks.  The selection of protocols used in the
+subnetworks is determined independently for each subnetwork and may not be the same
+throughout.
+The actual path through the end-to-end data system through which the packets flow needs to
+be configured by design or by a management system before the data transfer occurs and can
+only be reconfigured through the management system.  This flow is referred to as a managed
+data path; aside from the APID, the SPP does not define any of the mechanisms to define or
+manage a managed data path. Each managed data path may consist of a single source end
+system, one or more destination end systems, one or more subnetworks, and, if multiple
+subnetworks are involved, one or more intermediate systems that interconnect the
+subnetworks. A managed data path involves only one subnetwork only if the source and
+destination end systems are on the same subnetwork. The configuration details of the
+managed data path, and of any underlying transport services, are unknown to the SPP entity.
+These are all the responsibility of these underlying services, and the only information that
+SPP directly provides to assist in this is the APID field.
+2.1.2 PROTOCOL FEATURES
+The SPP provides the users with abstract services to transfer space application data from a
+source to a destination user application.  The primary function performed by this protocol is
+the identification and encapsulation of application data to facilitate its transfer along the
+managed data path through underlying subnetworks.
+The PDUs employed by this protocol are Space Packets (unless otherwise stated, the term
+‘Packet’ in this document refers to the Space Packet).  They are variable in length (or may be
+fixed at the discretion of the user) and are transmitted at variable intervals.  Aside from the
+SPP header that identifies the Packet, the internal data content of Space Packets is completely
+under the control of the user application.  Each user application can define the organization
+and content of Packets independently of other user applications and with a minimum of
+constraints imposed by the transmission mechanisms of the underlying subnetworks.
+The SPP entity at the source end system either generates Space Packets from Service Data
+Units (SDUs) supplied by the source user application, or validates Space Packets provided as
+SDUs by the source user application.  At the source system, the SPP entity examines the
+APID of incoming Space Packets and transfers them through appropriate subnetworks using
+the services provided by the underlying protocol and communication system.  The behavior
+of intermediate nodes, and the processes to be used for forwarding data, are implementation
+specific and outside the scope of this document.  If there are multiple destinations for a Space
+Packet, multicasting of Space Packets may be performed by one or more SPP entities at the
+source end system and/or intermediate system(s).
+2.1.3 ADDRESSING
+The addressing feature within the SPP is the APID. APIDs are unique only in a single naming
+domain.  An APID naming domain usually corresponds to a spacecraft (or an element of a
+constellation of cooperating space vehicles).  Each space project establishes the allocation of
+APIDs to be used in its naming domain.  The assignment of APIDs to managed data paths
+within a naming domain is controlled by the space project that owns the naming domain.
+2.1.4 PROTOCOL DESCRIPTION
+The SPP is described in terms of
+a) the abstract services provided to the users;
+b) the PDUs; and
+c) the procedures performed by the protocol.
+The service definitions are given in the form of primitives, which present an abstract model
+of the logical exchange of data and control information between the protocol entity and the
+service user.  The definitions of primitives are independent of specific implementation
+approaches.
+The procedure specifications define the procedures performed by protocol entities for the
+transfer of information between peer entities.  The definitions of procedures are independent
+of specific implementation methods or technologies.
+2.2
+OVERVIEW OF SERVICES
+2.2.1 COMMON FEATURES OF SERVICES
+The SPP provides users with data transfer services.  The point at which a service is provided
+to a user by a protocol entity is called a SAP (see reference [1]).  The SAP of the SPP entity
+accepts SPP SDUs identified with an APID.
+SDUs submitted to a SAP are processed in the order of submission.  No processing order is
+maintained for SDUs submitted to different SAPs.
+NOTE – Flow control between the service user and the service provider may be required
+at a SAP. CCSDS, however, does not define a flow control scheme between the
+user and provider.
+The categories of services in this Recommended Standard include the following:
+a) Preconfigured Services:  the user can send or receive data only through a
+preconfigured managed data path that is established by management.
+b) Unidirectional (one way) Services:  one end of the managed data path can send but
+not receive data through the path, while the other end can receive but not send.
+c) Asynchronous Services:  there are no predefined timing rules for the transfer of SDUs
+supplied by the service user.  The user may request data transfer at any time it desires,
+but there may be restrictions imposed by the provider implementation on the data
+generation rate.
+d) Unconfirmed Services:  the sending user does not receive confirmation from the
+receiving end that data has been received.
+e) Incomplete Services:  the services do not guarantee completeness of a sequence of
+SDUs, nor do they provide a retransmission mechanism.
+f) Non–Sequence Preserving Services:  the sequence of SDUs supplied by the sending
+user may not be preserved through the end-to-end managed data path.
+NOTE – This protocol may be used for sending data from user A to user B and from user
+B to user A, but two separate managed data paths, one for each direction, should
+be used in such cases.
+The actual end-to-end quality-of-service provided to service users will vary according to the
+individual qualities-of-service provided by the various subnetworks along the managed data
+path.  The SPP does not provide any mechanisms for guaranteeing a particular quality-of-
+service; it is the responsibility of implementing organizations to ensure that the end-to-end
+performance of a particular service instance meets the requirements of its users.
+2.2.2 SUMMARY OF SERVICES
+2.2.2.1 General
+The SPP provides two services:  Packet Service and Octet String Service.  Table 2-1
+summarizes these services.
+Table 2-1:  Summary of Services Provided by Space Packet Protocol
+Service
+SDU
+SAP Address
+Packet
+Space Packet
+APID
+Octet String
+Octet String
+APID
+Each source or destination SAP of an SPP service provider entity has an associated type of
+service, either Packet or Octet String.  The service type need not be preserved from end to
+end of the managed data path; that is, asymmetric services may be provided.  For instance, an
+invocation of the Octet String Service at the source end system may (at the user’s request)
+result in delivery of data through an instance of the Packet Service at the destination end
+system(s) of the same managed data path.
+NOTE – As explained in 2.1.2, the PDU generated by SPP is the Space Packet for both
+service types.  In the case of the Packet Service, the same Space Packet is used
+both as the SDU and as the PDU.
+2.2.2.2 Packet Service
+The Packet Service transfers Space Packets, pre-formatted by the service user, intact through
+the managed data path.  The service user must generate Space Packets according to the
+specification given in subsection 4.1 of this Recommended Standard.  Space Packets supplied
+by the service user are transferred by the service provider without any changes to the
+formatting.
+2.2.2.3 Octet String Service
+The Octet String service transfers delimited strings of octets supplied by the service user
+through the managed data path.  The service provider transfers the strings of octets by
+formatting them into Space Packets.  The details of this formatting are set by management.
+2.3
+OVERVIEW OF FUNCTIONS
+2.3.1 GENERAL FUNCTIONS
+The SPP transfers SDUs, supplied by sending users, producing a sequence of PDUs known
+as Space Packets, using services of underlying subnetworks.  The Space Packets have
+variable lengths and are transferred through subnetworks asynchronously.
+The protocol entity performs the following protocol functions:
+a) generation (or validation) and processing of protocol control information included in
+the header to perform data identification;
+b) initiating transfer of PDUs through a series of underlying subnetworks;
+c) multiplexing/demultiplexing in order for various service users (i.e., various managed
+data paths) to share a physical connection provided by an underlying subnetwork.
+The protocol entity does not perform any of the following protocol functions:
+a) connection establishment and release;
+b) segmenting of SDUs;
+c) retransmission of missing SDUs;
+d) flow control;
+e) quality of service features.
+2.3.2 INTERNAL ORGANIZATION OF PROTOCOL ENTITY
+Figures 2-2 and 2-3 show the internal organization of the protocol entity of the sending and
+receiving systems, respectively.  In figure 2-2, data flows from top to bottom of the figure.  In
+figure 2-3, data flows from bottom to top.
+These figures identify data-handling functions performed by the protocol entity.  The purpose
+of these figures is to show logical relationships among the functions of the protocol entity.
+The figures are not intended to imply any hardware or software configuration in a real
+system.  Depending on the services provided by a real system, not all of the functions may be
+present in the protocol entity.
+Packet
+Service
+Octet String
+Service
+Packet
+Assembly
+Packet Transfer
+Subnetwork
+
+Figure 2-2:  Internal Organization of Protocol Entity (Sending End)
+Packet
+Service
+Octet String
+Service
+Packet
+Extraction
+Packet Reception
+Subnetwork
+
+Figure 2-3:  Internal Organization of Protocol Entity (Receiving End)
+2.4
+SERVICES ASSUMED FROM LOWER LAYERS
+As described in 2.1.1, the SPP uses services provided by the underlying layers.  It is intended
+that the SPP be capable of operating over services provided by a wide variety of real
+subnetworks and data links. Furthermore, SPP itself has no networking capabilities and fully
+relies on the services provided by the applicable subnetworks.
+It is assumed in this specification that the underlying subnetworks and their associated
+protocols provide the local addressing, storage, and forwarding capabilities required to
+perform the transfer of Space Packet PDUs from source to destination.
+When operating over space links, SPP relies on the Packet Services provided by the Space
+Data Link Protocols (i.e., TM, TC, AOS, Proximity-1, and USLP, references [C3]–[C7]) or
+on the service that transmits a bundle to an identified bundle endpoint provided by the BP
+(reference [C9]). While BP offers networking capabilities, the Space Data Link Protocols are
+only for point-to-point communications.
+SPP can also operate over many other communications links and can be used, for example, on-
+board between instruments and data stores over the SOIS Packet Service (reference [C12]),
+within the S/C over local message busses or private data exchanges, within the ground
+system over local message busses or private data exchanges, over terrestrial TCP/IP socket
+links as a flow of data, etc.
+3 SERVICE DEFINITION
+3.1
+OVERVIEW
+This section provides an abstract service definition in the form of primitives, which present a
+model of the logical exchange of data and control information between the protocol entity
+and the service user.  The definitions of primitives are independent of specific
+implementation approaches.
+The parameters of the primitives are specified in an abstract sense and specify the
+information to be made available to the user of the primitive.  The way in which a specific
+implementation makes this information available is not constrained by this specification.  In
+addition to the SPP specific parameters described in this section, an implementation may
+provide other parameters to the service user (e.g., parameters for controlling the service,
+monitoring performance, or facilitating diagnosis).
+3.2
+SOURCE DATA
+3.2.1 SOURCE DATA OVERVIEW
+This subsection describes the SDUs that are transferred from sending users to receiving users
+by the SPP.
+The SDUs transferred by the SPP are
+a) Space Packet; and
+b) Octet String.
+3.2.2 SPACE PACKET
+3.2.2.1 The Space Packet shall be a variable-length, delimited, octet-aligned data unit
+defined in section 4 of this Recommended Standard.  It shall consist of at least 7 and at most
+65542 octets, but individual project organizations may establish the maximum length to be
+used for their projects, taking into account the maximum SDU size in all subnetworks
+traversed by the Space Packet.
+3.2.2.2
+The SPP user shall use the Packet Service to transfer Space Packets.
+3.2.3 OCTET STRING
+3.2.3.1 The Octet String shall be a variable-length, delimited, octet-aligned data unit whose
+content and format are unknown to the SPP.  It shall consist of at least 1 and at most 65536
+octets, but individual project organizations may establish the maximum length used for their
+projects, taking into account the maximum SDU size in all subnetworks traversed by the
+Space Packet.
+3.2.3.2 The Octet String may contain a Packet Secondary Header defined in 4.1.4.2 of this
+Recommended Standard.
+3.2.3.3 An Octet String shall be placed within the User Data Field of a single Space Packet.
+3.2.3.4 The SPP user shall use the Octet String Service to transfer Octet Strings.
+3.3
+PACKET SERVICE
+3.3.1 OVERVIEW OF PACKET SERVICE
+The Packet Service shall transfer Space Packets, pre-formatted by the service user, intact
+through the mission-specified managed data path.  The service user must generate Space
+Packets according to the specification given in section 4 of this Recommended Standard.
+Space Packets supplied by the service user shall be transferred by the service provider
+without further formatting.
+3.3.2 PACKET SERVICE PARAMETERS
+3.3.2.1 Space Packet
+The Space Packet parameter shall be the SDU transferred by the Packet Service.
+NOTE – For restrictions on the Space Packets transferred by the Packet Service, see 3.2.2.
+3.3.2.2 APID
+The APID is a mandatory parameter that shall be used to uniquely identify the source,
+destination, or type of the Space Packet.
+NOTE – The meaning and use of the APID is mission specific.
+3.3.2.3 Packet Loss Indicator
+The Packet Loss Indicator parameter may be used to alert the user in a destination end system
+that one or more Packets have been lost during transmission, as evidenced by a discontinuity
+in the Packet Sequence Count.
+NOTE – This is an optional parameter, the presence or absence of which is
+implementation-specific. In some cases, the sending SPP entity could use the
+Packet Name in lieu of a Sequence Counter.
+If Packet Loss Indicators are to be generated by a particular implementation, they shall be
+declared at design time and be used consistently by all parties involved in the
+implementation.
+3.3.2.4 QoS Requirement
+The QoS Requirement is an optional parameter that indicates the Quality of Service (QoS)
+requirement of each Space Packet.  If one of the underlying subnetworks supports multiple
+levels of QoS, then this parameter shall be used to select an appropriate QoS level.
+NOTE – If the Telecommand (TC) Space Data Link Protocol (reference [C4]) is used as
+one of the protocols of the underlying subnetworks, the user can specify with this
+parameter whether the Type-A or Type-B service should be applied to the
+transfer of each Space Packet.
+3.3.3 PACKET SERVICE PRIMITIVES
+3.3.3.1 General
+The service primitives associated with this service are
+a) PACKET.request; and
+b) PACKET.indication.
+3.3.3.2 PACKET.request
+3.3.3.2.1 Function
+At the sending end, the Packet Service user shall pass a PACKET.request primitive to the
+service provider to request that a Space Packet be transferred to the user at the receiving end.
+NOTE – The PACKET.request primitive is the service request primitive for the Packet Service.
+3.3.3.2.2 Semantics
+The PACKET.request primitive shall provide parameters as follows:
+PACKET.request
+(Space Packet,
+APID,
+QoS Requirement (optional))
+3.3.3.2.3 When Generated
+The PACKET.request primitive shall be passed to the service provider to request it to send
+the Space Packet.
+3.3.3.2.4 Effect on Receipt
+Receipt of the PACKET.request primitive shall cause the service provider to transfer the
+Space Packet.
+3.3.3.3 PACKET.indication
+3.3.3.3.1 Function
+At the receiving end, the service provider shall pass a PACKET.indication to the Packet
+Service user to deliver a Space Packet.
+NOTE – The PACKET.indication primitive is the service indication primitive for the
+Packet Service.
+3.3.3.3.2 Semantics
+The PACKET.indication primitive shall provide parameters as follows:
+PACKET.indication
+(Space Packet,
+APID,
+
+Packet Loss Indicator (optional))
+3.3.3.3.3 When Generated
+The PACKET.indication primitive shall be passed from the service provider to the Packet
+Service user at the receiving end to deliver a Space Packet.
+3.3.3.3.4 Effect on Receipt
+The effect of receipt of the PACKET.indication primitive by the Packet Service user is
+undefined.
+3.3.3.3.5 Discussion
+The PACKET.indication primitive is used to deliver Space Packets to the Packet Service user
+identified with the APID.
+3.4
+OCTET STRING SERVICE
+3.4.1 OVERVIEW OF OCTET STRING SERVICE
+The Octet String service shall transfer delimited strings of octets supplied by the service user.
+The service provider shall transfer the strings of octets by formatting them into Space Packets.
+3.4.2 OCTET STRING SERVICE PARAMETERS
+3.4.2.1 Octet String
+The Octet String parameter shall be the SDU transferred by the Octet String Service.
+NOTE – For restrictions on the Octet Strings transferred by the Octet String Service, see 3.2.3.
+3.4.2.2 APID
+The APID is a mandatory parameter that shall be used to uniquely identify the source,
+destination, or type of the Space Packet.
+3.4.2.3 Secondary Header Indicator
+3.4.2.3.1 The Packet Primary Header shall contain a Secondary Header Flag that indicates
+the presence or absence of a Packet Secondary Header.
+3.4.2.3.2 The service user in the source end system shall signal whether or not a Packet
+Secondary Header is contained at the start of the Octet String by passing the Secondary
+Header Indicator parameter to the service provider.
+3.4.2.3.3 The service provider shall use the value of this parameter to set the value of the
+Secondary Header Flag in the Packet Primary Header.
+NOTES
+1
+The Secondary Header is a feature of the Space Packet that allows additional types of
+information that may be useful to the user application (e.g., a time code) to be
+included.  The format of the secondary header, if present, is managed and mission
+specific.
+2
+Secondary Header types are registered with SANA (reference [5]), and the actual
+contents of the secondary header are ‘managed’ at the SPP service user interface. The
+service user of the SPP Packet Service provides the SPP service provider with a
+predefined space packet in the PACKET.request, while the service user of the SPP
+Octet String Service provides the SPP service provider with a predefined space packet
+data field and a Secondary Header Indicator in the OCTET_STRING.request.
+3.4.2.4 Data Loss Indicator
+The Data Loss Indicator parameter shall be used to alert the user in a destination end system
+that one or more Octet Strings have been lost during transmission, as evidenced by a
+discontinuity in the Packet Sequence Count.  This is an optional parameter, the presence or
+absence of which is implementation-specific.  If Data Loss Indicators are to be generated by
+a particular implementation, then they must be declared at design time and be used
+consistently by all parties involved in the implementation.
+3.4.3 OCTET STRING SERVICE PRIMITIVES
+3.4.3.1 General
+The service primitives associated with this service are
+a) OCTET_STRING.request; and
+b) OCTET_STRING.indication.
+3.4.3.2 OCTET_STRING.request
+3.4.3.2.1 Function
+3.4.3.2.1.1 At the sending end, the Octet String Service user shall pass an
+OCTET_STRING.request primitive to the service provider to request that an Octet String be
+transferred to the user at the receiving end through the managed data path.
+3.4.3.2.1.2 One call to the Octet_String.request function shall result in the creation of one,
+and only one, Space Packet.
+NOTES
+1
+The OCTET_STRING.request primitive is the service request primitive for the Octet
+String Service.
+2
+The Space Packet will be created according to managed parameters including either a
+Packet Sequence Count or a Packet Name (see 4.1.3.4.3).
+3.4.3.2.2 Semantics
+The OCTET_STRING.request primitive shall provide parameters as follows:
+OCTET_STRING.request
+(Octet String,
+APID,
+Secondary Header Indicator,
+Packet Type,
+Packet Sequence Count/Packet Name)
+3.4.3.2.3 When Generated
+The OCTET_STRING.request primitive shall be passed to the service provider to request it
+to send the Octet String.
+3.4.3.2.4 Effect on Receipt
+Receipt of the OCTET_STRING.request primitive shall cause the service provider to transfer
+the Octet String.
+3.4.3.2.5 Discussion
+The OCTET_STRING.request primitive is used to transfer Octet Strings through the
+managed data path identified with the APID. When Packet Type = ‘1’, this primitive includes
+the Packet Sequence Count or Packet Name parameter.
+3.4.3.3 OCTET_STRING.indication
+3.4.3.3.1 Function
+At the receiving end, the service provider shall pass an OCTET_STRING.indication to the
+Octet String Service user to deliver an Octet String.
+NOTE – The OCTET_STRING.indication primitive is the service indication primitive for
+the Octet String Service.
+3.4.3.3.2 Semantics
+The OCTET_STRING.indication primitive shall provide parameters as follows:
+OCTET_STRING.indication (Octet String,
+APID,
+Secondary Header Indicator,
+Data Loss Indicator (optional))
+3.4.3.3.3 When Generated
+The OCTET_STRING.indication primitive shall be passed from the service provider to the
+Octet String Service user at the receiving end to deliver an Octet String.
+3.4.3.3.4 Effect on Receipt
+The effect of receipt of the OCTET_STRING.indication primitive by the Octet String Service
+user is undefined.
+3.4.3.3.5 Discussion
+The OCTET_STRING.indication primitive is used to deliver Octet Strings to the Octet String
+Service user identified with the APID.
+4 PROTOCOL SPECIFICATION
+4.1
+PROTOCOL DATA UNIT
+4.1.1 SPACE PACKET OVERVIEW
+The PDU of the SPP is the Space Packet.  In this Recommended Standard, the Space Packet
+is also called the Packet. Space Packets are either created by Packet Service users or by the
+SPP according to input from the Octet String Service user.
+4.1.2 SPACE PACKET REQUIREMENTS
+4.1.2.1 A Space Packet shall include the defined fields, positioned contiguously, in the
+following sequence:
+a) Packet Primary Header (6 octets, mandatory);
+b) Packet Data Field (from 1 to 65536 octets, mandatory).
+4.1.2.2 A Space Packet shall consist of at least 7 and at most 65542 octets.
+NOTES
+1
+The maximum Packet length allowed by a particular spacecraft or ground
+implementation may be less than the maximum specified here.
+2
+A Space Packet identified by a reserved APID value (see 4.1.3.3.4.4) that contains
+Idle Data (a fixed-length project-specified ‘idle’ pattern) in its Packet Data Field is
+called an Idle Packet (see 1.6.1.3).
+3
+Idle Packets are generated when needed, by the Telemetry (TM), Advanced Orbiting
+Systems (AOS), and USLP Space Data Link Protocols (references [C3], [C5], and
+[C7] respectively), to maintain synchronization of the data transport processes.
+4
+The structural components of the Space Packet are shown in figure 4-1.
+PACKET
+PRIMARY
+HEADER
+1 to 65536 octets
+6 octets
+SPACE PACKET
+PACKET DATA FIELD
+PACKET
+SECONDARY
+HEADER
+Variable
+Variable
+USER DATA FIELD
+
+Figure 4-1:  Space Packet Structural Components
+4.1.3 PACKET PRIMARY HEADER
+4.1.3.1 General
+The Packet Primary Header is mandatory and shall consist of four fields, positioned
+contiguously, in the following sequence:
+a) Packet Version Number (3 bits, mandatory);
+b) Packet Identification Field (13 bits, mandatory);
+c) Packet Sequence Control Field (16 bits, mandatory);
+d) Packet Data Length (16 bits, mandatory).
+NOTE – The format of the Packet Primary Header is shown in figure 4-2.
+PACKET
+VERSION
+NUMBER
+PACKET
+IDENTIFICATION
+PACKET
+TYPE
+PACKET
+SEQUENCE
+CONTROL
+11 bits
+APPLICATION
+PROCESS
+IDENTIFIER
+SEQUENCE
+FLAGS
+PACKET
+DATA
+LENGTH
+2 octets
+2 octets
+14 bits
+2 bits
+3 bits
+2 octets
+PACKET PRIMARY HEADER
+1 bit
+SEC.
+HDR.
+FLAG
+1 bit
+PACKET
+SEQUENCE
+COUNT OR
+PACKET NAME
+
+Figure 4-2:  Packet Primary Header
+4.1.3.2 Packet Version Number
+4.1.3.2.1 Bits 0–2 of the Packet Primary Header shall contain the (binary encoded) Packet
+Version Number (PVN).
+4.1.3.2.2 This 3-bit field shall identify the data unit as a Space Packet defined by this
+Recommended Standard; it shall be set to ‘000’.
+NOTE – The Version Number is used to reserve the possibility of introducing other packet
+structures.  This Recommended Standard defines Version 1 CCSDS Packet
+whose binary encoded Version Number is ‘000’.
+4.1.3.3 Packet Identification Field
+4.1.3.3.1 General
+4.1.3.3.1.1 Bits 3–15 of the Packet Primary Header shall contain the Packet Identification Field.
+4.1.3.3.1.2 This 13-bit field shall be sub-divided into three sub-fields as follows:
+a) Packet Type (1 bit, mandatory);
+b) Secondary Header Flag (1 bit, mandatory);
+c) APID (11 bits, mandatory).
+4.1.3.3.2 Packet Type
+4.1.3.3.2.1 Bit 3 of the Packet Primary Header shall contain the Packet Type.
+4.1.3.3.2.2 The Packet Type shall be used to distinguish Packets used for telemetry (or
+reporting) from Packets used for telecommand (or requesting).
+4.1.3.3.2.3 For a telemetry (or reporting) Packet, this bit shall be set to ‘0’; for a
+telecommand (or requesting) Packet, this bit shall be set to ‘1’.
+NOTE – The exact definition of ‘telemetry Packets’ and ‘telecommand Packets’ needs to
+be established by the project that uses this protocol.
+4.1.3.3.3 Secondary Header Flag
+4.1.3.3.3.1 Bit 4 of the Packet Primary Header shall contain the Secondary Header Flag.
+4.1.3.3.3.2 The Secondary Header Flag shall indicate the presence or absence of the Packet
+Secondary Header within this Space Packet.  It shall be ‘1’ if a Packet Secondary Header is
+present; it shall be ‘0’ if a Packet Secondary Header is not present.
+4.1.3.3.3.3 The Secondary Header Flag shall be static with respect to the APID and
+managed data path throughout a Mission Phase.
+4.1.3.3.3.4 The Secondary Header Flag shall be set to ‘0’ for Idle Packets.
+4.1.3.3.4 Application Process Identifier
+4.1.3.3.4.1 Bits 5–15 of the Packet Primary Header shall contain the APID.
+4.1.3.3.4.2 The APID shall provide the naming mechanism for the managed data path.
+NOTE – The APID is unique only within its naming domain.  For the discussion of
+naming domains (see 2.1.1 and 2.1.3 of this Recommended Standard).
+4.1.3.3.4.3 The APID may uniquely identify the individual sending or receiving application
+process within a particular space vehicle.
+4.1.3.3.4.4 For Idle Packets the APID shall be ‘11111111111’, that is, ‘all ones’(see
+reference [4]).
+NOTES
+1
+There are no restrictions on the selection of APIDs except for the APID for Idle
+Packets stated above.  In particular, APIDs are not required to be numbered
+consecutively.
+2
+Issue 1 of this Recommended Standard used a reserved APID to carry specific PDUs
+by, for example, CFDP and LTP (references [C10] and [C11]). This capability of
+acting as ‘shim’ protocol is preserved; that is, SPP can still carry PDUs of other
+protocols, but the coupling of APIDs to protocols is now mission specific. Missions
+may use the optional Packet Secondary Header to create an extended naming domain,
+but such uses are not specifically defined in this protocol. This is reflected by the fact
+that in reference [4] the only reserved value is now the one for Idle Packets.
+4.1.3.4 Packet Sequence Control Field
+4.1.3.4.1 General
+4.1.3.4.1.1 Bits 16–31 of the Packet Primary Header shall contain the Packet Sequence
+Control Field.
+4.1.3.4.1.2 This 16-bit field shall be sub-divided into two sub-fields as follows:
+a) Sequence Flags (2 bits, mandatory);
+b) Packet Sequence Count or Packet Name (14 bits, mandatory).
+4.1.3.4.2 Sequence Flags
+4.1.3.4.2.1 Bits 16–17 of the Packet Primary Header shall contain the Sequence Flags.
+NOTE – The use of the Sequence Flags is not mandatory for the users of the SPP.
+However, the Sequence Flags may be used by the user of the Packet Service to
+indicate that the User Data contained within the Space Packet is a segment of a
+larger set of application data.
+4.1.3.4.2.2 The Sequence Flags shall be set as follows:
+a) ‘00’ if the Space Packet contains a continuation segment of User Data;
+b) ‘01’ if the Space Packet contains the first segment of User Data;
+c) ‘10’ if the Space Packet contains the last segment of User Data;
+d) ‘11’ if the Space Packet contains unsegmented User Data.
+4.1.3.4.2.3 If the Octet String service is invoked at any point within the managed data path,
+the Sequence Flags must always be set to ‘11’, since segmentation is not allowed within the
+Octet String service.
+4.1.3.4.3 Packet Sequence Count or Packet Name
+4.1.3.4.3.1 Bits 18–31 of the Packet Primary Header shall contain the Packet Sequence
+Count or the Packet Name.
+4.1.3.4.3.2
+For a Packet with the Packet Type set to ‘0’ (i.e., a telemetry Packet), this field
+shall contain the Packet Sequence Count.  For a Packet with the Packet Type set to ‘1’ (i.e., a
+telecommand Packet), this field shall contain either the Packet Sequence Count or Packet Name.
+4.1.3.4.3.3 The Packet Sequence Count shall provide the sequential binary count of each
+Space Packet generated by the user application identified by the APID. Packet Sequence
+Counts are unique and independent per each user application as identified by the APID and
+are not shared across multiple APIDs.
+4.1.3.4.3.4
+The Packet Sequence Count shall be continuous (modulo-16384). A re-setting of
+the Packet Sequence Count before reaching 16383 shall not take place unless it is unavoidable.
+NOTES
+1
+The purpose of the Packet Sequence Count is to order the Packets generated by the
+same user application (identified by a single APID), even though their order may be
+disturbed during transport from the origin to the destination, as well as to support the
+detection of missing packets within each user application.
+2
+If the Packet Sequence Count is reset because of an unavoidable reinitialization of a
+process, the completeness of a sequence of Packets cannot be determined.
+3
+The Packet Sequence Count may be used in conjunction with a time code (see
+4.1.4.2.2; its insertion is, however, not mandatory) to provide unambiguous ordering
+during a long operational time period; it is therefore essential that the resolution of
+the time code is sufficient for this code to increment at least once between successive
+recyclings of the Packet Sequence Count.
+4
+The Packet Name allows a particular Packet to be identified with respect to others
+occurring within the same communications session.  There are no restrictions on
+binary encoding of the Packet Name.  That is, the Packet Name can be any 14-bit
+binary pattern.
+4.1.3.5 Packet Data Length
+4.1.3.5.1 Bits 32–47 of the Packet Primary Header shall contain the Packet Data Length.
+4.1.3.5.2 This 16-bit field shall contain a length count C that equals one fewer than the
+length (in octets) of the Packet Data Field.
+4.1.3.5.3 The length count C shall be expressed as:
+C = (Total Number of Octets in the Packet Data Field) – 1
+4.1.4 PACKET DATA FIELD
+4.1.4.1 General
+4.1.4.1.1 The Packet Data Field is mandatory and shall consist of at least one of the
+following two fields, positioned contiguously, in the following sequence:
+a) Packet Secondary Header (variable length);
+b) User Data Field (variable length).
+4.1.4.1.2 The Packet Data Field shall contain at least one octet.
+4.1.4.2 Packet Secondary Header
+4.1.4.2.1 General
+4.1.4.2.1.1 If present, the Packet Secondary Header shall follow, without gap, the Packet
+Primary Header.
+4.1.4.2.1.2 The Packet Secondary Header shall be mandatory if no User Data Field is
+present in the Packet; otherwise, it is optional.  The presence or absence of a Packet
+Secondary Header shall be signaled by the Secondary Header Flag within the Packet
+Identification Field (see 4.1.3.3.3).
+4.1.4.2.1.3
+If present, the Packet Secondary Header shall consist of an integral number of
+octets.
+4.1.4.2.1.4 The contents of the Packet Secondary Header shall be specified by the source
+end user and provided to the destination end user(s) by management.
+NOTES
+1
+The intension of the ‘Packet Secondary Header Contents’ Parameter is explained in table 5-1.
+2
+The Packet Secondary Header is not allowed for Idle Packets (see 4.1.3.3.3).
+4.1.4.2.1.5 If present, the Packet Secondary Header shall consist of either:
+a) a Time Code Field (variable length) only;
+b) an Ancillary Data Field (variable length) only; or
+c) a Time Code Field followed by an Ancillary Data Field.
+4.1.4.2.1.6 The chosen option shall remain static for a specific managed data path
+throughout all Mission Phases.
+NOTE – The format of the Packet Secondary Header is shown in figure 4-3.
+ANCILLARY
+DATA FIELD
+(optional)
+variable
+PACKET SECONDARY HEADER
+TIME CODE
+FIELD
+(optional)
+variable
+
+Figure 4-3:  Packet Secondary Header
+NOTES
+1
+The purpose of the Packet Secondary Header is to allow (but not require) a mission-
+specific means for consistently placing ancillary data (time, internal data field format,
+spacecraft position/attitude, etc.) in the same location within a Space Packet. The
+format of the secondary header, if present, is managed and mission specific.
+2
+Secondary Header types are registered with SANA (reference [5]), and the actual
+contents of the secondary header are ‘managed’ at the SPP service user interface. The
+service user of the SPP Packet Service provides the SPP service provider with a
+predefined space packet in the PACKET.request, while the service user of the SPP
+Octet String Service provides the SPP service provider with a predefined space packet
+data field and a Secondary Header Indicator in the OCTET_STRING.request.
+4.1.4.2.2 Time Code Field
+4.1.4.2.2.1 If present, the Time Code Field shall consist of an integral number of octets.
+4.1.4.2.2.2 The Time Code Field shall consist of one of the CCSDS segmented binary or
+unsegmented binary time codes specified in reference [3].
+NOTE – The time codes defined in reference [3] consist of an optional P-Field (Preamble
+Field), which identifies the time code and its characteristics and a mandatory T-
+Field (Time Field).  Examples of time codes are CCSDS Unsegmented Time
+Code and CCSDS Day Segmented Time Code.  Examples of characteristics are
+ambiguity period, epoch, length, and resolution.
+4.1.4.2.2.3 The time code selected shall be fixed for a given managed data path throughout
+all Mission Phases.
+4.1.4.2.2.4 If the characteristics of the chosen time code are fixed, the corresponding P-
+field (as described in reference [3]) need not be present.  If the characteristics are allowed to
+change, the P-field shall be present so as to identify the changes.
+4.1.4.2.2.5 The presence or absence of the P-field in the Time Code Field shall be fixed for
+a given managed data path throughout all Mission Phases.  If present, it shall immediately
+precede the T-field that is defined in reference [3].
+4.1.4.2.3 Ancillary Data Field
+If present, the Ancillary Data Field shall consist of an integral number of octets.
+NOTE – The content and format of the data contained in the Ancillary Data Field are not
+specified in this Recommended Standard.  The Ancillary Data Field may contain
+any ancillary information necessary for the interpretation of the information
+contained within the User Data Field of the Space Packet, to define mission-
+specific header fields for user data, or to extend the naming domain provided by
+the APID.
+4.1.4.3 User Data Field
+4.1.4.3.1 If present, the User Data Field shall follow, without gap, either the Packet
+Secondary Header (if a Packet Secondary Header is present) or the Packet Primary Header (if
+a Packet Secondary Header is not present).
+4.1.4.3.2 The User Data Field shall be mandatory if a Packet Secondary Header is not
+present; otherwise, it is optional.
+4.1.4.3.3 If present, the User Data Field shall consist of an integral number of octets.
+4.1.4.3.4 If the Packet is not an Idle Packet, then the User Data Field shall contain
+application data supplied by the sending user.  If the Packet is an Idle Packet, the User Data
+Field shall contain Idle Data.
+NOTE – The bit pattern of Idle Data is set by the mission and is not specified in this
+Recommended Standard.
+4.2
+PROTOCOL PROCEDURES AT THE SENDING END
+4.2.1 OVERVIEW
+This subsection describes procedures at the sending end associated with each of the functions
+shown in figure 4-4.  In this figure, data flow from top to bottom of the figure.  This figure
+identifies data-handling functions performed by the protocol entity at the sending end and
+shows logical relationships among these functions.  This figure is not intended to imply any
+hardware or software configuration in a real system.  Depending on the services actually
+implemented within a real system, not all of the functions may be present in the protocol
+entity.  The procedures described in this subsection are defined in an abstract sense and are
+not intended to imply any particular implementation approach of a protocol entity.
+Packet
+Service
+Octet String
+Service
+Packet
+Assembly
+Packet Transfer
+Subnetwork
+
+Figure 4-4:  Internal Organization of Protocol Entity (Sending End)
+4.2.2 PACKET ASSEMBLY FUNCTION
+4.2.2.1 The Packet Assembly Function shall be used to generate Space Packets from Octet
+Strings.
+NOTE – There is an instance of the Packet Assembly Function for each packet service
+entity that accepts SDUs with the Octet String Service.
+4.2.2.2 The Packet Assembly Function receives Octet Strings from the Octet String Service
+user and shall build Space Packets by generating the Packet Primary Header.
+4.2.2.3 The Secondary Header Indicator parameter shall be generated by the service user to
+indicate the presence or absence of a Packet Secondary Header at the start of Octet Strings.
+4.2.2.4 The Packet Assembly Function shall translate the parameter by setting the
+Secondary Header Flag in the Packet Primary Header to a corresponding value.  A sequence
+counter is maintained and shall be used to generate the Packet Sequence Count in the Packet
+Primary Header.
+4.2.3 PACKET TRANSFER FUNCTION
+4.2.3.1 The Packet Transfer Function shall be used to transfer Space Packets to the packet
+service entity at receiving end in the managed data path, using services of the underlying
+subnetwork.
+NOTE – There is an instance of the Packet Transfer Function in each sending end system.
+4.2.3.2 If necessary, the Packet Transfer Function shall multiplex Space Packets received
+from the instances of the Packet Assembly Function and the Packet Service users, and shall
+put the Space Packets into a queue, in an appropriate order that is set by management.  The
+algorithm to be used to order the Space Packets is not specified by CCSDS, but shall be
+defined by project organizations considering factors such as priority, release rate, etc.
+4.2.3.3 The Packet Transfer Function, then, shall examine the APID of each Packet in the
+queue to identify the packet service entity at the receiving end and shall transfer the Packet
+using a service of the underlying layers.
+NOTE – The Packet Transfer Function can transfer the Packet to multiple protocol entities.
+4.3
+PROTOCOL PROCEDURES AT THE RECEIVING END
+4.3.1 OVERVIEW
+This subsection describes procedures at the receiving end associated with each of the functions
+shown in figure 4-5.  In this figure, data flow from bottom to top of the figure.  This figure
+identifies data-handling functions performed by the protocol entity at the receiving end and
+shows logical relationships among these functions.  This figure is not intended to imply any
+hardware or software configuration in a real system.  Depending on the services actually
+implemented by a real system, not all of the functions may be present in the protocol entity.
+The procedures described in this subsection are defined in an abstract sense and are not
+intended to imply any particular implementation approach of a protocol entity.
+Packet
+Service
+Octet String
+Service
+Packet
+Extraction
+Packet Reception
+Subnetwork
+
+Figure 4-5:  Internal Organization of Protocol Entity (Receiving End)
+4.3.2 PACKET EXTRACTION FUNCTION
+4.3.2.1 The Packet Extraction Function shall be used to extract SDUs from Space Packets.
+NOTE – There is an instance of the Packet Extraction Function for each packet service
+entity that delivers SDUs with the Octet String Service.
+4.3.2.2 The Packet Extraction Function shall receive Space Packets from the Packet
+Reception Function and shall extract Octet Strings by removing the Packet Primary Header.
+The Secondary Header Indicator parameter shall be generated by the Packet Extraction
+Function to indicate the presence of a Packet Secondary Header at the start of the Octet
+String.  The Packet Extraction Function checks the continuity of the Packet Sequence Count
+to determine if one or more Packets have been lost during transmission and shall generate the
+optional Data Loss Indicator parameter accordingly.
+4.3.3 PACKET RECEPTION FUNCTION
+4.3.3.1 The Packet Reception Function shall be used to receive and demultiplex Space
+Packets received from the underlying subnetwork.
+NOTE – There is an instance of the Packet Reception Function in each receiving end
+system.
+4.3.3.2 The Packet Reception Function shall receive Space Packets from the underlying
+subnetwork and shall demultiplex, if necessary, the received Packets on the basis of the
+APID of each Packet.
+4.3.3.3 If the receiving user of the APID uses the Packet Service, the received Packets shall
+be delivered intact to the user identified by the APID.  If the receiving user of the APID uses
+the Octet String Service, then the received Packets shall be delivered to the user through the
+Packet Extraction Function.
+5 MANAGED PARAMETERS
+5.1
+OVERVIEW OF MANAGED PARAMETERS
+In order to conserve bandwidth on the underlying link(s) included in the managed data paths,
+some parameters associated with the SPP are handled by management rather than by in-line
+protocol mechanisms.  The managed parameters are those which tend to be static for long
+periods of time and whose change generally signifies a major reconfiguration of the protocol
+entities associated with a particular mission.  Through the use of a management system (not
+specified in this protocol), the management conveys the required information to the protocol
+entities.
+In this section, the managed parameters used by the SPP are listed.  These parameters are
+defined in an abstract sense and are not intended to imply any particular implementation of a
+management system.
+5.2
+PROTOCOL CONFIGURATION PARAMETERS
+Table 5-1 lists the protocol configuration parameters.  These parameters should be used by
+each SPP entity.
+Table 5-1:  Protocol Configuration Parameters
+Managed Parameter
+Allowed Values
+Maximum Packet Length (octets)
+Integer
+Packet Multiplexing Scheme (used only by sending
+systems)
+Mission Specific
+Service Type (this parameter is specified for each APID
+at the sending and receiving ends)
+Packet Service, Octet
+String Service
+Packet Secondary Header Contents (this parameter is
+intended to state, for each APID having a Packet
+Secondary Header, the actual contents, for example,
+per 4.1.4.2.1.5 and/or by reference to a given SANA
+Registry (see reference [5] and annex B and NOTE 1)
+Mission Specific
+NOTES
+1
+Per 4.1.4.2.1.4, the contents are specified by the source end user and provided to the
+destination end user(s) by management.
+2
+Packet Type is set by the SPP user of the packet service or provided directly as a
+parameter of the OctetString.request primitive.
