@@ -18,6 +18,11 @@ from src.tools._3d.compiler import compile_3d_grammar
 from src.tools._3d.preprocess import clean_3d_response
 from src.tools._3d.runtime import _3D_RUNTIME
 
+############### Vest ###############
+from src.tools.vest.compiler import compile_vest_grammar
+from src.tools.vest.preprocess import clean_vest_response
+from src.tools.vest.runtime import VEST_RUNTIME
+
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -70,6 +75,18 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         compile_fn=compile_3d_grammar,
         runtime=_3D_RUNTIME,
         response_cleaner=clean_3d_response,
+    ),
+    "vest": TargetLanguage(
+        name="vest",
+        display_name="Vest",
+        assistant_name="VestDeveloper",
+        source_extension=".vest",
+        instructions_by_protocol_type={
+            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "Vest" / "BINARY.md"
+        },
+        compile_fn=compile_vest_grammar,
+        runtime=VEST_RUNTIME,
+        response_cleaner=clean_vest_response,
     )
 }
 

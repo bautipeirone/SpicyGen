@@ -93,6 +93,5 @@ def run_everparse_parser(
 
 _3D_RUNTIME = RuntimeAdapter(
     parse_packet=run_everparse_parser,
-    prepare_parser=prepare_everparse_parser,
-    summarize_parse_result=None,
+    prepare_parser=prepare_everparse_parser
 )
