@@ -214,7 +214,7 @@ def run_refinement_loop(
             return f"Could not retrieve RFC {rfc_id}."
         return clean_rfc_text(rfc_text)
 
-    def compile_grammar(code: Annotated[str, "The grammar code to compile"]) -> str:
+    def compile_grammar(code: Annotated[str, "The grammar code to compile"]) -> tuple[bool, str]:
         cleaned_code = target_language.response_cleaner(code)
         if not cleaned_code:
             cleaned_code = code # Fallback just in case
@@ -243,19 +243,14 @@ def run_refinement_loop(
         if result.success:
             state.iterations[-1].compiled = True
             logger.info(f"Compilation succeeded on attempt {state.attempt}.")
-            return "SUCCESS"
+            return True, "SUCCESS"
 
         logger.warning(f"Compilation failed on attempt {state.attempt}.")
         logger.error(f"Compilation Errors:\n{result.errors}\n")
 
-        if state.attempt >= max_retries:
-            state.termination_reason = "max_retries"
-            logger.warning(f"Reached max compilation attempts ({max_retries}). Stopping.")
-            return "This was the last allowed attempt. Please say TERMINATE."
+        return False, COMPILATION_FEEDBACK_TEMPLATE.format(errors=result.errors)
 
-        return COMPILATION_FEEDBACK_TEMPLATE.format(errors=result.errors)
-
-    def parse_packets(code: Annotated[str, "The grammar code to verify against packets"]) -> str:
+    def parse_packets(code: Annotated[str, "The grammar code to verify against packets"]) -> tuple[bool, str]:
         """Run the grammar against known protocol packets."""
         cleaned_code = target_language.response_cleaner(code)
         if not cleaned_code:
@@ -289,11 +284,11 @@ def run_refinement_loop(
         if check_result.setup_error:
             logger.warning(f"Runtime setup FAILED for '{state.protocol.name}'.")
             summary = check_result.summary(show_packet_representation=show_packet_representation)
-            return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
+            return False, RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
         if not check_result.verdicts:
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
-            return f"No packets registered for protocol '{state.protocol.name}'. Say TERMINATE if the grammar compiled successfully."
+            return True, f"No packets registered for protocol '{state.protocol.name}'. Say TERMINATE if the grammar compiled successfully."
 
         score = check_result.score
         if score > state.best_score or state.best_iteration is None:
@@ -307,17 +302,25 @@ def run_refinement_loop(
             state.success = True
             state.termination_reason = "success"
             logger.info(f"Runtime check PASSED for '{state.protocol.name}'.")
-            return f"All packets parsed correctly. Say TERMINATE."
+            return True, f"All packets parsed correctly. Say TERMINATE."
         else:
             logger.warning(f"Runtime check FAILED for '{state.protocol.name}'.")
-            return RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
+            return False, RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
 
     def validate_grammar(code: Annotated[str, "The grammar code to compile and verify against packets"]) -> str:
-        compilation_result = compile_grammar(code)
-        if compilation_result != 'SUCCESS':
-            return compilation_result
-        parsing_result = parse_packets(code)
-        return parsing_result
+        compilation_success, compilation_msg = compile_grammar(code)
+        iteration_msg = compilation_msg
+
+        if compilation_success:
+            _, parsing_msg = parse_packets(code)
+            iteration_msg = parsing_msg
+
+        if state.attempt >= max_retries:
+            state.termination_reason = "max_retries"
+            logger.warning(f"Reached max compilation attempts ({max_retries}). Stopping.")
+            return "This was the last allowed attempt. Please say TERMINATE."
+
+        return iteration_msg
 
     if show_parsing_tree and not include_parse_tree_summary:
         logger.info(
