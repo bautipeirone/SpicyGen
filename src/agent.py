@@ -312,10 +312,10 @@ def run_refinement_loop(
         iteration_msg = compilation_msg
 
         if compilation_success:
-            _, parsing_msg = parse_packets(code)
+            parsing_success, parsing_msg = parse_packets(code)
             iteration_msg = parsing_msg
 
-        if state.attempt >= max_retries:
+        if not (compilation_success and parsing_success) and state.attempt >= max_retries:
             state.termination_reason = "max_retries"
             logger.warning(f"Reached max compilation attempts ({max_retries}). Stopping.")
             return "This was the last allowed attempt. Please say TERMINATE."
