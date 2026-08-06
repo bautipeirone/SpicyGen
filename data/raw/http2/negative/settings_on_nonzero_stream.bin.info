@@ -1,0 +1,1 @@
+Invalid Reason: SETTINGS applies to the connection and must use stream identifier 0, but this otherwise empty SETTINGS frame uses stream 1.

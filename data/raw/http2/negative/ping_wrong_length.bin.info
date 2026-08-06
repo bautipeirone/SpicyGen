@@ -1,0 +1,1 @@
+Invalid Reason: PING frames must contain exactly 8 octets of opaque data, but this frame declares a 7-octet payload.

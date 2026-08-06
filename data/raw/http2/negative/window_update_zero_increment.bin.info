@@ -1,0 +1,1 @@
+Invalid Reason: WINDOW_UPDATE carries a 31-bit window increment in the legal range 1..2^31-1; this frame uses an increment of 0 on the connection window.

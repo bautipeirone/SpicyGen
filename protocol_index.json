@@ -77,6 +77,12 @@
     "spec_type": "rfc",
     "rfc_id": "2616"
   },
+  "http2": {
+    "full_name": "Hyper Text Transfer Protocol 2",
+    "type": "binary",
+    "spec_type": "rfc",
+    "rfc_id": "7540"
+  },
   "icmpv4": {
     "full_name": "Internet Control Message Protocol version 4",
     "type": "binary",
