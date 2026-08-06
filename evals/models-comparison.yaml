@@ -6,6 +6,8 @@ defaults:
   models:
     - "gpt-oss"
     - "gemini-3.1-flash"
+    # - "gpt-5.4" # Not included, evaluations already done in workspaces/
+    - "gpt-5.6-sol"
   configs:
     - "configs/models-comparison.yaml"
   target_languages:
@@ -33,4 +35,4 @@ protocols:
     {}
 
   http1.1:
-    spec_file: "deprecated/specs/http1.1-grammar-and-headers.txt"
+    spec_file: "misc/specs/http1.1-grammar-and-headers.txt"

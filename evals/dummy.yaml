@@ -51,4 +51,4 @@ protocols:
     models:
       - "gpt-oss"
 
-    spec_file: "deprecated/specs/ipv4-header-format.txt"
+    spec_file: "misc/specs/ipv4-header-format.txt"
