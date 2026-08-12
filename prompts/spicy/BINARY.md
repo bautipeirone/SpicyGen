@@ -161,6 +161,50 @@ type Frame = unit {
 };
 ```
 
+### Error recovery and synchronization
+When the grammar may run inside a Zeek analyzer, consider whether parsing can resume at a later frame or record after malformed input. Add `&synchronize` only when the protocol provides a reliable, protocol-defined boundary that Spicy can search for. For a binary protocol, this generally requires a distinctive mandatory magic value, fixed record marker, or delimiter. An ordinary version, type, length, or other fixed-width header field is not by itself a useful synchronization target because Spicy needs a literal or regular expression to search for and common byte values produce false matches.
+
+Place `&synchronize` on the field at which parsing can safely resume. For repeated units, place it on the vector element type:
+```
+type Frame = unit {
+    magic: b"\xd9\xd9\xf7";
+    length: uint16;
+    payload: bytes &size=self.length;
+
+    on payload { confirm; }
+};
+
+public type Stream = unit {
+    frames: (Frame &synchronize)[] &eod;
+};
+```
+This works because every `Frame` begins with a mandatory literal. A normal unit field may be marked in the same way: `next: Frame &synchronize;`.
+
+To make the recovery boundary explicit, or when Spicy cannot derive it from the target field, declare a synchronization property inside the target unit. `%synchronize-at` leaves the matched literal in the input, so the resumed unit must begin by consuming it. `%synchronize-after` consumes the matched delimiter first, so the unit must describe the content immediately after that delimiter:
+```
+type Frame = unit {
+    %synchronize-at = b"\xd9\xd9\xf7";
+    magic: b"\xd9\xd9\xf7";
+    length: uint16;
+    payload: bytes &size=self.length;
+
+    on payload { confirm; }
+};
+
+type RecordAfterDelimiter = unit {
+    %synchronize-after = b"\x00\xff\x00\xff";
+    length: uint16;
+    payload: bytes &size=self.length;
+
+    on payload { confirm; }
+};
+```
+These properties override any synchronization point Spicy could infer from the unit and have an effect only when a field of that unit type is marked `&synchronize`. Do not parse a `%synchronize-after` delimiter again at the start of the recovered unit because synchronization has already consumed it.
+
+After finding a marker, Spicy parses in trial mode. The recovered unit must execute `confirm;` from a hook after enough subsequent structure has parsed to establish that the marker is genuine; reaching the end of the grammar without confirming is a fatal error. Calling `confirm` during normal parsing has no effect. A highly distinctive marker may be confirmed immediately with `on %synced { confirm; }`, but prefer a later field hook when the marker might also occur in payload data.
+
+Do not add synchronization merely because the parser is intended for Zeek. Most binary protocols do not expose a sufficiently reliable marker, so omit `&synchronize` when no such boundary exists, when recovery would resume in the middle of a dependent frame, or when the marker can commonly occur in payload data. Never invent a magic value or delimiter that the protocol specification does not define.
+
 ## Important considerations
 * For multi-byte integer values, it is important to consider the byte order for parsing. Network byte order (i.e., big-endian) is the default. To change byte order, use field attributes. Add `&byte-order=spicy::ByteOrder::Little;` when you need to parse an integer as little endian.
 * The following words are reserved and cant be used as field names: file, port, type, time. The following can be used to replace them: filename, port_number, type_value, time_value.
@@ -246,8 +290,8 @@ To parse a bitfield with this order, do like the following example
 ```
 import spicy;
 
-public type Header= unit {
-    : bitfield(32) {
+public type Header = unit {
+    flags: bitfield(32) {
         fin: 0;
         rsv: 1..3;
         opcode: 4..7;

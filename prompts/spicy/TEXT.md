@@ -167,6 +167,52 @@ type Message = unit {
 };
 ```
 
+### Error recovery and synchronization
+When the grammar may run inside a Zeek analyzer, consider whether parsing can resume at a later message or record after malformed input. Add `&synchronize` only when the protocol provides a reliable, protocol-defined boundary that Spicy can search for. Good synchronization targets begin with a mandatory literal or regular expression, such as a fixed command set (`/GET|POST/`), a record marker, or a line delimiter. The target should be distinctive enough that matching the same bytes inside payload data is unlikely.
+
+Place `&synchronize` on the field at which parsing can safely resume. For repeated units, place it on the vector element type:
+```
+type Request = unit {
+    method: /GET|POST/;
+    : WhiteSpace;
+    target: Token;
+    newline: CRLF;
+
+    on newline { confirm; }
+};
+
+public type Session = unit {
+    requests: (Request &synchronize)[] &eod;
+};
+```
+This works because every `Request` begins with a mandatory regular expression. A normal unit field may be marked in the same way: `next: Request &synchronize;`.
+
+To make the recovery boundary explicit, or when Spicy cannot derive it from the target field, declare a synchronization property inside the target unit. `%synchronize-at` leaves the matched literal in the input, so the resumed unit must begin by consuming it. `%synchronize-after` consumes the matched delimiter first, so the unit must describe the content immediately after that delimiter:
+```
+type Command = unit {
+    %synchronize-at = /GET|POST/;
+    method: /GET|POST/;
+    : WhiteSpace;
+    target: Token;
+    newline: CRLF;
+
+    on newline { confirm; }
+};
+
+type LineAfterError = unit {
+    %synchronize-after = /\r?\n/;
+    content: RestOfLine;
+    newline: CRLF;
+
+    on newline { confirm; }
+};
+```
+These properties override any synchronization point Spicy could infer from the unit and have an effect only when a field of that unit type is marked `&synchronize`. Do not parse a `%synchronize-after` delimiter again at the start of the recovered unit because synchronization has already consumed it.
+
+After finding a marker, Spicy parses in trial mode. The recovered unit must execute `confirm;` from a hook after enough subsequent structure has parsed to establish that the marker is genuine; reaching the end of the grammar without confirming is a fatal error. Calling `confirm` during normal parsing has no effect. A highly distinctive marker may be confirmed immediately with `on %synced { confirm; }`, but prefer a later field hook when the marker might also occur in payload data.
+
+Do not add synchronization merely because the parser is intended for Zeek. Omit it when there is no unambiguous literal or regex boundary, when recovery would resume in the middle of a dependent message, or when the candidate marker can commonly occur in payload data. Never invent a magic value or delimiter that the protocol specification does not define.
+
 ## Line Based Parsing
 This section describes common and reusable patterns for parsing line-based protocols. 
 These are common regex definitions to use.
