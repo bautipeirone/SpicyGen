@@ -5,8 +5,10 @@ import importlib
 import os
 import re
 import sys
+from collections.abc import Callable
+from dataclasses import dataclass
 
-from scapy.packet import Packet
+from scapy.packet import Packet, Raw
 from scapy.utils import PcapReader
 
 
@@ -32,6 +34,12 @@ SEARCH_MODULES = (
     "scapy.layers.tftp",
 )
 
+@dataclass(frozen=True)
+class ProtocolHandler:
+    display_name: str
+    file_stem: str
+    extractor: Callable[[Packet], Packet | bytes | bytearray | memoryview | None]
+
 
 def load_base_layers():
     # Load the core L2/L3/L4 bindings before opening captures so Scapy can
@@ -50,36 +58,119 @@ def load_protocol_class(module_name, class_name):
     return protocol_class
 
 
+def load_protocol_attribute(module_name, attribute_name):
+    module = importlib.import_module(module_name)
+    return getattr(module, attribute_name)
+
+
+def build_layer_extractor(protocol_class):
+    def extract_layer(pkt):
+        if not pkt.haslayer(protocol_class):
+            return None
+        return pkt[protocol_class]
+
+    return extract_layer
+
+
+def detect_http_payload(pkt):
+    # print("A")
+    if not pkt.haslayer(Raw):
+        return None
+
+    # print("B")
+
+    raw_payload = pkt[Raw].load
+    if not raw_payload:
+        return None
+
+    if b"HTTP" in raw_payload:
+        print(pkt.load)
+        print(raw_payload)
+        exit(0)
+
+
+    if any(raw_payload.startswith(version) for version in (b"HTTP/1.0", b"HTTP/1.1", b"HTTP/2")):
+        print("D")
+        return raw_payload
+
+    http_methods = (
+        b"GET",
+        b"POST",
+        b"PUT",
+        b"DELETE",
+        b"HEAD",
+        b"OPTIONS",
+        b"PATCH",
+        b"TRACE",
+        b"CONNECT",
+    )
+    if any(raw_payload.startswith(method + b" ") for method in http_methods):
+        print("E")
+        return raw_payload
+
+    return None
+
+
+BUILTIN_PROTOCOL_DETECTORS = {
+    "http": detect_http_payload,
+}
+
+
+def make_protocol_handler(protocol_name, extractor, display_name=None):
+    return ProtocolHandler(
+        display_name=display_name or protocol_name,
+        file_stem=make_file_stem(protocol_name, display_name),
+        extractor=extractor,
+    )
+
+
 def resolve_protocol(protocol_name):
     protocol_name = protocol_name.strip()
     normalized = protocol_name.lower()
 
+    if normalized in BUILTIN_PROTOCOL_DETECTORS:
+        return make_protocol_handler(protocol_name, BUILTIN_PROTOCOL_DETECTORS[normalized], display_name=normalized.upper())
+
     if normalized in COMMON_PROTOCOL_ALIASES:
         module_name, class_name = COMMON_PROTOCOL_ALIASES[normalized]
-        return load_protocol_class(module_name, class_name)
+        protocol_class = load_protocol_class(module_name, class_name)
+        return make_protocol_handler(protocol_name, build_layer_extractor(protocol_class), display_name=protocol_class.__name__)
 
     if "." in protocol_name:
         module_name, class_name = protocol_name.rsplit(".", 1)
-        return load_protocol_class(module_name, class_name)
+        protocol_attribute = load_protocol_attribute(module_name, class_name)
+        if isinstance(protocol_attribute, type) and issubclass(protocol_attribute, Packet):
+            return make_protocol_handler(
+                protocol_name,
+                build_layer_extractor(protocol_attribute),
+                display_name=protocol_attribute.__name__,
+            )
+        if callable(protocol_attribute):
+            return make_protocol_handler(protocol_name, protocol_attribute, display_name=class_name)
+        raise TypeError(
+            f"{module_name}.{class_name} is neither a Scapy Packet class nor a callable detector function."
+        )
 
     for module_name in SEARCH_MODULES:
         try:
-            return load_protocol_class(module_name, protocol_name)
+            protocol_class = load_protocol_class(module_name, protocol_name)
+            return make_protocol_handler(protocol_name, build_layer_extractor(protocol_class), display_name=protocol_class.__name__)
         except (AttributeError, ImportError, TypeError):
             continue
 
-    known_aliases = ", ".join(sorted(COMMON_PROTOCOL_ALIASES))
+    known_aliases = ", ".join(sorted({*COMMON_PROTOCOL_ALIASES, *BUILTIN_PROTOCOL_DETECTORS}))
     raise ValueError(
         f"Unsupported protocol '{protocol_name}'. Use one of: {known_aliases}, "
-        "a known Scapy class name such as DNS, or a fully qualified Scapy class "
-        "path such as scapy.layers.inet6.IPv6ExtHdrFragment."
+        "a known Scapy class name such as DNS, a fully qualified Scapy class "
+        "path such as scapy.layers.inet6.IPv6ExtHdrFragment, or a fully qualified "
+        "callable detector such as custom_protocols.detect_http."
     )
 
 
-def make_file_stem(protocol_name, protocol_class):
+def make_file_stem(protocol_name, fallback_name=None):
     preferred_name = protocol_name.split(".")[-1] if "." in protocol_name else protocol_name
-    preferred_name = preferred_name.strip() or protocol_class.__name__
-    preferred_name = preferred_name.lstrip("_") or protocol_class.__name__.lstrip("_")
+    preferred_name = preferred_name.strip() or fallback_name or "packet"
+    preferred_name = preferred_name.lstrip("_") or str(fallback_name or "packet").lstrip("_")
     return re.sub(r"[^0-9a-zA-Z]+", "_", preferred_name).strip("_").lower() or "packet"
 
 
@@ -124,17 +215,31 @@ def write_packet_bytes(output_dir, output_name, payload):
         raise FileExistsError(f"Could not find a unique output filename for '{output_name}'.")
 
 
-def extract_packets_from_capture(capture_file, capture_index, protocol_class, file_stem, output_dir):
+def serialize_extracted_layer(extracted_layer):
+    if extracted_layer is None:
+        return None
+    if isinstance(extracted_layer, Packet):
+        return bytes(extracted_layer)
+    if isinstance(extracted_layer, (bytes, bytearray, memoryview)):
+        return bytes(extracted_layer)
+    raise TypeError(
+        "Protocol detector returned an unsupported type. Expected a Scapy Packet, bytes-like object, or None."
+    )
+
+
+def extract_packets_from_capture(capture_file, capture_index, protocol_handler, output_dir):
     count = 0
 
     with PcapReader(capture_file) as capture:
         for pkt in capture:
-            if not pkt.haslayer(protocol_class):
+            extracted_layer = protocol_handler.extractor(pkt)
+            if extracted_layer is not None: print("hello")
+            payload = serialize_extracted_layer(extracted_layer)
+            if payload is None:
                 continue
 
-            target_layer = pkt[protocol_class]
-            output_name = build_output_file_name(file_stem, capture_file, capture_index, count)
-            write_packet_bytes(output_dir, output_name, bytes(target_layer))
+            output_name = build_output_file_name(protocol_handler.file_stem, capture_file, capture_index, count)
+            write_packet_bytes(output_dir, output_name, payload)
             count += 1
 
     return count
@@ -142,13 +247,11 @@ def extract_packets_from_capture(capture_file, capture_index, protocol_class, fi
 
 def extract_packets_from_capture_worker(capture_file, capture_index, protocol_name, output_dir):
     load_base_layers()
-    protocol_class = resolve_protocol(protocol_name)
-    file_stem = make_file_stem(protocol_name, protocol_class)
+    protocol_handler = resolve_protocol(protocol_name)
     return extract_packets_from_capture(
         capture_file,
         capture_index,
-        protocol_class,
-        file_stem,
+        protocol_handler,
         output_dir,
     )
 
@@ -162,7 +265,7 @@ def extract_protocol_packets(input_path, output_dir, protocol_name, workers=None
     os.makedirs(output_dir, exist_ok=True)
 
     load_base_layers()
-    protocol_class = resolve_protocol(protocol_name)
+    protocol_handler = resolve_protocol(protocol_name)
 
     if not capture_files:
         print("No capture files found to process.")
@@ -172,22 +275,28 @@ def extract_protocol_packets(input_path, output_dir, protocol_name, workers=None
     max_workers = max(1, max_workers)
 
     print(
-        f"Processing {len(capture_files)} capture files and extracting '{protocol_class.__name__}' "
+        f"Processing {len(capture_files)} capture files and extracting '{protocol_handler.display_name}' "
         f"layers with {max_workers} workers into '{output_dir}'..."
     )
 
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-        futures = [
+        future_to_capture = {
             executor.submit(
                 extract_packets_from_capture_worker,
                 capture_file,
                 capture_index,
                 protocol_name,
                 output_dir,
-            )
+            ): capture_file
             for capture_index, capture_file in enumerate(capture_files)
-        ]
-        count = sum(future.result() for future in concurrent.futures.as_completed(futures))
+        }
+        count = 0
+        for future in concurrent.futures.as_completed(future_to_capture):
+            capture_file = future_to_capture[future]
+            try:
+                count += future.result()
+            except Exception as exc:
+                raise RuntimeError(f"Failed to process '{capture_file}': {exc}") from exc
 
     print(f"Extraction complete. Saved {count} packet(s) to '{output_dir}'.")
     return count
@@ -210,8 +319,7 @@ def build_parser():
         default="ipv6",
         help=(
             "Protocol layer to extract (default: ipv6). Examples: ipv4, ipv6, tcp, "
-            "udp, dns, dhcp, arp, icmp, icmpv6, or "
-            "scapy.layers.inet6.IPv6ExtHdrFragment."
+            "udp, dns, dhcp, arp, icmp, icmpv6, http, or scapy.layers.inet6.IPv6ExtHdrFragment."
         ),
     )
     parser.add_argument(
