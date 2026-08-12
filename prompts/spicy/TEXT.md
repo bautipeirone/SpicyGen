@@ -352,6 +352,10 @@ public type Foo = unit {
     };
 };
 ```
+If you get any errors like `production switch is ambiguous for look-ahead symbol(s)`, try to factor out the common
+prefix out of its branches. You can also use hooks to enforce constraints instead of validating them from the switch
+branches automatically.
+
 ---
 * **Conditional** fields are declared like `data` in the following example:
 ```
