@@ -20,7 +20,6 @@ def _create_build_dir(build_dir: Path | None) -> tuple[Path, Callable[[], None] 
 
 
 def prepare_everparse_parser(grammar_file: Path, build_dir: Path | None = None) -> RuntimeArtifact:
-    cleanup = None
     build_dir, cleanup = _create_build_dir(build_dir)
     output_exec = build_dir / "parser"
 

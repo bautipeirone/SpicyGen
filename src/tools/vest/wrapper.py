@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 MAIN_WRAPPER_SRC = r"""
@@ -14,7 +15,7 @@ fn main() -> ExitCode {{
     let mut args = env::args_os();
     let program = args
         .next()
-        .unwrap_or_else(|| "dhcp-parser".into());
+        .unwrap_or_else(|| "parser".into());
 
     let input_path = match args.next() {{
         Some(path) => path,
@@ -24,7 +25,7 @@ fn main() -> ExitCode {{
                 Path::new(&program)
                     .file_name()
                     .and_then(|s| s.to_str())
-                    .unwrap_or("dhcp-parser")
+                    .unwrap_or("parser")
             );
             return ExitCode::from(1);
         }}
@@ -71,8 +72,9 @@ def get_main_src(module_name: str, parser_entrypoint: str) -> str:
 
 
 def write_main(file: Path, out: Path):
-    grammar_code = file.read_text()
-    module_name = ""
-    parser_entrypoint = ""
+    module_name = str(os.path.basename(file.stem))
+    # Its hardcoded for Vest since there is no "entrypoint" or "public" declaration
+    # The agent is instructed to name the main unit as message.
+    parser_entrypoint = "parse_message"
     main_src = get_main_src(module_name, parser_entrypoint)
     out.write_text(main_src)

@@ -82,7 +82,7 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         assistant_name="VestDeveloper",
         source_extension=".vest",
         instructions_by_protocol_type={
-            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "Vest" / "BINARY.md"
+            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "vest" / "BINARY.md"
         },
         compile_fn=compile_vest_grammar,
         runtime=VEST_RUNTIME,
