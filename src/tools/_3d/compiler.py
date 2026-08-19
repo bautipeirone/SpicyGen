@@ -35,5 +35,9 @@ def compile_3d_grammar(source_file: Path) -> CompileResult:
     if result.returncode == 0:
         return CompileResult(success=True, errors=None)
     else:
-        errors = result.stderr.strip() if result.stderr else result.stdout.strip()
+        errors = (
+            result.stderr
+            or result.stdout
+            or f"Everparse/3D exited with status {result.returncode} without producing output"
+        ).strip()
         return CompileResult(success=False, errors=errors)
