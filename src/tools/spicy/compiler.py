@@ -38,4 +38,9 @@ def compile_spicy_grammar(source_file: Path) -> CompileResult:
     if result.returncode == 0:
         return CompileResult(success=True, errors=None)
     else:
-        return CompileResult(success=False, errors=result.stderr.strip())
+        errors = (
+            result.stderr
+            or result.stdout
+            or f"Spicy exited with status {result.returncode} without producing output"
+        ).strip()
+        return CompileResult(success=False, errors=errors)

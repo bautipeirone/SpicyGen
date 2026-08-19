@@ -20,7 +20,6 @@ def _create_build_dir(build_dir: Path | None) -> tuple[Path, Callable[[], None] 
 
 
 def prepare_everparse_parser(grammar_file: Path, build_dir: Path | None = None) -> RuntimeArtifact:
-    cleanup = None
     build_dir, cleanup = _create_build_dir(build_dir)
     output_exec = build_dir / "parser"
 
@@ -93,6 +92,5 @@ def run_everparse_parser(
 
 _3D_RUNTIME = RuntimeAdapter(
     parse_packet=run_everparse_parser,
-    prepare_parser=prepare_everparse_parser,
-    summarize_parse_result=None,
+    prepare_parser=prepare_everparse_parser
 )
