@@ -228,6 +228,27 @@ def extract_codex_usage(jsonl_output: str) -> dict[str, CostSummary] | None:
     return normalized_usage
 
 
+def codex_error_details(stdout: str, stderr: str) -> str:
+    """Return concise diagnostics from a failed Codex JSONL invocation."""
+    messages: list[str] = []
+    for line in stdout.splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict) or event.get("type") != "error":
+            continue
+        message = event.get("message")
+        if not isinstance(message, str) and isinstance(event.get("error"), dict):
+            message = event["error"].get("message")
+        if isinstance(message, str) and message.strip():
+            messages.append(message.strip())
+
+    if stderr.strip():
+        messages.append(stderr.strip())
+    return "\n".join(messages)
+
+
 def run_codex(
     *,
     prompt: str,
@@ -266,10 +287,18 @@ def run_codex(
         text=True,
         cwd=PROJECT_ROOT,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         check=False,
     )
     if completed.returncode != 0:
-        raise RuntimeError(f"`codex exec` failed with exit code {completed.returncode}.")
+        details = codex_error_details(completed.stdout, completed.stderr)
+        suffix = f"\n{details}" if details else ""
+        raise RuntimeError(
+            f"`codex exec` failed with exit code {completed.returncode}.{suffix}"
+        )
+
+    if completed.stderr:
+        print(completed.stderr, file=sys.stderr, end="")
 
     usage = extract_codex_usage(completed.stdout)
     if candidate_path.exists() and candidate_path.stat().st_size:

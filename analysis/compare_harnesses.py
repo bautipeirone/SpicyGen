@@ -266,7 +266,11 @@ def ratio(numerator: Any, denominator: Any) -> float | None:
 
 
 def compact_error(text: str, limit: int = 2000) -> str:
-    return re.sub(r"\s+", " ", text).strip()[-limit:]
+    compacted = re.sub(r"\s+", " ", text).strip()
+    if len(compacted) <= limit:
+        return compacted
+    half = (limit - 5) // 2
+    return f"{compacted[:half]} ... {compacted[-half:]}"
 
 
 def usage_columns(metrics: dict[str, Any]) -> dict[str, Any]:

@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from scripts import generate_grammar_codex_harness as codex_harness
 from src.prompts import build_one_shot_system_message, build_one_shot_user_message
 from src.protocol import Protocol, ProtocolSpecType, ProtocolType
@@ -128,6 +130,7 @@ def test_run_codex_uses_noninteractive_ephemeral_workspace_session(
         candidate_path.write_text("module Example;")
         return SimpleNamespace(
             returncode=0,
+            stderr="",
             stdout=(
                 '{"type":"turn.completed","usage":'
                 '{"input_tokens":100,"cached_input_tokens":20,'
@@ -159,6 +162,7 @@ def test_run_codex_uses_noninteractive_ephemeral_workspace_session(
     assert kwargs["input"] == "PROMPT"
     assert kwargs["cwd"] == codex_harness.PROJECT_ROOT
     assert kwargs["stdout"] == codex_harness.subprocess.PIPE
+    assert kwargs["stderr"] == codex_harness.subprocess.PIPE
     assert response == "module Example;"
     assert source == "candidate-file"
     assert usage is not None
@@ -181,7 +185,7 @@ def test_run_codex_falls_back_to_last_message(monkeypatch, tmp_path):
 
     def fake_run(command, **kwargs):
         last_message_path.write_text("module Fallback;")
-        return SimpleNamespace(returncode=0, stdout="")
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(codex_harness.subprocess, "run", fake_run)
 
@@ -196,3 +200,35 @@ def test_run_codex_falls_back_to_last_message(monkeypatch, tmp_path):
     assert response == "module Fallback;"
     assert source == "last-message"
     assert usage is None
+
+
+def test_run_codex_reports_captured_cli_error(monkeypatch, tmp_path):
+    candidate_path = tmp_path / "candidate.spicy"
+    last_message_path = tmp_path / "last-message.txt"
+
+    monkeypatch.setattr(
+        codex_harness.shutil,
+        "which",
+        lambda executable: "/usr/bin/codex",
+    )
+    monkeypatch.setattr(
+        codex_harness.subprocess,
+        "run",
+        lambda command, **kwargs: SimpleNamespace(
+            returncode=1,
+            stdout=(
+                '{"type":"error","error":'
+                '{"message":"state database is read-only"}}\n'
+            ),
+            stderr="startup failed",
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="state database is read-only"):
+        codex_harness.run_codex(
+            prompt="PROMPT",
+            candidate_path=candidate_path,
+            last_message_path=last_message_path,
+            codex_bin="codex",
+            model="gpt-test",
+        )
