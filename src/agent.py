@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from src.tools.compiler import run_grammar_compiler
-from src.tools.runtime import get_protocol_packet_paths, run_parser_check_from_code, ParsingConfig
+from src.tools.runtime import get_protocol_packet_paths
 from src.tools.rfc import retrieve_rfc_by_id, clean_rfc_text
 from src.tools.extraction import extract_intervals
 from src.protocol import Protocol
@@ -9,21 +8,10 @@ from src.target_language import TargetLanguage
 from src.logger import logger
 from src.prompts import SUMMARIZE_SPEC_SYSTEM_PROMPT
 from src.usage import extract_cost_summary, CostSummary
+from src import validation
 from typing import Annotated, Any
 import autogen
 
-
-COMPILATION_FEEDBACK_TEMPLATE = """The grammar you produced failed to compile with the following errors:
-
-{errors}
-
-Please fix the grammar to resolve these compilation errors. Only output the corrected grammar."""
-
-RUNTIME_FEEDBACK_TEMPLATE = """The grammar you produced failed to parse the following packets:
-
-{errors}
-
-Please fix the grammar to handle these packets correctly, then use validate_grammar again."""
 
 @dataclass
 class State:
@@ -35,24 +23,8 @@ class State:
     best_code: str | None = None
     best_iteration: int | None = None
     termination_reason: str | None = None
-    iterations: list["IterationStats"] = field(default_factory=list)
+    iterations: list[validation.IterationStats] = field(default_factory=list)
     retrieved_rfcs: list[str] | None = None
-
-
-@dataclass
-class IterationStats:
-    compiled: bool = False
-    positive_accepted: int = 0
-    negative_rejected: int = 0
-    changed_from_previous: bool = False
-
-    def as_dict(self) -> dict[str, bool | int]:
-        return {
-            "compiled": self.compiled,
-            "positive_accepted": self.positive_accepted,
-            "negative_rejected": self.negative_rejected,
-            "changed_from_previous": self.changed_from_previous,
-        }
 
 
 def query_llm_once(llm_config: dict, system_prompt: str, user_message: str) -> tuple[str, dict[str, Any] | None]:
@@ -214,113 +186,60 @@ def run_refinement_loop(
             return f"Could not retrieve RFC {rfc_id}."
         return clean_rfc_text(rfc_text)
 
-    def compile_grammar(code: Annotated[str, "The grammar code to compile"]) -> tuple[bool, str]:
-        cleaned_code = target_language.response_cleaner(code)
-        if not cleaned_code:
-            cleaned_code = code # Fallback just in case
-
+    def validate_grammar_tool(code: Annotated[str, "The grammar code to compile and verify against packets"]) -> str:
+        cleaned_code = target_language.response_cleaner(code) or code
         previous_code = state.last_code
         state.attempt += 1
         state.last_code = cleaned_code
         state.iterations.append(
-            IterationStats(
-                changed_from_previous=(state.attempt > 1 and cleaned_code != previous_code),
+            validation.IterationStats(
+                changed_from_previous=(
+                    state.attempt > 1 and cleaned_code != previous_code
+                ),
             )
         )
-        step_path = (
-            refinement_dir / f"Grammar_{state.attempt}{target_language.source_extension}"
-            if refinement_dir else None
-        )
-        errors_path = errors_dir / f"{state.attempt}-compilation.log" if errors_dir else None
-        debug_info = { "step_path": step_path, "errors_path": errors_path }
-
-        logger.info(
-            f"Compiling {target_language.display_name} attempt {state.attempt}/{max_retries} ..."
-        )
-
-        result = run_grammar_compiler(cleaned_code, target_language.compile_fn, target_language.source_extension, debug_info=debug_info)
-
-        if result.success:
-            state.iterations[-1].compiled = True
-            logger.info(f"Compilation succeeded on attempt {state.attempt}.")
-            return True, "SUCCESS"
-
-        logger.warning(f"Compilation failed on attempt {state.attempt}.")
-        logger.error(f"Compilation Errors:\n{result.errors}\n")
-
-        return False, COMPILATION_FEEDBACK_TEMPLATE.format(errors=result.errors)
-
-    def parse_packets(code: Annotated[str, "The grammar code to verify against packets"]) -> tuple[bool, str]:
-        """Run the grammar against known protocol packets."""
-        cleaned_code = target_language.response_cleaner(code)
-        if not cleaned_code:
-            cleaned_code = code
-
-        step_build_dir = build_dir / f"step_{state.attempt}" if build_dir else None
-        errors_path = errors_dir / f"{state.attempt}-runtime.log" if errors_dir else None
-        debug_info = { "build_dir": step_build_dir, "errors_path": errors_path }
-
-        logger.info(
-            f"Running runtime check for protocol '{state.protocol.name}' using {target_language.display_name}..."
-        )
-
-        parsing_config = ParsingConfig(
-            negative_packets_enabled=negative_packets_enabled,
-            include_parse_tree_summary=include_parse_tree_summary
-        )
-
-        check_result = run_parser_check_from_code(
-            cleaned_code,
-            target_language.runtime,
+        validation_result = validation.validate_grammar(
+            code,
             state.protocol,
-            target_language.source_extension,
-            parsing_config=parsing_config,
-            debug_info=debug_info,
+            target_language,
+            negative_packets_enabled=negative_packets_enabled,
+            show_parsing_tree=show_parsing_tree,
+            debug_dir=debug_dir,
+            attempt=state.attempt,
+            max_attempts=max_retries,
         )
-        if state.iterations:
-            state.iterations[-1].positive_accepted = check_result.accept_passed
-            state.iterations[-1].negative_rejected = check_result.reject_passed
+        iteration = validation_result.iteration_stats()
+        iteration.changed_from_previous = state.iterations[-1].changed_from_previous
+        state.iterations[-1] = iteration
 
-        if check_result.setup_error:
+        check_result = validation_result.packet_check
+        if check_result and check_result.setup_error:
             logger.warning(f"Runtime setup FAILED for '{state.protocol.name}'.")
-            summary = check_result.summary(show_packet_representation=show_packet_representation)
-            return False, RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
-
-        if not check_result.verdicts:
+        elif check_result and not check_result.verdicts:
             logger.warning(f"No packets registered for protocol '{state.protocol.name}'.")
-            return True, f"No packets registered for protocol '{state.protocol.name}'. Say TERMINATE if the grammar compiled successfully."
+        elif check_result:
+            score = check_result.score
+            if score > state.best_score or state.best_iteration is None:
+                state.best_score = score
+                state.best_code = validation_result.code
+                state.best_iteration = state.attempt
+                logger.info(f"New best score: {score} on attempt {state.attempt}.")
 
-        score = check_result.score
-        if score > state.best_score or state.best_iteration is None:
-            state.best_score = score
-            state.best_code = cleaned_code
-            state.best_iteration = state.attempt
-            logger.info(f"New best score: {score} on attempt {state.attempt}.")
+            if check_result.all_passed:
+                state.success = True
+                state.termination_reason = "success"
+                logger.info(f"Runtime check PASSED for '{state.protocol.name}'.")
+            else:
+                logger.warning(f"Runtime check FAILED for '{state.protocol.name}'.")
 
-        summary = check_result.summary(show_packet_representation=show_packet_representation)
-        if check_result.all_passed:
-            state.success = True
-            state.termination_reason = "success"
-            logger.info(f"Runtime check PASSED for '{state.protocol.name}'.")
-            return True, f"All packets parsed correctly. Say TERMINATE."
-        else:
-            logger.warning(f"Runtime check FAILED for '{state.protocol.name}'.")
-            return False, RUNTIME_FEEDBACK_TEMPLATE.format(errors=summary)
-
-    def validate_grammar(code: Annotated[str, "The grammar code to compile and verify against packets"]) -> str:
-        compilation_success, compilation_msg = compile_grammar(code)
-        iteration_msg = compilation_msg
-
-        if compilation_success:
-            parsing_success, parsing_msg = parse_packets(code)
-            iteration_msg = parsing_msg
-
-        if not (compilation_success and parsing_success) and state.attempt >= max_retries:
+        if not validation_result.success and state.attempt >= max_retries:
             state.termination_reason = "max_retries"
             logger.warning(f"Reached max compilation attempts ({max_retries}). Stopping.")
             return "This was the last allowed attempt. Please say TERMINATE."
 
-        return iteration_msg
+        return validation_result.feedback(
+            show_packet_representation=show_packet_representation
+        )
 
     if show_parsing_tree and not include_parse_tree_summary:
         logger.info(
@@ -336,7 +255,7 @@ def run_refinement_loop(
     # max_consecutive_auto_reply is set higher than max_retries because Autogen
     # counts ALL auto-replies (including default_auto_reply nudges when the LLM
     # responds without a tool call), not just actual compilation attempts.
-    # The real retry limit is enforced inside compile_grammar via state.attempt.
+    # The real retry limit is enforced inside validate_grammar_tool via state.attempt.
     user_proxy = autogen.UserProxyAgent(
         name="CompilerProxy",
         human_input_mode="NEVER",
@@ -351,7 +270,7 @@ def run_refinement_loop(
     )
     
     autogen.agentchat.register_function(
-        validate_grammar,
+        validate_grammar_tool,
         caller=assistant,
         executor=user_proxy,
         name="validate_grammar",
