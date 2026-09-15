@@ -35,7 +35,7 @@
   },
   "gpt-5.4": {
     "name": "gpt-5.4",
-    "provider": "openai-account",
+    "provider": "openai",
     "context-window": "1000000",
     "cutoff-date": "08-25",
     "price": [0.0025, 0.015]
