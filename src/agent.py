@@ -158,6 +158,7 @@ def run_refinement_loop(
     Returns a tuple of (grammar_code, completed_successfully, refinement_stats, cost_summary).
     """
     max_retries = agent_config.get("max_retries")
+    preprocessing_enabled = agent_config.get("enable_preprocessing", True)
     rfc_retrieval_tool_enabled = agent_config.get("enable_rfc_retrieval_tool")
     negative_packets_enabled = agent_config.get("enable_negative_packets")
     show_packet_representation = agent_config.get("show_packet_representation")
@@ -202,6 +203,7 @@ def run_refinement_loop(
             code,
             state.protocol,
             target_language,
+            preprocessing_enabled=preprocessing_enabled,
             negative_packets_enabled=negative_packets_enabled,
             show_parsing_tree=show_parsing_tree,
             debug_dir=debug_dir,

@@ -19,6 +19,7 @@ class TestReadConfig:
         llm_params, agent_config = read_config(None)
         assert llm_params["temperature"] == 0.0
         assert agent_config["max_retries"] == 15
+        assert agent_config["enable_preprocessing"] is True
         assert agent_config["show_packet_representation"] is False
 
     def test_override_from_yaml(self, tmp_path):

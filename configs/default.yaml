@@ -8,6 +8,7 @@ llm:
 # Agent parameters
 agent:
     max_retries: 15
+    enable_preprocessing: true
     enable_rfc_retrieval_tool: true
     enable_negative_packets: true
     show_packet_representation: false

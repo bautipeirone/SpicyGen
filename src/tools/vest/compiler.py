@@ -18,13 +18,16 @@ def run_vest(source_file: str, build_dir: str):
     )
 
 
-def compile_vest_grammar(source_file: Path) -> CompileResult:
-    code = load_file(source_file)
-    errors = preprocess_vest_code(code)
+def compile_vest_grammar(
+    source_file: Path, *, preprocessing_enabled: bool = True
+) -> CompileResult:
+    if preprocessing_enabled:
+        code = load_file(source_file)
+        errors = preprocess_vest_code(code)
 
-    if errors:
-        error_message = "\n".join(errors)
-        return CompileResult(success=False, errors=error_message)
+        if errors:
+            error_message = "\n".join(errors)
+            return CompileResult(success=False, errors=error_message)
 
     with tempfile.TemporaryDirectory(prefix="vest_build_", delete=True) as build_dir:
         result = run_vest(str(source_file), build_dir=build_dir)

@@ -95,6 +95,7 @@ def validate_grammar(
     protocol: Protocol,
     target_language: TargetLanguage,
     *,
+    preprocessing_enabled: bool = True,
     negative_packets_enabled: bool = True,
     show_parsing_tree: bool = False,
     debug_dir: Path | None = None,
@@ -132,6 +133,7 @@ def validate_grammar(
             "step_path": step_path,
             "errors_path": compilation_errors_path,
         },
+        preprocessing_enabled=preprocessing_enabled,
     )
     if not compilation.success:
         logger.warning(f"Compilation failed on attempt {attempt}.")

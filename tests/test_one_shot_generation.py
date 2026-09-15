@@ -149,6 +149,25 @@ def test_validate_grammar_runs_packets_once_after_compilation(monkeypatch):
     assert result.feedback() == "All packets parsed correctly. Say TERMINATE."
 
 
+def test_validate_grammar_forwards_preprocessing_toggle(monkeypatch):
+    compiler_calls = []
+
+    def fake_compiler(*args, **kwargs):
+        compiler_calls.append((args, kwargs))
+        return CompileResult(False, "compiler error")
+
+    monkeypatch.setattr(validation, "run_grammar_compiler", fake_compiler)
+
+    validation.validate_grammar(
+        "module Example;",
+        make_protocol(),
+        make_target_language(),
+        preprocessing_enabled=False,
+    )
+
+    assert compiler_calls[0][1]["preprocessing_enabled"] is False
+
+
 def test_script_makes_one_query_then_validates_the_answer(monkeypatch, tmp_path):
     protocol = make_protocol()
     target_language = make_target_language()
@@ -209,6 +228,7 @@ def test_script_makes_one_query_then_validates_the_answer(monkeypatch, tmp_path)
     assert metrics["max_total_retries"] == 1
     assert metrics["mode"] == "full-context"
     assert validation_calls[0][3]["negative_packets_enabled"] is True
+    assert validation_calls[0][3]["preprocessing_enabled"] is True
 
 
 def test_criteria_only_mode_sends_no_spec_or_manual(monkeypatch, tmp_path):
@@ -357,6 +377,7 @@ def test_refinement_tool_delegates_to_global_validator(monkeypatch):
         target_language=target_language,
         agent_config={
             "max_retries": 2,
+            "enable_preprocessing": False,
             "enable_rfc_retrieval_tool": False,
             "enable_negative_packets": True,
             "show_packet_representation": False,
@@ -371,6 +392,8 @@ def test_refinement_tool_delegates_to_global_validator(monkeypatch):
     assert validation_calls[1][3]["attempt"] == 2
     assert validation_calls[0][3]["max_attempts"] == 2
     assert validation_calls[1][3]["max_attempts"] == 2
+    assert validation_calls[0][3]["preprocessing_enabled"] is False
+    assert validation_calls[1][3]["preprocessing_enabled"] is False
     assert code == "module Example;"
     assert success is True
     assert stats["best_iteration"] == 2

@@ -24,12 +24,15 @@ def run_everparse(grammar_file: str, build_dir: str):
         text=True
     )
 
-def compile_3d_grammar(source_file: Path) -> CompileResult:
-    code = load_file(source_file)
-    errors = preprocess_3d_code(code)
-    if errors:
-        error_message = "\n".join(errors)
-        return CompileResult(success=False, errors=error_message)
+def compile_3d_grammar(
+    source_file: Path, *, preprocessing_enabled: bool = True
+) -> CompileResult:
+    if preprocessing_enabled:
+        code = load_file(source_file)
+        errors = preprocess_3d_code(code)
+        if errors:
+            error_message = "\n".join(errors)
+            return CompileResult(success=False, errors=error_message)
     with tempfile.TemporaryDirectory(prefix="3d_build_", delete=True) as build_dir:
         result = run_everparse(str(source_file), build_dir=build_dir)
     if result.returncode == 0:

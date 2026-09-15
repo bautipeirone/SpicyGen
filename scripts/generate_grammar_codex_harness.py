@@ -378,6 +378,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         response,
         protocol,
         target_language,
+        preprocessing_enabled=agent_config.get("enable_preprocessing", True),
         negative_packets_enabled=True,
         show_parsing_tree=agent_config.get("show_parsing_tree", False),
         debug_dir=args.debug_dir,

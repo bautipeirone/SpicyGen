@@ -27,12 +27,15 @@ def compile_to_hlto(
         return CompileResult(success=False, errors=error)
     return CompileResult(success=True, errors=None)
 
-def compile_spicy_grammar(source_file: Path) -> CompileResult:
-    code = load_file(source_file)
-    errors = preprocess_spicy_code(code)
-    if errors:
-        error_message = "\n".join(errors)
-        return CompileResult(success=False, errors=error_message)
+def compile_spicy_grammar(
+    source_file: Path, *, preprocessing_enabled: bool = True
+) -> CompileResult:
+    if preprocessing_enabled:
+        code = load_file(source_file)
+        errors = preprocess_spicy_code(code)
+        if errors:
+            error_message = "\n".join(errors)
+            return CompileResult(success=False, errors=error_message)
   
     result = run_spicy_compiler(str(source_file))
     if result.returncode == 0:

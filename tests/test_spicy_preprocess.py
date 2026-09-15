@@ -6,6 +6,7 @@ bitfield-without-bitorder detection, producing actionable error lists.
 
 import pytest
 
+from src.tools.spicy import compiler
 from src.tools.spicy.preprocess import (
     find_bitfields_decls,
     find_bitfields_without_bitorder_attribute,
@@ -118,3 +119,54 @@ class TestPreprocessCodeIntegration:
         )
         errors = preprocess_spicy_code(code)
         assert len(errors) >= 2  # One for 'port', one for bitfield.
+
+
+class TestCompilerPreprocessingToggle:
+
+    def test_preprocessing_is_enabled_by_default(self, monkeypatch, tmp_path):
+        source_file = tmp_path / "grammar.spicy"
+        source_file.write_text("module Test;")
+        compiler_called = False
+
+        monkeypatch.setattr(
+            compiler, "preprocess_spicy_code", lambda code: ["early syntax error"]
+        )
+
+        def fake_compiler(*args):
+            nonlocal compiler_called
+            compiler_called = True
+
+        monkeypatch.setattr(compiler, "run_spicy_compiler", fake_compiler)
+
+        result = compiler.compile_spicy_grammar(source_file)
+
+        assert result.success is False
+        assert result.errors == "early syntax error"
+        assert compiler_called is False
+
+    def test_disabled_preprocessing_calls_compiler_directly(
+        self, monkeypatch, tmp_path
+    ):
+        source_file = tmp_path / "grammar.spicy"
+        source_file.write_text("module Test;")
+
+        monkeypatch.setattr(
+            compiler,
+            "preprocess_spicy_code",
+            lambda code: (_ for _ in ()).throw(
+                AssertionError("preprocessor should not run")
+            ),
+        )
+        monkeypatch.setattr(
+            compiler,
+            "run_spicy_compiler",
+            lambda *args: type(
+                "CompilerResult", (), {"returncode": 0, "stderr": "", "stdout": ""}
+            )(),
+        )
+
+        result = compiler.compile_spicy_grammar(
+            source_file, preprocessing_enabled=False
+        )
+
+        assert result.success is True
