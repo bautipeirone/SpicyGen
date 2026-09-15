@@ -13,6 +13,7 @@ skills-lock.json
 # Builds
 a.out*
 *.hlto
+*.egg-info/
 
 # Dataset
 data/pcap/

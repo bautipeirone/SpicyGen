@@ -1,0 +1,229 @@
+module HTTP_QUERY_gpt;
+
+import spicy;
+
+const Token = /[^()<>@,;:\\"\/\[\]?={} \t\r\n]+/;
+const HeaderName = /[^()<>@,;:\\"\/\[\]?={} \t\r\n]+/;
+const RequestTarget = /[^ \t\r\n]+/;
+const WhiteSpace = /[ \t]+/;
+const OptionalWhiteSpace = /[ \t]*/;
+const CRLF = /\r?\n/;
+const RestOfLine = /[^\r\n]*/;
+const Integer = /[0-9]+/;
+const HexInteger = /[0-9a-fA-F]+/;
+const HTTPVersion = /HTTP\/[0-9]\.[0-9]/;
+
+type DeliveryMode = enum {
+    NoBody = 1,
+    Length = 2,
+    Chunked = 3,
+    EndOfData = 4,
+};
+
+type Chunk = unit {
+    length: HexInteger &convert=$$.to_uint(16);
+    extensions: bytes &until=b"\r\n";
+    data: bytes &size=self.length if ( self.length > 0 );
+    : CRLF if ( self.length > 0 );
+};
+
+type RequestHeader = unit(inout msg: RequestMessage) {
+    name: HeaderName;
+    : b":";
+    : OptionalWhiteSpace;
+    content: RestOfLine;
+    : CRLF;
+
+    on content {
+        local n = self.name.upper();
+
+        if ( n == b"HOST" )
+            msg.host_seen = True;
+
+        if ( n == b"CONTENT-LENGTH" ) {
+            local v = self.content.to_uint();
+
+            if ( msg.content_length_seen && msg.content_length != v )
+                throw "conflicting Content-Length headers";
+
+            msg.content_length = v;
+            msg.content_length_seen = True;
+            msg.has_body = True;
+        }
+
+        if ( n == b"CONTENT-TYPE" )
+            msg.content_type = self.content;
+
+        if ( n == b"TRANSFER-ENCODING" ) {
+            msg.transfer_encoding = self.content;
+            msg.transfer_encoding_seen = True;
+            msg.has_body = True;
+        }
+
+        if ( n == b"ACCEPT" )
+            msg.accept = self.content;
+
+        if ( n == b"ACCEPT-QUERY" )
+            msg.accept_query = self.content;
+    }
+};
+
+type ResponseHeader = unit(inout msg: ResponseMessage) {
+    name: HeaderName;
+    : b":";
+    : OptionalWhiteSpace;
+    content: RestOfLine;
+    : CRLF;
+
+    on content {
+        local n = self.name.upper();
+
+        if ( n == b"CONTENT-LENGTH" ) {
+            local v = self.content.to_uint();
+
+            if ( msg.content_length_seen && msg.content_length != v )
+                throw "conflicting Content-Length headers";
+
+            msg.content_length = v;
+            msg.content_length_seen = True;
+            msg.has_body = True;
+        }
+
+        if ( n == b"CONTENT-TYPE" )
+            msg.content_type = self.content;
+
+        if ( n == b"TRANSFER-ENCODING" ) {
+            msg.transfer_encoding = self.content;
+            msg.transfer_encoding_seen = True;
+            msg.has_body = True;
+        }
+
+        if ( n == b"LOCATION" )
+            msg.location = self.content;
+
+        if ( n == b"CONTENT-LOCATION" )
+            msg.content_location = self.content;
+
+        if ( n == b"ACCEPT-QUERY" )
+            msg.accept_query = self.content;
+    }
+};
+
+type RequestMessage = unit {
+    method: /GET|HEAD|POST|PUT|DELETE|OPTIONS|TRACE|CONNECT|PATCH|PROPFIND|REPORT|SEARCH|QUERY/;
+    : WhiteSpace;
+    target: RequestTarget;
+    : WhiteSpace;
+    version: HTTPVersion;
+    : CRLF;
+    headers: (RequestHeader(self))[];
+    end_of_headers: CRLF;
+
+    switch ( self.delivery_mode ) {
+        DeliveryMode::Length -> body_length: bytes &size=self.content_length if ( self.has_body );
+        DeliveryMode::Chunked -> chunks: Chunk[] &until=($$.length == 0) if ( self.has_body );
+        DeliveryMode::EndOfData -> body_eod: bytes &eod if ( self.has_body );
+        * -> : void;
+    };
+
+    trailers: (RequestHeader(self))[] if ( self.delivery_mode == DeliveryMode::Chunked );
+    end_of_trailers: CRLF if ( self.delivery_mode == DeliveryMode::Chunked );
+
+    var has_body: bool = False;
+    var content_length: uint64 = 0;
+    var content_length_seen: bool = False;
+    var transfer_encoding_seen: bool = False;
+    var host_seen: bool = False;
+    var delivery_mode: DeliveryMode = DeliveryMode::NoBody;
+    var content_type: bytes &optional;
+    var transfer_encoding: bytes &optional;
+    var accept: bytes &optional;
+    var accept_query: bytes &optional;
+
+    on end_of_headers {
+        if ( self.version == b"HTTP/1.1" && ! self.host_seen )
+            throw "missing Host header";
+
+        if ( self.transfer_encoding_seen && self.content_length_seen )
+            throw "both Transfer-Encoding and Content-Length present";
+
+        if ( self?.transfer_encoding ) {
+            if ( self.transfer_encoding.lower() == b"chunked" )
+                self.delivery_mode = DeliveryMode::Chunked;
+            else
+                throw "unsupported transfer encoding";
+        }
+        else if ( self.content_length_seen )
+            self.delivery_mode = DeliveryMode::Length;
+        else if ( self.method == b"QUERY" || self.method == b"POST" || self.method == b"PUT" || self.method == b"PATCH" ) {
+            self.has_body = True;
+            self.delivery_mode = DeliveryMode::EndOfData;
+        }
+
+        if ( self.method == b"QUERY" && ! self?.content_type )
+            throw "QUERY requires Content-Type";
+    }
+};
+
+type ResponseMessage = unit {
+    version: HTTPVersion;
+    : WhiteSpace;
+    status_code: Integer &convert=$$.to_uint();
+    : WhiteSpace;
+    reason: RestOfLine;
+    : CRLF;
+    headers: (ResponseHeader(self))[];
+    end_of_headers: CRLF;
+
+    switch ( self.delivery_mode ) {
+        DeliveryMode::Length -> body_length: bytes &size=self.content_length if ( self.has_body );
+        DeliveryMode::Chunked -> chunks: Chunk[] &until=($$.length == 0) if ( self.has_body );
+        DeliveryMode::EndOfData -> body_eod: bytes &eod if ( self.has_body );
+        * -> : void;
+    };
+
+    trailers: (ResponseHeader(self))[] if ( self.delivery_mode == DeliveryMode::Chunked );
+    end_of_trailers: CRLF if ( self.delivery_mode == DeliveryMode::Chunked );
+
+    var has_body: bool = True;
+    var content_length: uint64 = 0;
+    var content_length_seen: bool = False;
+    var transfer_encoding_seen: bool = False;
+    var delivery_mode: DeliveryMode = DeliveryMode::NoBody;
+    var content_type: bytes &optional;
+    var transfer_encoding: bytes &optional;
+    var location: bytes &optional;
+    var content_location: bytes &optional;
+    var accept_query: bytes &optional;
+
+    on end_of_headers {
+        if ( self.transfer_encoding_seen && self.content_length_seen )
+            throw "both Transfer-Encoding and Content-Length present";
+
+        if ( (100 <= self.status_code && self.status_code < 200) || self.status_code == 204 || self.status_code == 304 ) {
+            self.has_body = False;
+            self.delivery_mode = DeliveryMode::NoBody;
+        }
+        else if ( self?.transfer_encoding ) {
+            if ( self.transfer_encoding.lower() == b"chunked" ) {
+                self.has_body = True;
+                self.delivery_mode = DeliveryMode::Chunked;
+            }
+            else
+                throw "unsupported transfer encoding";
+        }
+        else if ( self.content_length_seen ) {
+            self.has_body = True;
+            self.delivery_mode = DeliveryMode::Length;
+        }
+        else if ( self.has_body )
+            self.delivery_mode = DeliveryMode::EndOfData;
+    }
+};
+
+public type Message = unit {
+    switch {
+        -> request: RequestMessage;
+        -> response: ResponseMessage;
+    };
+};
