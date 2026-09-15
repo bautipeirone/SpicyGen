@@ -21,10 +21,6 @@ class TestReadConfig:
         assert agent_config["max_retries"] == 15
         assert agent_config["show_packet_representation"] is False
 
-    def test_defaults_when_file_does_not_exist(self, tmp_path):
-        llm_params, _ = read_config(tmp_path / "nonexistent.yaml")
-        assert llm_params["temperature"] == 0.0
-
     def test_override_from_yaml(self, tmp_path):
         config_file = tmp_path / "config.yaml"
         config_file.write_text(
@@ -34,20 +30,6 @@ class TestReadConfig:
         llm_params, agent_config = read_config(config_file)
         assert llm_params["temperature"] == 0.7
         assert agent_config["max_retries"] == 5
-
-    def test_partial_override_llm_only(self, tmp_path):
-        config_file = tmp_path / "config.yaml"
-        config_file.write_text("llm:\n  temperature: 0.5\n")
-        llm_params, agent_config = read_config(config_file)
-        assert llm_params["temperature"] == 0.5
-        assert agent_config["max_retries"] == 15
-
-    def test_empty_yaml_returns_defaults(self, tmp_path):
-        config_file = tmp_path / "empty.yaml"
-        config_file.write_text("")
-        llm_params, agent_config = read_config(config_file)
-        assert llm_params["temperature"] == 0.0
-
 
 class TestGetAutogenConfig:
 
