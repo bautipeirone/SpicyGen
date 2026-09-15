@@ -1,5 +1,13 @@
+from enum import StrEnum
+
 from src.protocol import Protocol
 from src.target_language import TargetLanguage
+
+
+class GenerationContextMode(StrEnum):
+    FULL_CONTEXT = "full-context"
+    CRITERIA_ONLY = "criteria-only"
+
 
 SUMMARIZE_SPEC_SYSTEM_PROMPT = """\
 You are a communication protocol expert. You are given the full text of an \
@@ -103,6 +111,19 @@ Use the tools provided to generate correct and complete grammars in this languag
 Retrieve any additional information you need from other RFCs so the grammar is as complete as possible.
 """
 
+ONE_SHOT_GENERATION_PROMPT = """You are a communication protocol's specialist called {name}, and your job is to extract message structures from RFC specifications.
+You will be given a manual instructing you the language in which you have to extract the grammar of the messages from the protocol.
+Make sure to capture all the fields and its relationships.
+Generate a correct and complete grammar in this language for the RFC the user gives you as input.
+Make the grammar as complete as possible.
+"""
+
+ONE_SHOT_INSTRUCTIONS = """
+IMPORTANT WORKFLOW — follow these steps in order:
+1. Write the complete grammar.
+2. Output only the grammar source code, without Markdown fences or an explanation.
+"""
+
 AGENT_LOOP_INSTRUCTIONS_TEMPLATE = """
 IMPORTANT WORKFLOW — follow these steps in order:
 1. Write the grammar and use the `validate_grammar` tool.
@@ -152,6 +173,15 @@ def build_refinement_system_message(
         target_language,
         rfc_retrieval_tool_enabled=rfc_retrieval_tool_enabled,
     )
+    argument_contract = build_parser_argument_contract(protocol, target_language)
+
+    return f"{base_prompt}{target_language_context}{argument_contract}{loop_instructions}"
+
+
+def build_parser_argument_contract(
+    protocol: Protocol | None,
+    target_language: TargetLanguage,
+) -> str:
     parser_arguments = protocol.parser_arguments_for(target_language.name) if protocol else ()
     argument_contract = ""
     if parser_arguments:
@@ -167,7 +197,45 @@ def build_refinement_system_message(
             lines.append(f"- {argument.name}: {argument.type}{description}\n")
         argument_contract = "".join(lines)
 
-    return f"{base_prompt}{target_language_context}{argument_contract}{loop_instructions}"
+    return argument_contract
+
+
+def build_one_shot_system_message(
+    model_name: str,
+    target_language_context: str,
+    target_language: TargetLanguage,
+    protocol: Protocol | None = None,
+) -> str:
+    """Build the generation prompt for a model with no harness tools."""
+    base_prompt = ONE_SHOT_GENERATION_PROMPT.format(name=model_name)
+    argument_contract = build_parser_argument_contract(protocol, target_language)
+    return f"{base_prompt}{target_language_context}{argument_contract}{ONE_SHOT_INSTRUCTIONS}"
+
+
+def build_one_shot_user_message(spec_content: str) -> str:
+    """Keep the framework's specification placement, without its tool request."""
+    return "\n".join([spec_content, "Please output the grammar."])
+
+
+def build_spicy_success_criterion(protocol_name: str) -> str:
+    packet_root = f"data/raw/{protocol_name}"
+    return f"""A grammar is successful only when:
+1. It compiles with the installed `spicyc` compiler.
+2. It accepts every packet (`*.bin`, recursively) under `{packet_root}/positive/`.
+3. It rejects every packet (`*.bin`, recursively) under `{packet_root}/negative/`.
+"""
+
+
+def build_spicy_criteria_only_context(protocol_name: str) -> str:
+    return "\n\n".join(
+        [
+            (
+                f"Generate a grammar for the `{protocol_name}` protocol in Spicy "
+                "v1.16.0, the parser-generation language from the Zeek Project."
+            ),
+            build_spicy_success_criterion(protocol_name),
+        ]
+    )
 
 
 def build_empty_spec_prompt(
