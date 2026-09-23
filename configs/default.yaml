@@ -1,7 +1,7 @@
 # LLM parameters
 llm:
     temperature: 0.0
-    # reasoning_effort: "high"
+    reasoning_effort: "medium"
     # max_tokens: 1000
     # seed: 25
 
