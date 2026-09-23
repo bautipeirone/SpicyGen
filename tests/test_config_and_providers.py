@@ -10,7 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from src.utils import read_config
-from src.providers import get_autogen_config, read_model_index
+from src.providers import get_autogen_config, get_responses_price, read_model_index
 
 
 class TestReadConfig:
@@ -73,7 +73,40 @@ class TestGetAutogenConfig:
         with patch("src.providers.read_model_index", return_value=self._make_index("openai")):
             config = get_autogen_config("test-key", llm_params={"reasoning_effort": "xhigh"})
         assert config["config_list"][0]["reasoning_effort"] == "xhigh"
+        assert config["config_list"][0]["api_type"] == "responses"
         assert "reasoning_effort" not in config
+
+    def test_openai_reasoning_uses_responses_without_unsupported_options(self):
+        index = self._make_index("openai", model_name="other-reasoning-model", price=[0.0025, 0.015])
+        with patch("src.providers.read_model_index", return_value=index):
+            config = get_autogen_config(
+                "test-key", llm_params={"reasoning_effort": "medium", "temperature": 0.7}
+            )
+            price = get_responses_price(config)
+        assert config["config_list"][0]["api_type"] == "responses"
+        assert config["config_list"][0]["reasoning_effort"] == "medium"
+        assert "price" not in config["config_list"][0]
+        assert "temperature" not in config
+        assert price == (0.0025, 0.015)
+
+    def test_openai_without_reasoning_stays_on_chat_completions(self):
+        index = self._make_index("openai", model_name="other-model", price=[0.0025, 0.015])
+        with patch("src.providers.read_model_index", return_value=index):
+            config = get_autogen_config(
+                "test-key", llm_params={"reasoning_effort": "none", "temperature": 0.0}
+            )
+        assert "api_type" not in config["config_list"][0]
+        assert config["config_list"][0]["price"] == [0.0025, 0.015]
+        assert config["temperature"] == 0.0
+
+    def test_openai_account_does_not_switch_to_responses(self):
+        index = self._make_index("openai-account", model_name="other-model")
+        with patch("src.providers.read_model_index", return_value=index):
+            config = get_autogen_config(
+                "test-key", llm_params={"reasoning_effort": "medium", "temperature": 0.7}
+            )
+        assert config["config_list"][0]["api_type"] == "openai"
+        assert config["temperature"] == 0.7
 
 
 class TestRealModelIndex:

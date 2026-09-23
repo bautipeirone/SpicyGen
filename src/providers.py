@@ -36,6 +36,9 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
                 "api_key": os.getenv("OPENAI_API_KEY", "")
             }]
         }
+        if llm_params.get("reasoning_effort") not in (None, "none"):
+            # Use Responses for direct OpenAI reasoning calls with tools.
+            config["config_list"][0]["api_type"] = "responses"
     elif provider_name == "google":
         config = {
             "config_list": [{
@@ -64,7 +67,8 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
     else:
         raise ValueError(f"Unsupported provider for Autogen: {provider_name}")
 
-    if price is not None:
+    using_responses = config["config_list"][0].get("api_type") == "responses"
+    if price is not None and not using_responses:
         config["config_list"][0]["price"] = price
 
     # AG2's LLMConfig only accepts a fixed set of application-level options.
@@ -74,8 +78,27 @@ def get_autogen_config(model: str, llm_params: dict | None = None) -> dict:
     if reasoning_effort is not None:
         config["config_list"][0]["reasoning_effort"] = reasoning_effort
 
-    config.update({key: value for key, value in llm_params.items() if key != "reasoning_effort"})
+    # Reasoning requests on Responses omit temperature. Shared configs can
+    # retain it for providers that accept it.
+    config.update({
+        key: value for key, value in llm_params.items()
+        if key != "reasoning_effort"
+        and not (key == "temperature" and using_responses)
+    })
     return config
+
+
+def get_responses_price(llm_config: dict) -> tuple[float, float] | None:
+    """Return local per-token prices for an AG2 Responses config, if known."""
+    entry = llm_config.get("config_list", [{}])[0]
+    if entry.get("api_type") != "responses":
+        return None
+    for model in read_model_index().values():
+        if model.get("provider") == "openai" and model.get("name") == entry.get("model"):
+            price = model.get("price")
+            if price is not None:
+                return float(price[0]), float(price[1])
+    return None
 
 # LEGACY CODE
 # def get_llm_provider(provider_name: str) -> type[LLMInterface]:

@@ -32,7 +32,9 @@ def normalize_usage_block(usage: Any) -> dict[str, Any] | None:
 
     return normalized or None
 
-def get_cost_summary(usage: Any) -> CostSummary | None:
+def get_cost_summary(usage: Any, price: tuple[float, float] | None = None) -> CostSummary | None:
+    if not isinstance(usage, dict):
+        return None
     total_cost = usage.get("total_cost", 0)
     prompt_tokens = 0
     completion_tokens = 0
@@ -44,6 +46,12 @@ def get_cost_summary(usage: Any) -> CostSummary | None:
         prompt_tokens += model_usage.get("prompt_tokens", 0)
         completion_tokens += model_usage.get("completion_tokens", 0)
         total_tokens += model_usage.get("total_tokens", 0)
+
+    if price is not None:
+        # AG2's Responses client reports token counts but no token cost. Its
+        # custom `price` option expects Chat Completions usage fields, so price
+        # these counts after the conversation instead.
+        total_cost = (prompt_tokens * price[0] + completion_tokens * price[1]) / 1000
   
     return {
         "total_cost": total_cost,
@@ -52,10 +60,12 @@ def get_cost_summary(usage: Any) -> CostSummary | None:
         "total_tokens": total_tokens,
     }
 
-def extract_cost_summary(cost: Any) -> dict[str, CostSummary | None] | None:
+def extract_cost_summary(
+    cost: Any, price: tuple[float, float] | None = None
+) -> dict[str, CostSummary | None] | None:
     if isinstance(cost, dict):
-        including_cache = get_cost_summary(cost.get("usage_including_cached_inference"))
-        excluding_cache = get_cost_summary(cost.get("usage_excluding_cached_inference"))
+        including_cache = get_cost_summary(cost.get("usage_including_cached_inference"), price)
+        excluding_cache = get_cost_summary(cost.get("usage_excluding_cached_inference"), price)
         if including_cache or excluding_cache:
             return {
                 "total_usage": including_cache,

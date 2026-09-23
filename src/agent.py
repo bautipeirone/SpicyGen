@@ -8,6 +8,7 @@ from src.target_language import TargetLanguage
 from src.logger import logger
 from src.prompts import SUMMARIZE_SPEC_SYSTEM_PROMPT
 from src.usage import extract_cost_summary, CostSummary
+from src.providers import get_responses_price
 from src import validation
 from typing import Annotated, Any
 import autogen
@@ -25,6 +26,26 @@ class State:
     termination_reason: str | None = None
     iterations: list[validation.IterationStats] = field(default_factory=list)
     retrieved_rfcs: list[str] | None = None
+
+
+def _message_text(message: dict[str, Any]) -> str:
+    """Read plain text from either AG2 chat or Responses message content."""
+    content = message.get("content")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            part.get("text", "")
+            for part in content
+            if isinstance(part, dict) and part.get("type") in {"text", "output_text"}
+        )
+    return ""
+
+
+def _chat_cost(chat_result: Any, llm_config: dict) -> dict[str, CostSummary | None] | None:
+    if chat_result is None:
+        return None
+    return extract_cost_summary(chat_result.cost, get_responses_price(llm_config))
 
 
 def query_llm_once(llm_config: dict, system_prompt: str, user_message: str) -> tuple[str, dict[str, Any] | None]:
@@ -54,7 +75,7 @@ def query_llm_once(llm_config: dict, system_prompt: str, user_message: str) -> t
     except Exception as e:
         logger.error(f"Agent loop terminated with an exception: {e}")
 
-    return assistant.last_message()["content"], extract_cost_summary(chat_result.cost) if chat_result is not None else None
+    return _message_text(assistant.last_message()), _chat_cost(chat_result, llm_config)
 
 
 def summarize_spec(llm_config: dict, spec_content: str) -> tuple[str, dict[str, Any], dict[str, Any] | None]:
@@ -106,7 +127,7 @@ def summarize_spec(llm_config: dict, spec_content: str) -> tuple[str, dict[str, 
         name="SpecProxy",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=3,
-        is_termination_msg=lambda msg: msg.get("content", "").strip().endswith("TERMINATE") or result_holder.get("summary") is not None,
+        is_termination_msg=lambda msg: _message_text(msg).strip().endswith("TERMINATE") or result_holder.get("summary") is not None,
         code_execution_config=False,
         default_auto_reply="Please use the `select_intervals` tool to mark the relevant parts of the document, then say TERMINATE.",
     )
@@ -138,10 +159,10 @@ def summarize_spec(llm_config: dict, spec_content: str) -> tuple[str, dict[str, 
 
     if result_holder["summary"] is not None:
         logger.info(f"Spec summarization complete — {len(result_holder['summary'])} chars extracted.")
-        return result_holder["summary"], result_holder["stats"], extract_cost_summary(chat_result.cost)
+        return result_holder["summary"], result_holder["stats"], _chat_cost(chat_result, llm_config)
 
     logger.warning("LLM did not call select_intervals; returning empty summary.")
-    return "", result_holder["stats"], extract_cost_summary(chat_result.cost)
+    return "", result_holder["stats"], _chat_cost(chat_result, llm_config)
 
 
 def run_refinement_loop(
@@ -262,7 +283,7 @@ def run_refinement_loop(
         name="CompilerProxy",
         human_input_mode="NEVER",
         max_consecutive_auto_reply=max_retries * 3,
-        is_termination_msg=lambda msg: (msg.get("content") and msg.get("content", "").strip().endswith("TERMINATE")) or state.attempt > max_retries,
+        is_termination_msg=lambda msg: _message_text(msg).strip().endswith("TERMINATE") or state.attempt > max_retries,
         code_execution_config=False,
         # Needed to avoid auto stop when LLM doesnt issue a tool call
         default_auto_reply=(
@@ -317,7 +338,7 @@ def run_refinement_loop(
         state.termination_reason = "agent_terminated"
 
     code_to_return = state.best_code if state.best_code is not None else state.last_code
-    cost_summary = extract_cost_summary(chat_result.cost) if chat_result is not None else None
+    cost_summary = _chat_cost(chat_result, llm_config)
     first_successful_compile_iteration = next(
         (
             index
