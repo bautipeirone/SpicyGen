@@ -61,6 +61,7 @@ class RunSpec:
     model: str
     config: str | None        # Path to config YAML, or None for default
     target_language: str
+    instructions_file: str | None  # Target-language instructions override
     spec_file: str | None     # Custom spec file override, or None
     no_spec: bool             # Run without specification
     sample: int = 1           # Sample index (1-based)
@@ -138,6 +139,7 @@ def expand_matrix(config: dict[str, Any]) -> list[RunSpec]:
     default_target_langs = defaults.get("target_languages", GLOBAL_DEFAULT_TARGET_LANGUAGES)
     default_no_spec = defaults.get("no_spec", GLOBAL_DEFAULT_NO_SPEC)
     default_spec_file = defaults.get("spec_file", None)
+    default_instructions_file = defaults.get("instructions_file", None)
     default_samples = defaults.get("samples", GLOBAL_DEFAULT_SAMPLES)
 
     runs: list[RunSpec] = []
@@ -151,6 +153,9 @@ def expand_matrix(config: dict[str, Any]) -> list[RunSpec]:
         target_langs = proto_config.get("target_languages", default_target_langs)
         no_spec = proto_config.get("no_spec", default_no_spec)
         spec_file = proto_config.get("spec_file", default_spec_file)
+        instructions_file = proto_config.get(
+            "instructions_file", default_instructions_file
+        )
         samples = proto_config.get("samples", default_samples)
 
         if not models:
@@ -172,6 +177,7 @@ def expand_matrix(config: dict[str, Any]) -> list[RunSpec]:
                             model=model,
                             config=cfg,
                             target_language=tl,
+                            instructions_file=instructions_file,
                             spec_file=spec_file,
                             no_spec=no_spec,
                             sample=s,
@@ -266,6 +272,9 @@ def execute_run(
 
     if run.config:
         cmd.extend(["-c", run.config])
+
+    if run.instructions_file:
+        cmd.extend(["-i", run.instructions_file])
 
     if run.no_spec:
         cmd.append("--no-spec")
@@ -674,6 +683,7 @@ def write_readme(eval_dir: Path, config: dict[str, Any], runs: list[RunSpec], de
     models = sorted(set(r.model for r in runs))
     configs = sorted(set(r.config or "default" for r in runs))
     target_langs = sorted(set(r.target_language for r in runs))
+    instruction_files = sorted(set(r.instructions_file or "target default" for r in runs))
     max_samples = max((r.total_samples for r in runs), default=1)
     unique_configs = len(set(r.base_id for r in runs))
 
@@ -688,6 +698,7 @@ def write_readme(eval_dir: Path, config: dict[str, Any], runs: list[RunSpec], de
     - **Models:** {', '.join(models)}
     - **Configs:** {', '.join(configs)}
     - **Target languages:** {', '.join(target_langs)}
+    - **Instruction files:** {', '.join(instruction_files)}
     - **Debug:** {'enabled' if debug else 'disabled'}
 
     ## Note
@@ -782,13 +793,13 @@ def print_matrix(runs: list[RunSpec]) -> None:
 
     has_samples = max_samples > 1
     if has_samples:
-        header = f"  {'#':<4} {'Protocol':<15} {'Model':<22} {'Config':<18} {'Target':<8} {'Sample':<8} {'Spec'}"
+        header = f"  {'#':<4} {'Protocol':<15} {'Model':<22} {'Config':<18} {'Target':<8} {'Sample':<8} {'Instructions':<18} {'Spec'}"
         print(header)
-        print(f"  {'—'*4} {'—'*15} {'—'*22} {'—'*18} {'—'*8} {'—'*8} {'—'*20}")
+        print(f"  {'—'*4} {'—'*15} {'—'*22} {'—'*18} {'—'*8} {'—'*8} {'—'*18} {'—'*20}")
     else:
-        header = f"  {'#':<4} {'Protocol':<15} {'Model':<22} {'Config':<18} {'Target':<8} {'Spec'}"
+        header = f"  {'#':<4} {'Protocol':<15} {'Model':<22} {'Config':<18} {'Target':<8} {'Instructions':<18} {'Spec'}"
         print(header)
-        print(f"  {'—'*4} {'—'*15} {'—'*22} {'—'*18} {'—'*8} {'—'*20}")
+        print(f"  {'—'*4} {'—'*15} {'—'*22} {'—'*18} {'—'*8} {'—'*18} {'—'*20}")
 
     for i, run in enumerate(runs, 1):
         config_label = Path(run.config).stem if run.config else "—"
@@ -798,14 +809,17 @@ def print_matrix(runs: list[RunSpec]) -> None:
             spec_label = Path(run.spec_file).name
         else:
             spec_label = "index"
+        instructions_label = (
+            Path(run.instructions_file).name if run.instructions_file else "target default"
+        )
 
         if has_samples:
             sample_label = f"{run.sample}/{run.total_samples}"
             print(f"  {i:<4} {run.protocol:<15} {run.model:<22} {config_label:<18} "
-                  f"{run.target_language:<8} {sample_label:<8} {spec_label}")
+                  f"{run.target_language:<8} {sample_label:<8} {instructions_label:<18} {spec_label}")
         else:
             print(f"  {i:<4} {run.protocol:<15} {run.model:<22} {config_label:<18} "
-                  f"{run.target_language:<8} {spec_label}")
+                  f"{run.target_language:<8} {instructions_label:<18} {spec_label}")
 
     print(f"\n{'='*80}\n")
 

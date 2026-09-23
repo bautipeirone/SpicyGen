@@ -10,9 +10,48 @@ def _run_spec(model: str = "test-model") -> run_eval.RunSpec:
         model=model,
         config=None,
         target_language="spicy",
+        instructions_file=None,
         spec_file=None,
         no_spec=False,
     )
+
+
+def test_expand_matrix_supports_instructions_file_override():
+    runs = run_eval.expand_matrix({
+        "defaults": {
+            "models": ["test-model"],
+            "configs": ["configs/default.yaml"],
+            "target_languages": ["spicy"],
+            "instructions_file": "prompts/spicy/NO_DOCS.md",
+        },
+        "protocols": {"dns": {}},
+    })
+
+    assert len(runs) == 1
+    assert runs[0].instructions_file == "prompts/spicy/NO_DOCS.md"
+
+
+def test_execute_run_passes_instructions_file_to_generator(tmp_path, monkeypatch):
+    run = _run_spec()
+    run.instructions_file = "prompts/spicy/NO_DOCS.md"
+    captured_cmd = None
+
+    def fake_run(cmd, **_kwargs):
+        nonlocal captured_cmd
+        captured_cmd = cmd
+        metrics_path = cmd[cmd.index("--metrics-file") + 1]
+        with open(metrics_path, "w") as metrics_file:
+            json.dump({"success": True, "termination_reason": "success"}, metrics_file)
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(run_eval.subprocess, "run", fake_run)
+
+    success, error = run_eval.execute_run(run, tmp_path, debug=False)
+
+    assert success is True
+    assert error is None
+    assert captured_cmd is not None
+    assert captured_cmd[captured_cmd.index("-i") + 1] == "prompts/spicy/NO_DOCS.md"
 
 
 def _mock_completed_process(monkeypatch, *, grammar_success: bool, termination_reason: str, returncode: int = 0):
