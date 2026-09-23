@@ -2,14 +2,18 @@ import argparse
 import concurrent.futures
 import hashlib
 import importlib
+import json
 import os
 import re
 import sys
+import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 
 from scapy.packet import Packet, Raw
 from scapy.utils import PcapReader
+import scapy.layers.dot11
+import scapy.layers.vxlan
 
 
 COMMON_PROTOCOL_ALIASES = {
@@ -228,21 +232,30 @@ def serialize_extracted_layer(extracted_layer):
 
 
 def extract_packets_from_capture(capture_file, capture_index, protocol_handler, output_dir):
-    count = 0
+    records = []
 
     with PcapReader(capture_file) as capture:
-        for pkt in capture:
+        for frame_number, pkt in enumerate(capture, start=1):
             extracted_layer = protocol_handler.extractor(pkt)
-            if extracted_layer is not None: print("hello")
             payload = serialize_extracted_layer(extracted_layer)
             if payload is None:
                 continue
 
-            output_name = build_output_file_name(protocol_handler.file_stem, capture_file, capture_index, count)
-            write_packet_bytes(output_dir, output_name, payload)
-            count += 1
+            packet_index = len(records)
+            output_name = build_output_file_name(
+                protocol_handler.file_stem, capture_file, capture_index, packet_index
+            )
+            output_file = write_packet_bytes(output_dir, output_name, payload)
+            records.append({
+                "packet_path": os.path.abspath(output_file),
+                "capture_path": os.path.abspath(capture_file),
+                "frame_number": frame_number,
+                "capture_index": capture_index,
+                "packet_index": packet_index,
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            })
 
-    return count
+    return records
 
 
 def extract_packets_from_capture_worker(capture_file, capture_index, protocol_name, output_dir):
@@ -287,18 +300,36 @@ def extract_protocol_packets(input_path, output_dir, protocol_name, workers=None
                 capture_index,
                 protocol_name,
                 output_dir,
-            ): capture_file
+            ): (capture_index, capture_file)
             for capture_index, capture_file in enumerate(capture_files)
         }
-        count = 0
+        records_by_capture = {}
         for future in concurrent.futures.as_completed(future_to_capture):
-            capture_file = future_to_capture[future]
+            capture_index, capture_file = future_to_capture[future]
             try:
-                count += future.result()
+                records_by_capture[capture_index] = future.result()
             except Exception as exc:
                 raise RuntimeError(f"Failed to process '{capture_file}': {exc}") from exc
 
+    manifest_path = os.path.join(output_dir, "manifest.jsonl")
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", dir=output_dir, prefix=".manifest-", delete=False
+    ) as temporary:
+        temporary_path = temporary.name
+        try:
+            count = 0
+            for capture_index in sorted(records_by_capture):
+                for record in records_by_capture[capture_index]:
+                    temporary.write(json.dumps(record) + "\n")
+                    count += 1
+            temporary.flush()
+            os.replace(temporary_path, manifest_path)
+        finally:
+            if os.path.exists(temporary_path):
+                os.unlink(temporary_path)
+
     print(f"Extraction complete. Saved {count} packet(s) to '{output_dir}'.")
+    print(f"Frame index written to '{manifest_path}'.")
     return count
 
 
