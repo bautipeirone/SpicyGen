@@ -1,0 +1,53 @@
+DNS::Message {
+  header: DNS::Header {
+    id: 36275
+    flags: {
+      qr: 1
+      opcode: 0
+      aa: 0
+      tc: 0
+      rd: 1
+      ra: 1
+      z: 0
+      ad: 0
+      cd: 0
+      rcode: 0
+    }
+    qdcount: 1
+    ancount: 1
+    nscount: 0
+    arcount: 0
+    rejected: False
+  }
+  question: [
+    DNS::Question {
+      qname: DNS::Name {
+        label: .www.google.com
+      }
+      qtype: 28
+      qclass: 1
+    }
+  ]
+  answer: [
+    DNS::ResourceRecord {
+      name: DNS::Name {
+        label: .www.google.com
+      }
+      ty: CNAME
+      class: 1
+      ttl: 633.000000s
+      rdlen: 8
+      rname: DNS::Name {
+        label: .www.l.google.com
+      }
+      a: (unset)
+      mx: (unset)
+      soa: (unset)
+      srv: (unset)
+      txt: (unset)
+      rdata: (unset)
+    }
+  ]
+  authority: []
+  additional: []
+}

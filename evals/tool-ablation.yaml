@@ -1,0 +1,43 @@
+# Progressive ablation of grammar-generation assistance.
+#
+# The four configurations form a nested sequence:
+#   00 full           preprocessing + packet representation + parse-tree diffs
+#   01 no parse tree  preprocessing + packet representation
+#   02 basic feedback preprocessing only
+#   03 minimal        none of the three ablated features
+#
+# Compare adjacent stages to estimate the marginal contribution of the feature
+# removed at that stage. Packet representation and parse-tree diffs are kept
+# adjacent because both enrich runtime feedback. This is intentionally not a
+# full factorial experiment; a factorial follow-up can test interactions after
+# this screening run identifies which removals matter.
+
+name: "Grammar Generation Tool Ablation"
+
+note: >-
+  Progressive ablation of parse-tree diffs, packet representation, and grammar
+  preprocessing. All other agent settings are held constant. The protocol set
+  covers binary and text formats and only includes protocols with expected
+  Spicy parse trees, so every enabled treatment is active.
+
+defaults:
+  models:
+    - "gpt-oss"
+    - "gemini-3.1-flash"
+  configs:
+    - "configs/evals/ablation-00-full.yaml"
+    - "configs/evals/ablation-01-no-parse-tree.yaml"
+    - "configs/evals/ablation-02-basic-feedback.yaml"
+    - "configs/evals/ablation-03-minimal.yaml"
+  target_languages:
+    - "spicy"
+  no_spec: false
+  samples: 1
+
+protocols:
+  tftp: {}
+  dhcp: {}
+  dns: {}
+  ident: {}
+  telnet: {}
+  http1.1: {}

@@ -1,0 +1,12 @@
+IDENT_gpt::IDENT {
+  messages: [
+    IDENT_gpt::Message {
+      port_pair: IDENT_gpt::PortPair {
+        port_on_server: 65535
+        port_on_client: 65535
+      }
+      userid: (unset)
+      error: (unset)
+    }
+  ]
+}

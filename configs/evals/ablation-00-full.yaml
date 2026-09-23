@@ -1,0 +1,12 @@
+# Full framework: preprocessing plus both forms of rich runtime feedback.
+llm:
+    temperature: 0.0
+    reasoning_effort: "medium"
+
+agent:
+    max_retries: 15
+    enable_preprocessing: true
+    enable_rfc_retrieval_tool: true
+    enable_negative_packets: true
+    show_packet_representation: true
+    show_parsing_tree: true

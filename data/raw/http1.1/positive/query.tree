@@ -1,0 +1,34 @@
+HTTP::Request {
+  request: HTTP::RequestLine {
+    method: QUERY
+    uri: /feed
+    version: HTTP::Version {
+      number: 1.1
+    }
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: Host
+        content: example.org
+      }
+      HTTP::Header {
+        name: Content-Type
+        content: application/x-www-form-urlencoded
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    body: (unset)
+    has_body: False
+    is_request: True
+    content_encoding: (unset)
+    use_content_length: True
+    body_len: (unset)
+    content_length: (unset)
+    content_type: (APPLICATION, X-WWW-FORM-URLENCODED)
+    content_type_parameter: 
+    delivery_mode: EndOfData
+    multipart_boundary: (unset)
+    transfer_encoding: (unset)
+  }
+}

@@ -1,0 +1,42 @@
+HTTP::Request {
+  request: HTTP::RequestLine {
+    method: HEAD
+    uri: /users/123
+    version: HTTP::Version {
+      number: 1.1
+    }
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: Host
+        content: example.com
+      }
+      HTTP::Header {
+        name: User-Agent
+        content: seed-client/1.0
+      }
+      HTTP::Header {
+        name: Accept
+        content: application/json
+      }
+      HTTP::Header {
+        name: Connection
+        content: close
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    body: (unset)
+    has_body: False
+    is_request: True
+    content_encoding: (unset)
+    use_content_length: True
+    body_len: (unset)
+    content_length: (unset)
+    content_type: (TEXT, PLAIN)
+    content_type_parameter: (unset)
+    delivery_mode: EndOfData
+    multipart_boundary: (unset)
+    transfer_encoding: (unset)
+  }
+}

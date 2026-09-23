@@ -1,0 +1,53 @@
+DNS::Message {
+  header: DNS::Header {
+    id: 39867
+    flags: {
+      qr: 1
+      opcode: 0
+      aa: 0
+      tc: 0
+      rd: 1
+      ra: 1
+      z: 0
+      ad: 0
+      cd: 0
+      rcode: 0
+    }
+    qdcount: 1
+    ancount: 1
+    nscount: 0
+    arcount: 0
+    rejected: False
+  }
+  question: [
+    DNS::Question {
+      qname: DNS::Name {
+        label: .104.9.192.66.in-addr.arpa
+      }
+      qtype: 12
+      qclass: 1
+    }
+  ]
+  answer: [
+    DNS::ResourceRecord {
+      name: DNS::Name {
+        label: .104.9.192.66.in-addr.arpa
+      }
+      ty: PTR
+      class: 1
+      ttl: 86309.000000s
+      rdlen: 32
+      rname: DNS::Name {
+        label: .66-192-9-104.gen.twtelecom.net
+      }
+      a: (unset)
+      mx: (unset)
+      soa: (unset)
+      srv: (unset)
+      txt: (unset)
+      rdata: (unset)
+    }
+  ]
+  authority: []
+  additional: []
+}

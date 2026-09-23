@@ -1,0 +1,51 @@
+DNS::Message {
+  header: DNS::Header {
+    id: 61652
+    flags: {
+      qr: 1
+      opcode: 0
+      aa: 0
+      tc: 0
+      rd: 1
+      ra: 1
+      z: 0
+      ad: 0
+      cd: 0
+      rcode: 0
+    }
+    qdcount: 1
+    ancount: 1
+    nscount: 0
+    arcount: 0
+    rejected: False
+  }
+  question: [
+    DNS::Question {
+      qname: DNS::Name {
+        label: .www.netbsd.org
+      }
+      qtype: 28
+      qclass: 1
+    }
+  ]
+  answer: [
+    DNS::ResourceRecord {
+      name: DNS::Name {
+        label: .www.netbsd.org
+      }
+      ty: AAAA
+      class: 1
+      ttl: 86400.000000s
+      rdlen: 16
+      rname: (unset)
+      a: 2001:4f8:4:7:2e0:81ff:fe52:9a6b
+      mx: (unset)
+      soa: (unset)
+      srv: (unset)
+      txt: (unset)
+      rdata: (unset)
+    }
+  ]
+  authority: []
+  additional: []
+}

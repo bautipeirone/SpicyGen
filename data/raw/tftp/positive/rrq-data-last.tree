@@ -1,7 +1,11 @@
 TFTP::Packet {
   op: DATA
+  rrq: (unset)
+  wrq: (unset)
   data: TFTP::Data {
     num: 49
     data: 
   }
+  ack: (unset)
+  error: (unset)
 }

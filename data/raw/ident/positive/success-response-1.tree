@@ -1,0 +1,18 @@
+IDENT_gpt::IDENT {
+  messages: [
+    IDENT_gpt::Message {
+      port_pair: IDENT_gpt::PortPair {
+        port_on_server: 23
+        port_on_client: 6191
+      }
+      userid: IDENT_gpt::UserIDTail {
+        resp_type: USERID
+        opsys: UNIX
+        charset: (unset)
+        user_id:  alice
+        has_charset: False
+      }
+      error: (unset)
+    }
+  ]
+}

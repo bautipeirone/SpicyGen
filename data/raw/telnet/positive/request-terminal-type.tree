@@ -1,0 +1,31 @@
+TELNET_gpt::TELNET {
+  elements: [
+    TELNET_gpt::TelnetElement {
+      command: TELNET_gpt::IACCommand {
+        iac: \xff
+        command_code: 250
+        command: SB
+        se: (unset)
+        nop: (unset)
+        dm: (unset)
+        brk: (unset)
+        ip: (unset)
+        ao: (unset)
+        ayt: (unset)
+        ec: (unset)
+        el: (unset)
+        ga: (unset)
+        subnegotiation: TELNET_gpt::SubnegotiationCommandBody {
+          option: 24
+          parameters: \x01
+        }
+        will: (unset)
+        wont: (unset)
+        do_option: (unset)
+        dont: (unset)
+        escaped_iac: (unset)
+      }
+      data_byte: (unset)
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+IDENT_gpt::IDENT {
+  messages: [
+    IDENT_gpt::Message {
+      port_pair: IDENT_gpt::PortPair {
+        port_on_server: 23
+        port_on_client: 6191
+      }
+      userid: (unset)
+      error: IDENT_gpt::ErrorTail {
+        resp_type: ERROR
+        error_type_known: NO-USER
+        error_type_extension: (unset)
+      }
+    }
+  ]
+}

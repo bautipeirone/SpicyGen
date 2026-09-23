@@ -1,0 +1,46 @@
+HTTP::Request {
+  request: HTTP::RequestLine {
+    method: PATCH
+    uri: /users/124
+    version: HTTP::Version {
+      number: 1.1
+    }
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: Host
+        content: example.com
+      }
+      HTTP::Header {
+        name: User-Agent
+        content: seed-client/1.0
+      }
+      HTTP::Header {
+        name: Content-Type
+        content: application/json-patch+json
+      }
+      HTTP::Header {
+        name: Content-Length
+        content: 49
+      }
+      HTTP::Header {
+        name: Connection
+        content: close
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    body: HTTP::Body {}
+    has_body: True
+    is_request: True
+    content_encoding: (unset)
+    use_content_length: True
+    body_len: 49
+    content_length: 49
+    content_type: (APPLICATION, JSON-PATCH+JSON)
+    content_type_parameter: 
+    delivery_mode: Length
+    multipart_boundary: (unset)
+    transfer_encoding: (unset)
+  }
+}

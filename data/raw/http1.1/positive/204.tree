@@ -1,0 +1,42 @@
+HTTP::Reply {
+  reply: HTTP::ReplyLine {
+    version: HTTP::Version {
+      number: 1.1
+    }
+    status: 204
+    reason: No Content
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: Date
+        content: Wed, 06 May 2026 10:00:06 GMT
+      }
+      HTTP::Header {
+        name: Allow
+        content: GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS
+      }
+      HTTP::Header {
+        name: Access-Control-Allow-Methods
+        content: GET, POST, PUT, PATCH, DELETE, OPTIONS
+      }
+      HTTP::Header {
+        name: Connection
+        content: close
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    body: (unset)
+    has_body: False
+    is_request: False
+    content_encoding: (unset)
+    use_content_length: True
+    body_len: (unset)
+    content_length: (unset)
+    content_type: (TEXT, PLAIN)
+    content_type_parameter: (unset)
+    delivery_mode: EndOfData
+    multipart_boundary: (unset)
+    transfer_encoding: (unset)
+  }
+}

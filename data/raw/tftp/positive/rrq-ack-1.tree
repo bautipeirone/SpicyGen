@@ -1,6 +1,10 @@
 TFTP::Packet {
   op: ACK
+  rrq: (unset)
+  wrq: (unset)
+  data: (unset)
   ack: TFTP::Acknowledgement {
     num: 1
   }
+  error: (unset)
 }

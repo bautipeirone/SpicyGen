@@ -1,7 +1,11 @@
 TFTP::Packet {
   op: WRQ
+  rrq: (unset)
   wrq: TFTP::Request {
     filename: rfc1350.txt
     mode: octet
   }
+  data: (unset)
+  ack: (unset)
+  error: (unset)
 }

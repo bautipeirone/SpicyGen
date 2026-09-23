@@ -4,4 +4,8 @@ TFTP::Packet {
     filename: rfc1350.txt
     mode: octet
   }
+  wrq: (unset)
+  data: (unset)
+  ack: (unset)
+  error: (unset)
 }

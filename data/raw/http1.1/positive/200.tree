@@ -30,7 +30,7 @@ HTTP::Reply {
       }
       HTTP::Header {
         name: Content-length
-        content: 1272
+        content: 0
       }
       HTTP::Header {
         name: Date
@@ -44,9 +44,11 @@ HTTP::Reply {
     content_encoding: gzip
     use_content_length: False
     body_len: 0
-    content_length: 1272
+    content_length: 0
     content_type: (TEXT, HTML)
     content_type_parameter: charset=ISO-8859-1
     delivery_mode: Length
+    multipart_boundary: (unset)
+    transfer_encoding: (unset)
   }
 }

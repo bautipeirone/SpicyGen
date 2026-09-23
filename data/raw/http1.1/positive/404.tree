@@ -1,0 +1,42 @@
+HTTP::Reply {
+  reply: HTTP::ReplyLine {
+    version: HTTP::Version {
+      number: 1.1
+    }
+    status: 404
+    reason: Not Found
+  }
+  message: HTTP::Message {
+    headers: [
+      HTTP::Header {
+        name: Date
+        content: Wed, 06 May 2026 10:01:00 GMT
+      }
+      HTTP::Header {
+        name: Content-Type
+        content: application/json
+      }
+      HTTP::Header {
+        name: Content-Length
+        content: 31
+      }
+      HTTP::Header {
+        name: Connection
+        content: close
+      }
+    ]
+    end_of_hdr: \x0d\x0a
+    body: HTTP::Body {}
+    has_body: True
+    is_request: False
+    content_encoding: (unset)
+    use_content_length: True
+    body_len: 31
+    content_length: 31
+    content_type: (APPLICATION, JSON)
+    content_type_parameter: 
+    delivery_mode: Length
+    multipart_boundary: (unset)
+    transfer_encoding: (unset)
+  }
+}

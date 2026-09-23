@@ -1,0 +1,16 @@
+IDENT_gpt::IDENT {
+  messages: [
+    IDENT_gpt::Message {
+      port_pair: IDENT_gpt::PortPair {
+        port_on_server: 80
+        port_on_client: 54321
+      }
+      userid: (unset)
+      error: IDENT_gpt::ErrorTail {
+        resp_type: ERROR
+        error_type_known: INVALID-PORT
+        error_type_extension: (unset)
+      }
+    }
+  ]
+}
