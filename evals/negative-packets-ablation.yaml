@@ -1,0 +1,42 @@
+# Ablation of negative-packet testing during grammar refinement.
+#
+# The two configurations are identical except for enable_negative_packets.
+# SIP is included in addition to the standard six-protocol set because its
+# negative suite exercises both grammar-level and cross-field/context rules.
+#
+# Important: when negative packets are disabled, the current generator also
+# excludes them from its success criterion. The generated grammars should
+# therefore be rescored against the complete positive + negative suite before
+# comparing final accuracy. The summary produced directly by run_eval.py is
+# useful for generation behavior, iterations, time, and cost, but its success
+# rates are not directly comparable between these two treatments.
+
+name: "Negative Packet Feedback Ablation"
+
+note: >-
+  Compare grammar generation with and without negative packets during the
+  refinement loop. All other settings are held constant. SIP supplements the
+  standard six protocols with flexible syntax and semantic constraints likely
+  to expose over-permissive grammars. Final grammars must be rescored on the
+  complete packet suite for a fair accuracy comparison.
+
+defaults:
+  models:
+    - "gpt-oss"
+    - "gemini-3.1-flash"
+  configs:
+    - "configs/evals/negative-packets-enabled.yaml"
+    - "configs/evals/negative-packets-disabled.yaml"
+  target_languages:
+    - "spicy"
+  no_spec: false
+  samples: 1
+
+protocols:
+  tftp: {}
+  dhcp: {}
+  dns: {}
+  ident: {}
+  telnet: {}
+  http1.1: {}
+  sip: {}
