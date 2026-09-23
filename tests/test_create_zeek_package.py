@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import pytest
 
 import create_zeek_package as czp
+from src.providers import ModelConfig
 
 
 def test_derive_analyzer_name_strips_known_model_suffix():
@@ -185,7 +186,11 @@ def test_generate_zeek_files_retries_after_compile_failure(tmp_path, monkeypatch
     user_messages = []
 
     monkeypatch.setattr(czp, "read_config", lambda path: ({}, {}))
-    monkeypatch.setattr(czp, "get_model_config", lambda model, params: {"model": model})
+    monkeypatch.setattr(
+        czp,
+        "get_model_config",
+        lambda model, params: ModelConfig(model=model, model_name=model, provider="openai-account"),
+    )
 
     def fake_query_llm_once(llm_config, system_prompt, user_message):
         user_messages.append(user_message)

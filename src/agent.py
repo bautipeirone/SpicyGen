@@ -8,7 +8,7 @@ from src.target_language import TargetLanguage
 from src.logger import logger
 from src.prompts import SUMMARIZE_SPEC_SYSTEM_PROMPT
 from src.usage import extract_cost_summary, CostSummary
-from src.providers import ModelConfig, get_responses_price
+from src.providers import ModelConfig
 from src import validation
 from typing import Annotated, Any
 import autogen
@@ -42,25 +42,18 @@ def _message_text(message: dict[str, Any]) -> str:
     return ""
 
 
-LLMConfigInput = ModelConfig | dict[str, Any]
-
-
-def _autogen_config(llm_config: LLMConfigInput) -> dict[str, Any]:
-    return llm_config.as_autogen_config() if isinstance(llm_config, ModelConfig) else llm_config
-
-
-def _chat_cost(chat_result: Any, llm_config: LLMConfigInput) -> dict[str, CostSummary | None] | None:
+def _chat_cost(chat_result: Any, llm_config: ModelConfig) -> dict[str, CostSummary | None] | None:
     if chat_result is None:
         return None
-    return extract_cost_summary(chat_result.cost, get_responses_price(llm_config))
+    return extract_cost_summary(chat_result.cost, llm_config.responses_price)
 
 
-def query_llm_once(llm_config: LLMConfigInput, system_prompt: str, user_message: str) -> tuple[str, dict[str, Any] | None]:
+def query_llm_once(llm_config: ModelConfig, system_prompt: str, user_message: str) -> tuple[str, dict[str, Any] | None]:
     """Send a single user message to the LLM and return the reply text plus usage."""
     assistant = autogen.ConversableAgent(
         name="assistant",
         system_message=system_prompt,
-        llm_config=_autogen_config(llm_config),
+        llm_config=llm_config.as_autogen_config(),
         human_input_mode="NEVER",
         max_consecutive_auto_reply=1,
     )
@@ -85,7 +78,7 @@ def query_llm_once(llm_config: LLMConfigInput, system_prompt: str, user_message:
     return _message_text(assistant.last_message()), _chat_cost(chat_result, llm_config)
 
 
-def summarize_spec(llm_config: LLMConfigInput, spec_content: str) -> tuple[str, dict[str, Any], dict[str, Any] | None]:
+def summarize_spec(llm_config: ModelConfig, spec_content: str) -> tuple[str, dict[str, Any], dict[str, Any] | None]:
     """Use an LLM agent with a select_intervals tool to identify and extract
     the parts of *spec_content* that describe message grammar, format, or
     protocol state machines.  Returns the concatenated relevant text.
@@ -127,7 +120,7 @@ def summarize_spec(llm_config: LLMConfigInput, spec_content: str) -> tuple[str, 
     assistant = autogen.AssistantAgent(
         name="SpecAnalyzer",
         system_message=SUMMARIZE_SPEC_SYSTEM_PROMPT,
-        llm_config=_autogen_config(llm_config),
+        llm_config=llm_config.as_autogen_config(),
     )
 
     user_proxy = autogen.UserProxyAgent(
@@ -173,7 +166,7 @@ def summarize_spec(llm_config: LLMConfigInput, spec_content: str) -> tuple[str, 
 
 
 def run_refinement_loop(
-    llm_config: LLMConfigInput,
+    llm_config: ModelConfig,
     system_message: str,
     spec_content: str,
     protocol: Protocol,
@@ -279,7 +272,7 @@ def run_refinement_loop(
     assistant = autogen.AssistantAgent(
         name=target_language.assistant_name,
         system_message=system_message,
-        llm_config=_autogen_config(llm_config),
+        llm_config=llm_config.as_autogen_config(),
     )
 
     # max_consecutive_auto_reply is set higher than max_retries because Autogen
@@ -324,14 +317,7 @@ def run_refinement_loop(
     initial_prompt = "\n".join([spec_content, "Please output the grammar and verify it with the given tools."])
 
     logger.info("System message and tools initialized. Starting the agent loop...")
-    if isinstance(llm_config, ModelConfig):
-        logger.info("LLM Config: %s", llm_config)
-    else:
-        logged_llm_config = llm_config | {"config_list": "..."}
-        reasoning_effort = llm_config["config_list"][0].get("reasoning_effort")
-        if reasoning_effort is not None:
-            logged_llm_config["reasoning_effort"] = reasoning_effort
-        logger.info("LLM Config: %s", logged_llm_config)
+    logger.info("LLM Config: %s", llm_config)
     logger.info(f"Agent config: {agent_config}")
     logger.info(f"Tools available: {[tool.name for tool in assistant.tools]}")
     logger.debug(f"Initial system message:\n{system_message}")

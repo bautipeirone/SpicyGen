@@ -9,6 +9,7 @@ from src.prompts import (
     build_one_shot_user_message,
 )
 from src.protocol import ParserArgument, Protocol, ProtocolSpecType, ProtocolType
+from src.providers import ModelConfig
 from src.target_language import get_target_language
 from src.tools.compiler import CompileResult
 from src.tools.runtime import PacketVerdict, SemanticCheckResult
@@ -184,7 +185,11 @@ def test_script_makes_one_query_then_validates_the_answer(monkeypatch, tmp_path)
     monkeypatch.setattr(one_shot, "load_protocol", lambda name: protocol)
     monkeypatch.setattr(one_shot, "load_spec", lambda selected: "SPECIFICATION")
     monkeypatch.setattr(one_shot, "read_config", lambda path: ({}, {}))
-    monkeypatch.setattr(one_shot, "get_model_config", lambda model, params: {"model": model})
+    monkeypatch.setattr(
+        one_shot,
+        "get_model_config",
+        lambda model, params: ModelConfig(model=model, model_name=model, provider="openai-account"),
+    )
     monkeypatch.setattr(one_shot, "get_protocol_packet_paths", lambda name: ([], []))
 
     def fake_query(llm_config, system_message, user_message):
@@ -255,7 +260,7 @@ def test_criteria_only_mode_sends_no_spec_or_manual(monkeypatch, tmp_path):
     monkeypatch.setattr(
         one_shot,
         "get_model_config",
-        lambda model, params: {"model": model},
+        lambda model, params: ModelConfig(model=model, model_name=model, provider="openai-account"),
     )
     monkeypatch.setattr(one_shot, "get_protocol_packet_paths", lambda name: ([], []))
 
@@ -370,7 +375,7 @@ def test_refinement_tool_delegates_to_global_validator(monkeypatch):
     )
 
     code, success, stats, usage = agent.run_refinement_loop(
-        llm_config={},
+        llm_config=ModelConfig(model="test-model", model_name="test-model", provider="openai-account"),
         system_message="system",
         spec_content="specification",
         protocol=protocol,

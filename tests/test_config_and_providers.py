@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 
 from src.utils import read_config
-from src.providers import ModelConfig, get_autogen_config, get_model_config, get_responses_price, read_model_index
+from src.providers import ModelConfig, get_model_config, read_model_index
 
 
 class TestReadConfig:
@@ -33,7 +33,7 @@ class TestReadConfig:
         assert llm_params["temperature"] == 0.7
         assert agent_config["max_retries"] == 5
 
-class TestGetAutogenConfig:
+class TestModelConfig:
 
     def _make_index(self, provider, model_name="test-v1", price=None):
         index = {"test-key": {"name": model_name, "provider": provider, "context-window": "100000"}}
@@ -44,7 +44,7 @@ class TestGetAutogenConfig:
     def test_google_provider(self):
         index = self._make_index("google", price=[0.001, 0.005])
         with patch("src.providers.read_model_index", return_value=index):
-            config = get_autogen_config("test-key")
+            config = get_model_config("test-key").as_autogen_config()
         entry = config["config_list"][0]
         assert entry["model"] == "test-v1"
         assert entry["api_type"] == "google"
@@ -52,22 +52,22 @@ class TestGetAutogenConfig:
 
     def test_ollama_provider(self):
         with patch("src.providers.read_model_index", return_value=self._make_index("ollama")):
-            config = get_autogen_config("test-key")
+            config = get_model_config("test-key").as_autogen_config()
         assert "ollama" in config["config_list"][0]["base_url"]
 
     def test_unsupported_provider_raises(self):
         with patch("src.providers.read_model_index", return_value=self._make_index("bad")):
             with pytest.raises(ValueError, match="Unsupported provider"):
-                get_autogen_config("test-key")
+                get_model_config("test-key")
 
     def test_unknown_model_raises(self):
         with patch("src.providers.read_model_index", return_value={}):
             with pytest.raises(ValueError, match="not found"):
-                get_autogen_config("nonexistent-model")
+                get_model_config("nonexistent-model")
 
     def test_llm_params_merged(self):
         with patch("src.providers.read_model_index", return_value=self._make_index("google")):
-            config = get_autogen_config("test-key", llm_params={"temperature": 0.7})
+            config = get_model_config("test-key", {"temperature": 0.7}).as_autogen_config()
         assert config["temperature"] == 0.7
 
     def test_model_config_exposes_settings_without_credentials(self, monkeypatch):
@@ -111,7 +111,7 @@ class TestGetAutogenConfig:
 
     def test_reasoning_effort_is_added_to_model_entry(self):
         with patch("src.providers.read_model_index", return_value=self._make_index("openai")):
-            config = get_autogen_config("test-key", llm_params={"reasoning_effort": "xhigh"})
+            config = get_model_config("test-key", {"reasoning_effort": "xhigh"}).as_autogen_config()
         assert config["config_list"][0]["reasoning_effort"] == "xhigh"
         assert config["config_list"][0]["api_type"] == "responses"
         assert "reasoning_effort" not in config
@@ -119,10 +119,11 @@ class TestGetAutogenConfig:
     def test_openai_reasoning_uses_responses_without_unsupported_options(self):
         index = self._make_index("openai", model_name="other-reasoning-model", price=[0.0025, 0.015])
         with patch("src.providers.read_model_index", return_value=index):
-            config = get_autogen_config(
-                "test-key", llm_params={"reasoning_effort": "medium", "temperature": 0.7}
+            model_config = get_model_config(
+                "test-key", {"reasoning_effort": "medium", "temperature": 0.7}
             )
-            price = get_responses_price(config)
+            config = model_config.as_autogen_config()
+            price = model_config.responses_price
         assert config["config_list"][0]["api_type"] == "responses"
         assert config["config_list"][0]["reasoning_effort"] == "medium"
         assert "price" not in config["config_list"][0]
@@ -132,9 +133,9 @@ class TestGetAutogenConfig:
     def test_openai_without_reasoning_stays_on_chat_completions(self):
         index = self._make_index("openai", model_name="other-model", price=[0.0025, 0.015])
         with patch("src.providers.read_model_index", return_value=index):
-            config = get_autogen_config(
-                "test-key", llm_params={"reasoning_effort": "none", "temperature": 0.0}
-            )
+            config = get_model_config(
+                "test-key", {"reasoning_effort": "none", "temperature": 0.0}
+            ).as_autogen_config()
         assert "api_type" not in config["config_list"][0]
         assert config["config_list"][0]["price"] == [0.0025, 0.015]
         assert config["temperature"] == 0.0
@@ -142,9 +143,9 @@ class TestGetAutogenConfig:
     def test_openai_account_does_not_switch_to_responses(self):
         index = self._make_index("openai-account", model_name="other-model")
         with patch("src.providers.read_model_index", return_value=index):
-            config = get_autogen_config(
-                "test-key", llm_params={"reasoning_effort": "medium", "temperature": 0.7}
-            )
+            config = get_model_config(
+                "test-key", {"reasoning_effort": "medium", "temperature": 0.7}
+            ).as_autogen_config()
         assert config["config_list"][0]["api_type"] == "openai"
         assert config["temperature"] == 0.7
 
