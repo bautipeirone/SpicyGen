@@ -31,7 +31,7 @@ from src.prompts import (
     build_spicy_success_criterion,
 )
 from src.protocol import Protocol, load_protocol, load_spec
-from src.providers import get_autogen_config
+from src.providers import get_model_config
 from src.target_language import get_target_language
 from src.tools.runtime import get_protocol_packet_paths
 from src.utils import load_file, read_config, write_json_file
@@ -203,7 +203,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
 
     llm_params, agent_config = read_config(args.config)
-    llm_config = get_autogen_config(args.model, llm_params)
+    llm_config = get_model_config(args.model, llm_params)
 
     if mode == GenerationContextMode.FULL_CONTEXT:
         spec_content, target_language_context, spec_source = resolve_full_context(

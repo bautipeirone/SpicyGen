@@ -1,16 +1,17 @@
 """Integration tests for config loading and provider configuration.
 
-Covers: read_config() → get_autogen_config() pipeline.
+Covers config loading, inspectable model settings, and AG2 conversion.
 """
 
 import json
+from dataclasses import asdict
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from src.utils import read_config
-from src.providers import get_autogen_config, get_responses_price, read_model_index
+from src.providers import ModelConfig, get_autogen_config, get_model_config, get_responses_price, read_model_index
 
 
 class TestReadConfig:
@@ -68,6 +69,45 @@ class TestGetAutogenConfig:
         with patch("src.providers.read_model_index", return_value=self._make_index("google")):
             config = get_autogen_config("test-key", llm_params={"temperature": 0.7})
         assert config["temperature"] == 0.7
+
+    def test_model_config_exposes_settings_without_credentials(self, monkeypatch):
+        index = self._make_index("openai", model_name="other-model", price=[0.0025, 0.015])
+        monkeypatch.setenv("OPENAI_API_KEY", "private-test-key")
+        with patch("src.providers.read_model_index", return_value=index):
+            model_config = get_model_config(
+                "test-key", {"temperature": 0.4, "max_tokens": 2000, "seed": 7}
+            )
+        monkeypatch.setenv("OPENAI_API_KEY", "replacement-private-key")
+
+        assert isinstance(model_config, ModelConfig)
+        assert model_config.model == "test-key"
+        assert model_config.model_name == "other-model"
+        assert model_config.provider == "openai"
+        assert model_config.temperature == 0.4
+        assert model_config.max_tokens == 2000
+        assert model_config.seed == 7
+        assert "private-test-key" not in repr(model_config)
+        assert "replacement-private-key" not in repr(model_config)
+        assert "api_key" not in asdict(model_config)
+        autogen_config = model_config.as_autogen_config()
+        assert autogen_config["config_list"][0]["api_key"] == "replacement-private-key"
+        assert autogen_config["seed"] == 7
+
+    def test_model_config_handles_reasoning_and_rejects_secret_options(self):
+        index = self._make_index("openai", model_name="other-reasoning-model", price=[0.0025, 0.015])
+        with patch("src.providers.read_model_index", return_value=index):
+            model_config = get_model_config(
+                "test-key", {"reasoning_effort": "medium", "temperature": 0.7}
+            )
+            with pytest.raises(ValueError, match="Unsupported LLM parameters: api_key"):
+                get_model_config("test-key", {"api_key": "private-test-key"})
+
+        assert model_config.uses_responses
+        assert model_config.responses_price == (0.0025, 0.015)
+        autogen_config = model_config.as_autogen_config()
+        assert autogen_config["config_list"][0]["api_type"] == "responses"
+        assert "temperature" not in autogen_config
+        assert "price" not in autogen_config["config_list"][0]
 
     def test_reasoning_effort_is_added_to_model_entry(self):
         with patch("src.providers.read_model_index", return_value=self._make_index("openai")):

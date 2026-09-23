@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from src.providers import get_autogen_config
+from src.providers import get_model_config
 from src.agent import run_refinement_loop
 from src.target_language import (
     DEFAULT_TARGET_LANGUAGE,
@@ -198,7 +198,7 @@ def main() -> None:
         raise RuntimeError(f"No specification content found for protocol '{protocol.name}'.")
 
     llm_params, agent_config = read_config(args.config)
-    llm_config = get_autogen_config(args.model, llm_params)
+    llm_config = get_model_config(args.model, llm_params)
 
     model_name = args.model.split("-")[0]
     system_instruction = build_refinement_system_message(

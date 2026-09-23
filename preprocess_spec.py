@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-from src.providers import get_autogen_config
+from src.providers import ModelConfig, get_model_config
 from src.logger import logger, enable_runtime_log_file
 from src.protocol import Protocol, load_protocol, load_spec
 from src.prompts import EXTRACT_INFO_SYSTEM_PROMPT, NEGATIVE_PACKETS_SYSTEM_PROMPT_TEMPLATE
@@ -62,7 +62,7 @@ def compute_info_stats(info: dict[str, Any]) -> dict[str, Any]:
 
 
 def extract_protocol_info(
-    llm_config: dict,
+    llm_config: ModelConfig,
     protocol_name: str,
     spec_content: str | None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
@@ -176,7 +176,7 @@ def packets_to_jsonl(packets: list[dict[str, Any]]) -> str:
 
 
 def generate_negative_packets(
-    llm_config: dict,
+    llm_config: ModelConfig,
     protocol: Protocol,
     spec_content: str | None,
     count: int,
@@ -312,7 +312,7 @@ def main() -> None:
     if spec_content is None:
         logger.warning(f"No specification content found for '{protocol.name}'. Proceeding without spec text.")
 
-    llm_config = get_autogen_config(args.model)
+    llm_config = get_model_config(args.model)
     spec_stats = compute_text_stats(spec_content)
 
     report: dict[str, Any] = {

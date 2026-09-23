@@ -37,7 +37,7 @@ from dotenv import load_dotenv
 from src.agent import query_llm_once
 from src.tools.spicy.preprocess import SpicyParserInfo, parse_spicy_file
 from src.logger import enable_runtime_log_file, logger
-from src.providers import get_autogen_config
+from src.providers import get_model_config
 from src.utils import read_config
 
 load_dotenv()
@@ -420,7 +420,7 @@ def generate_zeek_files_with_llm(
         raise ValueError("max_retries must be at least 1")
 
     llm_params, _ = read_config(config_path)
-    llm_config = get_autogen_config(model, llm_params)
+    llm_config = get_model_config(model, llm_params)
     spicy_source = spicy_info.source_path.read_text()
     system_prompt = build_zeek_system_prompt(
         load_zeek_integration_instructions(instructions_path)

@@ -185,7 +185,7 @@ def test_generate_zeek_files_retries_after_compile_failure(tmp_path, monkeypatch
     user_messages = []
 
     monkeypatch.setattr(czp, "read_config", lambda path: ({}, {}))
-    monkeypatch.setattr(czp, "get_autogen_config", lambda model, params: {"model": model})
+    monkeypatch.setattr(czp, "get_model_config", lambda model, params: {"model": model})
 
     def fake_query_llm_once(llm_config, system_prompt, user_message):
         user_messages.append(user_message)
