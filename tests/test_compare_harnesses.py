@@ -1,4 +1,9 @@
-from analysis import compare_harnesses as comparison
+from importlib import import_module
+
+
+comparison = import_module(
+    "analysis.harness-comparison.compare_harnesses"
+)
 
 
 def test_default_matrix_covers_both_harnesses_modes_and_six_protocols():

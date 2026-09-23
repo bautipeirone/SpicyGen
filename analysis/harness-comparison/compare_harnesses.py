@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_PROTOCOLS = ("http1.1", "dns", "dhcp", "ident", "telnet", "tftp")
 DEFAULT_MODES = ("full-context", "criteria-only")
