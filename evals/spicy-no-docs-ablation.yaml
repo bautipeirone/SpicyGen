@@ -1,0 +1,42 @@
+# Spicy documentation ablation for direct comparison with models-comparison.yaml.
+# Models, generation config, protocol specifications, target language, and
+# sample count are identical; only the target-language instructions change.
+
+name: "Spicy Documentation Ablation"
+
+note: >-
+  Repeat the LLM Models Evaluation without the conventional Spicy language
+  documentation. NO_DOCS.md supplies only the language/version identity and
+  official documentation URL.
+
+defaults:
+  models:
+    - "gpt-oss"
+    - "gemini-3.1-flash"
+    - "gpt-5.6-sol"
+  configs:
+    - "configs/models-comparison.yaml"
+  target_languages:
+    - "spicy"
+  instructions_file: "prompts/spicy/NO_DOCS.md"
+  no_spec: false
+  samples: 1
+
+protocols:
+  # Binary ones, ranging from simple to complex.
+  tftp:
+    spec_file: "workspaces/tftp/gpt-5.4/20260727_153219/preprocess/summary.txt"
+
+  dhcp: {}
+
+  dns:
+    spec_file: "outputs/summary/dns-gpt-5.4.txt"
+
+  # Text ones, ranging from simple to complex.
+  ident:
+    spec_file: "workspaces/ident/gpt-5.4/20260724_164806/preprocess/summary.txt"
+
+  telnet: {}
+
+  http1.1:
+    spec_file: "misc/specs/http1.1-grammar-and-headers.txt"
