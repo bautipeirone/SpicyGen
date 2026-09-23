@@ -1,0 +1,80 @@
+# GPT-5.4 3D benchmark with stable specification paths.
+#
+# Unmarked entries use the same automatic summary as the reported benchmark.
+# RERUN-READY entries now point at an automatic summary but historically used
+# another source. RERUN-BLOCKED entries still need an automatic summary; their
+# current source is retained only to keep the complete historical matrix here.
+
+name: "Best Model Benchmark — 3D"
+
+note: >-
+  GPT-5.4 3D benchmark using stable copies of the automatic specification
+  summaries. RERUN comments identify results that must be regenerated for a
+  uniformly automatic-summary benchmark.
+
+defaults:
+  models:
+    - "gpt-5.4"
+  configs:
+    - "configs/best-model-benchmark.yaml"
+  target_languages:
+    - "3d"
+  no_spec: false
+  samples: 1
+
+protocols:
+  arp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/arp.txt"
+  babel:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/babel.txt"
+  bfd:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/bfd.txt"
+  bgp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/bgp.txt"
+  coap:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/coap.txt"
+  dccp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dccp.txt"
+  dhcp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dhcp.txt"
+  dns:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dns.txt"
+  dtls:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dtls.txt"
+  icmpv4:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/icmpv4.txt"
+  icmpv6:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/icmpv6.txt"
+  igmpv2:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/igmpv2.txt"
+  ipv4:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ipv4.txt"
+  ipv6:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ipv6.txt"
+  mqtt:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/mqtt.txt"
+  nsh:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/nsh.txt"
+  ntp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ntp.txt"
+  # Preserve the exact input of the historical 3D run; ospfv3.txt was revised later.
+  ospfv3:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ospfv3-historical-3d.txt"
+  ppp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ppp.txt"
+  rtp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/rtp.txt"
+  spp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/spp.txt"
+  ssh:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ssh.txt"
+  tcp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/tcp.txt"
+  tftp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/tftp.txt"
+  tpkt:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/tpkt.txt"
+  udp:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/udp.txt"
+  vxlan:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/vxlan.txt"

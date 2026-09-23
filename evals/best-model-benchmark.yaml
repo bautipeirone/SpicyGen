@@ -1,6 +1,18 @@
-name: "Best Model Benchmark"
+# GPT-5.4 Spicy benchmark with stable specification paths.
+#
+# Unmarked entries use the same automatic summary as the reported benchmark.
+# RERUN entries did not historically use an automatic summary (or, for DNS,
+# the exact source could not be recovered). Entries marked RERUN-READY already
+# point at a copied automatic summary. Entries marked RERUN-BLOCKED preserve
+# the historical source until an automatic summary is generated; replace that
+# source before running the standardized repair.
 
-note: "Benchmark on all available protocols on GPT-5.4 for frontier model performance statistics."
+name: "Best Model Benchmark — Spicy"
+
+note: >-
+  GPT-5.4 Spicy benchmark using stable copies of the automatic specification
+  summaries. RERUN comments identify results that must be regenerated for a
+  uniformly automatic-summary benchmark.
 
 defaults:
   models:
@@ -9,87 +21,83 @@ defaults:
     - "configs/best-model-benchmark.yaml"
   target_languages:
     - "spicy"
-    - "3d"
-  
   no_spec: false
   samples: 1
 
-
-# TODO: Only enable 3D for supported protocols?
 protocols:
   arp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/arp.txt"
   babel:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/babel.txt"
   bfd:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/bfd.txt"
   bgp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/bgp.txt"
   coap:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/coap.txt"
   dccp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dccp.txt"
   dhcp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dhcp.txt"
   dns:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dns.txt"
   dtls:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/dtls.txt"
   ftp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ftp.txt"
   http1.1:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/http1.1.txt"
+  http2:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/http2.txt"
   icmpv4:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/icmpv4.txt"
   icmpv6:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/icmpv6.txt"
   ident:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ident.txt"
   igmpv2:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/igmpv2.txt"
   imap4:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/imap4.txt"
   ipv4:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ipv4.txt"
   ipv6:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ipv6.txt"
   irc:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/irc.txt"
+  mqtt:
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/mqtt.txt"
   nsh:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/nsh.txt"
   ntp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ntp.txt"
   ospfv3:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ospfv3.txt"
   ppp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ppp.txt"
   rlogin:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/rlogin.txt"
   rtp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/rtp.txt"
   rtsp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/rtsp.txt"
   sip:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/sip.txt"
   smtp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/smtp.txt"
   spp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/spp.txt"
   ssh:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/ssh.txt"
   tcp:
-    {}
-  tc-sdlp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/tcp.txt"
   telnet:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/telnet.txt"
   tftp:
-    {}
-  tm-sdlp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/tftp.txt"
   tpkt:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/tpkt.txt"
   udp:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/udp.txt"
   vxlan:
-    {}
+    spec_file: "../../data/outputs/benchmark-summaries/gpt-5.4/vxlan.txt"
