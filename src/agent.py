@@ -317,7 +317,11 @@ def run_refinement_loop(
     initial_prompt = "\n".join([spec_content, "Please output the grammar and verify it with the given tools."])
 
     logger.info("System message and tools initialized. Starting the agent loop...")
-    logger.info(f"LLM Config: {llm_config | { 'config_list' : '...' }}")
+    logged_llm_config = llm_config | {"config_list": "..."}
+    reasoning_effort = llm_config["config_list"][0].get("reasoning_effort")
+    if reasoning_effort is not None:
+        logged_llm_config["reasoning_effort"] = reasoning_effort
+    logger.info("LLM Config: %s", logged_llm_config)
     logger.info(f"Agent config: {agent_config}")
     logger.info(f"Tools available: {[tool.name for tool in assistant.tools]}")
     logger.debug(f"Initial system message:\n{system_message}")
