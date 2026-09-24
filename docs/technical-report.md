@@ -73,7 +73,7 @@ The codebase follows a lightweight layered architecture. The layers are conventi
 
 | Layer | Main elements | Responsibility |
 |---|---|---|
-| Entry points | `generate_grammar.py`, `preprocess_spec.py`, `pipeline.py`, `run_eval.py`, `create_zeek_package.py`, `run_parser_trace.py` | Parse commands and initiate use cases |
+| Entry points | `generate_grammar.py`, `preprocess_spec.py`, `pipeline.py`, `run_eval.py`, `create_zeek_package.py`, `scripts/run_parser_trace.py` | Parse commands and initiate use cases |
 | Application workflows | refinement loop, preprocessing workflow, workspace pipeline, evaluation matrix, Zeek generation | Coordinate multi-step operations |
 | Domain model | `Protocol`, `ParserArgument`, `TargetLanguage`, `State`, result dataclasses | Represent protocol contracts, candidates, and outcomes |
 | Ports and adapters | provider configuration, `RuntimeAdapter`, compiler callables, RFC retrieval | Isolate external providers and toolchains |
@@ -479,7 +479,7 @@ Its next stage of maturity is less about adding more prompting logic and more ab
 | Specification preprocessing | [`preprocess_spec.py`](../preprocess_spec.py), [`src/tools/extraction.py`](../src/tools/extraction.py) |
 | Workspace state and pipeline | [`src/workspace.py`](../src/workspace.py), [`pipeline.py`](../pipeline.py) |
 | Evaluation matrix and reports | [`run_eval.py`](../run_eval.py), [`evals/`](../evals/) |
-| Standalone parser tracing | [`run_parser_trace.py`](../run_parser_trace.py) |
+| Standalone parser tracing | [`run_parser_trace.py`](../scripts/run_parser_trace.py) |
 | Zeek integration | [`create_zeek_package.py`](../create_zeek_package.py), [`prompts/zeek/`](../prompts/zeek/) |
 | Packet corpus | [`data/raw/`](../data/raw/) |
 | Tests | [`tests/`](../tests/) |

@@ -25,6 +25,8 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from rich.table import Table
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from src.target_language import get_target_language
 from src.tools.runtime import RuntimeArtifact
 
@@ -40,6 +42,7 @@ class PacketTraceResult:
     packet_path: str
     success: bool
     error: str = ""
+    execution_error: bool = False
 
 
 @dataclass(frozen=True)
@@ -84,6 +87,16 @@ def discover_packet_paths(packet_dir: Path, recursive: bool = True) -> list[Path
     return sorted(path for path in packet_dir.glob(pattern) if path.is_file())
 
 
+def read_packet_list(path: Path) -> list[Path]:
+    paths = [Path(line.strip()) for line in path.read_text().splitlines() if line.strip()]
+    if len(paths) != len(set(paths)):
+        raise ValueError(f"Packet list contains duplicate paths: {path}")
+    missing = [packet for packet in paths if not packet.is_file()]
+    if missing:
+        raise FileNotFoundError(f"Packet list references a missing file: {missing[0]}")
+    return paths
+
+
 def resolve_worker_count(requested_workers: int | None, packet_count: int) -> int:
     if packet_count < 1:
         return 0
@@ -125,6 +138,7 @@ def _trace_worker(
                     packet_path=str(packet_path),
                     success=False,
                     error=f"{type(exc).__name__}: {exc}",
+                    execution_error=True,
                 )
             )
         processed += 1
@@ -260,6 +274,13 @@ def write_json_summary(summary: TraceSummary, output_path: Path) -> None:
     output_path.write_text(json.dumps(summary_to_json(summary), indent=2) + "\n")
 
 
+def write_packet_results(results: list[PacketTraceResult], output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as output:
+        for result in sorted(results, key=lambda item: item.packet_path):
+            output.write(json.dumps(asdict(result)) + "\n")
+
+
 def _format_percent(value: float) -> str:
     return f"{value:.1f}%"
 
@@ -295,14 +316,18 @@ def run_trace(args) -> TraceSummary:
 
     if not parser_path.is_file():
         raise FileNotFoundError(f"Parser file not found: {parser_path}")
-    if not packet_dir.is_dir():
+    if args.packet_list is None and not packet_dir.is_dir():
         raise NotADirectoryError(f"Packet directory not found: {packet_dir}")
     if args.show_errors < 0:
         raise ValueError("--show-errors must be at least 0.")
 
     runtime_name = detect_runtime(parser_path, args.runtime)
     target = get_target_language(runtime_name)
-    packet_paths = discover_packet_paths(packet_dir, recursive=not args.no_recursive)
+    packet_paths = (
+        read_packet_list(Path(args.packet_list))
+        if args.packet_list is not None
+        else discover_packet_paths(packet_dir, recursive=not args.no_recursive)
+    )
     if not packet_paths:
         raise RuntimeError(f"No .bin packet files found in '{packet_dir}'.")
 
@@ -365,6 +390,10 @@ def run_trace(args) -> TraceSummary:
         json_out = Path(args.json_out)
         write_json_summary(summary, json_out)
         console.print(f"Wrote JSON summary to [bold]{json_out}[/bold]")
+    if args.results_jsonl is not None:
+        results_out = Path(args.results_jsonl)
+        write_packet_results(results, results_out)
+        console.print(f"Wrote packet results to [bold]{results_out}[/bold]")
 
     return summary
 
@@ -398,6 +427,16 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=10,
         help="Number of rejected packet errors to show (default: 10).",
+    )
+    parser.add_argument(
+        "--packet-list",
+        type=Path,
+        help="Text file listing exactly which packet paths to parse, one per line.",
+    )
+    parser.add_argument(
+        "--results-jsonl",
+        type=Path,
+        help="Write every packet's accept/reject result as JSONL.",
     )
     parser.add_argument(
         "--json-out",

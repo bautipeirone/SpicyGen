@@ -4,7 +4,7 @@ from queue import Queue
 
 import pytest
 
-import run_parser_trace
+from scripts import run_parser_trace
 from src.tools.runtime import ParseResult
 
 
