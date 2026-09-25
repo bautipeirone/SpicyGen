@@ -77,17 +77,20 @@ def build_layer_extractor(protocol_class):
     return extract_layer
 
 
-def detect_http_payload(pkt):
+def get_original_tcp_payload(pkt):
     if not pkt.haslayer(TCP):
-        return None
+        return b""
 
     tcp = pkt[TCP]
-    # Scapy may dissect HTTP into HTTPRequest/HTTPResponse and expose only the
-    # message body as Raw. The captured TCP segment preserves the wire bytes.
+    # Application dissectors may expose only the message body as Raw. The
+    # captured TCP segment preserves the complete bytes on the wire.
     if tcp.original and tcp.dataofs is not None:
-        payload = tcp.original[tcp.dataofs * 4:]
-    else:
-        payload = bytes(tcp.payload)
+        return tcp.original[tcp.dataofs * 4:]
+    return bytes(tcp.payload)
+
+
+def detect_http_payload(pkt):
+    payload = get_original_tcp_payload(pkt)
 
     if not payload:
         return None
@@ -104,8 +107,26 @@ def detect_http_payload(pkt):
     return None
 
 
+def detect_rtsp_payload(pkt):
+    payload = get_original_tcp_payload(pkt)
+    if not payload:
+        return None
+
+    first_line = payload.split(b"\n", 1)[0].rstrip(b"\r")
+    if re.fullmatch(rb"RTSP/[0-9]+(?:\.[0-9]+)? [0-9]{3}(?: [^\r\n]*)?", first_line):
+        return payload
+    if re.fullmatch(
+        rb"[!#$%&'*+.^_`|~0-9A-Za-z-]+ [^ \r\n]+ RTSP/[0-9]+(?:\.[0-9]+)?",
+        first_line,
+    ):
+        return payload
+
+    return None
+
+
 BUILTIN_PROTOCOL_DETECTORS = {
     "http": detect_http_payload,
+    "rtsp": detect_rtsp_payload,
 }
 
 
@@ -339,7 +360,7 @@ def build_parser():
         default="ipv6",
         help=(
             "Protocol layer to extract (default: ipv6). Examples: ipv4, ipv6, tcp, "
-            "udp, dns, dhcp, arp, icmp, icmpv6, http, or scapy.layers.inet6.IPv6ExtHdrFragment."
+            "udp, dns, dhcp, arp, icmp, icmpv6, http, rtsp, or scapy.layers.inet6.IPv6ExtHdrFragment."
         ),
     )
     parser.add_argument(
