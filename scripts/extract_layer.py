@@ -10,7 +10,7 @@ import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from scapy.layers.inet import TCP
+from scapy.layers.inet import TCP, UDP
 from scapy.packet import Packet
 from scapy.utils import PcapReader
 import scapy.layers.dot11
@@ -19,6 +19,7 @@ import scapy.layers.vxlan
 
 COMMON_PROTOCOL_ALIASES = {
     "arp": ("scapy.layers.l2", "ARP"),
+    "bfd": ("scapy.contrib.bfd", "BFD"),
     "dhcp": ("scapy.layers.dhcp", "BOOTP"),
     "dns": ("scapy.layers.dns", "DNS"),
     "icmp": ("scapy.layers.inet", "ICMP"),
@@ -89,6 +90,24 @@ def get_original_tcp_payload(pkt):
     return bytes(tcp.payload)
 
 
+def get_original_udp_payload(pkt):
+    if not pkt.haslayer(UDP):
+        return b""
+
+    udp = pkt[UDP]
+    if udp.original:
+        return udp.original[8:]
+    return bytes(udp.payload)
+
+
+def detect_babel_payload(pkt):
+    payload = get_original_udp_payload(pkt)
+    # Babel's four-byte UDP header starts with magic 42 and version 2.
+    if len(payload) >= 4 and payload[:2] == b"\x2a\x02":
+        return payload
+    return None
+
+
 def detect_http_payload(pkt):
     payload = get_original_tcp_payload(pkt)
 
@@ -125,6 +144,7 @@ def detect_rtsp_payload(pkt):
 
 
 BUILTIN_PROTOCOL_DETECTORS = {
+    "babel": detect_babel_payload,
     "http": detect_http_payload,
     "rtsp": detect_rtsp_payload,
 }
@@ -360,7 +380,8 @@ def build_parser():
         default="ipv6",
         help=(
             "Protocol layer to extract (default: ipv6). Examples: ipv4, ipv6, tcp, "
-            "udp, dns, dhcp, arp, icmp, icmpv6, http, rtsp, or scapy.layers.inet6.IPv6ExtHdrFragment."
+            "udp, dns, dhcp, arp, icmp, icmpv6, babel, bfd, http, rtsp, "
+            "or scapy.layers.inet6.IPv6ExtHdrFragment."
         ),
     )
     parser.add_argument(

@@ -1,14 +1,19 @@
 """Frame identity survives filtering during payload extraction."""
 
 import hashlib
+from pathlib import Path
 
 from scapy.layers.dns import DNS
 from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.inet6 import IPv6
 from scapy.layers.l2 import Ether
 from scapy.packet import Raw
 from scapy.utils import PcapReader, wrpcap
 
 from scripts import extract_layer
+
+
+RAW_DATA = Path(__file__).resolve().parents[1] / "data" / "raw"
 
 
 def test_extraction_records_original_frame_numbers(tmp_path):
@@ -100,3 +105,61 @@ def test_rtsp_extraction_keeps_complete_tcp_payloads(tmp_path):
         response,
         off_port_request,
     ]
+
+
+def test_babel_extraction_keeps_complete_udp_datagrams(tmp_path):
+    capture = tmp_path / "babel.pcap"
+    hello = (RAW_DATA / "babel/positive/hello.bin").read_bytes()
+    update = (RAW_DATA / "babel/positive/router-update.bin").read_bytes()
+    with_trailer = hello + b"\x00"
+    packets = [
+        Ether() / IP() / UDP(sport=6696, dport=6696) / Raw(hello),
+        Ether() / IPv6() / UDP(sport=6696, dport=6696) / Raw(update),
+        Ether() / IP() / UDP(sport=50000, dport=9000) / Raw(with_trailer),
+        Ether() / IP() / UDP(sport=6696, dport=6696) / Raw(b"\x2a\x03\x00\x00"),
+        Ether() / IP() / UDP(sport=6696, dport=6696) / Raw(b"\x2a\x02"),
+        Ether() / IP() / TCP(sport=6696, dport=6696) / Raw(hello),
+    ]
+    wrpcap(str(capture), packets)
+    output = tmp_path / "payloads"
+    output.mkdir()
+
+    records = extract_layer.extract_packets_from_capture(
+        str(capture), 0, extract_layer.resolve_protocol("babel"), str(output)
+    )
+
+    assert [record["frame_number"] for record in records] == [1, 2, 3]
+    assert [(output / Path(record["packet_path"]).name).read_bytes() for record in records] == [
+        hello,
+        update,
+        with_trailer,
+    ]
+
+
+def test_bfd_extraction_keeps_control_packet_bytes(tmp_path):
+    from scapy.contrib.bfd import BFD
+
+    capture = tmp_path / "bfd.pcap"
+    plain = (RAW_DATA / "bfd/positive/no-diagnostic.bin").read_bytes()
+    authenticated = (RAW_DATA / "bfd/positive/no-diagnostic-md5-auth.bin").read_bytes()
+    packets = [
+        Ether() / IP() / UDP(sport=50000, dport=3784) / Raw(plain),
+        Ether() / IPv6() / UDP(sport=50001, dport=4784) / Raw(authenticated),
+        Ether() / IP() / UDP(sport=50002, dport=9000) / Raw(plain),
+        Ether() / IP() / TCP(sport=50003, dport=3784) / Raw(plain),
+    ]
+    wrpcap(str(capture), packets)
+    output = tmp_path / "payloads"
+    output.mkdir()
+
+    records = extract_layer.extract_packets_from_capture(
+        str(capture), 0, extract_layer.resolve_protocol("bfd"), str(output)
+    )
+
+    assert [record["frame_number"] for record in records] == [1, 2]
+    assert [(output / Path(record["packet_path"]).name).read_bytes() for record in records] == [
+        plain,
+        authenticated,
+    ]
+    with PcapReader(str(capture)) as reader:
+        assert next(iter(reader)).haslayer(BFD)
