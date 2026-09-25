@@ -3,10 +3,10 @@
 import hashlib
 
 from scapy.layers.dns import DNS
-from scapy.layers.inet import IP, UDP
+from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.l2 import Ether
 from scapy.packet import Raw
-from scapy.utils import wrpcap
+from scapy.utils import PcapReader, wrpcap
 
 from scripts import extract_layer
 
@@ -30,3 +30,38 @@ def test_extraction_records_original_frame_numbers(tmp_path):
     for record in records:
         packet_bytes = (output / record["packet_path"].split("/")[-1]).read_bytes()
         assert hashlib.sha256(packet_bytes).hexdigest() == record["sha256"]
+
+
+def test_http_extraction_keeps_complete_tcp_payloads(tmp_path):
+    # Port 80 traffic is decoded into Scapy HTTP layers once this is loaded.
+    from scapy.layers import http
+
+    capture = tmp_path / "http.pcap"
+    request = b"GET / HTTP/1.1\r\nHost: example.test\r\n\r\n"
+    response = b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK"
+    off_port_request = b"POST /api HTTP/1.1\r\nHost: example.test\r\n\r\n"
+    packets = [
+        Ether() / IP() / TCP(sport=50000, dport=80, flags="PA") / Raw(request),
+        Ether() / IP() / TCP(sport=80, dport=50000, flags="A"),
+        Ether() / IP() / TCP(sport=80, dport=50000, flags="PA") / Raw(response),
+        Ether() / IP() / TCP(sport=50001, dport=8080, flags="PA") / Raw(off_port_request),
+        Ether() / IP() / TCP(sport=50002, dport=9000, flags="PA") / Raw(b"hello HTTP/1.1 world"),
+        Ether() / IP() / UDP(sport=50003, dport=9000) / Raw(request),
+    ]
+    wrpcap(str(capture), packets)
+    with PcapReader(str(capture)) as reader:
+        assert next(iter(reader)).haslayer(http.HTTP)
+    output = tmp_path / "payloads"
+    output.mkdir()
+
+    records = extract_layer.extract_packets_from_capture(
+        str(capture), 0, extract_layer.resolve_protocol("http"), str(output)
+    )
+
+    assert [record["frame_number"] for record in records] == [1, 3, 4]
+    assert [record["packet_index"] for record in records] == [0, 1, 2]
+    assert [(output / record["packet_path"].split("/")[-1]).read_bytes() for record in records] == [
+        request,
+        response,
+        off_port_request,
+    ]

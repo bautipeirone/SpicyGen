@@ -10,7 +10,8 @@ import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from scapy.packet import Packet, Raw
+from scapy.layers.inet import TCP
+from scapy.packet import Packet
 from scapy.utils import PcapReader
 import scapy.layers.dot11
 import scapy.layers.vxlan
@@ -77,40 +78,28 @@ def build_layer_extractor(protocol_class):
 
 
 def detect_http_payload(pkt):
-    # print("A")
-    if not pkt.haslayer(Raw):
+    if not pkt.haslayer(TCP):
         return None
 
-    # print("B")
+    tcp = pkt[TCP]
+    # Scapy may dissect HTTP into HTTPRequest/HTTPResponse and expose only the
+    # message body as Raw. The captured TCP segment preserves the wire bytes.
+    if tcp.original and tcp.dataofs is not None:
+        payload = tcp.original[tcp.dataofs * 4:]
+    else:
+        payload = bytes(tcp.payload)
 
-    raw_payload = pkt[Raw].load
-    if not raw_payload:
+    if not payload:
         return None
 
-    if b"HTTP" in raw_payload:
-        print(pkt.load)
-        print(raw_payload)
-        exit(0)
-
-
-    if any(raw_payload.startswith(version) for version in (b"HTTP/1.0", b"HTTP/1.1", b"HTTP/2")):
-        print("D")
-        return raw_payload
-
-    http_methods = (
-        b"GET",
-        b"POST",
-        b"PUT",
-        b"DELETE",
-        b"HEAD",
-        b"OPTIONS",
-        b"PATCH",
-        b"TRACE",
-        b"CONNECT",
-    )
-    if any(raw_payload.startswith(method + b" ") for method in http_methods):
-        print("E")
-        return raw_payload
+    first_line = payload.split(b"\n", 1)[0].rstrip(b"\r")
+    if re.fullmatch(rb"HTTP/[0-9]+(?:\.[0-9]+)? [0-9]{3}(?: [^\r\n]*)?", first_line):
+        return payload
+    if re.fullmatch(rb"[!#$%&'*+.^_`|~0-9A-Za-z-]+ [^ \r\n]+ HTTP/[0-9]+(?:\.[0-9]+)?", first_line):
+        return payload
+    # HTTP/0.9 requests have no version or headers.
+    if re.fullmatch(rb"GET [^ \r\n]+", first_line):
+        return payload
 
     return None
 
