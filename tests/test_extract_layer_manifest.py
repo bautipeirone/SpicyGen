@@ -163,3 +163,38 @@ def test_bfd_extraction_keeps_control_packet_bytes(tmp_path):
     ]
     with PcapReader(str(capture)) as reader:
         assert next(iter(reader)).haslayer(BFD)
+
+
+def test_bgp_extraction_keeps_original_tcp_payloads(tmp_path):
+    from scapy.contrib.bgp import BGPHeader
+
+    capture = tmp_path / "bgp.pcap"
+    opened = (RAW_DATA / "bgp/positive/open.bin").read_bytes()
+    keepalive = (RAW_DATA / "bgp/positive/keepalive.bin").read_bytes()
+    update = (RAW_DATA / "bgp/positive/update.bin").read_bytes()
+    packets = [
+        Ether() / IP() / TCP(sport=50000, dport=179, flags="PA") / Raw(opened),
+        Ether() / IP() / TCP(sport=179, dport=50000, flags="A"),
+        Ether() / IP() / TCP(sport=179, dport=50000, flags="PA") / Raw(keepalive),
+        Ether() / IP() / TCP(sport=50001, dport=9000, flags="PA") / Raw(update),
+        Ether() / IP() / TCP(sport=50002, dport=179, flags="PA") / Raw(b"not bgp"),
+        Ether() / IP() / TCP(sport=50003, dport=179, flags="PA") / Raw(b"x" + keepalive),
+        Ether() / IP() / TCP(sport=50004, dport=179, flags="PA") / Raw(b"\xff" * 16 + b"\x00\x12\x04"),
+        Ether() / IP() / UDP(sport=50005, dport=179) / Raw(keepalive),
+    ]
+    wrpcap(str(capture), packets)
+    with PcapReader(str(capture)) as reader:
+        assert next(iter(reader)).haslayer(BGPHeader)
+    output = tmp_path / "payloads"
+    output.mkdir()
+
+    records = extract_layer.extract_packets_from_capture(
+        str(capture), 0, extract_layer.resolve_protocol("bgp"), str(output)
+    )
+
+    assert [record["frame_number"] for record in records] == [1, 3, 4]
+    assert [(output / Path(record["packet_path"]).name).read_bytes() for record in records] == [
+        opened,
+        keepalive,
+        update,
+    ]

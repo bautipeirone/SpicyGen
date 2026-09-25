@@ -108,6 +108,17 @@ def detect_babel_payload(pkt):
     return None
 
 
+def detect_bgp_payload(pkt):
+    payload = get_original_tcp_payload(pkt)
+    # BGP's 19-byte header begins with an all-ones marker, followed by the
+    # two-byte message length and one-byte type.
+    if len(payload) < 19 or payload[:16] != b"\xff" * 16:
+        return None
+    if int.from_bytes(payload[16:18], "big") < 19:
+        return None
+    return payload
+
+
 def detect_http_payload(pkt):
     payload = get_original_tcp_payload(pkt)
 
@@ -145,6 +156,7 @@ def detect_rtsp_payload(pkt):
 
 BUILTIN_PROTOCOL_DETECTORS = {
     "babel": detect_babel_payload,
+    "bgp": detect_bgp_payload,
     "http": detect_http_payload,
     "rtsp": detect_rtsp_payload,
 }
@@ -380,7 +392,7 @@ def build_parser():
         default="ipv6",
         help=(
             "Protocol layer to extract (default: ipv6). Examples: ipv4, ipv6, tcp, "
-            "udp, dns, dhcp, arp, icmp, icmpv6, babel, bfd, http, rtsp, "
+            "udp, dns, dhcp, arp, icmp, icmpv6, babel, bfd, bgp, http, rtsp, "
             "or scapy.layers.inet6.IPv6ExtHdrFragment."
         ),
     )
