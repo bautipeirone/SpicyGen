@@ -11,7 +11,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from scapy.layers.inet import TCP, UDP
-from scapy.packet import Packet
+from scapy.layers.rtp import RTP
+from scapy.packet import Packet, Raw
 from scapy.utils import PcapReader
 import scapy.layers.dot11
 import scapy.layers.vxlan
@@ -119,6 +120,42 @@ def detect_bgp_payload(pkt):
     return payload
 
 
+def detect_rtp_payload(pkt):
+    # RTP has no fixed UDP port or unique magic, so this identifies candidates
+    # by their header structure and excludes UDP traffic already dissected
+    # as another protocol.
+    if not pkt.haslayer(UDP) or not isinstance(pkt[UDP].payload, (Raw, RTP)):
+        return None
+
+    payload = get_original_udp_payload(pkt)
+    if len(payload) < 12 or payload[0] >> 6 != 2:
+        return None
+
+    payload_type = payload[1] & 0x7F
+    if 72 <= payload_type <= 76:
+        return None
+    # A complete RTCP feedback packet can otherwise resemble marked RTP.
+    if 200 <= payload[1] <= 211 and (int.from_bytes(payload[2:4], "big") + 1) * 4 == len(payload):
+        return None
+
+    header_length = 12 + 4 * (payload[0] & 0x0F)
+    if len(payload) < header_length:
+        return None
+    if payload[0] & 0x10:
+        if len(payload) < header_length + 4:
+            return None
+        extension_words = int.from_bytes(payload[header_length + 2:header_length + 4], "big")
+        header_length += 4 + extension_words * 4
+        if len(payload) < header_length:
+            return None
+    if payload[0] & 0x20:
+        padding_length = payload[-1]
+        if padding_length == 0 or padding_length > len(payload) - header_length:
+            return None
+
+    return payload
+
+
 def detect_http_payload(pkt):
     payload = get_original_tcp_payload(pkt)
 
@@ -158,6 +195,7 @@ BUILTIN_PROTOCOL_DETECTORS = {
     "babel": detect_babel_payload,
     "bgp": detect_bgp_payload,
     "http": detect_http_payload,
+    "rtp": detect_rtp_payload,
     "rtsp": detect_rtsp_payload,
 }
 
@@ -392,7 +430,7 @@ def build_parser():
         default="ipv6",
         help=(
             "Protocol layer to extract (default: ipv6). Examples: ipv4, ipv6, tcp, "
-            "udp, dns, dhcp, arp, icmp, icmpv6, babel, bfd, bgp, http, rtsp, "
+            "udp, dns, dhcp, arp, icmp, icmpv6, babel, bfd, bgp, http, rtp, rtsp, "
             "or scapy.layers.inet6.IPv6ExtHdrFragment."
         ),
     )

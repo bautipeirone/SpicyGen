@@ -198,3 +198,42 @@ def test_bgp_extraction_keeps_original_tcp_payloads(tmp_path):
         keepalive,
         update,
     ]
+
+
+def test_rtp_extraction_preserves_valid_udp_payloads(tmp_path):
+    capture = tmp_path / "rtp.pcap"
+    audio = (RAW_DATA / "rtp/positive/ITU-T-G711-seq-1.bin").read_bytes()
+    video = (RAW_DATA / "rtp/positive/ITU-T-H263-seq-53966.bin").read_bytes()
+    extended = (
+        b"\xb1\x60" + audio[2:12] + b"\x12\x34\x56\x78"
+        + b"\xbe\xde\x00\x01" + b"\x10\x00\x00\x00" + b"data\x00\x02"
+    )
+    rtcp_sender_report = b"\x80\xc8\x00\x06" + b"\x00" * 24
+    rtcp_feedback = b"\x80\xcd\x00\x03" + b"\x00" * 12
+    packets = [
+        Ether() / IP() / UDP(sport=5004, dport=5004) / Raw(audio),
+        Ether() / IPv6() / UDP(sport=5006, dport=9000) / Raw(video),
+        Ether() / IP() / UDP(sport=5008, dport=5008) / Raw(extended),
+        Ether() / IP() / UDP(sport=5005, dport=5005) / Raw(rtcp_sender_report),
+        Ether() / IP() / UDP(sport=5005, dport=5005) / Raw(rtcp_feedback),
+        Ether() / IP() / UDP(sport=53, dport=50000) / DNS(id=0x8001, qr=1),
+        Ether() / IP() / TCP(sport=5004, dport=5004) / Raw(audio),
+    ]
+    packets.extend(
+        Ether() / IP() / UDP(sport=5010, dport=5010) / Raw(path.read_bytes())
+        for path in sorted((RAW_DATA / "rtp/negative").glob("*.bin"))
+    )
+    wrpcap(str(capture), packets)
+    output = tmp_path / "payloads"
+    output.mkdir()
+
+    records = extract_layer.extract_packets_from_capture(
+        str(capture), 0, extract_layer.resolve_protocol("rtp"), str(output)
+    )
+
+    assert [record["frame_number"] for record in records] == [1, 2, 3]
+    assert [(output / Path(record["packet_path"]).name).read_bytes() for record in records] == [
+        audio,
+        video,
+        extended,
+    ]
