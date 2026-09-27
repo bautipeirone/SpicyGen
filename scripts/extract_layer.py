@@ -120,40 +120,67 @@ def detect_bgp_payload(pkt):
     return payload
 
 
-def detect_rtp_payload(pkt):
-    # RTP has no fixed UDP port or unique magic, so this identifies candidates
-    # by their header structure and excludes UDP traffic already dissected
-    # as another protocol.
-    if not pkt.haslayer(UDP) or not isinstance(pkt[UDP].payload, (Raw, RTP)):
-        return None
+def is_rtcp_payload(payload):
+    offset = 0
+    while offset < len(payload):
+        if len(payload) - offset < 4 or payload[offset] >> 6 != 2:
+            return False
+        if not 192 <= payload[offset + 1] <= 223:
+            return False
+        end = offset + 4 * (int.from_bytes(payload[offset + 2:offset + 4], "big") + 1)
+        if end > len(payload):
+            return False
+        offset = end
+    return offset > 0
 
-    payload = get_original_udp_payload(pkt)
+
+def is_rtp_payload(payload):
+    # RTP has no fixed port or unique magic, so identify candidates by their
+    # header structure and filter out RTCP packets with overlapping prefixes.
     if len(payload) < 12 or payload[0] >> 6 != 2:
-        return None
+        return False
 
     payload_type = payload[1] & 0x7F
     if 72 <= payload_type <= 76:
-        return None
-    # A complete RTCP feedback packet can otherwise resemble marked RTP.
-    if 200 <= payload[1] <= 211 and (int.from_bytes(payload[2:4], "big") + 1) * 4 == len(payload):
-        return None
+        return False
+    # Compound RTCP can resemble marked RTP even when its first packet does
+    # not occupy the entire payload.
+    if is_rtcp_payload(payload):
+        return False
 
     header_length = 12 + 4 * (payload[0] & 0x0F)
     if len(payload) < header_length:
-        return None
+        return False
     if payload[0] & 0x10:
         if len(payload) < header_length + 4:
-            return None
+            return False
         extension_words = int.from_bytes(payload[header_length + 2:header_length + 4], "big")
         header_length += 4 + extension_words * 4
         if len(payload) < header_length:
-            return None
+            return False
     if payload[0] & 0x20:
         padding_length = payload[-1]
         if padding_length == 0 or padding_length > len(payload) - header_length:
-            return None
+            return False
 
-    return payload
+    return True
+
+
+def detect_rtp_payload(pkt):
+    if pkt.haslayer(UDP):
+        # Exclude UDP traffic already dissected as another protocol.
+        if not isinstance(pkt[UDP].payload, (Raw, RTP)):
+            return None
+        payload = get_original_udp_payload(pkt)
+        return payload if is_rtp_payload(payload) else None
+
+    # RTP carried by RTSP uses a $ marker, channel, and two-byte length before
+    # the RTP packet. A TCP segment may contain several such units.
+    rtsp_units = detect_rtsp_payload(pkt)
+    if not isinstance(rtsp_units, tuple):
+        return None
+    media = [unit[4:] for unit in rtsp_units if unit.startswith(b"$") and is_rtp_payload(unit[4:])]
+    return tuple(media) if media else None
 
 
 def detect_http_payload(pkt):

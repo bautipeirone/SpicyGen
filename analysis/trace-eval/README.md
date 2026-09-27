@@ -10,7 +10,8 @@ First extract payloads. The extractor writes `manifest.jsonl`, which maps every
 Keep this manifest with the packet files; the comparison checks each payload's
 SHA-256 hash and runs only the files listed in the manifest. RTSP interleaved
 `$` frames are written one unit per file, including when several units share a
-TCP frame.
+TCP frame. For RTP extraction, complete RTP payloads inside RTSP interleaved
+units are also written separately, without the four-byte RTSP framing header.
 
 ```bash
 .venv/bin/python scripts/extract_layer.py CAPTURE_OR_DIRECTORY \
@@ -50,4 +51,6 @@ oracle frame are coverage gaps, not parser rejections. Oracle verdicts remain
 frame-level: when a frame contains several extracted units, the verdict is
 associated with each unit, while coverage counts the frame once. The extractor
 separates complete RTSP interleaved units within a TCP frame but does not
-reassemble units split across TCP frames.
+reassemble units split across TCP frames. RTP detection uses packet structure;
+it can select valid RTP from flows that Wireshark leaves labeled as generic
+RTSP data when the signaling context is absent from the capture.
