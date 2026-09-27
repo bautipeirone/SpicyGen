@@ -45,7 +45,7 @@ SEARCH_MODULES = (
 class ProtocolHandler:
     display_name: str
     file_stem: str
-    extractor: Callable[[Packet], Packet | bytes | bytearray | memoryview | None]
+    extractor: Callable[[Packet], Packet | bytes | bytearray | memoryview | tuple[bytes, ...] | None]
 
 
 def load_base_layers():
@@ -174,21 +174,70 @@ def detect_http_payload(pkt):
     return None
 
 
+def is_rtsp_control_payload(payload):
+    first_line = payload.split(b"\n", 1)[0].rstrip(b"\r")
+    if re.fullmatch(rb"RTSP/[0-9]+(?:\.[0-9]+)? [0-9]{3}(?: [^\r\n]*)?", first_line):
+        return True
+    if re.fullmatch(
+        rb"[!#$%&'*+.^_`|~0-9A-Za-z-]+ [^ \r\n]+ RTSP/[0-9]+(?:\.[0-9]+)?",
+        first_line,
+    ):
+        return True
+
+    return False
+
+
+def rtsp_control_message_end(payload):
+    headers_end = payload.find(b"\r\n\r\n")
+    if headers_end < 0:
+        return None
+    content_length = 0
+    for line in payload[:headers_end].split(b"\r\n")[1:]:
+        if line.lower().startswith(b"content-length:"):
+            value = line.partition(b":")[2].strip()
+            if not value.isdigit():
+                return None
+            content_length = int(value)
+    end = headers_end + 4 + content_length
+    return end if end <= len(payload) else None
+
+
 def detect_rtsp_payload(pkt):
     payload = get_original_tcp_payload(pkt)
     if not payload:
         return None
 
-    first_line = payload.split(b"\n", 1)[0].rstrip(b"\r")
-    if re.fullmatch(rb"RTSP/[0-9]+(?:\.[0-9]+)? [0-9]{3}(?: [^\r\n]*)?", first_line):
-        return payload
-    if re.fullmatch(
-        rb"[!#$%&'*+.^_`|~0-9A-Za-z-]+ [^ \r\n]+ RTSP/[0-9]+(?:\.[0-9]+)?",
-        first_line,
-    ):
-        return payload
+    units = []
+    offset = 0
+    while offset < len(payload):
+        remaining = payload[offset:]
+        if remaining.startswith(b"$"):
+            if len(remaining) < 4:
+                return None
+            end = offset + 4 + int.from_bytes(remaining[2:4], "big")
+            if end > len(payload):
+                return None
+            units.append(payload[offset:end])
+            offset = end
+            continue
 
-    return None
+        if not is_rtsp_control_payload(remaining):
+            return None
+        end = rtsp_control_message_end(remaining)
+        if end is None or end == len(remaining):
+            if units:
+                units.append(remaining)
+                return tuple(units)
+            return payload
+        if remaining[end:end + 1] != b"$":
+            if units:
+                units.append(remaining)
+                return tuple(units)
+            return payload
+        units.append(remaining[:end])
+        offset += end
+
+    return tuple(units)
 
 
 BUILTIN_PROTOCOL_DETECTORS = {
@@ -317,23 +366,27 @@ def extract_packets_from_capture(capture_file, capture_index, protocol_handler, 
     with PcapReader(capture_file) as capture:
         for frame_number, pkt in enumerate(capture, start=1):
             extracted_layer = protocol_handler.extractor(pkt)
-            payload = serialize_extracted_layer(extracted_layer)
-            if payload is None:
-                continue
+            units = extracted_layer if isinstance(extracted_layer, tuple) else (extracted_layer,)
+            for unit_index, unit in enumerate(units):
+                payload = serialize_extracted_layer(unit)
+                if payload is None:
+                    continue
 
-            packet_index = len(records)
-            output_name = build_output_file_name(
-                protocol_handler.file_stem, capture_file, capture_index, packet_index
-            )
-            output_file = write_packet_bytes(output_dir, output_name, payload)
-            records.append({
-                "packet_path": os.path.abspath(output_file),
-                "capture_path": os.path.abspath(capture_file),
-                "frame_number": frame_number,
-                "capture_index": capture_index,
-                "packet_index": packet_index,
-                "sha256": hashlib.sha256(payload).hexdigest(),
-            })
+                packet_index = len(records)
+                output_name = build_output_file_name(
+                    protocol_handler.file_stem, capture_file, capture_index, packet_index
+                )
+                output_file = write_packet_bytes(output_dir, output_name, payload)
+                records.append({
+                    "packet_path": os.path.abspath(output_file),
+                    "capture_path": os.path.abspath(capture_file),
+                    "frame_number": frame_number,
+                    "capture_index": capture_index,
+                    "packet_index": packet_index,
+                    "unit_index": unit_index,
+                    "unit_count": len(units),
+                    "sha256": hashlib.sha256(payload).hexdigest(),
+                })
 
     return records
 

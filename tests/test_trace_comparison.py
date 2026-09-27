@@ -2,6 +2,7 @@
 
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 
 import pytest
@@ -61,3 +62,40 @@ def test_compare_keeps_unpaired_frames_and_soft_rejects_separate(tmp_path):
     assert summary["target_pairs"]["strict vs permissive"]["reject_accept"] == 1
     assert rows[2]["oracle_verdict"] == "SOFT_REJECT"
     assert rows[2]["strict"] == "NOT_RUN"
+
+
+def test_compare_accepts_multiple_units_in_one_frame(tmp_path):
+    capture = tmp_path / "trace.pcap"
+    capture.write_bytes(b"pcap")
+    packets = [tmp_path / f"unit-{index}.bin" for index in range(2)]
+    payloads = [b"$\x00\x00\x01a", b"$\x01\x00\x01b"]
+    records = []
+    for index, (path, payload) in enumerate(zip(packets, payloads)):
+        path.write_bytes(payload)
+        records.append({
+            "capture_path": str(capture),
+            "frame_number": 7,
+            "unit_index": index,
+            "unit_count": 2,
+            "packet_path": str(path),
+            "sha256": hashlib.sha256(payload).hexdigest(),
+        })
+    manifest = tmp_path / "manifest.jsonl"
+    manifest.write_text("".join(json.dumps(record) + "\n" for record in records))
+
+    loaded = compare_traces.load_manifest(manifest, [capture])
+    oracle = {str(capture): {"packets": [
+        {"frame_number": 7, "verdict": "ACCEPT", "rejection_reasons": []},
+    ]}}
+    targets = {"parser": {str(path): {"success": True, "error": ""} for path in packets}}
+
+    rows, summary = compare_traces.compare([capture], loaded, oracle, targets)
+
+    assert [(row["frame_number"], row["unit_index"], row["packet_path"]) for row in rows] == [
+        (7, 0, str(packets[0])),
+        (7, 1, str(packets[1])),
+    ]
+    assert summary["totals"]["oracle_frames"] == 1
+    assert summary["totals"]["extracted_packets"] == 2
+    assert summary["totals"]["matched"] == 1
+    assert summary["targets"]["parser"]["oracle_accept_target_accept"] == 2

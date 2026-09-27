@@ -79,12 +79,18 @@ def test_rtsp_extraction_keeps_complete_tcp_payloads(tmp_path):
     request = b"DESCRIBE rtsp://example.test/movie RTSP/1.0\r\nCSeq: 1\r\n\r\n"
     response = b"RTSP/1.0 200 OK\r\nCSeq: 1\r\nContent-Length: 4\r\n\r\nbody"
     off_port_request = b"PLAY rtsp://example.test/movie RTSP/2.0\r\nCSeq: 2\r\n\r\n"
+    media = b"$\x00\x00\x04data"
+    control = b"$\x01\x00\x03xyz"
     packets = [
         Ether() / IP() / TCP(sport=50000, dport=554, flags="PA") / Raw(request),
         Ether() / IP() / TCP(sport=554, dport=50000, flags="A"),
         Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(response),
         Ether() / IP() / TCP(sport=50001, dport=8554, flags="PA") / Raw(off_port_request),
-        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(b"$\x00\x00\x04data"),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(media),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(media + control),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(response + media),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(media + response),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(b"$\x00\x00\x05data"),
         Ether() / IP() / TCP(sport=50002, dport=9000, flags="PA") / Raw(b"hello RTSP/1.0 world"),
         Ether() / IP() / UDP(sport=50003, dport=9000) / Raw(request),
     ]
@@ -98,12 +104,21 @@ def test_rtsp_extraction_keeps_complete_tcp_payloads(tmp_path):
         str(capture), 0, extract_layer.resolve_protocol("rtsp"), str(output)
     )
 
-    assert [record["frame_number"] for record in records] == [1, 3, 4]
-    assert [record["packet_index"] for record in records] == [0, 1, 2]
+    assert [record["frame_number"] for record in records] == [1, 3, 4, 5, 6, 6, 7, 7, 8, 8]
+    assert [record["packet_index"] for record in records] == list(range(10))
+    assert [record["unit_index"] for record in records] == [0, 0, 0, 0, 0, 1, 0, 1, 0, 1]
+    assert [record["unit_count"] for record in records] == [1, 1, 1, 1, 2, 2, 2, 2, 2, 2]
     assert [(output / record["packet_path"].split("/")[-1]).read_bytes() for record in records] == [
         request,
         response,
         off_port_request,
+        media,
+        media,
+        control,
+        response,
+        media,
+        media,
+        response,
     ]
 
 
