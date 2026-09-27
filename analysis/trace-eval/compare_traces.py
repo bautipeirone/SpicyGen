@@ -2,7 +2,8 @@
 """Compare packet parser results with a configurable Wireshark oracle.
 
 Extract packets first with scripts/extract_layer.py. Its manifest.jsonl maps each
-.bin file to the original capture frame. This script uses only those files.
+.bin file to the original capture frame and unit index. This script uses only
+those files.
 """
 
 from __future__ import annotations
@@ -72,21 +73,27 @@ def load_manifest(path: Path, captures: list[Path]) -> list[dict[str, Any]]:
         raise ComparisonError(f"Extraction manifest is empty: {path}")
     allowed_captures = {str(capture) for capture in captures}
     paths = set()
-    frames = set()
+    frame_units = defaultdict(set)
+    frame_counts = {}
     for record in records:
         try:
             packet = Path(record["packet_path"]).absolute()
             capture = str(Path(record["capture_path"]).absolute())
             frame = int(record["frame_number"])
+            unit_index = int(record.get("unit_index", 0))
+            unit_count = int(record.get("unit_count", 1))
             digest = record["sha256"]
         except (KeyError, TypeError, ValueError) as exc:
             raise ComparisonError(f"Invalid manifest record: {record}") from exc
         if capture not in allowed_captures:
             raise ComparisonError(f"Manifest capture is outside the requested input: {capture}")
-        if frame < 1 or not packet.is_file():
+        if frame < 1 or unit_index < 0 or unit_count < 1 or unit_index >= unit_count or not packet.is_file():
             raise ComparisonError(f"Missing packet or invalid frame in manifest: {record}")
-        if (capture, frame) in frames:
-            raise ComparisonError(f"More than one payload maps to {capture} frame {frame}")
+        frame_key = (capture, frame)
+        if unit_index in frame_units[frame_key]:
+            raise ComparisonError(f"Duplicate unit {unit_index} for {capture} frame {frame}")
+        if frame_key in frame_counts and frame_counts[frame_key] != unit_count:
+            raise ComparisonError(f"Inconsistent unit count for {capture} frame {frame}")
         if str(packet) in paths:
             raise ComparisonError(f"Duplicate packet path in manifest: {packet}")
         if hashlib.sha256(packet.read_bytes()).hexdigest() != digest:
@@ -94,8 +101,14 @@ def load_manifest(path: Path, captures: list[Path]) -> list[dict[str, Any]]:
         record["packet_path"] = str(packet)
         record["capture_path"] = capture
         record["frame_number"] = frame
+        record["unit_index"] = unit_index
+        record["unit_count"] = unit_count
         paths.add(str(packet))
-        frames.add((capture, frame))
+        frame_units[frame_key].add(unit_index)
+        frame_counts[frame_key] = unit_count
+    for (capture, frame), indices in frame_units.items():
+        if indices != set(range(frame_counts[capture, frame])):
+            raise ComparisonError(f"Missing unit for {capture} frame {frame}")
     return records
 
 
@@ -192,7 +205,10 @@ def compare(
     oracle_reports: dict[str, dict[str, Any]],
     target_results: dict[str, dict[str, dict[str, Any]]],
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    indexed_packets = {(r["capture_path"], r["frame_number"]): r for r in records}
+    indexed_packets = {
+        (r["capture_path"], r["frame_number"], r.get("unit_index", 0)): r
+        for r in records
+    }
     indexed_oracle = {}
     for capture, report in oracle_reports.items():
         for packet in report["packets"]:
@@ -204,25 +220,33 @@ def compare(
     rows = []
     per_capture = defaultdict(Counter)
     target_counts = {name: Counter() for name in target_results}
-    for key in sorted(set(indexed_packets) | set(indexed_oracle)):
-        capture, frame = key
+    packet_frames = {(capture, frame) for capture, frame, _ in indexed_packets}
+    oracle_only_keys = {
+        (capture, frame, 0) for capture, frame in indexed_oracle
+        if (capture, frame) not in packet_frames
+    }
+    for key in sorted(set(indexed_packets) | oracle_only_keys):
+        capture, frame, unit_index = key
         packet = indexed_packets.get(key)
-        oracle = indexed_oracle.get(key)
+        oracle = indexed_oracle.get((capture, frame))
         verdict = oracle["verdict"] if oracle else "NO_ORACLE_FRAME"
         row = {
             "capture_path": capture, "frame_number": frame,
+            "unit_index": unit_index if packet else "",
             "packet_path": packet["packet_path"] if packet else "",
             "sha256": packet["sha256"] if packet else "",
             "oracle_verdict": verdict,
             "oracle_reasons": " | ".join(oracle["rejection_reasons"]) if oracle else "",
         }
         counter = per_capture[capture]
-        counter["oracle_frames"] += bool(oracle)
+        counter["oracle_frames"] += bool(oracle and unit_index == 0)
         counter["extracted_packets"] += bool(packet)
-        counter["matched"] += bool(oracle and packet)
+        counter["extracted_frames"] += bool(packet and unit_index == 0)
+        counter["matched"] += bool(oracle and packet and unit_index == 0)
+        counter["matched_packets"] += bool(oracle and packet)
         counter["oracle_only"] += bool(oracle and not packet)
-        counter["packet_only"] += bool(packet and not oracle) if oracle_reports else 0
-        if oracle:
+        counter["packet_only"] += bool(packet and not oracle and unit_index == 0) if oracle_reports else 0
+        if oracle and unit_index == 0:
             counter[f"oracle_{verdict.lower()}"] += 1
         statuses = []
         for name, results in target_results.items():
@@ -267,7 +291,7 @@ def write_analysis(
     args: argparse.Namespace, targets: dict[str, Path], captures: list[Path],
 ) -> None:
     columns = [
-        "capture_path", "frame_number", "packet_path", "sha256",
+        "capture_path", "frame_number", "unit_index", "packet_path", "sha256",
         "oracle_verdict", "oracle_reasons",
     ]
     for name in targets:

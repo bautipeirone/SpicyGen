@@ -6,9 +6,11 @@ and `wireshark_oracle.py`. Run commands from the `code/grammar-generator`
 project directory using its Python environment.
 
 First extract payloads. The extractor writes `manifest.jsonl`, which maps every
-`.bin` file to its capture and one-based frame number. Keep this manifest with
-the packet files; the comparison checks each payload's SHA-256 hash and runs
-only the files listed in the manifest.
+`.bin` file to its capture, one-based frame number, and zero-based unit index.
+Keep this manifest with the packet files; the comparison checks each payload's
+SHA-256 hash and runs only the files listed in the manifest. RTSP interleaved
+`$` frames are written one unit per file, including when several units share a
+TCP frame.
 
 ```bash
 .venv/bin/python scripts/extract_layer.py CAPTURE_OR_DIRECTORY \
@@ -33,8 +35,8 @@ number of workers used for each target.
 
 The output directory contains:
 
-- `comparison.csv`: one row per extracted payload or oracle-only frame,
-  with capture, frame, oracle verdict, each target's result, and errors.
+- `comparison.csv`: one row per extracted unit or oracle-only frame,
+  with capture, frame, unit index, oracle verdict, each target's result, and errors.
 - `summary.json`: coverage, verdict totals, per-capture counts, per-target
   cross counts, settings, and target run summaries.
 - `oracle/`: individual Wireshark reports when the oracle is run.
@@ -44,7 +46,8 @@ The output directory contains:
 `ACCEPT`, `STRICT_REJECT`, and `SOFT_REJECT` remain separate. A soft rejection
 can come from an enclosing network layer, while these target parsers receive
 only the extracted payload. An oracle-only frame and a payload without an
-oracle frame are coverage gaps, not parser rejections. The current extractor
-produces at most one payload per capture frame; protocols with multiple
-messages in one frame need a message-level index and reassembly before this
-comparison can represent them correctly.
+oracle frame are coverage gaps, not parser rejections. Oracle verdicts remain
+frame-level: when a frame contains several extracted units, the verdict is
+associated with each unit, while coverage counts the frame once. The extractor
+separates complete RTSP interleaved units within a TCP frame but does not
+reassemble units split across TCP frames.
