@@ -252,3 +252,33 @@ def test_rtp_extraction_preserves_valid_udp_payloads(tmp_path):
         video,
         extended,
     ]
+
+
+def test_rtp_extraction_unwraps_rtsp_interleaved_media(tmp_path):
+    capture = tmp_path / "rtp-over-rtsp.pcap"
+    media = (RAW_DATA / "rtp/positive/ITU-T-G711-seq-1.bin").read_bytes()
+    rtcp = b"\x80\xc8\x00\x06" + b"\x00" * 24
+    feedback = b"\x80\xcd\x00\x03" + b"\x00" * 12
+    rtp_unit = b"$\x00" + len(media).to_bytes(2, "big") + media
+    rtcp_unit = b"$\x01" + len(rtcp).to_bytes(2, "big") + rtcp
+    compound_rtcp = feedback + rtcp
+    compound_rtcp_unit = b"$\x01" + len(compound_rtcp).to_bytes(2, "big") + compound_rtcp
+    response = b"RTSP/1.0 200 OK\r\nCSeq: 1\r\n\r\n"
+    wrpcap(str(capture), [
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(rtp_unit),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(rtp_unit + rtcp_unit + rtp_unit),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(compound_rtcp_unit),
+        Ether() / IP() / TCP(sport=554, dport=50000, flags="PA") / Raw(response + rtp_unit),
+    ])
+    output = tmp_path / "payloads"
+    output.mkdir()
+
+    records = extract_layer.extract_packets_from_capture(
+        str(capture), 0, extract_layer.resolve_protocol("rtp"), str(output)
+    )
+
+    assert [record["frame_number"] for record in records] == [1, 2, 2, 4]
+    assert [record["unit_index"] for record in records] == [0, 0, 1, 0]
+    assert [(output / Path(record["packet_path"]).name).read_bytes() for record in records] == [
+        media, media, media, media,
+    ]
