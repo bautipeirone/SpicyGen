@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/data/workspaces/bfd/gpt-5.4/20260724_105642/grammar/output.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/bfd",
+  "total_packets": 5737,
+  "accepted": 5737,
+  "rejected": 0,
+  "accepted_percent": 100.0,
+  "rejected_percent": 0.0,
+  "elapsed_seconds": 21.463447,
+  "packets_per_second": 267.29164,
+  "workers": 8,
+  "errors": []
+}

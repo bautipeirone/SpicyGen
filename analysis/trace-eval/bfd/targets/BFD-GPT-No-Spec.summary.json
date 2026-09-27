@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/bfd__gpt-5.4__no-spec__spicy/output.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/bfd",
+  "total_packets": 5737,
+  "accepted": 5666,
+  "rejected": 71,
+  "accepted_percent": 98.7624,
+  "rejected_percent": 1.2376,
+  "elapsed_seconds": 22.389707,
+  "packets_per_second": 256.233812,
+  "workers": 8,
+  "errors": []
+}
