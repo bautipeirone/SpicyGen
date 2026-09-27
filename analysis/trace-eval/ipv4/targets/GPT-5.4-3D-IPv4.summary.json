@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/IPv4.3d",
+  "runtime": "3d",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/ipv4",
+  "total_packets": 300834,
+  "accepted": 300834,
+  "rejected": 0,
+  "accepted_percent": 100.0,
+  "rejected_percent": 0.0,
+  "elapsed_seconds": 81.89569,
+  "packets_per_second": 3673.380132,
+  "workers": 12,
+  "errors": []
+}

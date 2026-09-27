@@ -1,0 +1,1251 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-24T01:04:52.965679+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/ipv4/220614_ip_flags_google.pcapng",
+    "profile": "ipv4",
+    "display_filter": "ip",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 58,
+      "strict_reject": 0,
+      "soft_reject": 0,
+      "accept": 58
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 1,
+      "time_epoch": "1655239250.367184631",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "ping -c 3 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 2,
+      "time_epoch": "1655239250.402454305",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 3,
+      "time_epoch": "1655239251.367837470",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 4,
+      "time_epoch": "1655239251.399751203",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 5,
+      "time_epoch": "1655239252.368314019",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 6,
+      "time_epoch": "1655239252.398574815",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 7,
+      "time_epoch": "1655239278.094512896",
+      "frame_length": "1514",
+      "captured_length": "1514",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "ping -c 3 -s 3000 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 8,
+      "time_epoch": "1655239278.094531928",
+      "frame_length": "1514",
+      "captured_length": "1514",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 9,
+      "time_epoch": "1655239278.094534726",
+      "frame_length": "82",
+      "captured_length": "82",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "6291456"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "No response seen to ICMP request"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 10,
+      "time_epoch": "1655239279.098597631",
+      "frame_length": "1514",
+      "captured_length": "1514",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 11,
+      "time_epoch": "1655239279.098619729",
+      "frame_length": "1514",
+      "captured_length": "1514",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 12,
+      "time_epoch": "1655239279.098621609",
+      "frame_length": "82",
+      "captured_length": "82",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "6291456"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "No response seen to ICMP request"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 13,
+      "time_epoch": "1655239280.122543123",
+      "frame_length": "1514",
+      "captured_length": "1514",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 14,
+      "time_epoch": "1655239280.122577175",
+      "frame_length": "1514",
+      "captured_length": "1514",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 15,
+      "time_epoch": "1655239280.122579094",
+      "frame_length": "82",
+      "captured_length": "82",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "6291456"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "No response seen to ICMP request"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 16,
+      "time_epoch": "1655239306.382548936",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "ping -c 3 -M do 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 17,
+      "time_epoch": "1655239306.442974940",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 18,
+      "time_epoch": "1655239307.384123504",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 19,
+      "time_epoch": "1655239307.444913111",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 20,
+      "time_epoch": "1655239308.386049000",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 21,
+      "time_epoch": "1655239308.438793313",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 22,
+      "time_epoch": "1655239314.445013538",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "ping -c 3 -M dont 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 23,
+      "time_epoch": "1655239314.508970201",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 24,
+      "time_epoch": "1655239315.445470245",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 25,
+      "time_epoch": "1655239315.495280085",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 26,
+      "time_epoch": "1655239316.446488117",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27,
+      "time_epoch": "1655239316.504702538",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28,
+      "time_epoch": "1655239325.117525794",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "ping -c 3 -M do 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29,
+      "time_epoch": "1655239325.167109238",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 30,
+      "time_epoch": "1655239326.119268333",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 31,
+      "time_epoch": "1655239326.158303110",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32,
+      "time_epoch": "1655239327.120461437",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 33,
+      "time_epoch": "1655239327.159276951",
+      "frame_length": "98",
+      "captured_length": "98",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 34,
+      "time_epoch": "1655239347.516761959",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "./nping --icmp --rf --df 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 35,
+      "time_epoch": "1655239347.570478250",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 36,
+      "time_epoch": "1655239348.516853449",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 37,
+      "time_epoch": "1655239348.569486563",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 38,
+      "time_epoch": "1655239349.517688625",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 39,
+      "time_epoch": "1655239349.567972659",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 40,
+      "time_epoch": "1655239350.519262679",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 41,
+      "time_epoch": "1655239350.567864908",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 42,
+      "time_epoch": "1655239351.521160311",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 43,
+      "time_epoch": "1655239351.579001981",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 44,
+      "time_epoch": "1655239357.748490354",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "./nping --icmp --rf 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 45,
+      "time_epoch": "1655239357.795108908",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 46,
+      "time_epoch": "1655239358.749338594",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 47,
+      "time_epoch": "1655239358.805193647",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 48,
+      "time_epoch": "1655239359.750030008",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 49,
+      "time_epoch": "1655239359.811884567",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 50,
+      "time_epoch": "1655239360.752140379",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 51,
+      "time_epoch": "1655239360.818491719",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 52,
+      "time_epoch": "1655239361.753638165",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 53,
+      "time_epoch": "1655239361.805687093",
+      "frame_length": "60",
+      "captured_length": "60",
+      "protocols": "eth:ethertype:ip:icmp",
+      "source": "8.8.8.8",
+      "destination": "192.168.200.21",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304"
+      ],
+      "expert_groups": [
+        "150994944"
+      ],
+      "expert_messages": [
+        "Didn't find padding of zeros, and an undecoded trailer exists. There may be padding of non-zeros."
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 54,
+      "time_epoch": "1655239376.112380824",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "1048576"
+      ],
+      "expert_groups": [
+        "184549376"
+      ],
+      "expert_messages": [
+        "./nping --icmp --rf --df --mf 8.8.8.8"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 55,
+      "time_epoch": "1655239377.112657662",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 56,
+      "time_epoch": "1655239378.113334869",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 57,
+      "time_epoch": "1655239379.113877053",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 58,
+      "time_epoch": "1655239380.115111127",
+      "frame_length": "42",
+      "captured_length": "42",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "192.168.200.21",
+      "destination": "8.8.8.8",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    }
+  ]
+}

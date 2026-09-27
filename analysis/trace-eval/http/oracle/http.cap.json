@@ -1,0 +1,123 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-24T21:39:54.731750+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/http1.1/http.cap",
+    "profile": "http",
+    "display_filter": "http",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 4,
+      "strict_reject": 0,
+      "soft_reject": 0,
+      "accept": 4
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 4,
+      "time_epoch": "1084443428.222534000",
+      "frame_length": "533",
+      "captured_length": "533",
+      "protocols": "eth:ethertype:ip:tcp:http",
+      "source": "145.254.160.237",
+      "destination": "65.208.228.223",
+      "transport": "TCP",
+      "source_port": "3372",
+      "destination_port": "80",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /download.html HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 18,
+      "time_epoch": "1084443430.295515000",
+      "frame_length": "775",
+      "captured_length": "775",
+      "protocols": "eth:ethertype:ip:tcp:http",
+      "source": "145.254.160.237",
+      "destination": "216.239.59.99",
+      "transport": "TCP",
+      "source_port": "3371",
+      "destination_port": "80",
+      "stream_id": "1",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /pagead/ads?client=ca-pub-2309191948673629&random=1084443430285&lmt=1082467020&format=468x60_as&output=html&url=http%3A%2F%2Fwww.ethereal.com%2Fdownload.html&color_bg=FFFFFF&color_text=333333&color_link=000000&color_url=666633&color_bo"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27,
+      "time_epoch": "1084443431.266912000",
+      "frame_length": "214",
+      "captured_length": "214",
+      "protocols": "eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "216.239.59.99",
+      "destination": "145.254.160.237",
+      "transport": "TCP",
+      "source_port": "80",
+      "destination_port": "3371",
+      "stream_id": "1",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 38,
+      "time_epoch": "1084443432.158193000",
+      "frame_length": "478",
+      "captured_length": "478",
+      "protocols": "eth:ethertype:ip:tcp:http:data-text-lines:xml",
+      "source": "65.208.228.223",
+      "destination": "145.254.160.237",
+      "transport": "TCP",
+      "source_port": "80",
+      "destination_port": "3372",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-24T01:04:53.750436+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/ipv4/ipv4frags.pcap",
+    "profile": "ipv4",
+    "display_filter": "ip",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 3,
+      "strict_reject": 0,
+      "soft_reject": 0,
+      "accept": 3
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 1,
+      "time_epoch": "1506945812.535132000",
+      "frame_length": "1010",
+      "captured_length": "1010",
+      "protocols": "eth:ethertype:ip:data",
+      "source": "2.1.1.2",
+      "destination": "2.1.1.1",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 2,
+      "time_epoch": "1506945812.535197000",
+      "frame_length": "466",
+      "captured_length": "466",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "2.1.1.2",
+      "destination": "2.1.1.1",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 3,
+      "time_epoch": "1506945812.535641000",
+      "frame_length": "1442",
+      "captured_length": "1442",
+      "protocols": "eth:ethertype:ip:icmp:data",
+      "source": "2.1.1.1",
+      "destination": "2.1.1.2",
+      "transport": "",
+      "source_port": "",
+      "destination_port": "",
+      "stream_id": "",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    }
+  ]
+}

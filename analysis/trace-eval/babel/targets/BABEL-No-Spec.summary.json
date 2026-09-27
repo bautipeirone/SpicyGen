@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/babel__gpt-5.4__no-spec__spicy/output.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/babel",
+  "total_packets": 21639,
+  "accepted": 21639,
+  "rejected": 0,
+  "accepted_percent": 100.0,
+  "rejected_percent": 0.0,
+  "elapsed_seconds": 148.358967,
+  "packets_per_second": 145.855693,
+  "workers": 4,
+  "errors": []
+}

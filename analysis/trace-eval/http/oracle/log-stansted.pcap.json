@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-24T21:39:57.001791+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/mixed/log-stansted.pcap",
+    "profile": "http",
+    "display_filter": "http",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 3,
+      "strict_reject": 0,
+      "soft_reject": 0,
+      "accept": 3
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 501,
+      "time_epoch": "1786450807.521077000",
+      "frame_length": "187",
+      "captured_length": "187",
+      "protocols": "radiotap:wlan_radio:wlan:llc:ip:tcp:http",
+      "source": "10.250.37.15",
+      "destination": "91.189.91.97",
+      "transport": "TCP",
+      "source_port": "37702",
+      "destination_port": "80",
+      "stream_id": "14",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET / HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 519,
+      "time_epoch": "1786450808.510358000",
+      "frame_length": "198",
+      "captured_length": "198",
+      "protocols": "radiotap:wlan_radio:wlan:llc:ip:tcp:http",
+      "source": "10.250.37.15",
+      "destination": "91.189.91.98",
+      "transport": "TCP",
+      "source_port": "33656",
+      "destination_port": "80",
+      "stream_id": "15",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "6291456",
+        "2097152"
+      ],
+      "expert_groups": [
+        "218103808",
+        "33554432"
+      ],
+      "expert_messages": [
+        "No stbc information was available, assuming no stbc.",
+        "GET / HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 521,
+      "time_epoch": "1786450808.597247000",
+      "frame_length": "229",
+      "captured_length": "229",
+      "protocols": "radiotap:wlan_radio:wlan:llc:ip:tcp:http",
+      "source": "91.189.91.98",
+      "destination": "10.250.37.15",
+      "transport": "TCP",
+      "source_port": "80",
+      "destination_port": "33656",
+      "stream_id": "15",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 204 No Content\\r\\n"
+      ],
+      "extra_fields": {}
+    }
+  ]
+}

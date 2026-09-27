@@ -1,0 +1,2468 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-24T21:40:23.687103+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/mixed/log2.pcap",
+    "profile": "http",
+    "display_filter": "http",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 100,
+      "strict_reject": 1,
+      "soft_reject": 0,
+      "accept": 99
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 6961,
+      "time_epoch": "1743161625.415145000",
+      "frame_length": "674",
+      "captured_length": "674",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52472",
+      "destination_port": "3000",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /login HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 7061,
+      "time_epoch": "1743161625.437703000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 8693,
+      "time_epoch": "1743161625.507605000",
+      "frame_length": "498",
+      "captured_length": "498",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "52472",
+      "destination_port": "3000",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /public/img/icons/unicons/exclamation-circle.svg HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 8696,
+      "time_epoch": "1743161625.508530000",
+      "frame_length": "640",
+      "captured_length": "640",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 8697,
+      "time_epoch": "1743161625.508542000",
+      "frame_length": "640",
+      "captured_length": "640",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 8698,
+      "time_epoch": "1743161625.508937000",
+      "frame_length": "640",
+      "captured_length": "640",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 8704,
+      "time_epoch": "1743161625.508923000",
+      "frame_length": "640",
+      "captured_length": "640",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 14112,
+      "time_epoch": "1743161630.630149000",
+      "frame_length": "673",
+      "captured_length": "673",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52472",
+      "destination_port": "3000",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /login HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 14137,
+      "time_epoch": "1743161630.655882000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 19405,
+      "time_epoch": "1743161643.872729000",
+      "frame_length": "500",
+      "captured_length": "500",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52472",
+      "destination_port": "3000",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /public/img/icons/unicons/exclamation-triangle.svg HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 19409,
+      "time_epoch": "1743161643.874490000",
+      "frame_length": "685",
+      "captured_length": "685",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 19419,
+      "time_epoch": "1743161643.874080000",
+      "frame_length": "685",
+      "captured_length": "685",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 19420,
+      "time_epoch": "1743161643.874114000",
+      "frame_length": "685",
+      "captured_length": "685",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 19421,
+      "time_epoch": "1743161643.874518000",
+      "frame_length": "685",
+      "captured_length": "685",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:xml",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 23782,
+      "time_epoch": "1743161663.436290000",
+      "frame_length": "682",
+      "captured_length": "682",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52472",
+      "destination_port": "3000",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /login HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 23786,
+      "time_epoch": "1743161663.437809000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 23790,
+      "time_epoch": "1743161663.437827000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 23791,
+      "time_epoch": "1743161663.437911000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 23792,
+      "time_epoch": "1743161663.437925000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 24396,
+      "time_epoch": "1743161664.117123000",
+      "frame_length": "682",
+      "captured_length": "682",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "52472",
+      "destination_port": "3000",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /login HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 24400,
+      "time_epoch": "1743161664.118506000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 24403,
+      "time_epoch": "1743161664.118522000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 24404,
+      "time_epoch": "1743161664.118556000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 24405,
+      "time_epoch": "1743161664.118568000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27246,
+      "time_epoch": "1743161667.131907000",
+      "frame_length": "624",
+      "captured_length": "624",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27255,
+      "time_epoch": "1743161667.134217000",
+      "frame_length": "262",
+      "captured_length": "262",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27278,
+      "time_epoch": "1743161667.175476000",
+      "frame_length": "625",
+      "captured_length": "625",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/ HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27412,
+      "time_epoch": "1743161667.212932000",
+      "frame_length": "355",
+      "captured_length": "355",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27419,
+      "time_epoch": "1743161667.218456000",
+      "frame_length": "634",
+      "captured_length": "634",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/login.htm HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27485,
+      "time_epoch": "1743161667.269554000",
+      "frame_length": "1106",
+      "captured_length": "1106",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27549,
+      "time_epoch": "1743161667.363164000",
+      "frame_length": "625",
+      "captured_length": "625",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/dwr/engine.js HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27552,
+      "time_epoch": "1743161667.364206000",
+      "frame_length": "554",
+      "captured_length": "554",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52512",
+      "destination_port": "8080",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/dwr/interface/MiscDwr.js HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 27690,
+      "time_epoch": "1743161667.372748000",
+      "frame_length": "554",
+      "captured_length": "554",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28807,
+      "time_epoch": "1743161669.448658000",
+      "frame_length": "876",
+      "captured_length": "876",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52512",
+      "destination_port": "8080",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /Scada-LTS/dwr/call/plaincall/MiscDwr.terminateLongPoll.dwr HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28816,
+      "time_epoch": "1743161669.453230000",
+      "frame_length": "422",
+      "captured_length": "422",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines:data-text-lines",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n",
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28818,
+      "time_epoch": "1743161669.453587000",
+      "frame_length": "109",
+      "captured_length": "109",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28834,
+      "time_epoch": "1743161669.465536000",
+      "frame_length": "880",
+      "captured_length": "880",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:urlencoded-form",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52512",
+      "destination_port": "8080",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /Scada-LTS/login.htm HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28840,
+      "time_epoch": "1743161669.471921000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28841,
+      "time_epoch": "1743161669.471944000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28842,
+      "time_epoch": "1743161669.472484000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28843,
+      "time_epoch": "1743161669.472498000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28848,
+      "time_epoch": "1743161669.492599000",
+      "frame_length": "733",
+      "captured_length": "733",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52512",
+      "destination_port": "8080",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/login.htm?error HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28906,
+      "time_epoch": "1743161669.558817000",
+      "frame_length": "631",
+      "captured_length": "631",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52512",
+      "destination_port": "8080",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/dwr/engine.js HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28910,
+      "time_epoch": "1743161669.561665000",
+      "frame_length": "560",
+      "captured_length": "560",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/dwr/interface/MiscDwr.js HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28913,
+      "time_epoch": "1743161669.563357000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "STRICT_REJECT",
+      "rejection_reasons": [
+        "Matched _ws.malformed"
+      ],
+      "expert_severities": [
+        "2097152",
+        "2097152",
+        "8388608"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "117440512"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n",
+        "HTTP/1.1 200 \\r\\n",
+        "Malformed Packet (Exception occurred)"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28915,
+      "time_epoch": "1743161669.563401000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28916,
+      "time_epoch": "1743161669.563401000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28919,
+      "time_epoch": "1743161669.563471000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28920,
+      "time_epoch": "1743161669.563471000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28921,
+      "time_epoch": "1743161669.563471000",
+      "frame_length": "996",
+      "captured_length": "996",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28925,
+      "time_epoch": "1743161669.563538000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28926,
+      "time_epoch": "1743161669.563538000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28929,
+      "time_epoch": "1743161669.563578000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28930,
+      "time_epoch": "1743161669.563578000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28933,
+      "time_epoch": "1743161669.563643000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28934,
+      "time_epoch": "1743161669.563643000",
+      "frame_length": "996",
+      "captured_length": "996",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28937,
+      "time_epoch": "1743161669.563706000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28938,
+      "time_epoch": "1743161669.563706000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28939,
+      "time_epoch": "1743161669.563706000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28943,
+      "time_epoch": "1743161669.563781000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28993,
+      "time_epoch": "1743161669.564692000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28994,
+      "time_epoch": "1743161669.564692000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28997,
+      "time_epoch": "1743161669.564767000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28998,
+      "time_epoch": "1743161669.564767000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 28999,
+      "time_epoch": "1743161669.564767000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29003,
+      "time_epoch": "1743161669.564891000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29004,
+      "time_epoch": "1743161669.564891000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29005,
+      "time_epoch": "1743161669.564891000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29006,
+      "time_epoch": "1743161669.564891000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29007,
+      "time_epoch": "1743161669.564891000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29013,
+      "time_epoch": "1743161669.565015000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29014,
+      "time_epoch": "1743161669.565015000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29015,
+      "time_epoch": "1743161669.565015000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29016,
+      "time_epoch": "1743161669.565015000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29021,
+      "time_epoch": "1743161669.565132000",
+      "frame_length": "1564",
+      "captured_length": "1564",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29022,
+      "time_epoch": "1743161669.565132000",
+      "frame_length": "554",
+      "captured_length": "554",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 29100,
+      "time_epoch": "1743161669.566543000",
+      "frame_length": "109",
+      "captured_length": "109",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32077,
+      "time_epoch": "1743161679.647277000",
+      "frame_length": "888",
+      "captured_length": "888",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /Scada-LTS/dwr/call/plaincall/MiscDwr.terminateLongPoll.dwr HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32091,
+      "time_epoch": "1743161679.651568000",
+      "frame_length": "109",
+      "captured_length": "109",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32112,
+      "time_epoch": "1743161679.673568000",
+      "frame_length": "886",
+      "captured_length": "886",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:urlencoded-form",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /Scada-LTS/login.htm HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32123,
+      "time_epoch": "1743161679.681637000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32124,
+      "time_epoch": "1743161679.682168000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32125,
+      "time_epoch": "1743161679.682185000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32129,
+      "time_epoch": "1743161679.681609000",
+      "frame_length": "325",
+      "captured_length": "325",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 302 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32163,
+      "time_epoch": "1743161679.723720000",
+      "frame_length": "739",
+      "captured_length": "739",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/login.htm?error HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32173,
+      "time_epoch": "1743161679.739533000",
+      "frame_length": "1214",
+      "captured_length": "1214",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32218,
+      "time_epoch": "1743161679.796602000",
+      "frame_length": "631",
+      "captured_length": "631",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52511",
+      "destination_port": "8080",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/dwr/engine.js HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32220,
+      "time_epoch": "1743161679.797037000",
+      "frame_length": "560",
+      "captured_length": "560",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52512",
+      "destination_port": "8080",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /Scada-LTS/dwr/interface/MiscDwr.js HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32234,
+      "time_epoch": "1743161679.802698000",
+      "frame_length": "109",
+      "captured_length": "109",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52512",
+      "stream_id": "138",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 32377,
+      "time_epoch": "1743161679.810278000",
+      "frame_length": "554",
+      "captured_length": "554",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:data-text-lines",
+      "source": "10.0.1.60",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "8080",
+      "destination_port": "52511",
+      "stream_id": "137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 \\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 35540,
+      "time_epoch": "1743161685.229454000",
+      "frame_length": "455",
+      "captured_length": "455",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "19931",
+      "destination_port": "80",
+      "stream_id": "182",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HEAD /filestreamingservice/files/84d3e481-77df-49da-bc37-0a994069ddb9?P1=1743716124&P2=404&P3=2&P4=BN0A03h%2bSblis2qpFbJqUT7qyJV2UK0EEKLjUHgEQOUqyBrYu0M0uC0b2mn4D2mfKoDzQ37qHrQmRz6vmSbndw%3d%3d HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 35556,
+      "time_epoch": "1743161685.234245000",
+      "frame_length": "711",
+      "captured_length": "711",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.11",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "80",
+      "destination_port": "19931",
+      "stream_id": "182",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 35736,
+      "time_epoch": "1743161685.410832000",
+      "frame_length": "506",
+      "captured_length": "506",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.11",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "19931",
+      "destination_port": "80",
+      "stream_id": "182",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /filestreamingservice/files/84d3e481-77df-49da-bc37-0a994069ddb9?P1=1743716124&P2=404&P3=2&P4=BN0A03h%2bSblis2qpFbJqUT7qyJV2UK0EEKLjUHgEQOUqyBrYu0M0uC0b2mn4D2mfKoDzQ37qHrQmRz6vmSbndw%3d%3d HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 51536,
+      "time_epoch": "1743161692.558078000",
+      "frame_length": "698",
+      "captured_length": "698",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "52472",
+      "destination_port": "3000",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "POST /login HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 51543,
+      "time_epoch": "1743161692.560135000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.45",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 51544,
+      "time_epoch": "1743161692.560160000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 51545,
+      "time_epoch": "1743161692.560524000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 51548,
+      "time_epoch": "1743161692.560508000",
+      "frame_length": "430",
+      "captured_length": "430",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http:json",
+      "source": "10.0.1.44",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "3000",
+      "destination_port": "52472",
+      "stream_id": "3",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "4194304",
+        "4194304",
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432",
+        "33554432",
+        "33554432"
+      ],
+      "expert_messages": [
+        "This frame is a (suspected) fast retransmission",
+        "This frame is a (suspected) retransmission",
+        "HTTP/1.1 401 Unauthorized\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 225092,
+      "time_epoch": "1743161785.041675000",
+      "frame_length": "313",
+      "captured_length": "313",
+      "protocols": "eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "169.254.169.254",
+      "transport": "TCP",
+      "source_port": "52528",
+      "destination_port": "80",
+      "stream_id": "41137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /latest/meta-data/iam/security-credentials/ HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 225095,
+      "time_epoch": "1743161785.042056000",
+      "frame_length": "592",
+      "captured_length": "592",
+      "protocols": "eth:ethertype:ip:tcp:http:data-text-lines:xml",
+      "source": "169.254.169.254",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "80",
+      "destination_port": "52528",
+      "stream_id": "41137",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 404 Not Found\\r\\n"
+      ],
+      "extra_fields": {}
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "totals": {
+    "oracle_frames": 7380,
+    "extracted_packets": 9001,
+    "matched": 6105,
+    "oracle_only": 1275,
+    "packet_only": 2896,
+    "oracle_accept": 7373,
+    "GPT-5.4-Spicy_accept": 6786,
+    "GPT-5.4-NoSpec-Spicy_accept": 6786,
+    "GPT-5.4-Spicy_reject": 2215,
+    "GPT-5.4-NoSpec-Spicy_reject": 2215,
+    "oracle_strict_reject": 7
+  },
+  "targets": {
+    "GPT-5.4-Spicy": {
+      "accept": 6786,
+      "oracle_accept_target_accept": 6077,
+      "reject": 2215,
+      "oracle_accept_target_reject": 27,
+      "oracle_strict_reject_target_reject": 1
+    },
+    "GPT-5.4-NoSpec-Spicy": {
+      "accept": 6786,
+      "oracle_accept_target_accept": 6077,
+      "reject": 2215,
+      "oracle_accept_target_reject": 27,
+      "oracle_strict_reject_target_reject": 1
+    }
+  },
+  "target_pairs": {
+    "GPT-5.4-Spicy vs GPT-5.4-NoSpec-Spicy": {
+      "accept_accept": 6786,
+      "reject_reject": 2215
+    }
+  },
+  "per_capture": {
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/c05-http-reply-r1.pcap": {
+      "oracle_frames": 7019,
+      "extracted_packets": 7841,
+      "matched": 5822,
+      "oracle_only": 1197,
+      "packet_only": 2019,
+      "oracle_accept": 7013,
+      "GPT-5.4-Spicy_accept": 5921,
+      "GPT-5.4-NoSpec-Spicy_accept": 5921,
+      "GPT-5.4-Spicy_reject": 1920,
+      "GPT-5.4-NoSpec-Spicy_reject": 1920,
+      "oracle_strict_reject": 6
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/http.cap": {
+      "oracle_frames": 4,
+      "extracted_packets": 5,
+      "matched": 2,
+      "oracle_only": 2,
+      "packet_only": 3,
+      "oracle_accept": 4,
+      "GPT-5.4-Spicy_accept": 2,
+      "GPT-5.4-NoSpec-Spicy_accept": 2,
+      "GPT-5.4-Spicy_reject": 3,
+      "GPT-5.4-NoSpec-Spicy_reject": 3
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/http_gzip.cap": {
+      "oracle_frames": 2,
+      "extracted_packets": 2,
+      "matched": 2,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 2,
+      "GPT-5.4-Spicy_accept": 2,
+      "GPT-5.4-NoSpec-Spicy_accept": 2
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log-bravo.pcap": {
+      "oracle_frames": 2,
+      "extracted_packets": 2,
+      "matched": 2,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 2,
+      "GPT-5.4-Spicy_accept": 2,
+      "GPT-5.4-NoSpec-Spicy_accept": 2
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log-stansted.pcap": {
+      "oracle_frames": 3,
+      "extracted_packets": 3,
+      "matched": 3,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 3,
+      "GPT-5.4-Spicy_accept": 3,
+      "GPT-5.4-NoSpec-Spicy_accept": 3
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log1.pcap": {
+      "oracle_frames": 247,
+      "extracted_packets": 954,
+      "matched": 210,
+      "oracle_only": 37,
+      "packet_only": 744,
+      "oracle_accept": 247,
+      "GPT-5.4-Spicy_accept": 714,
+      "GPT-5.4-NoSpec-Spicy_accept": 714,
+      "GPT-5.4-Spicy_reject": 240,
+      "GPT-5.4-NoSpec-Spicy_reject": 240
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log2.pcap": {
+      "oracle_frames": 100,
+      "extracted_packets": 186,
+      "matched": 61,
+      "oracle_only": 39,
+      "packet_only": 125,
+      "oracle_accept": 99,
+      "GPT-5.4-Spicy_accept": 138,
+      "GPT-5.4-NoSpec-Spicy_accept": 138,
+      "GPT-5.4-Spicy_reject": 48,
+      "GPT-5.4-NoSpec-Spicy_reject": 48,
+      "oracle_strict_reject": 1
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log3.pcap": {
+      "oracle_frames": 3,
+      "extracted_packets": 8,
+      "matched": 3,
+      "oracle_only": 0,
+      "packet_only": 5,
+      "oracle_accept": 3,
+      "GPT-5.4-Spicy_accept": 4,
+      "GPT-5.4-NoSpec-Spicy_accept": 4,
+      "GPT-5.4-Spicy_reject": 4,
+      "GPT-5.4-NoSpec-Spicy_reject": 4
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log4.pcap": {}
+  },
+  "target_run_summaries": {
+    "GPT-5.4-Spicy": {
+      "parser": "/home/bati/imdea/spec-extract/data/workspaces/http1.1/gpt-5.4/20260724_154928/grammar/output.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/http",
+      "total_packets": 9001,
+      "accepted": 6786,
+      "rejected": 2215,
+      "accepted_percent": 75.3916,
+      "rejected_percent": 24.6084,
+      "elapsed_seconds": 40.516034,
+      "packets_per_second": 222.158962,
+      "workers": 16,
+      "errors": []
+    },
+    "GPT-5.4-NoSpec-Spicy": {
+      "parser": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/http1.1__gpt-5.4__no-spec__spicy/output.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/http",
+      "total_packets": 9001,
+      "accepted": 6786,
+      "rejected": 2215,
+      "accepted_percent": 75.3916,
+      "rejected_percent": 24.6084,
+      "elapsed_seconds": 41.405311,
+      "packets_per_second": 217.387572,
+      "workers": 16,
+      "errors": []
+    }
+  },
+  "generated_at_utc": "2026-09-24T21:42:44.394118+00:00",
+  "capture_paths": [
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/c05-http-reply-r1.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/http.cap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/http_gzip.cap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log-bravo.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log-stansted.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log1.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log2.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log3.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/http1.1/log4.pcap"
+  ],
+  "manifest": "/home/bati/imdea/spec-extract/data/packets/http/manifest.jsonl",
+  "oracle": {
+    "mode": "run",
+    "protocol": "http",
+    "filter_override": null,
+    "profile_config": null,
+    "decode_as": [],
+    "soft_reject_filters": []
+  },
+  "target_parsers": {
+    "GPT-5.4-Spicy": "/home/bati/imdea/spec-extract/data/workspaces/http1.1/gpt-5.4/20260724_154928/grammar/output.spicy",
+    "GPT-5.4-NoSpec-Spicy": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/http1.1__gpt-5.4__no-spec__spicy/output.spicy"
+  }
+}

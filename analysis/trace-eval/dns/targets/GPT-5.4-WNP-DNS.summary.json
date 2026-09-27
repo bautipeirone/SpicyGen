@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/dns-gpt-5.4-wnp.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+  "total_packets": 4360,
+  "accepted": 1816,
+  "rejected": 2544,
+  "accepted_percent": 41.6514,
+  "rejected_percent": 58.3486,
+  "elapsed_seconds": 14.992723,
+  "packets_per_second": 290.807747,
+  "workers": 12,
+  "errors": []
+}

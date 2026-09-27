@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-25T19:23:18.941242+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/rtsp/rtsp_with_data_over_tcp.cap",
+    "profile": "rtsp",
+    "display_filter": "rtsp",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 1,
+      "strict_reject": 0,
+      "soft_reject": 0,
+      "accept": 1
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 1,
+      "time_epoch": "1131279540.025406000",
+      "frame_length": "625",
+      "captured_length": "625",
+      "protocols": "eth:ethertype:ip:tcp:rtsp",
+      "source": "216.64.190.61",
+      "destination": "10.201.100.41",
+      "transport": "TCP",
+      "source_port": "554",
+      "destination_port": "2461",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    }
+  ]
+}

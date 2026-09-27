@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/DNS.3d",
+  "runtime": "3d",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+  "total_packets": 4360,
+  "accepted": 4202,
+  "rejected": 158,
+  "accepted_percent": 96.3761,
+  "rejected_percent": 3.6239,
+  "elapsed_seconds": 0.821374,
+  "packets_per_second": 5308.180021,
+  "workers": 12,
+  "errors": []
+}

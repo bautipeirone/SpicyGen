@@ -1,0 +1,170 @@
+{
+  "totals": {
+    "oracle_frames": 300834,
+    "extracted_packets": 300834,
+    "matched": 300834,
+    "oracle_only": 0,
+    "packet_only": 0,
+    "oracle_accept": 300827,
+    "GPT-5.4-IPv4_accept": 300807,
+    "GPT-5.4-WNP-IPv4_accept": 300807,
+    "GPT-5.4-3D-IPv4_accept": 300834,
+    "GPT-5.4-IPv4_reject": 27,
+    "GPT-5.4-WNP-IPv4_reject": 27,
+    "target_disagreements": 27,
+    "oracle_strict_reject": 7
+  },
+  "targets": {
+    "GPT-5.4-IPv4": {
+      "accept": 300807,
+      "oracle_accept_target_accept": 300800,
+      "reject": 27,
+      "oracle_accept_target_reject": 27,
+      "oracle_strict_reject_target_accept": 7
+    },
+    "GPT-5.4-WNP-IPv4": {
+      "accept": 300807,
+      "oracle_accept_target_accept": 300800,
+      "reject": 27,
+      "oracle_accept_target_reject": 27,
+      "oracle_strict_reject_target_accept": 7
+    },
+    "GPT-5.4-3D-IPv4": {
+      "accept": 300834,
+      "oracle_accept_target_accept": 300827,
+      "oracle_strict_reject_target_accept": 7
+    }
+  },
+  "target_pairs": {
+    "GPT-5.4-IPv4 vs GPT-5.4-WNP-IPv4": {
+      "accept_accept": 300807,
+      "reject_reject": 27
+    },
+    "GPT-5.4-IPv4 vs GPT-5.4-3D-IPv4": {
+      "accept_accept": 300807,
+      "reject_accept": 27
+    },
+    "GPT-5.4-WNP-IPv4 vs GPT-5.4-3D-IPv4": {
+      "accept_accept": 300807,
+      "reject_accept": 27
+    }
+  },
+  "per_capture": {
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/220614_ip_flags_google.pcapng": {
+      "oracle_frames": 58,
+      "extracted_packets": 58,
+      "matched": 58,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 58,
+      "GPT-5.4-IPv4_accept": 33,
+      "GPT-5.4-WNP-IPv4_accept": 33,
+      "GPT-5.4-3D-IPv4_accept": 58,
+      "GPT-5.4-IPv4_reject": 25,
+      "GPT-5.4-WNP-IPv4_reject": 25,
+      "target_disagreements": 25
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/ipv4_cipso_option.pcap": {
+      "oracle_frames": 6,
+      "extracted_packets": 6,
+      "matched": 6,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 6,
+      "GPT-5.4-IPv4_accept": 6,
+      "GPT-5.4-WNP-IPv4_accept": 6,
+      "GPT-5.4-3D-IPv4_accept": 6
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/ipv4frags.pcap": {
+      "oracle_frames": 3,
+      "extracted_packets": 3,
+      "matched": 3,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 3,
+      "GPT-5.4-IPv4_accept": 3,
+      "GPT-5.4-WNP-IPv4_accept": 3,
+      "GPT-5.4-3D-IPv4_accept": 3
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/log4.pcap": {
+      "oracle_frames": 300767,
+      "extracted_packets": 300767,
+      "matched": 300767,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 300760,
+      "GPT-5.4-IPv4_accept": 300765,
+      "GPT-5.4-WNP-IPv4_accept": 300765,
+      "GPT-5.4-3D-IPv4_accept": 300767,
+      "oracle_strict_reject": 7,
+      "GPT-5.4-IPv4_reject": 2,
+      "GPT-5.4-WNP-IPv4_reject": 2,
+      "target_disagreements": 2
+    }
+  },
+  "target_run_summaries": {
+    "GPT-5.4-IPv4": {
+      "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/ipv4-gpt-5.4.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/ipv4",
+      "total_packets": 300834,
+      "accepted": 300807,
+      "rejected": 27,
+      "accepted_percent": 99.991,
+      "rejected_percent": 0.009,
+      "elapsed_seconds": 1585.273083,
+      "packets_per_second": 189.767935,
+      "workers": 12,
+      "errors": []
+    },
+    "GPT-5.4-WNP-IPv4": {
+      "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/ipv4-gpt-5.4-wnp.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/ipv4",
+      "total_packets": 300834,
+      "accepted": 300807,
+      "rejected": 27,
+      "accepted_percent": 99.991,
+      "rejected_percent": 0.009,
+      "elapsed_seconds": 1542.655574,
+      "packets_per_second": 195.010477,
+      "workers": 12,
+      "errors": []
+    },
+    "GPT-5.4-3D-IPv4": {
+      "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/IPv4.3d",
+      "runtime": "3d",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/ipv4",
+      "total_packets": 300834,
+      "accepted": 300834,
+      "rejected": 0,
+      "accepted_percent": 100.0,
+      "rejected_percent": 0.0,
+      "elapsed_seconds": 81.89569,
+      "packets_per_second": 3673.380132,
+      "workers": 12,
+      "errors": []
+    }
+  },
+  "generated_at_utc": "2026-09-24T01:59:50.756231+00:00",
+  "capture_paths": [
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/220614_ip_flags_google.pcapng",
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/ipv4_cipso_option.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/ipv4frags.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/ipv4/log4.pcap"
+  ],
+  "manifest": "/home/bati/imdea/spec-extract/data/packets/ipv4/manifest.jsonl",
+  "oracle": {
+    "mode": "run",
+    "protocol": "ipv4",
+    "filter_override": "ip",
+    "profile_config": null,
+    "decode_as": [],
+    "soft_reject_filters": []
+  },
+  "target_parsers": {
+    "GPT-5.4-IPv4": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/ipv4-gpt-5.4.spicy",
+    "GPT-5.4-WNP-IPv4": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/ipv4-gpt-5.4-wnp.spicy",
+    "GPT-5.4-3D-IPv4": "/home/bati/imdea/spec-extract/code/grammar-generator/IPv4.3d"
+  }
+}

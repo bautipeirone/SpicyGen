@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/data/workspaces/tcp/gpt-5.4/20260729_133228/grammar/output.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/tcp",
+  "total_packets": 305466,
+  "accepted": 305446,
+  "rejected": 20,
+  "accepted_percent": 99.9935,
+  "rejected_percent": 0.0065,
+  "elapsed_seconds": 1290.642619,
+  "packets_per_second": 236.677447,
+  "workers": 12,
+  "errors": []
+}

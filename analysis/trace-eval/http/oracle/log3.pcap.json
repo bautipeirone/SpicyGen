@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-24T21:40:41.960996+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/mixed/log3.pcap",
+    "profile": "http",
+    "display_filter": "http",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 3,
+      "strict_reject": 0,
+      "soft_reject": 0,
+      "accept": 3
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 34859,
+      "time_epoch": "1743161808.732265000",
+      "frame_length": "455",
+      "captured_length": "455",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.11",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "19970",
+      "destination_port": "80",
+      "stream_id": "6199",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HEAD /filestreamingservice/files/aa693d92-13b5-41e7-b6dd-1e68cc46cb2a?P1=1743584959&P2=404&P3=2&P4=LyhFTo2nlB748JwpRAxccSVjquud%2fvm1rcZlqKKVrRUnneeaZ5LaMQG0mUTdQ4saRsbPNOJQOUTdJHxLWz8G8g%3d%3d HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 34970,
+      "time_epoch": "1743161808.745146000",
+      "frame_length": "729",
+      "captured_length": "729",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.9",
+      "destination": "10.0.1.8",
+      "transport": "TCP",
+      "source_port": "80",
+      "destination_port": "19970",
+      "stream_id": "6199",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "HTTP/1.1 200 OK\\r\\n"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 35118,
+      "time_epoch": "1743161808.784593000",
+      "frame_length": "506",
+      "captured_length": "506",
+      "protocols": "eth:ethertype:ip:udp:vxlan:eth:ethertype:ip:tcp:http",
+      "source": "10.0.1.11",
+      "destination": "10.0.1.9",
+      "transport": "TCP",
+      "source_port": "19970",
+      "destination_port": "80",
+      "stream_id": "6199",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [
+        "2097152"
+      ],
+      "expert_groups": [
+        "33554432"
+      ],
+      "expert_messages": [
+        "GET /filestreamingservice/files/aa693d92-13b5-41e7-b6dd-1e68cc46cb2a?P1=1743584959&P2=404&P3=2&P4=LyhFTo2nlB748JwpRAxccSVjquud%2fvm1rcZlqKKVrRUnneeaZ5LaMQG0mUTdQ4saRsbPNOJQOUTdJHxLWz8G8g%3d%3d HTTP/1.1\\r\\n"
+      ],
+      "extra_fields": {}
+    }
+  ]
+}

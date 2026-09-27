@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/examples/spicy/dns.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+  "total_packets": 4360,
+  "accepted": 4360,
+  "rejected": 0,
+  "accepted_percent": 100.0,
+  "rejected_percent": 0.0,
+  "elapsed_seconds": 21.138488,
+  "packets_per_second": 206.258842,
+  "workers": 12,
+  "errors": []
+}

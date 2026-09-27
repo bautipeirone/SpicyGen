@@ -1,0 +1,218 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-25T19:48:10.005291+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/babel/babel_rtt.pcap",
+    "profile": "babel",
+    "display_filter": "babel",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 9,
+      "strict_reject": 3,
+      "soft_reject": 0,
+      "accept": 6
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 1,
+      "time_epoch": "1393947762.968288000",
+      "frame_length": "66",
+      "captured_length": "66",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe85:5da9",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 2,
+      "time_epoch": "1393947766.255938000",
+      "frame_length": "92",
+      "captured_length": "92",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe23:4567",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "1",
+      "verdict": "STRICT_REJECT",
+      "rejection_reasons": [
+        "Matched _ws.malformed"
+      ],
+      "expert_severities": [
+        "8388608"
+      ],
+      "expert_groups": [
+        "117440512"
+      ],
+      "expert_messages": [
+        "Malformed Packet (Exception occurred)"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 3,
+      "time_epoch": "1393947766.465555000",
+      "frame_length": "92",
+      "captured_length": "92",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe85:5da9",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "0",
+      "verdict": "STRICT_REJECT",
+      "rejection_reasons": [
+        "Matched _ws.malformed"
+      ],
+      "expert_severities": [
+        "8388608"
+      ],
+      "expert_groups": [
+        "117440512"
+      ],
+      "expert_messages": [
+        "Malformed Packet (Exception occurred)"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 4,
+      "time_epoch": "1393947769.741156000",
+      "frame_length": "66",
+      "captured_length": "66",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe85:5da9",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 5,
+      "time_epoch": "1393947770.547169000",
+      "frame_length": "66",
+      "captured_length": "66",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe23:4567",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "1",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 6,
+      "time_epoch": "1393947774.148744000",
+      "frame_length": "66",
+      "captured_length": "66",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe23:4567",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "1",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 7,
+      "time_epoch": "1393947774.624767000",
+      "frame_length": "66",
+      "captured_length": "66",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe85:5da9",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 8,
+      "time_epoch": "1393947778.082419000",
+      "frame_length": "92",
+      "captured_length": "92",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe23:4567",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "1",
+      "verdict": "STRICT_REJECT",
+      "rejection_reasons": [
+        "Matched _ws.malformed"
+      ],
+      "expert_severities": [
+        "8388608"
+      ],
+      "expert_groups": [
+        "117440512"
+      ],
+      "expert_messages": [
+        "Malformed Packet (Exception occurred)"
+      ],
+      "extra_fields": {}
+    },
+    {
+      "frame_number": 9,
+      "time_epoch": "1393947779.287088000",
+      "frame_length": "128",
+      "captured_length": "128",
+      "protocols": "raw:ipv6:udp:babel",
+      "source": "fe80::5054:ff:fe85:5da9",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "totals": {
+    "oracle_frames": 21639,
+    "extracted_packets": 21639,
+    "matched": 21639,
+    "oracle_only": 0,
+    "packet_only": 0,
+    "oracle_accept": 21636,
+    "BABEL-GPT_accept": 21639,
+    "BABEL-No-Spec_accept": 21639,
+    "oracle_strict_reject": 3
+  },
+  "targets": {
+    "BABEL-GPT": {
+      "accept": 21639,
+      "oracle_accept_target_accept": 21636,
+      "oracle_strict_reject_target_accept": 3
+    },
+    "BABEL-No-Spec": {
+      "accept": 21639,
+      "oracle_accept_target_accept": 21636,
+      "oracle_strict_reject_target_accept": 3
+    }
+  },
+  "target_pairs": {
+    "BABEL-GPT vs BABEL-No-Spec": {
+      "accept_accept": 21639
+    }
+  },
+  "per_capture": {
+    "/home/bati/imdea/spec-extract/data/pcap/babel/babel-diverse.pcap": {
+      "oracle_frames": 21629,
+      "extracted_packets": 21629,
+      "matched": 21629,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 21629,
+      "BABEL-GPT_accept": 21629,
+      "BABEL-No-Spec_accept": 21629
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/babel/babel_auth.pcap": {
+      "oracle_frames": 1,
+      "extracted_packets": 1,
+      "matched": 1,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 1,
+      "BABEL-GPT_accept": 1,
+      "BABEL-No-Spec_accept": 1
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/babel/babel_rtt.pcap": {
+      "oracle_frames": 9,
+      "extracted_packets": 9,
+      "matched": 9,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 6,
+      "BABEL-GPT_accept": 9,
+      "BABEL-No-Spec_accept": 9,
+      "oracle_strict_reject": 3
+    }
+  },
+  "target_run_summaries": {
+    "BABEL-GPT": {
+      "parser": "/home/bati/imdea/spec-extract/data/workspaces/babel/gpt-5.4/20260724_120708/grammar/output.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/babel",
+      "total_packets": 21639,
+      "accepted": 21639,
+      "rejected": 0,
+      "accepted_percent": 100.0,
+      "rejected_percent": 0.0,
+      "elapsed_seconds": 139.418688,
+      "packets_per_second": 155.208748,
+      "workers": 4,
+      "errors": []
+    },
+    "BABEL-No-Spec": {
+      "parser": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/babel__gpt-5.4__no-spec__spicy/output.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/babel",
+      "total_packets": 21639,
+      "accepted": 21639,
+      "rejected": 0,
+      "accepted_percent": 100.0,
+      "rejected_percent": 0.0,
+      "elapsed_seconds": 148.358967,
+      "packets_per_second": 145.855693,
+      "workers": 4,
+      "errors": []
+    }
+  },
+  "generated_at_utc": "2026-09-25T19:53:16.414643+00:00",
+  "capture_paths": [
+    "/home/bati/imdea/spec-extract/data/pcap/babel/babel-diverse.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/babel/babel_auth.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/babel/babel_rtt.pcap"
+  ],
+  "manifest": "/home/bati/imdea/spec-extract/data/packets/babel/manifest.jsonl",
+  "oracle": {
+    "mode": "run",
+    "protocol": "babel",
+    "filter_override": "babel",
+    "profile_config": null,
+    "decode_as": [],
+    "soft_reject_filters": []
+  },
+  "target_parsers": {
+    "BABEL-GPT": "/home/bati/imdea/spec-extract/data/workspaces/babel/gpt-5.4/20260724_120708/grammar/output.spicy",
+    "BABEL-No-Spec": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/babel__gpt-5.4__no-spec__spicy/output.spicy"
+  }
+}

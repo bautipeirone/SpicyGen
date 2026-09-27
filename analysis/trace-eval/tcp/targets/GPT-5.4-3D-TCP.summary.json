@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/TCP.3d",
+  "runtime": "3d",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/tcp",
+  "total_packets": 305466,
+  "accepted": 305446,
+  "rejected": 20,
+  "accepted_percent": 99.9935,
+  "rejected_percent": 0.0065,
+  "elapsed_seconds": 69.378914,
+  "packets_per_second": 4402.865115,
+  "workers": 12,
+  "errors": []
+}

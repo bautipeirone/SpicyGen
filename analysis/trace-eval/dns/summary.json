@@ -1,0 +1,309 @@
+{
+  "totals": {
+    "oracle_frames": 4360,
+    "extracted_packets": 4360,
+    "matched": 4360,
+    "oracle_only": 0,
+    "packet_only": 0,
+    "oracle_accept": 4359,
+    "GPT-5.4-DNS_accept": 4360,
+    "GPT-5.4-NoSpec-DNS_accept": 2524,
+    "GPT-5.4-WNP-DNS_accept": 1816,
+    "GPT-5.4-3D-DNS_accept": 4202,
+    "GPT-5.4-WNP-DNS_reject": 2544,
+    "target_disagreements": 2596,
+    "GPT-5.4-NoSpec-DNS_reject": 1836,
+    "GPT-5.4-3D-DNS_reject": 158,
+    "oracle_soft_reject": 1
+  },
+  "targets": {
+    "GPT-5.4-DNS": {
+      "accept": 4360,
+      "oracle_accept_target_accept": 4359,
+      "oracle_soft_reject_target_accept": 1
+    },
+    "GPT-5.4-NoSpec-DNS": {
+      "accept": 2524,
+      "oracle_accept_target_accept": 2523,
+      "reject": 1836,
+      "oracle_accept_target_reject": 1836,
+      "oracle_soft_reject_target_accept": 1
+    },
+    "GPT-5.4-WNP-DNS": {
+      "accept": 1816,
+      "oracle_accept_target_accept": 1815,
+      "reject": 2544,
+      "oracle_accept_target_reject": 2544,
+      "oracle_soft_reject_target_accept": 1
+    },
+    "GPT-5.4-3D-DNS": {
+      "accept": 4202,
+      "oracle_accept_target_accept": 4201,
+      "reject": 158,
+      "oracle_accept_target_reject": 158,
+      "oracle_soft_reject_target_accept": 1
+    }
+  },
+  "target_pairs": {
+    "GPT-5.4-DNS vs GPT-5.4-NoSpec-DNS": {
+      "accept_accept": 2524,
+      "accept_reject": 1836
+    },
+    "GPT-5.4-DNS vs GPT-5.4-WNP-DNS": {
+      "accept_accept": 1816,
+      "accept_reject": 2544
+    },
+    "GPT-5.4-DNS vs GPT-5.4-3D-DNS": {
+      "accept_accept": 4202,
+      "accept_reject": 158
+    },
+    "GPT-5.4-NoSpec-DNS vs GPT-5.4-WNP-DNS": {
+      "accept_accept": 1816,
+      "accept_reject": 708,
+      "reject_reject": 1836
+    },
+    "GPT-5.4-NoSpec-DNS vs GPT-5.4-3D-DNS": {
+      "accept_accept": 2470,
+      "reject_accept": 1732,
+      "accept_reject": 54,
+      "reject_reject": 104
+    },
+    "GPT-5.4-WNP-DNS vs GPT-5.4-3D-DNS": {
+      "accept_accept": 1764,
+      "reject_accept": 2438,
+      "accept_reject": 52,
+      "reject_reject": 106
+    }
+  },
+  "per_capture": {
+    "/home/bati/imdea/spec-extract/data/pcap/dns/dns-icmp.pcapng": {
+      "oracle_frames": 11,
+      "extracted_packets": 11,
+      "matched": 11,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 11,
+      "GPT-5.4-DNS_accept": 11,
+      "GPT-5.4-NoSpec-DNS_accept": 11,
+      "GPT-5.4-WNP-DNS_accept": 11,
+      "GPT-5.4-3D-DNS_accept": 11
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/dns-remoteshell.pcap": {
+      "oracle_frames": 6,
+      "extracted_packets": 6,
+      "matched": 6,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 6,
+      "GPT-5.4-DNS_accept": 6,
+      "GPT-5.4-NoSpec-DNS_accept": 6,
+      "GPT-5.4-WNP-DNS_accept": 6,
+      "GPT-5.4-3D-DNS_accept": 6
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/dns.cap": {
+      "oracle_frames": 38,
+      "extracted_packets": 38,
+      "matched": 38,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 38,
+      "GPT-5.4-DNS_accept": 38,
+      "GPT-5.4-NoSpec-DNS_accept": 38,
+      "GPT-5.4-WNP-DNS_accept": 32,
+      "GPT-5.4-3D-DNS_accept": 38,
+      "GPT-5.4-WNP-DNS_reject": 6,
+      "target_disagreements": 6
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log-bravo.pcap": {
+      "oracle_frames": 2027,
+      "extracted_packets": 2027,
+      "matched": 2027,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 2027,
+      "GPT-5.4-DNS_accept": 2027,
+      "GPT-5.4-NoSpec-DNS_reject": 1268,
+      "GPT-5.4-WNP-DNS_reject": 1680,
+      "GPT-5.4-3D-DNS_accept": 1877,
+      "target_disagreements": 1732,
+      "GPT-5.4-NoSpec-DNS_accept": 759,
+      "GPT-5.4-WNP-DNS_accept": 347,
+      "GPT-5.4-3D-DNS_reject": 150
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log-stansted.pcap": {
+      "oracle_frames": 56,
+      "extracted_packets": 56,
+      "matched": 56,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 55,
+      "GPT-5.4-DNS_accept": 56,
+      "GPT-5.4-NoSpec-DNS_accept": 56,
+      "GPT-5.4-WNP-DNS_accept": 38,
+      "GPT-5.4-3D-DNS_accept": 56,
+      "GPT-5.4-WNP-DNS_reject": 18,
+      "target_disagreements": 18,
+      "oracle_soft_reject": 1
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log1.pcap": {
+      "oracle_frames": 1288,
+      "extracted_packets": 1288,
+      "matched": 1288,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 1288,
+      "GPT-5.4-DNS_accept": 1288,
+      "GPT-5.4-NoSpec-DNS_reject": 264,
+      "GPT-5.4-WNP-DNS_reject": 328,
+      "GPT-5.4-3D-DNS_accept": 1284,
+      "target_disagreements": 328,
+      "GPT-5.4-NoSpec-DNS_accept": 1024,
+      "GPT-5.4-WNP-DNS_accept": 960,
+      "GPT-5.4-3D-DNS_reject": 4
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log2.pcap": {
+      "oracle_frames": 548,
+      "extracted_packets": 548,
+      "matched": 548,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 548,
+      "GPT-5.4-DNS_accept": 548,
+      "GPT-5.4-NoSpec-DNS_accept": 328,
+      "GPT-5.4-WNP-DNS_reject": 380,
+      "GPT-5.4-3D-DNS_accept": 548,
+      "target_disagreements": 380,
+      "GPT-5.4-NoSpec-DNS_reject": 220,
+      "GPT-5.4-WNP-DNS_accept": 168
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log3.pcap": {
+      "oracle_frames": 344,
+      "extracted_packets": 344,
+      "matched": 344,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 344,
+      "GPT-5.4-DNS_accept": 344,
+      "GPT-5.4-NoSpec-DNS_reject": 72,
+      "GPT-5.4-WNP-DNS_reject": 120,
+      "GPT-5.4-3D-DNS_accept": 340,
+      "target_disagreements": 120,
+      "GPT-5.4-NoSpec-DNS_accept": 272,
+      "GPT-5.4-WNP-DNS_accept": 224,
+      "GPT-5.4-3D-DNS_reject": 4
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log4.pcap": {
+      "oracle_frames": 36,
+      "extracted_packets": 36,
+      "matched": 36,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 36,
+      "GPT-5.4-DNS_accept": 36,
+      "GPT-5.4-NoSpec-DNS_accept": 24,
+      "GPT-5.4-WNP-DNS_accept": 24,
+      "GPT-5.4-3D-DNS_accept": 36,
+      "GPT-5.4-NoSpec-DNS_reject": 12,
+      "GPT-5.4-WNP-DNS_reject": 12,
+      "target_disagreements": 12
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/dns/trace.pcap": {
+      "oracle_frames": 6,
+      "extracted_packets": 6,
+      "matched": 6,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 6,
+      "GPT-5.4-DNS_accept": 6,
+      "GPT-5.4-NoSpec-DNS_accept": 6,
+      "GPT-5.4-WNP-DNS_accept": 6,
+      "GPT-5.4-3D-DNS_accept": 6
+    }
+  },
+  "target_run_summaries": {
+    "GPT-5.4-DNS": {
+      "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/dns-gpt-5.4.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+      "total_packets": 4360,
+      "accepted": 4360,
+      "rejected": 0,
+      "accepted_percent": 100.0,
+      "rejected_percent": 0.0,
+      "elapsed_seconds": 14.749306,
+      "packets_per_second": 295.607133,
+      "workers": 12,
+      "errors": []
+    },
+    "GPT-5.4-NoSpec-DNS": {
+      "parser": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/dns__gpt-5.4__no-spec__spicy/output.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+      "total_packets": 4360,
+      "accepted": 2524,
+      "rejected": 1836,
+      "accepted_percent": 57.8899,
+      "rejected_percent": 42.1101,
+      "elapsed_seconds": 15.47641,
+      "packets_per_second": 281.719087,
+      "workers": 12,
+      "errors": []
+    },
+    "GPT-5.4-WNP-DNS": {
+      "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/dns-gpt-5.4-wnp.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+      "total_packets": 4360,
+      "accepted": 1816,
+      "rejected": 2544,
+      "accepted_percent": 41.6514,
+      "rejected_percent": 58.3486,
+      "elapsed_seconds": 14.992723,
+      "packets_per_second": 290.807747,
+      "workers": 12,
+      "errors": []
+    },
+    "GPT-5.4-3D-DNS": {
+      "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/DNS.3d",
+      "runtime": "3d",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+      "total_packets": 4360,
+      "accepted": 4202,
+      "rejected": 158,
+      "accepted_percent": 96.3761,
+      "rejected_percent": 3.6239,
+      "elapsed_seconds": 0.821374,
+      "packets_per_second": 5308.180021,
+      "workers": 12,
+      "errors": []
+    }
+  },
+  "generated_at_utc": "2026-09-24T18:11:18.464398+00:00",
+  "capture_paths": [
+    "/home/bati/imdea/spec-extract/data/pcap/dns/dns-icmp.pcapng",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/dns-remoteshell.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/dns.cap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log-bravo.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log-stansted.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log1.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log2.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log3.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/log4.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/dns/trace.pcap"
+  ],
+  "manifest": "/home/bati/imdea/spec-extract/data/packets/dns/manifest.jsonl",
+  "oracle": {
+    "mode": "reuse",
+    "protocol": "dns",
+    "filter_override": "dns || mdns",
+    "profile_config": null,
+    "decode_as": [],
+    "soft_reject_filters": []
+  },
+  "target_parsers": {
+    "GPT-5.4-DNS": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/dns-gpt-5.4.spicy",
+    "GPT-5.4-NoSpec-DNS": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/dns__gpt-5.4__no-spec__spicy/output.spicy",
+    "GPT-5.4-WNP-DNS": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/dns-gpt-5.4-wnp.spicy",
+    "GPT-5.4-3D-DNS": "/home/bati/imdea/spec-extract/code/grammar-generator/DNS.3d"
+  }
+}

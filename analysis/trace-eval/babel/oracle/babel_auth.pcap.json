@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "generated_at_utc": "2026-09-25T19:48:09.710839+00:00",
+    "pcap": "/home/bati/imdea/spec-extract/data/pcap/babel/babel_auth.pcap",
+    "profile": "babel",
+    "display_filter": "babel",
+    "decode_as": [],
+    "soft_reject_filters": [],
+    "extra_report_fields": [],
+    "tshark_executable": "/usr/bin/tshark",
+    "tshark_version": "TShark (Wireshark) 4.2.2 (Git v4.2.2 packaged as 4.2.2-1.1build3).",
+    "overall_verdict": "PROTOCOL_FRAMES_ANALYZED",
+    "counts": {
+      "total_protocol_frames": 1,
+      "strict_reject": 0,
+      "soft_reject": 0,
+      "accept": 1
+    },
+    "interpretation": "ACCEPT means the intended dissector handled the frame without a configured malformed/error signal. It does not prove full standards compliance."
+  },
+  "packets": [
+    {
+      "frame_number": 1,
+      "time_epoch": "1338986423.226395000",
+      "frame_length": "490",
+      "captured_length": "490",
+      "protocols": "eth:ethertype:ipv6:udp:babel",
+      "source": "fe80::b299:28ff:fec8:d646",
+      "destination": "ff02::1:6",
+      "transport": "UDP",
+      "source_port": "6696",
+      "destination_port": "6696",
+      "stream_id": "0",
+      "verdict": "ACCEPT",
+      "rejection_reasons": [],
+      "expert_severities": [],
+      "expert_groups": [],
+      "expert_messages": [],
+      "extra_fields": {}
+    }
+  ]
+}

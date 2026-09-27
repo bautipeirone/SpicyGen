@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/outputs/stable/rtsp-gpt-5.4-wnp.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/rtsp",
+  "total_packets": 220080,
+  "accepted": 220080,
+  "rejected": 0,
+  "accepted_percent": 100.0,
+  "rejected_percent": 0.0,
+  "elapsed_seconds": 1429.26429,
+  "packets_per_second": 153.981319,
+  "workers": 4,
+  "errors": []
+}

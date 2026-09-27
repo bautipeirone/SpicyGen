@@ -1,0 +1,14 @@
+{
+  "parser": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/dns__gpt-5.4__no-spec__spicy/output.spicy",
+  "runtime": "spicy",
+  "packet_dir": "/home/bati/imdea/spec-extract/data/packets/dns",
+  "total_packets": 4360,
+  "accepted": 2524,
+  "rejected": 1836,
+  "accepted_percent": 57.8899,
+  "rejected_percent": 42.1101,
+  "elapsed_seconds": 15.47641,
+  "packets_per_second": 281.719087,
+  "workers": 12,
+  "errors": []
+}

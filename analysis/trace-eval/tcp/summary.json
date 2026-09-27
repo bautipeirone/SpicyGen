@@ -1,0 +1,155 @@
+{
+  "totals": {
+    "oracle_frames": 305468,
+    "extracted_packets": 305466,
+    "matched": 305466,
+    "oracle_only": 2,
+    "packet_only": 0,
+    "oracle_accept": 305461,
+    "GPT-5.4-TCP_accept": 305446,
+    "GPT-5.4-NO_SPEC-TCP_accept": 305466,
+    "GPT-5.4-3D-TCP_accept": 305446,
+    "oracle_strict_reject": 7,
+    "GPT-5.4-TCP_reject": 20,
+    "GPT-5.4-3D-TCP_reject": 20,
+    "target_disagreements": 20
+  },
+  "targets": {
+    "GPT-5.4-TCP": {
+      "accept": 305446,
+      "oracle_accept_target_accept": 305439,
+      "oracle_strict_reject_target_accept": 7,
+      "reject": 20,
+      "oracle_accept_target_reject": 20
+    },
+    "GPT-5.4-NO_SPEC-TCP": {
+      "accept": 305466,
+      "oracle_accept_target_accept": 305459,
+      "oracle_strict_reject_target_accept": 7
+    },
+    "GPT-5.4-3D-TCP": {
+      "accept": 305446,
+      "oracle_accept_target_accept": 305439,
+      "oracle_strict_reject_target_accept": 7,
+      "reject": 20,
+      "oracle_accept_target_reject": 20
+    }
+  },
+  "target_pairs": {
+    "GPT-5.4-TCP vs GPT-5.4-NO_SPEC-TCP": {
+      "accept_accept": 305446,
+      "reject_accept": 20
+    },
+    "GPT-5.4-TCP vs GPT-5.4-3D-TCP": {
+      "accept_accept": 305446,
+      "reject_reject": 20
+    },
+    "GPT-5.4-NO_SPEC-TCP vs GPT-5.4-3D-TCP": {
+      "accept_accept": 305446,
+      "accept_reject": 20
+    }
+  },
+  "per_capture": {
+    "/home/bati/imdea/spec-extract/data/pcap/tcp/log-bravo.pcap": {
+      "oracle_frames": 3500,
+      "extracted_packets": 3498,
+      "matched": 3498,
+      "oracle_only": 2,
+      "packet_only": 0,
+      "oracle_accept": 3500,
+      "GPT-5.4-TCP_accept": 3498,
+      "GPT-5.4-NO_SPEC-TCP_accept": 3498,
+      "GPT-5.4-3D-TCP_accept": 3498
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/tcp/log-stansted.pcap": {
+      "oracle_frames": 1409,
+      "extracted_packets": 1409,
+      "matched": 1409,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 1409,
+      "GPT-5.4-TCP_accept": 1409,
+      "GPT-5.4-NO_SPEC-TCP_accept": 1409,
+      "GPT-5.4-3D-TCP_accept": 1409
+    },
+    "/home/bati/imdea/spec-extract/data/pcap/tcp/log4.pcap": {
+      "oracle_frames": 300559,
+      "extracted_packets": 300559,
+      "matched": 300559,
+      "oracle_only": 0,
+      "packet_only": 0,
+      "oracle_accept": 300552,
+      "GPT-5.4-TCP_accept": 300539,
+      "GPT-5.4-NO_SPEC-TCP_accept": 300559,
+      "GPT-5.4-3D-TCP_accept": 300539,
+      "oracle_strict_reject": 7,
+      "GPT-5.4-TCP_reject": 20,
+      "GPT-5.4-3D-TCP_reject": 20,
+      "target_disagreements": 20
+    }
+  },
+  "target_run_summaries": {
+    "GPT-5.4-TCP": {
+      "parser": "/home/bati/imdea/spec-extract/data/workspaces/tcp/gpt-5.4/20260729_133228/grammar/output.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/tcp",
+      "total_packets": 305466,
+      "accepted": 305446,
+      "rejected": 20,
+      "accepted_percent": 99.9935,
+      "rejected_percent": 0.0065,
+      "elapsed_seconds": 1290.642619,
+      "packets_per_second": 236.677447,
+      "workers": 12,
+      "errors": []
+    },
+    "GPT-5.4-NO_SPEC-TCP": {
+      "parser": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/tcp__gpt-5.4__no-spec__spicy/output.spicy",
+      "runtime": "spicy",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/tcp",
+      "total_packets": 305466,
+      "accepted": 305466,
+      "rejected": 0,
+      "accepted_percent": 100.0,
+      "rejected_percent": 0.0,
+      "elapsed_seconds": 1287.358318,
+      "packets_per_second": 237.281257,
+      "workers": 12,
+      "errors": []
+    },
+    "GPT-5.4-3D-TCP": {
+      "parser": "/home/bati/imdea/spec-extract/code/grammar-generator/TCP.3d",
+      "runtime": "3d",
+      "packet_dir": "/home/bati/imdea/spec-extract/data/packets/tcp",
+      "total_packets": 305466,
+      "accepted": 305446,
+      "rejected": 20,
+      "accepted_percent": 99.9935,
+      "rejected_percent": 0.0065,
+      "elapsed_seconds": 69.378914,
+      "packets_per_second": 4402.865115,
+      "workers": 12,
+      "errors": []
+    }
+  },
+  "generated_at_utc": "2026-09-24T20:39:01.468343+00:00",
+  "capture_paths": [
+    "/home/bati/imdea/spec-extract/data/pcap/tcp/log-bravo.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/tcp/log-stansted.pcap",
+    "/home/bati/imdea/spec-extract/data/pcap/tcp/log4.pcap"
+  ],
+  "manifest": "/home/bati/imdea/spec-extract/data/packets/tcp/manifest.jsonl",
+  "oracle": {
+    "mode": "run",
+    "protocol": "tcp",
+    "filter_override": "tcp",
+    "profile_config": null,
+    "decode_as": [],
+    "soft_reject_filters": []
+  },
+  "target_parsers": {
+    "GPT-5.4-TCP": "/home/bati/imdea/spec-extract/data/workspaces/tcp/gpt-5.4/20260729_133228/grammar/output.spicy",
+    "GPT-5.4-NO_SPEC-TCP": "/home/bati/imdea/spec-extract/data/eval/20260731_104101_No-Spec-Experiment/runs/tcp__gpt-5.4__no-spec__spicy/output.spicy",
+    "GPT-5.4-3D-TCP": "/home/bati/imdea/spec-extract/code/grammar-generator/TCP.3d"
+  }
+}
