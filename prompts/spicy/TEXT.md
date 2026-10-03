@@ -256,7 +256,8 @@ type Message = unit(body_default: bool) {
     switch ( self.delivery_mode ) {
       DeliveryMode::Length  -> body: bytes &size=self.content_length if ( self.has_body );
       DeliveryMode::Chunked -> chunks: Chunk[] &until=($$.length == 0) if ( self.has_body );
-      * -> : void;
+      DeliveryMode::EndOfData -> : void;
+      * -> : void { throw "unsupported delivery mode"; }
     };
 
     var has_body: bool;
@@ -366,6 +367,17 @@ Avoid this by making the branches mutually exclusive on what they match.
 
 ## Examples
 * **switch** constructs are supported as a way to branch into one of several parsing alternatives.
+
+Every `switch` you write MUST include an explicit default branch (`* ->`) to handle unknown or unexpected cases instead of relying on an unmatched-switch runtime exception. If the protocol provides a sensible way to parse an unknown branch, use it. For example, when a previously parsed length field defines the payload size and the protocol permits unknown types, preserve the payload as `unknown_payload: bytes &size=self.length;` in the default branch. A protocol-defined line or record delimiter can also provide a safe boundary. Respect that boundary so parsing can continue with the next field or message; do not consume the rest of the stream with `&eod` unless the protocol defines that boundary.
+
+If there is no sensible, protocol-defined way to parse the branch, or the value is forbidden by the protocol, put a `throw` statement with a descriptive message inside the default branch. In a parsing switch, attach it to a `void` field hook:
+```
+* -> : void {
+    throw "unsupported or unexpected message type";
+}
+```
+Do not use an empty default (`* -> : void;`) to silently accept an unknown value. A legitimate case with no payload should have its own explicit branch. For look-ahead switches, a bare `void` fallback cannot supply a look-ahead symbol, and a catch-all regex may overlap existing alternatives. When needed, factor out and parse the common discriminator first, then use a value-based switch with an explicit default.
+
 ```
 public type Foo = unit {
     x: bytes &size=1;
@@ -374,9 +386,9 @@ public type Foo = unit {
         b"B" -> a16: int16;
         b"C" -> : void;
         * -> {
-          u8: uint8;
-          u16: uint16;
-          u32: uint32;
+          : void {
+              throw "unsupported field discriminator";
+          }
         } # This block doesnt carry a `;`
     }; # The block for the switch does carry a `;`
 };
@@ -426,7 +438,7 @@ public type Msg = unit {
     Code::A,
     Code::B -> payload: bytes &eod
     Code::C -> error: uint8
-    * -> : void;
+    * -> : void { throw "unsupported code"; }
   };
 };
 ```

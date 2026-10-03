@@ -1,0 +1,56 @@
+module DHCP_gpt;
+import spicy;
+
+const DHCPMagic = b"\x63\x82\x53\x63";
+
+type DHCPMessageType = enum { DHCPDISCOVER = 1, DHCPOFFER = 2, DHCPREQUEST = 3, DHCPDECLINE = 4, DHCPACK = 5, DHCPNAK = 6, DHCPRELEASE = 7, DHCPINFORM = 8, };
+type OpCode = enum { BOOTREQUEST = 1, BOOTREPLY = 2, };
+type DHCPOptionCode = enum {
+    Pad = 0, SubnetMask = 1, TimeOffset = 2, Router = 3, TimeServer = 4, NameServer = 5, DomainNameServer = 6, LogServer = 7, CookieServer = 8, LPRServer = 9, ImpressServer = 10, ResourceLocationServer = 11, HostName = 12, BootFileSize = 13, MeritDumpFile = 14, DomainName = 15, SwapServer = 16, RootPath = 17, ExtensionsPath = 18, IPForwarding = 19, NonLocalSourceRouting = 20, PolicyFilter = 21, MaxDatagramReassembly = 22, DefaultIPTTL = 23, PathMTUAging = 24, PathMTUPlateau = 25, InterfaceMTU = 26, AllSubnetsLocal = 27, BroadcastAddress = 28, MaskDiscovery = 29, MaskSupplier = 30, RouterDiscovery = 31, RouterSolicitation = 32, StaticRoute = 33, TrailerEncapsulation = 34, ARPCacheTimeout = 35, EthernetEncapsulation = 36, TCPDefaultTTL = 37, TCPKeepaliveInterval = 38, TCPKeepaliveGarbage = 39, NISDomain = 40, NISServers = 41, NTPServers = 42, VendorSpecific = 43, NBNServers = 44, NBDDServers = 45, NetBIOSNodeType = 46, NetBIOSScope = 47, XFontServers = 48, XDisplayManagers = 49, RequestedIP = 50, LeaseTime = 51, OptionOverload = 52, MessageType = 53, ServerIdentifier = 54, ParameterRequestList = 55, Message = 56, MaxDHCPMessageSize = 57, RenewalTime = 58, RebindingTime = 59, ClassIdentifier = 60, ClientIdentifier = 61, End = 255,
+};
+
+type IPv4Option = unit { length: uint8 &requires=($$ == 4); address: addr &ipv4; };
+type U32Option = unit { length: uint8 &requires=($$ == 4); value: uint32; };
+type U16Option = unit { length: uint8 &requires=($$ == 2); value: uint16; };
+type U8Option = unit { length: uint8 &requires=($$ == 1); value: uint8; };
+type BytesOption = unit { length: uint8 &requires=(1 <= $$); value: bytes &size=self.length; };
+type AddressListOption = unit { length: uint8 &requires=(4 <= $$ && $$ % 4 == 0); addresses: (addr &ipv4)[] &size=self.length; };
+type PairAddressListOption = unit { length: uint8 &requires=(8 <= $$ && $$ % 8 == 0); pairs: (addr &ipv4)[2] &size=self.length; };
+type PolicyPairListOption = unit { length: uint8 &requires=(8 <= $$ && $$ % 8 == 0); pairs: (addr &ipv4)[2] &size=self.length; };
+
+type DHCPOption = unit {
+    code: uint8 &convert=DHCPOptionCode($$);
+    switch (self.code) {
+        DHCPOptionCode::Pad -> : void;
+        DHCPOptionCode::End -> : void;
+        DHCPOptionCode::SubnetMask, DHCPOptionCode::BroadcastAddress, DHCPOptionCode::RouterSolicitation, DHCPOptionCode::ServerIdentifier, DHCPOptionCode::RequestedIP -> ipv4: IPv4Option;
+        DHCPOptionCode::TimeOffset, DHCPOptionCode::PathMTUAging, DHCPOptionCode::ARPCacheTimeout, DHCPOptionCode::TCPKeepaliveInterval, DHCPOptionCode::LeaseTime, DHCPOptionCode::RenewalTime, DHCPOptionCode::RebindingTime -> u32: U32Option;
+        DHCPOptionCode::BootFileSize, DHCPOptionCode::MaxDHCPMessageSize, DHCPOptionCode::InterfaceMTU, DHCPOptionCode::MaxDatagramReassembly -> u16: U16Option;
+        DHCPOptionCode::IPForwarding, DHCPOptionCode::NonLocalSourceRouting, DHCPOptionCode::DefaultIPTTL, DHCPOptionCode::AllSubnetsLocal, DHCPOptionCode::MaskDiscovery, DHCPOptionCode::MaskSupplier, DHCPOptionCode::RouterDiscovery, DHCPOptionCode::TrailerEncapsulation, DHCPOptionCode::EthernetEncapsulation, DHCPOptionCode::TCPDefaultTTL, DHCPOptionCode::TCPKeepaliveGarbage, DHCPOptionCode::OptionOverload, DHCPOptionCode::MessageType, DHCPOptionCode::NetBIOSNodeType -> u8: U8Option;
+        DHCPOptionCode::Router, DHCPOptionCode::TimeServer, DHCPOptionCode::NameServer, DHCPOptionCode::DomainNameServer, DHCPOptionCode::LogServer, DHCPOptionCode::CookieServer, DHCPOptionCode::LPRServer, DHCPOptionCode::ImpressServer, DHCPOptionCode::ResourceLocationServer, DHCPOptionCode::NISServers, DHCPOptionCode::NTPServers, DHCPOptionCode::NBNServers, DHCPOptionCode::NBDDServers, DHCPOptionCode::XFontServers, DHCPOptionCode::XDisplayManagers -> address_list: AddressListOption;
+        DHCPOptionCode::PolicyFilter -> policy_filters: PolicyPairListOption;
+        DHCPOptionCode::StaticRoute -> static_routes: PairAddressListOption;
+        DHCPOptionCode::PathMTUPlateau -> plateau: BytesOption;
+        DHCPOptionCode::HostName, DHCPOptionCode::MeritDumpFile, DHCPOptionCode::DomainName, DHCPOptionCode::RootPath, DHCPOptionCode::ExtensionsPath, DHCPOptionCode::SwapServer, DHCPOptionCode::NISDomain, DHCPOptionCode::VendorSpecific, DHCPOptionCode::NetBIOSScope, DHCPOptionCode::ParameterRequestList, DHCPOptionCode::Message, DHCPOptionCode::ClassIdentifier, DHCPOptionCode::ClientIdentifier -> bytes_value: BytesOption;
+        * -> unknown: BytesOption;
+    };
+};
+
+public type DHCPMessage = unit {
+    op: uint8 &convert=OpCode($$);
+    htype: uint8;
+    hlen: uint8;
+    hops: uint8;
+    xid: uint32;
+    secs: uint16;
+    flags: bitfield(16) { broadcast: 0; reserved: 1..15; } &bit-order=spicy::BitOrder::MSB0;
+    ciaddr: addr &ipv4;
+    yiaddr: addr &ipv4;
+    siaddr: addr &ipv4;
+    giaddr: addr &ipv4;
+    chaddr: bytes &size=16;
+    sname: bytes &size=64;
+    filename: bytes &size=128;
+    magic: DHCPMagic;
+    options: DHCPOption[] &until=$$.code == DHCPOptionCode::End;
+};
