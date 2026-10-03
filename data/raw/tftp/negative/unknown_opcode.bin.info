@@ -1,0 +1,1 @@
+Invalid Reason: RFC 1350 defines opcodes 1 through 5; opcode 65535 has no defined payload layout and must be explicitly rejected.

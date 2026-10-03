@@ -1,0 +1,1 @@
+Invalid Reason: Unknown DHCP option 254 declares eight payload bytes but only three remain. A length-bounded default branch must reject the truncated payload.

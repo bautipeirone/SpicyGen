@@ -46,5 +46,12 @@
     "context-window": "1050000",
     "cutoff-date": "02-26",
     "price": [0.005, 0.030]
+  },
+  "gpt-5.6-luna": {
+    "name": "gpt-5.6-luna",
+    "provider": "openai-account",
+    "context-window": "1050000",
+    "cutoff-date": "02-26",
+    "price": [0.0002, 0.0012]
   }
 }
