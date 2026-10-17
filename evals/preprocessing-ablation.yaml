@@ -1,0 +1,45 @@
+# Isolated ablation of grammar preprocessing in the full framework.
+#
+# Reuse level 00 as the baseline. The second configuration changes only
+# enable_preprocessing; packet representation and parse-tree diffs stay on.
+# This measures preprocessing with full runtime feedback available, whereas
+# levels 02 -> 03 in tool-ablation.yaml measure it without that feedback.
+#
+# All five protocols have positive and negative packets and an expected Spicy
+# parse tree for every positive packet. Protocol rationale, RFC sources, and
+# current corpus limitations are documented in docs/preprocessing-ablation.md.
+
+name: "Grammar Preprocessing Ablation"
+
+note: >-
+  Compare the full framework (level 00) with the same framework without grammar
+  preprocessing. The protocol set targets packed bitfields, option type/length
+  layouts, reserved field-name collisions, and time-valued fields. Models,
+  specifications, language instructions, retry budget, negative packets,
+  packet representations, and parse-tree feedback are held constant.
+
+defaults:
+  models:
+    - "gpt-oss"
+    - "gemini-3.1-flash"
+  configs:
+    - "configs/models-comparison.yaml"
+    - "configs/evals/ablation-no-preprocessing.yaml"
+  target_languages:
+    - "spicy"
+  no_spec: false
+  samples: 1
+
+protocols:
+  # RFC 791: version/IHL, flags/fragment offset, and option type/length fields.
+  ipv4: {}
+  # RFC 793: data offset/reserved/control bits and kind/length/data options.
+  tcp: {}
+  # RFC 792: direct Type identifier pressure. Timestamp formats are specified,
+  # but the current ICMPv4 fixtures do not exercise timestamp messages.
+  icmpv4: {}
+  # RFCs 2131/2132: broadcast flag, TLV options, secs, lease/renewal times,
+  # and the reserved Spicy field name file.
+  dhcp: {}
+  # RFC 1035: packed header flags, resource-record TYPE/RDLENGTH/RDATA, and TTL.
+  dns: {}
