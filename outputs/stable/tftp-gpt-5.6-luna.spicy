@@ -1,0 +1,46 @@
+module TFTP_gpt;
+
+import spicy;
+
+const NUL = b"\x00";
+
+type Opcode = enum {
+    RRQ = 1,
+    WRQ = 2,
+    DATA = 3,
+    ACK = 4,
+    ERROR = 5,
+};
+
+type Request = unit {
+    filename: bytes &until=NUL;
+    mode: bytes &until=NUL &requires=(|$$| > 0);
+};
+
+type DataPacket = unit {
+    block_number: uint16 &requires=(1 <= $$);
+    data: bytes &eod &requires=(|$$| <= 512);
+};
+
+type AckPacket = unit {
+    block_number: uint16;
+};
+
+type ErrorPacket = unit {
+    error_code: uint16 &requires=($$ <= 7);
+    error_message: bytes &until=NUL;
+};
+
+public type TFTP = unit {
+    opcode: uint16 &convert=Opcode($$);
+    switch (self.opcode) {
+        Opcode::RRQ -> request: Request;
+        Opcode::WRQ -> request: Request;
+        Opcode::DATA -> data_packet: DataPacket;
+        Opcode::ACK -> ack_packet: AckPacket;
+        Opcode::ERROR -> error_packet: ErrorPacket;
+        * -> : void {
+            throw "unsupported TFTP opcode";
+        }
+    };
+};

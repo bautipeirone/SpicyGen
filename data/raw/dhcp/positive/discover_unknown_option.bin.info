@@ -1,0 +1,1 @@
+Valid Reason: DHCP option 254 is an opaque extension with a declared length of 6. Its payload contains bytes that resemble End, Pad, and DHCP Message Type options; consume exactly the declared length, then parse the original Discover options and End marker.

@@ -2,6 +2,22 @@
 
 This changelog tracks which release grammars were updated in `stable` and `wip`. Grammars in the latter one don't compile yet or need polishing via prompt refinement.
 
+## 2026-10-03
+
+Add `gpt-5.6-luna` grammars generated with the explicit switch-default instructions in the Spicy prompts.
+
+| Protocol | Grammar | Positive packets accepted | Negative packets rejected | Validation attempts |
+| --- | --- | --- | --- | --- |
+| TFTP | [tftp-gpt-5.6-luna.spicy](stable/tftp-gpt-5.6-luna.spicy) | 12/12 | 7/7 | 2 |
+| DHCP | [dhcp-gpt-5.6-luna.spicy](stable/dhcp-gpt-5.6-luna.spicy) | 7/7 | 11/11 | 4 |
+
+Validated with Spicy v1.17.0 using the default agent configuration and the `openai-account` provider.
+
+- TFTP's opcode default explicitly throws `unsupported TFTP opcode` for an unknown opcode. The earlier `tftp-gemini-3-flash-preview.spicy` grammar has no default and reports an unmatched-switch error for the same packet.
+- DHCP's option default parses unknown option data using its length. A new Discover fixture includes option 254 with six payload bytes resembling option markers, followed by normal Discover options. A truncated unknown-option fixture is rejected.
+
+These results cover compilation and corpus acceptance/rejection. They do not establish full protocol conformance; the DHCP corpus includes negative packets rejected because their fixed headers are truncated.
+
 ## Summary
 
 | Protocol | qwen3-coder:480b-cloud Compiles | qwen3-coder:480b-cloud Packet test | gemini-3.1-flash-lite-preview Compiles | gemini-3.1-flash-lite-preview Packet test |
