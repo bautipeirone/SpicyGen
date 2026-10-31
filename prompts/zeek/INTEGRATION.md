@@ -7,7 +7,8 @@ Generate three files that connect an existing Spicy parser to Zeek:
 3. `scripts/main.zeek`: declares Zeek events, log records, and event handlers.
 
 The goal is compiling, useful, conservative integration. Prefer a small set of
-high-confidence events and log fields over speculative deep modeling.
+high-confidence events and log fields over speculative deep modeling. The log is
+for a network analyst, not a dump of the wire format; see "What to log".
 
 ## Architecture
 
@@ -90,16 +91,17 @@ public function create_request(req: TFTP::Request):
 }
 ```
 
-Use local variables for vectors and optionals:
+Use loops over vectors to pull out the values worth logging:
 
 ```spicy
-public function create_options(options: vector<DHCP::Option>): vector<string> {
-    local out: vector<string>;
+# DHCP message type from option 53, or 0 when the option is absent.
+function message_type(options: vector<DHCP::Option>): uint64 {
+    for (option in options) {
+        if (option.code == 53 && |option.data| == 1)
+            return option.data.to_uint(spicy::ByteOrder::Network);
+    }
 
-    for (option in options)
-        out.push_back("code=%u value=%s" % (option.code, option.data));
-
-    return out;
+    return 0;
 }
 ```
 
@@ -124,11 +126,17 @@ export {
     redef enum Log::ID += { LOG };
 
     type Info: record {
+        ## Timestamp of the message.
         ts: time &log;
+        ## Unique ID of the connection.
         uid: string &log;
+        ## The connection's 4-tuple of endpoint addresses/ports.
         id: conn_id &log;
+        ## True if the message was sent by the connection originator.
         is_orig: bool &log;
+        ## File requested for reading or writing.
         filename: string &optional &log;
+        ## Transfer mode requested (netascii, octet, mail).
         mode: string &optional &log;
     };
 
@@ -152,6 +160,36 @@ event TFTP::request(c: connection, is_orig: bool, filename: string, mode: string
 
 Use `&optional` on log fields that are not present for every event. Only assign
 optional fields when you have a value.
+
+## What to log
+
+The log is read by a network analyst. Model it on Zeek's own protocol logs
+(`dns.log`, `http.log`, `dhcp.log`): each line should say who did what, to what,
+and with what result.
+
+- Log the values that carry meaning: the operation (method, command, opcode,
+  message type), its target (name, URI, path, key, identifier), parameters an
+  analyst would search for (user names, host names, software versions,
+  addresses), and the result (status or error code).
+- Decode codes into names (`"NXDOMAIN"`, not `3`; `"BOOTREPLY"`, not `2`). If
+  the parser exposes a Spicy enum, render it with `"%s" % value`. If it is a
+  plain integer, map it in `main.zeek` with a `const table[count] of string`
+  that has a `&default` for unknown values.
+- Use typed columns: `addr` for IP addresses, `port`, `count`, `interval` for
+  durations and timers, `bool`, and `vector of string` for repeated values.
+- Skip wire mechanics: length fields, element counts (log the elements instead),
+  checksums, padding, reserved bits, offsets and header sizes.
+- For repeated elements (questions, answers, options, headers, attributes), log
+  the decoded values that matter, either as their own columns or as a `vector
+  of string` with one readable entry per element (e.g. `"example.com A"`).
+- Do not log raw binary payloads or opaque data blocks. If the content matters,
+  log its size or a short decoded summary.
+- Do not stringify whole records or tuples with `fmt("%s", ...)` into a
+  catch-all column; give each meaningful value its own column.
+- Name columns with the protocol's terminology in snake_case and document each
+  one with a `##` comment.
+- Only log values the parser actually exposes. A few meaningful columns beat
+  many mechanical ones.
 
 ## Worked example: simple TFTP-style analyzer
 
@@ -191,15 +229,24 @@ export {
     redef enum Log::ID += { LOG };
 
     type Info: record {
+        ## Timestamp of the message.
         ts: time &log;
+        ## Unique ID of the connection.
         uid: string &log;
+        ## The connection's 4-tuple of endpoint addresses/ports.
         id: conn_id &log;
+        ## True if the message was sent by the connection originator.
         is_orig: bool &log;
+        ## Kind of message (REQUEST, DATA).
         message_type: string &log;
+        ## File requested for reading or writing.
         filename: string &optional &log;
+        ## Transfer mode requested (netascii, octet, mail).
         mode: string &optional &log;
+        ## Block number of a DATA message.
         block: count &optional &log;
-        data: string &optional &log;
+        ## Number of file bytes carried by a DATA message.
+        size: count &optional &log;
     };
 
     global log_tftp: event(rec: Info);
@@ -226,7 +273,7 @@ event TFTP::data(c: connection, is_orig: bool, block: count, payload: string)
     local rec = Info($ts=network_time(), $uid=c$uid, $id=c$id,
                      $is_orig=is_orig, $message_type="DATA");
     rec$block = block;
-    rec$data = payload;
+    rec$size = |payload|;
     Log::write(TFTP::LOG, rec);
     }
 ```
@@ -254,19 +301,31 @@ on DHCP::Message -> event DHCP::message($conn, $is_orig, Zeek_DHCP::create_msg(s
 module Zeek_DHCP;
 
 import DHCP;
+import spicy;
 import zeek;
 
 on DHCP::Message::%done {
     zeek::confirm_protocol();
 }
 
-public function create_options(options: vector<DHCP::Option>): vector<string> {
-    local out: vector<string>;
+# DHCP message type from option 53, or 0 when the option is absent.
+function message_type(options: vector<DHCP::Option>): uint64 {
+    for (option in options) {
+        if (option.code == 53 && |option.data| == 1)
+            return option.data.to_uint(spicy::ByteOrder::Network);
+    }
 
-    for (option in options)
-        out.push_back("code=%u value=%s" % (option.code, option.data));
+    return 0;
+}
 
-    return out;
+# Host name from option 12, or empty when the option is absent.
+function host_name(options: vector<DHCP::Option>): bytes {
+    for (option in options) {
+        if (option.code == 12)
+            return option.data;
+    }
+
+    return b"";
 }
 
 public function create_msg(msg: DHCP::Message):
@@ -275,13 +334,15 @@ public function create_msg(msg: DHCP::Message):
         xid: uint32,
         client_ip: addr,
         your_ip: addr,
-        options: vector<string>> {
+        msg_type: uint64,
+        host_name: bytes> {
     return (
         cast<uint64>(msg.op),
         msg.xid,
         msg.client_ip,
         msg.your_ip,
-        create_options(msg.options)
+        message_type(msg.options),
+        host_name(msg.options)
     );
 }
 ```
@@ -299,24 +360,52 @@ export {
         xid: count;
         client_ip: addr;
         your_ip: addr;
-        options: vector of string;
+        msg_type: count;
+        host_name: string;
     };
 
     type Info: record {
+        ## Timestamp of the message.
         ts: time &log;
+        ## Unique ID of the connection.
         uid: string &log;
+        ## The connection's 4-tuple of endpoint addresses/ports.
         id: conn_id &log;
+        ## True if the message was sent by the connection originator.
         is_orig: bool &log;
-        op: count &log;
-        xid: count &log;
-        client_ip: addr &log;
-        your_ip: addr &log;
-        options: vector of string &optional &log;
+        ## BOOTP operation (BOOTREQUEST or BOOTREPLY).
+        op: string &log;
+        ## Transaction ID linking a client request to the server's reply.
+        trans_id: count &log;
+        ## DHCP message type (DISCOVER, OFFER, REQUEST, ACK, ...).
+        msg_type: string &optional &log;
+        ## Address the client already holds.
+        client_addr: addr &log;
+        ## Address offered or assigned by the server.
+        assigned_addr: addr &log;
+        ## Host name sent by the client.
+        host_name: string &optional &log;
     };
 
     global log_dhcp: event(rec: Info);
     global message: event(c: connection, is_orig: bool, msg: MessageLog);
 }
+
+const op_names: table[count] of string = {
+    [1] = "BOOTREQUEST",
+    [2] = "BOOTREPLY",
+} &default=function(n: count): string { return fmt("unknown-%d", n); };
+
+const msg_type_names: table[count] of string = {
+    [1] = "DISCOVER",
+    [2] = "OFFER",
+    [3] = "REQUEST",
+    [4] = "DECLINE",
+    [5] = "ACK",
+    [6] = "NAK",
+    [7] = "RELEASE",
+    [8] = "INFORM",
+} &default=function(n: count): string { return fmt("unknown-%d", n); };
 
 event zeek_init() &priority=5
     {
@@ -326,11 +415,15 @@ event zeek_init() &priority=5
 event DHCP::message(c: connection, is_orig: bool, msg: MessageLog)
     {
     local rec = Info($ts=network_time(), $uid=c$uid, $id=c$id,
-                     $is_orig=is_orig, $op=msg$op, $xid=msg$xid,
-                     $client_ip=msg$client_ip, $your_ip=msg$your_ip);
+                     $is_orig=is_orig, $op=op_names[msg$op],
+                     $trans_id=msg$xid, $client_addr=msg$client_ip,
+                     $assigned_addr=msg$your_ip);
 
-    if ( |msg$options| > 0 )
-        rec$options = msg$options;
+    if ( msg$msg_type != 0 )
+        rec$msg_type = msg_type_names[msg$msg_type];
+
+    if ( |msg$host_name| > 0 )
+        rec$host_name = msg$host_name;
 
     Log::write(DHCP::LOG, rec);
     }
@@ -344,5 +437,6 @@ event DHCP::message(c: connection, is_orig: bool, msg: MessageLog)
 - Do not use Zeek `record` syntax inside `.spicy`; use Spicy `tuple<...>`.
 - Do not use Spicy `vector<string>` syntax in Zeek scripts; use Zeek `vector of string`.
 - Keep event names declared in `main.zeek` exactly aligned with `.evt`.
+- Do not copy the parser's fields one-to-one into the log; follow "What to log".
 - Include a `%done` confirmation hook for the entry unit.
 - Do not add `%error` hooks calling `zeek::reject_protocol`.
