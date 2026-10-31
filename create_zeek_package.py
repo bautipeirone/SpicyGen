@@ -146,6 +146,62 @@ def adapt_parser_to_zeek_analyzer(code: str) -> str:
     code = replace_require_with_logging(code)
     return code
 
+def derive_stream_unit_name(entry_unit: str, code: str) -> str:
+    """Name the TCP stream unit after the entry unit (e.g. Message -> Messages)."""
+    plural = entry_unit + ("es" if entry_unit.endswith(("s", "x", "sh", "ch")) else "s")
+    if re.search(rf"\btype\s+{plural}\s*=", code):
+        return f"{entry_unit}Stream"
+    return plural
+
+def build_stream_unit(entry_unit: str, stream_unit: str, synchronize: bool) -> str:
+    if synchronize:
+        # &synchronize has no effect when combined with &eod, so the list is
+        # left unbounded (it still ends at end of data).
+        body = (
+            f"    : ({entry_unit} &synchronize)[];\n"
+            "    on %synced { confirm; }\n"
+        )
+    else:
+        body = f"    : {entry_unit}[] &eod;\n"
+    return (
+        "\n# TCP is stream based: parse a sequence of messages until the end of the stream.\n"
+        f"public type {stream_unit} = unit {{\n{body}}};\n"
+    )
+
+def validate_spicy_code(code: str, spicyc_bin: str = "spicyc") -> str | None:
+    """Validate Spicy code with ``spicyc -p``. Returns None on success, else the errors."""
+    spicyc_path = shutil.which(spicyc_bin)
+    if spicyc_path is None:
+        return f"'{spicyc_bin}' not found on PATH"
+
+    with tempfile.TemporaryDirectory(prefix="spicy-stream-unit-") as tmp:
+        path = Path(tmp) / "parser.spicy"
+        path.write_text(code)
+        result = subprocess.run([spicyc_path, "-p", str(path)], capture_output=True, text=True)
+
+    return None if result.returncode == 0 else result.stderr
+
+def add_tcp_stream_unit(code: str, entry_unit: str) -> tuple[str, str, bool]:
+    """Append a public unit parsing a sequence of entry units, for TCP analyzers.
+
+    Uses ``&synchronize`` so parsing can resume after a malformed message when
+    Spicy accepts it (the entry unit must start with a literal or declare
+    ``%synchronize-at``/``%synchronize-after``), otherwise falls back to ``&eod``.
+
+    Returns the new code, the stream unit name and whether it synchronizes.
+    """
+    stream_unit = derive_stream_unit_name(entry_unit, code)
+    code = code.rstrip() + "\n"
+
+    synced_code = code + build_stream_unit(entry_unit, stream_unit, synchronize=True)
+    errors = validate_spicy_code(synced_code)
+    if errors is None:
+        return synced_code, stream_unit, True
+
+    logger.info("Entry unit %s does not support &synchronize; using plain &eod list", entry_unit)
+    logger.debug("spicyc validation output:\n%s", errors)
+    return code + build_stream_unit(entry_unit, stream_unit, synchronize=False), stream_unit, False
+
 # ---------------------------------------------------------------------------
 # zkg invocation
 # ---------------------------------------------------------------------------
@@ -253,7 +309,9 @@ def build_zeek_generation_prompt(
     analyzer_name: str,
     entry_unit: str,
     transports: list[str],
+    stream_unit: str | None = None,
     compile_errors: str | None = None,
+    constraint_errors: str | None = None,
     previous_files: ZeekIntegrationFiles | None = None,
     response_error: str | None = None,
     previous_response: str | None = None,
@@ -268,6 +326,14 @@ def build_zeek_generation_prompt(
         f"- Transports: {[ transport.upper() for transport in transports ]}\n"
         f"- The .evt MUST import both {module_name} and Zeek_{analyzer_name}\n"
         f"- Entry unit: {module_name}::{entry_unit}\n"
+    )
+    if stream_unit:
+        prompt += (
+            f"- The TCP analyzer MUST parse originator and responder with {module_name}::{stream_unit} "
+            f"(a sequence of {entry_unit}); other transports parse with {module_name}::{entry_unit}\n"
+            f"- Map events to {entry_unit} and its sub-units, never to {stream_unit}\n"
+        )
+    prompt += (
         f"- In main.zeek, the Zeek module MUST be: {module_name}\n"
         f"- Write analyzer/{analyzer_name.lower()}.evt content in the JSON key \"evt\"\n"
         f"- Write analyzer/zeek_{analyzer_name.lower()}.spicy content in the JSON key \"zeek_spicy\"\n"
@@ -288,8 +354,16 @@ def build_zeek_generation_prompt(
             "Fix the files and return a complete replacement JSON bundle.\n\n"
             f"Compiler output:\n{compile_errors}\n\n"
         )
-        if previous_files:
-            prompt += format_files_for_feedback(previous_files) + "\n"
+
+    if constraint_errors:
+        prompt += (
+            "The previous generated files violate the CONSTRAINTS above. "
+            "Fix the files and return a complete replacement JSON bundle.\n\n"
+            f"Violations:\n{constraint_errors}\n\n"
+        )
+
+    if (compile_errors or constraint_errors) and previous_files:
+        prompt += format_files_for_feedback(previous_files) + "\n"
 
     prompt += f"PARSER SOURCE:\n```spicy\n{spicy_source}\n```"
     return prompt
@@ -339,9 +413,46 @@ def parse_llm_bundle(response: str) -> ZeekIntegrationFiles:
     )
 
 
+def check_evt_stream_unit(
+    evt: str, module_name: str, entry_unit: str, stream_unit: str
+) -> str | None:
+    """Check the .evt uses the TCP stream unit only as the TCP analyzer's parse unit.
+
+    Returns None if the file is fine, otherwise a description of the violations.
+    """
+    errors = []
+    stream_ref = rf"(?:{re.escape(module_name)}::)?{re.escape(stream_unit)}\b"
+
+    if re.search(rf"^\s*on\s+{stream_ref}", evt, re.MULTILINE):
+        errors.append(
+            f"Events must not be mapped to {module_name}::{stream_unit}; "
+            f"map them to {module_name}::{entry_unit} (or its sub-units) instead."
+        )
+
+    analyzers = re.findall(
+        r"protocol\s+analyzer\s+(\S+)\s+over\s+(\w+)\s*:(.*?);", evt, re.DOTALL
+    )
+    for name, transport, body in analyzers:
+        units = re.findall(r"\bwith\s+([\w:]+)", body)
+        uses_stream = [bool(re.fullmatch(stream_ref, unit)) for unit in units]
+        if transport.upper() == "TCP" and not (units and all(uses_stream)):
+            errors.append(
+                f"Analyzer {name} over TCP must parse originator and responder with "
+                f"{module_name}::{stream_unit}, got: {', '.join(units) or 'nothing'}."
+            )
+        elif transport.upper() != "TCP" and any(uses_stream):
+            errors.append(
+                f"Analyzer {name} over {transport} must parse with "
+                f"{module_name}::{entry_unit}, not {module_name}::{stream_unit}."
+            )
+
+    return "\n".join(f"- {error}" for error in errors) or None
+
+
 def try_compile_zeek_files(
     *,
     spicy_info: SpicyParserInfo,
+    spicy_source: str,
     analyzer_name: str,
     files: ZeekIntegrationFiles,
     spicyz_bin: str = "spicyz",
@@ -364,7 +475,7 @@ def try_compile_zeek_files(
         zeek_spicy_path = tmp_dir / f"zeek_{analyzer_name.lower()}.spicy"
         output_path = tmp_dir / f"{analyzer_name.lower()}.hlto"
 
-        shutil.copy2(spicy_info.source_path, parser_path)
+        parser_path.write_text(spicy_source)
         evt_path.write_text(files.evt)
         zeek_spicy_path.write_text(files.zeek_spicy)
 
@@ -407,6 +518,7 @@ def summarize_usage_records(usage_records: list[dict | None]) -> dict | None:
 def generate_zeek_files_with_llm(
     *,
     spicy_info: SpicyParserInfo,
+    spicy_source: str,
     analyzer_name: str,
     metadata: ProtocolMetadata,
     model: str,
@@ -414,6 +526,7 @@ def generate_zeek_files_with_llm(
     max_retries: int = 5,
     compile_check: bool = True,
     instructions_path: Path = ZEEK_INTEGRATION_PROMPT_PATH,
+    stream_unit: str | None = None,
 ) -> tuple[ZeekIntegrationFiles, dict | None]:
     """Generate Zeek integration files by prompting and validating with spicyz."""
     if max_retries < 1:
@@ -421,7 +534,6 @@ def generate_zeek_files_with_llm(
 
     llm_params, _ = read_config(config_path)
     llm_config = get_model_config(model, llm_params)
-    spicy_source = spicy_info.source_path.read_text()
     system_prompt = build_zeek_system_prompt(
         load_zeek_integration_instructions(instructions_path)
     )
@@ -430,7 +542,8 @@ def generate_zeek_files_with_llm(
         module_name=spicy_info.module_name,
         analyzer_name=analyzer_name,
         entry_unit=spicy_info.entry_unit,
-        transports=metadata.transports
+        transports=metadata.transports,
+        stream_unit=stream_unit,
     )
 
     usage_records: list[dict | None] = []
@@ -459,17 +572,43 @@ def generate_zeek_files_with_llm(
                 analyzer_name=analyzer_name,
                 entry_unit=spicy_info.entry_unit,
                 transports=metadata.transports,
+                stream_unit=stream_unit,
                 response_error=last_error,
                 previous_response=response,
             )
             continue
 
         last_files = files
+        constraint_errors = (
+            check_evt_stream_unit(
+                files.evt, spicy_info.module_name, spicy_info.entry_unit, stream_unit
+            )
+            if stream_unit
+            else None
+        )
+        if constraint_errors:
+            last_error = constraint_errors
+            logger.warning("Generated .evt violates TCP stream unit constraints; feeding back to the LLM")
+            logger.debug("Constraint violations:\n%s", constraint_errors)
+            if attempt < max_retries:
+                user_message = build_zeek_generation_prompt(
+                    spicy_source=spicy_source,
+                    module_name=spicy_info.module_name,
+                    analyzer_name=analyzer_name,
+                    entry_unit=spicy_info.entry_unit,
+                    transports=metadata.transports,
+                    stream_unit=stream_unit,
+                    constraint_errors=constraint_errors,
+                    previous_files=files,
+                )
+            continue
+
         if not compile_check:
             return files, summarize_usage_records(usage_records)
 
         compile_errors = try_compile_zeek_files(
             spicy_info=spicy_info,
+            spicy_source=spicy_source,
             analyzer_name=analyzer_name,
             files=files,
         )
@@ -487,6 +626,7 @@ def generate_zeek_files_with_llm(
                 analyzer_name=analyzer_name,
                 entry_unit=spicy_info.entry_unit,
                 transports=metadata.transports,
+                stream_unit=stream_unit,
                 compile_errors=compile_errors,
                 previous_files=files,
             )
@@ -494,7 +634,7 @@ def generate_zeek_files_with_llm(
     if last_files is None:
         raise RuntimeError(f"LLM did not produce valid Zeek files: {last_error}")
 
-    logger.warning("Returning last generated files after exhausting spicyz retries")
+    logger.warning("Returning last generated files after exhausting retries: %s", last_error)
     return last_files, summarize_usage_records(usage_records)
 
 
@@ -524,6 +664,8 @@ def build_metrics(
     metadata: ProtocolMetadata,
     elapsed_time_s: float,
     usage: dict | None,
+    stream_unit: str | None = None,
+    stream_unit_synchronize: bool = False,
 ) -> dict:
     """Build a metrics payload for Zeek package generation."""
     return {
@@ -535,6 +677,8 @@ def build_metrics(
         "analyzer_name": analyzer_name,
         "transport_candidates": metadata.transports,
         "port": metadata.port,
+        "tcp_stream_unit": stream_unit,
+        "tcp_stream_unit_synchronize": stream_unit_synchronize,
         "time_elapsed_s": round(elapsed_time_s, 2),
         "usage": usage,
     }
@@ -737,6 +881,11 @@ def parse_args() -> argparse.Namespace:
         help="Skip spicyz validation and use the first valid JSON response from the LLM.",
     )
     parser.add_argument(
+        "--skip-tcp-stream-unit",
+        action="store_true",
+        help="Don't wrap the entry unit in a list unit for the TCP analyzer; parse a single message per stream.",
+    )
+    parser.add_argument(
         "--skip-installation",
         action="store_true",
         help="Dont run the installation process, only generate the package structure and files."
@@ -761,7 +910,8 @@ def create_zeek_package(
     zeek_compile_check: bool = True,
     name_override: str | None = None,
     traces_dir: Path | None = None,
-    install_on_success: bool = True
+    install_on_success: bool = True,
+    tcp_stream_unit: bool = True,
 ) -> Path:
     """Create a Zeek package from a Spicy parser and metadata.
 
@@ -779,6 +929,9 @@ def create_zeek_package(
         Directory with traces to use as automatic generated tests.
     install_on_success: bool
         Install as local zeek plugin if successful.
+    tcp_stream_unit: bool
+        For TCP, parse a sequence of entry units until the end of the stream
+        instead of a single one.
 
     Returns
     -------
@@ -805,12 +958,25 @@ def create_zeek_package(
     logger.info("Port: %s", metadata.port)
     logger.info("Model: %s", model)
 
+    # TCP is stream based, so the TCP analyzer parses a sequence of entry units.
+    parser_code = spicy_info.source_path.read_text()
+    stream_unit: str | None = None
+    stream_unit_synchronize = False
+    if tcp_stream_unit and any(t.lower() == "tcp" for t in metadata.transports):
+        parser_code, stream_unit, stream_unit_synchronize = add_tcp_stream_unit(
+            parser_code, spicy_info.entry_unit
+        )
+        logger.info(
+            "TCP stream unit: %s (synchronize=%s)", stream_unit, stream_unit_synchronize
+        )
+
     # ── Phase 2: Scaffold with zkg ─────────────────────────────────────
     output_dir.mkdir(parents=True, exist_ok=True)
     # zkg create only takes one transport, so we use the first one declared as default
+    default_transport = metadata.transports[0]
     run_zkg_create(
-        package_dir, package_name, analyzer_name,
-        metadata.transports[0], spicy_info.entry_unit,
+        package_dir, package_name, analyzer_name, default_transport,
+        stream_unit if default_transport.lower() == "tcp" and stream_unit else spicy_info.entry_unit,
     )
 
     # zkg creates files using lowercase analyzer name (e.g. dns.spicy, dns.evt,
@@ -820,7 +986,6 @@ def create_zeek_package(
     # ── Phase 3: Copy the user's Spicy parser ─────────────────────────
     # Overwrite the template placeholder with the real parser.
     analyzer_spicy = package_dir / "analyzer" / f"{a_lower}.spicy"
-    parser_code = spicy_info.source_path.read_text()
     analyzer_code = adapt_parser_to_zeek_analyzer(parser_code)
     analyzer_spicy.write_text(analyzer_code)
     logger.info("Copied parser to %s", analyzer_spicy.relative_to(output_dir))
@@ -829,12 +994,14 @@ def create_zeek_package(
     logger.info("Generating Zeek integration files with the LLM")
     generated_files, usage = generate_zeek_files_with_llm(
         spicy_info=spicy_info,
+        spicy_source=parser_code,
         analyzer_name=analyzer_name,
         metadata=metadata,
         model=model,
         config_path=config_path,
         max_retries=zeek_max_retries,
         compile_check=zeek_compile_check,
+        stream_unit=stream_unit,
     )
 
     protocol_signatures = generate_protocol_signatures(analyzer_name, metadata)
@@ -883,6 +1050,8 @@ def create_zeek_package(
         metadata=metadata,
         elapsed_time_s=time.time() - start_time,
         usage=usage,
+        stream_unit=stream_unit,
+        stream_unit_synchronize=stream_unit_synchronize,
     )
     if metrics_file:
         save_metrics(metrics_file, metrics)
@@ -908,6 +1077,7 @@ def main() -> None:
     logger.debug("Zeek max retries: %s", args.zeek_max_retries)
     logger.debug("Skip Zeek compile check: %s", args.skip_zeek_compile_check)
     logger.debug("Skip installation: %s", args.skip_installation)
+    logger.debug("Skip TCP stream unit: %s", args.skip_tcp_stream_unit)
 
     if not args.spicy_file.exists():
         logger.error("Spicy file not found: %s", args.spicy_file)
@@ -928,7 +1098,8 @@ def main() -> None:
             zeek_compile_check=not args.skip_zeek_compile_check,
             name_override=args.name,
             traces_dir=args.traces_dir,
-            install_on_success=not args.skip_installation
+            install_on_success=not args.skip_installation,
+            tcp_stream_unit=not args.skip_tcp_stream_unit,
         )
     except (ValueError, RuntimeError, FileExistsError) as exc:
         logger.error("Zeek package creation failed: %s", exc)

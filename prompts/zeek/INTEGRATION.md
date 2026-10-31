@@ -68,7 +68,7 @@ on DHCP::Message -> event DHCP::message($conn, $is_orig, Zeek_DHCP::create_msg(s
 ## zeek_<analyzer>.spicy pattern
 
 The helper file should define module `Zeek_<Analyzer>`, import the parser module
-and `zeek`, and set protocol confirmation/rejection hooks:
+and `zeek`, and confirm the protocol once the entry unit parses successfully:
 
 ```spicy
 module Zeek_TFTP;
@@ -78,10 +78,6 @@ import zeek;
 
 on TFTP::Packet::%done {
     zeek::confirm_protocol();
-}
-
-on TFTP::Packet::%error {
-    zeek::reject_protocol("error while parsing TFTP");
 }
 ```
 
@@ -184,10 +180,6 @@ import zeek;
 on TFTP::Packet::%done {
     zeek::confirm_protocol();
 }
-
-on TFTP::Packet::%error {
-    zeek::reject_protocol("error while parsing TFTP");
-}
 ```
 
 `main.zeek`:
@@ -266,10 +258,6 @@ import zeek;
 
 on DHCP::Message::%done {
     zeek::confirm_protocol();
-}
-
-on DHCP::Message::%error {
-    zeek::reject_protocol("error while parsing DHCP");
 }
 
 public function create_options(options: vector<DHCP::Option>): vector<string> {
@@ -356,4 +344,5 @@ event DHCP::message(c: connection, is_orig: bool, msg: MessageLog)
 - Do not use Zeek `record` syntax inside `.spicy`; use Spicy `tuple<...>`.
 - Do not use Spicy `vector<string>` syntax in Zeek scripts; use Zeek `vector of string`.
 - Keep event names declared in `main.zeek` exactly aligned with `.evt`.
-- Include `%error` rejection and a conservative `%done` confirmation hook for the entry unit.
+- Include a `%done` confirmation hook for the entry unit.
+- Do not add `%error` hooks calling `zeek::reject_protocol`.
