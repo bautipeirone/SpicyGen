@@ -7,8 +7,8 @@
   "rejected": 0,
   "accepted_percent": 100.0,
   "rejected_percent": 0.0,
-  "elapsed_seconds": 21.138488,
-  "packets_per_second": 206.258842,
+  "elapsed_seconds": 21.580053,
+  "packets_per_second": 202.038433,
   "workers": 12,
   "errors": []
 }
