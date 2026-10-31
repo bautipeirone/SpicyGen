@@ -35,6 +35,7 @@ testing = [
 
 [dependency-groups]
 dev = [
+    "ipython>=9.18.0",
     "pandas==3.0.1",
     "rich==13.9.4",
     "scapy==2.7.0",
