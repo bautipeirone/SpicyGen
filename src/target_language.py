@@ -1,45 +1,44 @@
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.protocol import ProtocolType
 from src.tools.compiler import CompileFunction
-from src.tools.preprocess import ResponseCleaner
+from src.tools.preprocess import ResponseCleaner, trivial_response_cleaner
 from src.tools.runtime import RuntimeAdapter
-
-############## Spicy ###############
-from src.tools.spicy.compiler import compile_spicy_grammar
-from src.tools.spicy.preprocess import clean_spicy_response
-from src.tools.spicy.runtime import SPICY_RUNTIME
-
-################ 3D ################
-from src.tools._3d.compiler import compile_3d_grammar
-from src.tools._3d.preprocess import clean_3d_response
-from src.tools._3d.runtime import _3D_RUNTIME
-
-############### Vest ###############
-from src.tools.vest.compiler import compile_vest_grammar
-from src.tools.vest.preprocess import clean_vest_response
-from src.tools.vest.runtime import VEST_RUNTIME
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 @dataclass(frozen=True)
-class TargetLanguage:
+class TargetLanguage(ABC):
+    """Abstract factory for the components of a target language.
+
+    Each concrete language creates its own compiler, runtime and response
+    cleaner. Language-specific modules are imported inside the factory methods
+    so only the selected language's toolchain (and its environment) is loaded.
+    """
+
     name: str
     display_name: str
     assistant_name: str
     source_extension: str
     instructions_by_protocol_type: dict[ProtocolType, Path]
-    compile_fn: CompileFunction
-    runtime: RuntimeAdapter
-    response_cleaner: ResponseCleaner
+
+    @abstractmethod
+    def create_compiler(self) -> CompileFunction: ...
+
+    @abstractmethod
+    def create_runtime(self) -> RuntimeAdapter: ...
+
+    def create_response_cleaner(self) -> ResponseCleaner:
+        return trivial_response_cleaner
 
     @property
     def supports_parse_tree_summary(self) -> bool:
-        return self.runtime.supports_parse_tree_summary
+        return self.create_runtime().supports_parse_tree_summary
 
     def instructions_path_for(self, protocol_type: ProtocolType) -> Path:
         try:
@@ -50,8 +49,53 @@ class TargetLanguage:
             ) from exc
 
 
+############## Spicy ###############
+class SpicyLanguage(TargetLanguage):
+    def create_compiler(self) -> CompileFunction:
+        from src.tools.spicy.compiler import compile_spicy_grammar
+        return compile_spicy_grammar
+
+    def create_runtime(self) -> RuntimeAdapter:
+        from src.tools.spicy.runtime import SPICY_RUNTIME
+        return SPICY_RUNTIME
+
+    def create_response_cleaner(self) -> ResponseCleaner:
+        from src.tools.spicy.preprocess import clean_spicy_response
+        return clean_spicy_response
+
+
+################ 3D ################
+class ThreeDLanguage(TargetLanguage):
+    def create_compiler(self) -> CompileFunction:
+        from src.tools._3d.compiler import compile_3d_grammar
+        return compile_3d_grammar
+
+    def create_runtime(self) -> RuntimeAdapter:
+        from src.tools._3d.runtime import _3D_RUNTIME
+        return _3D_RUNTIME
+
+    def create_response_cleaner(self) -> ResponseCleaner:
+        from src.tools._3d.preprocess import clean_3d_response
+        return clean_3d_response
+
+
+############### Vest ###############
+class VestLanguage(TargetLanguage):
+    def create_compiler(self) -> CompileFunction:
+        from src.tools.vest.compiler import compile_vest_grammar
+        return compile_vest_grammar
+
+    def create_runtime(self) -> RuntimeAdapter:
+        from src.tools.vest.runtime import VEST_RUNTIME
+        return VEST_RUNTIME
+
+    def create_response_cleaner(self) -> ResponseCleaner:
+        from src.tools.vest.preprocess import clean_vest_response
+        return clean_vest_response
+
+
 SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
-    "spicy": TargetLanguage(
+    "spicy": SpicyLanguage(
         name="spicy",
         display_name="Spicy",
         assistant_name="SpicyDeveloper",
@@ -60,11 +104,8 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
             ProtocolType.TEXT: _PROJECT_ROOT / "prompts" / "spicy" / "TEXT.md",
             ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "spicy" / "BINARY.md",
         },
-        compile_fn=compile_spicy_grammar,
-        runtime=SPICY_RUNTIME,
-        response_cleaner=clean_spicy_response,
     ),
-    "3d": TargetLanguage(
+    "3d": ThreeDLanguage(
         name="3d",
         display_name="3D",
         assistant_name="3DDeveloper",
@@ -72,11 +113,8 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         instructions_by_protocol_type={
             ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "3D" / "BINARY.md"
         },
-        compile_fn=compile_3d_grammar,
-        runtime=_3D_RUNTIME,
-        response_cleaner=clean_3d_response,
     ),
-    "vest": TargetLanguage(
+    "vest": VestLanguage(
         name="vest",
         display_name="Vest",
         assistant_name="VestDeveloper",
@@ -84,10 +122,7 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         instructions_by_protocol_type={
             ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "vest" / "BINARY.md"
         },
-        compile_fn=compile_vest_grammar,
-        runtime=VEST_RUNTIME,
-        response_cleaner=clean_vest_response,
-    )
+    ),
 }
 
 DEFAULT_TARGET_LANGUAGE = "spicy"

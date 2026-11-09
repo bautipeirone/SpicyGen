@@ -113,7 +113,7 @@ def _trace_worker(
     task_queue,
     result_queue,
 ) -> int:
-    target = get_target_language(runtime_name)
+    runtime = get_target_language(runtime_name).create_runtime()
     artifact = RuntimeArtifact(path=Path(artifact_path), parser_name=parser_name)
     processed = 0
 
@@ -124,7 +124,7 @@ def _trace_worker(
 
         packet_path = Path(packet_path)
         try:
-            parse_result = target.runtime.run_parser(artifact, packet_path)
+            parse_result = runtime.run_parser(artifact, packet_path)
             result_queue.put(
                 PacketTraceResult(
                     packet_path=str(packet_path),
@@ -336,7 +336,7 @@ def run_trace(args) -> TraceSummary:
 
     with tempfile.TemporaryDirectory(prefix="trace_parser_build_") as build_dir:
         console.print(f"Precompiling [bold]{runtime_name}[/bold] parser...")
-        artifact = target.runtime.build_parser(parser_path, Path(build_dir))
+        artifact = target.create_runtime().build_parser(parser_path, Path(build_dir))
         start = time.perf_counter()
         completed = 0
 

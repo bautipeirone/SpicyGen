@@ -103,7 +103,7 @@ def validate_grammar(
     max_attempts: int | None = None,
 ) -> GrammarValidationResult:
     """Compile and packet-test one grammar without starting an agent loop."""
-    cleaned_code = target_language.response_cleaner(code) or code
+    cleaned_code = target_language.create_response_cleaner()(code) or code
 
     step_path = None
     compilation_errors_path = None
@@ -127,7 +127,7 @@ def validate_grammar(
 
     compilation = run_grammar_compiler(
         cleaned_code,
-        target_language.compile_fn,
+        target_language.create_compiler(),
         target_language.source_extension,
         debug_info={
             "step_path": step_path,
@@ -156,7 +156,7 @@ def validate_grammar(
     )
     packet_check = run_parser_check_from_code(
         cleaned_code,
-        target_language.runtime,
+        target_language.create_runtime(),
         protocol,
         target_language.source_extension,
         parsing_config=parsing_config,

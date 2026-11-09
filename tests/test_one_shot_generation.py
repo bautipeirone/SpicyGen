@@ -32,9 +32,11 @@ def make_target_language():
         name="spicy",
         display_name="Spicy",
         source_extension=".spicy",
-        compile_fn=object(),
-        runtime=object(),
-        response_cleaner=lambda response: response.removeprefix("preamble\n"),
+        create_compiler=lambda: object(),
+        create_runtime=lambda: object(),
+        create_response_cleaner=lambda: (
+            lambda response: response.removeprefix("preamble\n")
+        ),
         supports_parse_tree_summary=True,
     )
 
@@ -355,7 +357,7 @@ def test_refinement_tool_delegates_to_global_validator(monkeypatch):
     def fake_validate(code, selected_protocol, selected_language, **kwargs):
         validation_calls.append((code, selected_protocol, selected_language, kwargs))
         return validation.GrammarValidationResult(
-            code=selected_language.response_cleaner(code) or code,
+            code=selected_language.create_response_cleaner()(code) or code,
             compiled=True,
             packet_check=(
                 failed_packet_check

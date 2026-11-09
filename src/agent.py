@@ -208,8 +208,10 @@ def run_refinement_loop(
             return f"Could not retrieve RFC {rfc_id}."
         return clean_rfc_text(rfc_text)
 
+    response_cleaner = target_language.create_response_cleaner()
+
     def validate_grammar_tool(code: Annotated[str, "The grammar code to compile and verify against packets"]) -> str:
-        cleaned_code = target_language.response_cleaner(code) or code
+        cleaned_code = response_cleaner(code) or code
         previous_code = state.last_code
         state.attempt += 1
         state.last_code = cleaned_code

@@ -141,7 +141,8 @@ def test_trace_worker_processes_task_queue_with_fake_runtime(tmp_path, monkeypat
             )
 
     class FakeTarget:
-        runtime = FakeRuntime()
+        def create_runtime(self):
+            return FakeRuntime()
 
     monkeypatch.setattr(run_parser_trace, "get_target_language", lambda _name: FakeTarget())
     good_packet = tmp_path / "good.bin"
