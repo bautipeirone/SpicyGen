@@ -9,7 +9,7 @@ from src.tools.compiler import CompileFunction
 from src.tools.preprocess import ResponseCleaner, trivial_response_cleaner
 from src.tools.runtime import RuntimeAdapter
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 
 
 @dataclass(frozen=True)
@@ -17,7 +17,8 @@ class TargetLanguage(ABC):
     """Abstract factory for the components of a target language.
 
     Each concrete language creates its own compiler, runtime and response
-    cleaner. Language-specific modules are imported inside the factory methods
+    cleaner, and provides its instructions for each protocol type it
+    supports. Language-specific modules are imported inside the factory methods
     so only the selected language's toolchain (and its environment) is loaded.
     """
 
@@ -25,7 +26,6 @@ class TargetLanguage(ABC):
     display_name: str
     assistant_name: str
     source_extension: str
-    instructions_by_protocol_type: dict[ProtocolType, Path]
 
     @abstractmethod
     def create_compiler(self) -> CompileFunction: ...
@@ -40,13 +40,13 @@ class TargetLanguage(ABC):
     def supports_parse_tree_summary(self) -> bool:
         return self.create_runtime().supports_parse_tree_summary
 
-    def instructions_path_for(self, protocol_type: ProtocolType) -> Path:
-        try:
-            return self.instructions_by_protocol_type[protocol_type]
-        except KeyError as exc:
-            raise ValueError(
-                f"Unsupported protocol type '{protocol_type.value}' for target language '{self.name}'."
-            ) from exc
+    @abstractmethod
+    def instructions_path_for(self, protocol_type: ProtocolType) -> Path: ...
+
+    def _unsupported_protocol_type(self, protocol_type: ProtocolType) -> ValueError:
+        return ValueError(
+            f"Unsupported protocol type '{protocol_type.value}' for target language '{self.name}'."
+        )
 
 
 ############## Spicy ###############
@@ -63,6 +63,14 @@ class SpicyLanguage(TargetLanguage):
         from src.tools.spicy.preprocess import clean_spicy_response
         return clean_spicy_response
 
+    def instructions_path_for(self, protocol_type: ProtocolType) -> Path:
+        match protocol_type:
+            case ProtocolType.TEXT:
+                return _PROMPTS_DIR / "spicy" / "TEXT.md"
+            case ProtocolType.BINARY:
+                return _PROMPTS_DIR / "spicy" / "BINARY.md"
+        raise self._unsupported_protocol_type(protocol_type)
+
 
 ################ 3D ################
 class ThreeDLanguage(TargetLanguage):
@@ -77,6 +85,12 @@ class ThreeDLanguage(TargetLanguage):
     def create_response_cleaner(self) -> ResponseCleaner:
         from src.tools._3d.preprocess import clean_3d_response
         return clean_3d_response
+
+    def instructions_path_for(self, protocol_type: ProtocolType) -> Path:
+        match protocol_type:
+            case ProtocolType.BINARY:
+                return _PROMPTS_DIR / "3D" / "BINARY.md"
+        raise self._unsupported_protocol_type(protocol_type)
 
 
 ############### Vest ###############
@@ -93,6 +107,12 @@ class VestLanguage(TargetLanguage):
         from src.tools.vest.preprocess import clean_vest_response
         return clean_vest_response
 
+    def instructions_path_for(self, protocol_type: ProtocolType) -> Path:
+        match protocol_type:
+            case ProtocolType.BINARY:
+                return _PROMPTS_DIR / "vest" / "BINARY.md"
+        raise self._unsupported_protocol_type(protocol_type)
+
 
 SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
     "spicy": SpicyLanguage(
@@ -100,28 +120,18 @@ SUPPORTED_TARGET_LANGUAGES: dict[str, TargetLanguage] = {
         display_name="Spicy",
         assistant_name="SpicyDeveloper",
         source_extension=".spicy",
-        instructions_by_protocol_type={
-            ProtocolType.TEXT: _PROJECT_ROOT / "prompts" / "spicy" / "TEXT.md",
-            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "spicy" / "BINARY.md",
-        },
     ),
     "3d": ThreeDLanguage(
         name="3d",
         display_name="3D",
         assistant_name="3DDeveloper",
         source_extension=".3d",
-        instructions_by_protocol_type={
-            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "3D" / "BINARY.md"
-        },
     ),
     "vest": VestLanguage(
         name="vest",
         display_name="Vest",
         assistant_name="VestDeveloper",
         source_extension=".vest",
-        instructions_by_protocol_type={
-            ProtocolType.BINARY: _PROJECT_ROOT / "prompts" / "vest" / "BINARY.md"
-        },
     ),
 }
 
