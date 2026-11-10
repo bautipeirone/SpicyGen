@@ -103,9 +103,10 @@ class TestModelConfig:
                 get_model_config("test-key", {"api_key": "private-test-key"})
 
         assert model_config.uses_responses
-        assert model_config.responses_price == (0.0025, 0.015)
+        assert model_config.price == (0.0025, 0.015)
         autogen_config = model_config.as_autogen_config()
-        assert autogen_config["config_list"][0]["api_type"] == "responses"
+        assert autogen_config["config_list"][0]["model_client_cls"] == "StatelessResponsesClient"
+        assert "api_type" not in autogen_config["config_list"][0]
         assert "temperature" not in autogen_config
         assert "price" not in autogen_config["config_list"][0]
 
@@ -113,7 +114,7 @@ class TestModelConfig:
         with patch("src.providers.read_model_index", return_value=self._make_index("openai")):
             config = get_model_config("test-key", {"reasoning_effort": "xhigh"}).as_autogen_config()
         assert config["config_list"][0]["reasoning_effort"] == "xhigh"
-        assert config["config_list"][0]["api_type"] == "responses"
+        assert config["config_list"][0]["model_client_cls"] == "StatelessResponsesClient"
         assert "reasoning_effort" not in config
 
     def test_openai_reasoning_uses_responses_without_unsupported_options(self):
@@ -123,12 +124,11 @@ class TestModelConfig:
                 "test-key", {"reasoning_effort": "medium", "temperature": 0.7}
             )
             config = model_config.as_autogen_config()
-            price = model_config.responses_price
-        assert config["config_list"][0]["api_type"] == "responses"
+        assert config["config_list"][0]["model_client_cls"] == "StatelessResponsesClient"
         assert config["config_list"][0]["reasoning_effort"] == "medium"
+        # AG2's own `price` handling expects Chat Completions usage fields.
         assert "price" not in config["config_list"][0]
         assert "temperature" not in config
-        assert price == (0.0025, 0.015)
 
     def test_openai_without_reasoning_stays_on_chat_completions(self):
         index = self._make_index("openai", model_name="other-model", price=[0.0025, 0.015])
@@ -137,6 +137,7 @@ class TestModelConfig:
                 "test-key", {"reasoning_effort": "none", "temperature": 0.0}
             ).as_autogen_config()
         assert "api_type" not in config["config_list"][0]
+        assert "model_client_cls" not in config["config_list"][0]
         assert config["config_list"][0]["price"] == [0.0025, 0.015]
         assert config["temperature"] == 0.0
 
@@ -147,7 +148,14 @@ class TestModelConfig:
                 "test-key", {"reasoning_effort": "medium", "temperature": 0.7}
             ).as_autogen_config()
         assert config["config_list"][0]["api_type"] == "openai"
+        assert "model_client_cls" not in config["config_list"][0]
         assert config["temperature"] == 0.7
+
+    def test_cached_price_is_read_from_index(self):
+        index = self._make_index("openai", price=[0.0025, 0.015])
+        index["test-key"]["cached-price"] = 0.00025
+        with patch("src.providers.read_model_index", return_value=index):
+            assert get_model_config("test-key").cached_price == 0.00025
 
 
 class TestRealModelIndex:

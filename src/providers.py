@@ -40,6 +40,7 @@ class ModelConfig:
     response_format: Any = field(default=None, repr=False)
     routing_method: str | None = None
     price: tuple[float, float] | None = None
+    cached_price: float | None = None
 
     def __post_init__(self) -> None:
         if self.provider not in _SUPPORTED_PROVIDERS:
@@ -49,9 +50,27 @@ class ModelConfig:
     def uses_responses(self) -> bool:
         return self.provider == "openai" and self.reasoning_effort not in (None, "none")
 
-    @property
-    def responses_price(self) -> tuple[float, float] | None:
-        return self.price if self.uses_responses else None
+    def register_clients(self, agent: Any) -> Any:
+        """Attach custom AG2 model clients required by this config to *agent*.
+
+        AG2 rebuilds an agent's client whenever a tool is registered on it, which
+        drops custom clients. The hook re-attaches the client before each reply,
+        sharing one replay store so encrypted reasoning survives the rebuild.
+        """
+        if not self.uses_responses:
+            return agent
+        from autogen.oai.client import PlaceHolderClient
+        from src.responses_client import StatelessResponsesClient
+
+        client_kwargs = {"price": self.price, "cached_price": self.cached_price, "turn_items": {}}
+
+        def attach(agent: Any, *_: Any) -> None:
+            if any(isinstance(c, PlaceHolderClient) for c in agent.client._clients):
+                agent.register_model_client(StatelessResponsesClient, **client_kwargs)
+
+        attach(agent)
+        agent.register_hook("update_agent_state", attach)
+        return agent
 
     def as_autogen_config(self) -> dict[str, Any]:
         """Build the AG2 config, resolving secrets at the point of use."""
@@ -64,7 +83,9 @@ class ModelConfig:
         elif self.provider == "openai":
             entry["api_key"] = os.getenv("OPENAI_API_KEY", "")
             if self.uses_responses:
-                entry["api_type"] = "responses"
+                # AG2's own Responses clients duplicate history on every turn;
+                # see src/responses_client.py. Pair with register_clients().
+                entry["model_client_cls"] = "StatelessResponsesClient"
         elif self.provider == "google":
             entry.update({"api_key": os.getenv("GEMINI_API_KEY", ""), "api_type": "google"})
         elif self.provider == "anthropic":
@@ -84,8 +105,8 @@ class ModelConfig:
             entry["reasoning_effort"] = self.reasoning_effort
 
         config: dict[str, Any] = {"config_list": [entry]}
-        # Reasoning requests on Responses omit temperature. Shared configs can
-        # retain it for providers that accept it.
+        # Reasoning models reject temperature on the Responses API. Shared
+        # configs can retain it for providers that accept it.
         for name in _AUTOGEN_TOP_LEVEL_PARAMS:
             value = getattr(self, name)
             if value is not None and not (name == "temperature" and self.uses_responses):
@@ -123,4 +144,5 @@ def get_model_config(model: str, llm_params: Mapping[str, Any] | None = None) ->
         response_format=params.get("response_format"),
         routing_method=params.get("routing_method"),
         price=(float(price[0]), float(price[1])) if price is not None else None,
+        cached_price=float(entry["cached-price"]) if "cached-price" in entry else None,
     )

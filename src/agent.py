@@ -42,21 +42,21 @@ def _message_text(message: dict[str, Any]) -> str:
     return ""
 
 
-def _chat_cost(chat_result: Any, llm_config: ModelConfig) -> dict[str, CostSummary | None] | None:
+def _chat_cost(chat_result: Any) -> dict[str, CostSummary | None] | None:
     if chat_result is None:
         return None
-    return extract_cost_summary(chat_result.cost, llm_config.responses_price)
+    return extract_cost_summary(chat_result.cost)
 
 
 def query_llm_once(llm_config: ModelConfig, system_prompt: str, user_message: str) -> tuple[str, dict[str, Any] | None]:
     """Send a single user message to the LLM and return the reply text plus usage."""
-    assistant = autogen.ConversableAgent(
+    assistant = llm_config.register_clients(autogen.ConversableAgent(
         name="assistant",
         system_message=system_prompt,
         llm_config=llm_config.as_autogen_config(),
         human_input_mode="NEVER",
         max_consecutive_auto_reply=1,
-    )
+    ))
     user_proxy = autogen.ConversableAgent(
         name="user",
         llm_config=False,
@@ -75,7 +75,7 @@ def query_llm_once(llm_config: ModelConfig, system_prompt: str, user_message: st
     except Exception as e:
         logger.error(f"Agent loop terminated with an exception: {e}")
 
-    return _message_text(assistant.last_message()), _chat_cost(chat_result, llm_config)
+    return _message_text(assistant.last_message()), _chat_cost(chat_result)
 
 
 def summarize_spec(llm_config: ModelConfig, spec_content: str) -> tuple[str, dict[str, Any], dict[str, Any] | None]:
@@ -117,11 +117,11 @@ def summarize_spec(llm_config: ModelConfig, spec_content: str) -> tuple[str, dic
             return f"OK — extracted {len(intervals)} interval(s) ({len(summary)} chars total)."
         return "WARNING — no intervals could be matched in the document."
 
-    assistant = autogen.AssistantAgent(
+    assistant = llm_config.register_clients(autogen.AssistantAgent(
         name="SpecAnalyzer",
         system_message=SUMMARIZE_SPEC_SYSTEM_PROMPT,
         llm_config=llm_config.as_autogen_config(),
-    )
+    ))
 
     user_proxy = autogen.UserProxyAgent(
         name="SpecProxy",
@@ -159,10 +159,10 @@ def summarize_spec(llm_config: ModelConfig, spec_content: str) -> tuple[str, dic
 
     if result_holder["summary"] is not None:
         logger.info(f"Spec summarization complete — {len(result_holder['summary'])} chars extracted.")
-        return result_holder["summary"], result_holder["stats"], _chat_cost(chat_result, llm_config)
+        return result_holder["summary"], result_holder["stats"], _chat_cost(chat_result)
 
     logger.warning("LLM did not call select_intervals; returning empty summary.")
-    return "", result_holder["stats"], _chat_cost(chat_result, llm_config)
+    return "", result_holder["stats"], _chat_cost(chat_result)
 
 
 def run_refinement_loop(
@@ -271,11 +271,11 @@ def run_refinement_loop(
             f"{target_language.display_name} does not provide parse tree summaries; runtime feedback will include accept/reject errors only."
         )
 
-    assistant = autogen.AssistantAgent(
+    assistant = llm_config.register_clients(autogen.AssistantAgent(
         name=target_language.assistant_name,
         system_message=system_message,
         llm_config=llm_config.as_autogen_config(),
-    )
+    ))
 
     # max_consecutive_auto_reply is set higher than max_retries because Autogen
     # counts ALL auto-replies (including default_auto_reply nudges when the LLM
@@ -340,7 +340,7 @@ def run_refinement_loop(
         state.termination_reason = "agent_terminated"
 
     code_to_return = state.best_code if state.best_code is not None else state.last_code
-    cost_summary = _chat_cost(chat_result, llm_config)
+    cost_summary = _chat_cost(chat_result)
     first_successful_compile_iteration = next(
         (
             index
