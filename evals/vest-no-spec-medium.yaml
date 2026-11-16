@@ -1,0 +1,25 @@
+name: "Vest No-Spec — Medium Protocols"
+
+note: "Vest backend validation: GPT-5.6 Sol (high reasoning), no specification, 15 iterations, on five binary protocols that stress sub-byte length fields, counted sections, TLV options, flag-controlled optional parts, and nibble-encoded options."
+
+defaults:
+  models:
+    - "gpt-5.6-sol"
+  configs:
+    - "configs/vest-no-spec-high.yaml"
+  target_languages:
+    - "vest"
+  no_spec: true
+  samples: 1
+
+protocols:
+  ipv4:
+    {}
+  dns:
+    {}
+  dhcp:
+    {}
+  rtp:
+    {}
+  coap:
+    {}
