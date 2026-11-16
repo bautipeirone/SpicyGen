@@ -1,140 +1,165 @@
-# Protocol Grammar Extraction Pipeline
+# Pipeline and Workspaces
 
-The extraction process consists of two primary steps: spec preprocessing and grammar generation. To isolate the execution of these steps, avoid file collisions, and easily test/track runs independently, this project implements a **Protocol Workspace** pattern managed by a centralized pipeline orchestrator (`pipeline.py`).
+`pipeline.py` chains the three standalone tools inside an isolated
+**workspace**:
 
-Both underlying tasks (`preprocess_spec.py` and `generate_grammar.py`) remain fully independent and can still be run standalone. The orchestrator calls them as subprocesses and pipes all inputs, outputs, logs, and metrics into isolated, versioned workspace directories.
+1. `preprocess`: `preprocess_spec.py` extracts protocol info, a spec summary
+   and negative packets.
+2. `grammar`: `generate_grammar.py` runs the refinement loop.
+3. `zeek-package`: `create_zeek_package.py` turns the Spicy grammar into a Zeek
+   package.
 
----
+Each tool is run as a subprocess with its output paths pointed into the
+workspace, so the tools need no workspace-specific code and still work on their
+own.
 
-## Workspace Directory Structure
+```mermaid
+graph TD
+    P["pipeline.py"] -->|"1. preprocess"| PS["preprocess_spec.py"]
+    PS -->|"info.json, summary.txt"| WS
+    P -->|"2. grammar (--spec-file summary.txt)"| GG["generate_grammar.py"]
+    GG -->|"output.ext, metrics.json"| WS
+    P -->|"3. zeek-package (output.spicy + info.json)"| ZP["create_zeek_package.py"]
+    ZP -->|"spicy-protocol/"| WS
+    WS["workspaces/protocol/model/timestamp/"]
+```
 
-Every time you run the pipeline or initialize a workspace for a specific protocol and model combination, a self-contained directory is created under `workspaces/`.
+## Workspace layout
 
 ```
 workspaces/
 └── <protocol>/
-    └── <model_key>/
-        └── <timestamp>_YYYYMMDD_HHMMSS/
-            ├── manifest.json         # Tracks execution status, paths, exit codes, and timestamps
-            ├── pipeline.log          # Combined orchestrator logs
-            ├── preprocess/           # Output directory for the preprocessing step
-            │   ├── info.json         # Extracted protocol metadata (port, transport, type...)
-            │   ├── summary.txt       # Filtered spec summary
-            │   ├── report.json       # Preprocessing usage metrics & runtime stats
-            │   └── extraction.log    # Inner logging for preprocess_spec.py
-            └── grammar/              # Output directory for the grammar generation step
-                ├── output.spicy      # Generated Spicy grammar
-                ├── metrics.json      # Grammar usage metrics & refinement stats
-                ├── runtime.log       # Inner logging for generate_grammar.py
-                └── debug/            # Auto-generated compilation/refinement attempt logs
-                    ├── attempt_01/
-                    └── ...
+    └── <model>/
+        └── <YYYYMMDD_HHMMSS>/
+            ├── manifest.json
+            ├── pipeline.log                # orchestrator log
+            ├── preprocess/
+            │   ├── info.json               # transports, port, type, layer, ...
+            │   ├── summary.txt             # verbatim excerpts of the spec
+            │   ├── negative-packets.jsonl  # generated invalid packets
+            │   ├── report.json             # usage and extraction statistics
+            │   └── extraction.log
+            ├── grammar/
+            │   ├── output.<spicy|3d|vest>
+            │   ├── metrics.json
+            │   └── debug/                  # runtime.log, refinement/, errors/, build/
+            └── zeek-package/
+                ├── spicy-<analyzer>/       # the generated Zeek package
+                ├── metrics.json
+                └── debug/runtime.log
 ```
 
-### The Manifest File (`manifest.json`)
-The workspace state is tracked in a manifest file, serving as a lock/state file. This allows step recovery and resumes:
+Use `--workspace-root <dir>` (before the subcommand) to use a directory other
+than `./workspaces`.
+
+## Manifest
+
+`manifest.json` records the state of each step, which is what `--resume` and
+`status` read. Steps can be `pending`, `running`, `success` or `failed`.
+
 ```json
 {
   "protocol": "dns",
-  "model": "gemini-3.1-flash",
-  "created_at": "2026-05-22T15:05:51.601985+00:00",
-  "workspace_dir": "workspaces/dns/gemini-3.1-flash/20260522_170551",
+  "model": "gpt-5.4",
+  "target_language": "spicy",
+  "created_at": "2026-08-13T12:10:08.963221+00:00",
+  "workspace_dir": "workspaces/dns/gpt-5.4/20260813_141008",
   "steps": {
     "preprocess": {
       "status": "success",
-      "started_at": "2026-05-22T15:05:51...",
-      "finished_at": "2026-05-22T15:06:12...",
-      "exit_code": 0,
+      "started_at": "...", "finished_at": "...", "exit_code": 0,
       "outputs": {
-        "info": "preprocess/info.json",
-        "summary": "preprocess/summary.txt",
-        "report": "preprocess/report.json"
+        "info": ".../preprocess/info.json",
+        "summary": ".../preprocess/summary.txt",
+        "negative_packets": ".../preprocess/negative-packets.jsonl",
+        "report": ".../preprocess/report.json"
       }
     },
     "grammar": {
-      "status": "pending"
+      "status": "success",
+      "outputs": {"output": ".../grammar/output.spicy", "metrics": ".../grammar/metrics.json"}
+    },
+    "zeek-package": {
+      "status": "failed",
+      "error": "Process exited with code 1"
     }
   }
 }
 ```
 
----
+A step's status comes from its process's exit code. That is not the same as
+whether the grammar is valid: `generate_grammar.py` exits with 0 even when the
+grammar fails validation. Check `success` in `grammar/metrics.json` to know if
+the grammar is valid.
 
-## CLI Usage
+The manifest is not locked and writes are not atomic. If a process is killed,
+its step stays `running` until it is resumed.
 
-The pipeline orchestrator can be invoked via `python3 pipeline.py` with three core commands: `init`, `run`, and `status`.
+## Commands
 
-### 1. Initialize a Workspace
-Scaffold the directory structure and create the initial `manifest.json` without executing any LLM queries.
+### `init`
+
+Creates the workspace and its manifest without running any step:
+
 ```bash
-python3 pipeline.py init <protocol> -m <model_key>
-
-# Example:
-python3 pipeline.py init dns -m gemini-3.1-flash
+python pipeline.py init dns -m gemini-3.1-flash [-t spicy]
 ```
 
-### 2. Run the Pipeline
-Run both steps in sequence, or execute a single step inside an isolated workspace.
+### `run`
 
-* **Full Pipeline Run (Default)**
-  ```bash
-  python3 pipeline.py run <protocol> -m <model_key>
-  ```
-* **Run a Specific Step Only**
-  Use the `--only` flag (`preprocess` or `grammar`):
-  ```bash
-  python3 pipeline.py run dns -m gemini-3.1-flash --only preprocess
-  ```
-* **Resume a Previous Run**
-  If a step failed, or you only ran preprocessing first, you can resume the latest workspace. It will automatically detect completed steps from the manifest and run only what is pending or failed:
-  ```bash
-  python3 pipeline.py run dns -m gemini-3.1-flash --resume
-  ```
-* **Keep Going on Error**
-  By default, if the first step (`preprocess`) fails, the pipeline aborts. You can override this:
-  ```bash
-  python3 pipeline.py run dns -m gemini-3.1-flash --keep-going
-  ```
-* **Pass Custom Grammar Config**
-  ```bash
-  python3 pipeline.py run dns -m gemini-3.1-flash --config configs/default.yaml
-  ```
-
-### 3. Check Workspace Statuses
-View a summary table of all workspaces created on the local machine.
 ```bash
-python3 pipeline.py status
-
-# Filter by protocol or model:
-python3 pipeline.py status --protocol dns
-python3 pipeline.py status --model gemini-3.1-flash
+python pipeline.py run <protocol> -m <model> [-t spicy|3d|vest] [options]
 ```
 
----
+| Option | Effect |
+|---|---|
+| `--only {preprocess,grammar,zeek-package}` | Run a single step. |
+| `--resume` | Reuse the newest workspace for this protocol, model and target language, and run only the steps that have not succeeded. |
+| `--keep-going` | Continue after a failed step. Without it, a failed `preprocess` or `grammar` step stops the pipeline. |
+| `--preprocess-args "<flags>"` | Extra flags for `preprocess_spec.py`. |
+| `--grammar-args "<flags>"` | Extra flags for `generate_grammar.py`, e.g. `"--config configs/no-spec.yaml"`. |
+| `--zeek-args "<flags>"` | Extra flags for `create_zeek_package.py`, e.g. `"--traces-dir data/dns/traces --skip-installation"`. |
 
-## Automatic Integration in the Pipeline
-When running the full pipeline or resuming a workspace:
-* The `preprocess` step executes first and creates `preprocess/summary.txt`.
-* Before running the `grammar` step, the pipeline checks if `preprocess/summary.txt` exists in the workspace.
-* If found, the pipeline **automatically** appends `--spec-file <workspace>/preprocess/summary.txt` to the `generate_grammar.py` subprocess command.
-* If no preprocessed summary is present, the grammar generator safely falls back to standard index resolution.
+Examples:
 
----
+```bash
+# All three steps
+python pipeline.py run dns -m gemini-3.1-flash
 
-## Component Separation & Design
+# Only preprocessing, then generation later in the same workspace
+python pipeline.py run dns -m gemini-3.1-flash --only preprocess
+python pipeline.py run dns -m gemini-3.1-flash --only grammar --resume
 
-```mermaid
-graph TD
-    P["pipeline.py"] -->|"1. Run preprocessing"| PS["preprocess_spec.py"]
-    PS -->|"Writes summary.txt"| WS
-    P -->|"2. Checks for summary.txt"| WS
-    P -->|"3. Run grammar generation"| GG["generate_grammar.py"]
-    WS["workspaces/protocol/model/timestamp/"]
-    WS --> M["manifest.json"]
-    WS --> PP["preprocess/"]
-    WS --> GR["grammar/"]
+# Custom generation config, build the Zeek package but do not install it
+python pipeline.py run dns -m gemini-3.1-flash \
+    --grammar-args "--config configs/no-spec.yaml" \
+    --zeek-args "--skip-installation"
+
+# 3D: the Zeek step does not apply
+python pipeline.py run dns -m gemini-3.1-flash -t 3d --only grammar
 ```
 
-1. **Subprocess Isolation**: Because scripts are executed via Python's `subprocess` API, any code-level or package-level conflicts are averted, and individual scripts require zero modifications to accommodate workspace logic.
-2. **Path Mapping**: `pipeline.py` maps each script's output file paths (`--info-output`, `--summary-output`, `--output-file`, `--metrics-file`, `--debug-dir`) directly to the active workspace subdirectories (`preprocess/` and `grammar/`).
-3. **Log Merging**: Standard outputs and logger instances write into their own isolated logs (`preprocess/extraction.log` and `grammar/runtime.log`), while `pipeline.log` captures the overall orchestration flow.
+### `status`
+
+Prints a table of workspaces with each step's status:
+
+```bash
+python pipeline.py status
+python pipeline.py status --protocol dns --model gemini-3.1-flash -t spicy
+```
+
+## How the steps connect
+
+- **preprocess → grammar.** If `preprocess/summary.txt` exists, the grammar
+  step adds `--spec-file <workspace>/preprocess/summary.txt`, unless
+  `--grammar-args` already contains `--spec-file` or `--no-spec`. Without a
+  summary, the generator uses the specification from `protocol_index.json`.
+- **preprocess → zeek-package.** The Zeek step reads the transports and port
+  from `preprocess/info.json`. Preprocessing therefore has to run with info
+  extraction on (i.e. without `--no-info`).
+- **grammar → zeek-package.** The Zeek step reads `grammar/output.spicy`. It
+  works only with the Spicy target; for `3d` and `vest`, choose the other
+  steps with `--only`.
+- **Negative packets.** `negative-packets.jsonl` is written to the workspace,
+  but the grammar step does not use it. To add them to the corpus, run
+  `scripts/write_negative_packets.py <jsonl> data/raw/<protocol>/negative`.

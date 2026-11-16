@@ -1,82 +1,110 @@
-# Walkthrough: Evaluation Runner
+# Evaluation Runner
 
-## Files Created
+`run_eval.py` runs `generate_grammar.py` over a matrix of protocols, models,
+configs, target languages and repeated samples. It can resume an interrupted
+session and summarizes results with pass@k. It replaces `benchmark.sh`.
 
-### [run_eval.py](file:///home/bautistapeirone/Desktop/spec-extract/code/grammar-generator/run_eval.py)
-Python evaluation runner (~450 lines) that replaces `benchmark.sh` for structured, resumable evaluation runs.
+```bash
+python run_eval.py <eval.yaml> [--output-dir outputs] [--parallelism N] [--debug] [--dry-run]
+python run_eval.py <eval.yaml> --resume       --eval-dir outputs/<session>
+python run_eval.py <eval.yaml> --retry-failed --eval-dir outputs/<session>
+```
 
-### [evals/example.yaml](file:///home/bautistapeirone/Desktop/spec-extract/code/grammar-generator/evals/example.yaml)
-Example evaluation config demonstrating all available options.
+## Configuration
 
----
-
-## How It Works
-
-### YAML-Driven Matrix
-The runner reads an eval YAML and expands a cross-product matrix of `(protocol × model × config × target_language)`. Each protocol can override the global defaults:
+An evaluation is a YAML file, usually in `evals/`. The `defaults` apply to
+every protocol, and each protocol can override any of them.
 
 ```yaml
+name: "binary-protocols-comparison"   # used in the output directory name
+note: "Gemini vs Qwen on core binary protocols"
+
 defaults:
-  models: ["gemini-3.5-flash", "qwen3-coder"]
-  configs: ["configs/default.yaml"]
+  models: ["gemini-3.5-flash", "qwen3-coder"]   # required here or per protocol
+  configs: ["configs/default.yaml"]             # one or more generation configs
+  target_languages: ["spicy"]                   # default: ["spicy"]
+  samples: 3                                    # repetitions per combination (default: 1)
+  no_spec: false                                # generate without a specification
+  # spec_file: "specs/custom.txt"               # replace the indexed specification
+  # instructions_file: "prompts/spicy/NO_DOCS.md"  # replace the language manual
 
 protocols:
+  dns: {}                                       # defaults only
   dhcp:
-    spec_file: "specs/dhcp-summary.txt"   # custom spec
-  dns: {}                                  # use defaults
+    spec_file: "specs/dhcp-summary.txt"
+  tftp:
+    no_spec: true
   http1.1:
-    models: ["gpt-5.4"]                   # override models
-    no_spec: true                          # no spec
+    models: ["gpt-5.4"]
 ```
 
-### Output Structure
-Each session gets an isolated timestamped directory:
+The matrix is every combination of protocol × model × config × target
+language × sample. `--dry-run` prints it without running anything.
+
+Each run calls `generate_grammar.py` with `-m`, `-t`, `-o`, `--metrics-file`,
+and `-c`, `-i`, `--spec-file` or `--no-spec` as configured. `--no-spec` takes
+precedence over `spec_file`. `--debug` adds `--debug-dir` to every run. Runs
+time out after one hour.
+
+Configs specific to ablation studies are in `configs/evals/`. The evaluation
+files in `evals/` are the ones used for the reported experiments, for example
+`tool-ablation.yaml`, `preprocessing-ablation.yaml`,
+`negative-packets-ablation.yaml` and `spicy-no-docs-ablation.yaml`.
+
+## Output
 
 ```
-outputs/20260605_150423_binary-protocols-comparison/
-├── eval_config.yaml      # copy of input YAML
-├── eval_state.json       # run status tracking
-├── report.jsonl          # aggregated metrics
-├── summary.md            # comparison tables
-├── README.md
+outputs/<YYYYMMDD_HHMMSS>_<name>/
+├── eval_config.yaml      # copy of the input YAML
+├── eval_state.json       # per-run status, used by --resume and --retry-failed
+├── report.jsonl          # every run's metrics.json, tagged with run_id
+├── summary.md            # tables (see below)
+├── README.md             # session description and run list
 └── runs/
-    ├── dhcp__gemini-3.5-flash__default__spicy/
-    │   ├── output.spicy
-    │   ├── metrics.json
-    │   └── debug/        # if --debug
-    └── ...
+    └── <protocol>__<model>__<config>__<language>[__s<n>]/
+        ├── output.<ext>
+        ├── metrics.json
+        ├── stdout.txt / stderr.txt
+        └── debug/        # with --debug
 ```
 
-### Resume & Retry
+The `__s<n>` suffix is added only when `samples > 1`. `<config>` is the config
+file name without its extension.
 
-`eval_state.json` tracks every run as `pending → running → completed|failed`.
-For a completed run, `success` records the grammar validation result from the
-run's `metrics.json`. This gives three terminal outcomes:
+## Run outcomes
 
-- `status: completed, success: true` — generation completed with a valid grammar
-- `status: completed, success: false` — generation completed but exhausted its
-  iterations without a valid grammar
-- `status: failed, success: false` — the generation process failed (for example,
-  due to a timeout, network error, or malformed/missing metrics)
+Each run in `eval_state.json` moves through
+`pending → running → completed | failed`. Combined with `success`, there are
+three possible outcomes:
 
-The resume modes use `status` to select runs:
+| `status` | `success` | Meaning |
+|---|---|---|
+| `completed` | `true` | The grammar passed validation. |
+| `completed` | `false` | Generation finished but used up its attempts without a valid grammar. |
+| `failed` | `false` | Generation did not finish: non-zero exit, timeout, exception in the agent loop, or a missing or unreadable `metrics.json`. |
 
-- `--resume --eval-dir <path>`: skips completed, runs pending + failed
-- `--retry-failed --eval-dir <path>`: re-runs only failed runs
+Before each run, any existing `metrics.json` is deleted, so a retried run that
+writes no metrics cannot pick up an older run's result.
 
-### Parallelism
-`--parallelism N` runs N jobs concurrently via `ThreadPoolExecutor`. Default is 1 (sequential). State is saved after each run completes, so interrupting mid-evaluation is safe for resume.
+- `--resume` skips `completed` runs and runs everything else.
+- `--retry-failed` runs only `failed` runs.
 
-### Summary
-`summary.md` includes:
-- **Overview table** — total/completed/failed/success counts
-- **Results table** — per-run details (success, iterations, compile@1, time, cost)
-- **Per-Model statistics** — aggregate success rate, avg time, avg iterations, total cost
-- **Per-Protocol statistics** — aggregate success rate, avg time, avg iterations
-- **Failed runs** — error details for quick triage
+State is saved after every run, so you can interrupt a session and resume it
+safely. With `--parallelism N`, N runs execute at once in a thread pool.
 
-## Verified
+## Summary
 
-- `--dry-run` correctly expands the matrix (7 runs from example.yaml)
-- `--help` shows all options with examples
-- No modifications to existing files
+`summary.md` contains:
+
+- **Overview**: total, completed, failed and successful runs.
+- **Results**: one row per run with success, iterations, best iteration, first
+  compiling iteration, time and cost.
+- **Aggregated results** (when `samples > 1`): per configuration, the success
+  count and the unbiased pass@k estimator
+  `1 − C(n−c, k) / C(n, k)`, with averages over samples.
+- **Per model** and **per protocol**: success rate, average time and
+  iterations, and total cost per model.
+- **Failed runs**: the error for each `failed` run.
+
+Cost is read from `usage.total_usage.total_cost` in each run's metrics. It
+depends on the `price` set in `model_index.json`.
