@@ -45,6 +45,39 @@ def parse_spicy_file(path: Path) -> SpicyParserInfo:
         entry_unit_args=entry_unit_args,
     )
 
+def find_public_types(code: str) -> list[str]:
+    """Return the names of all ``public type`` declarations, in source order.
+
+    Aliases (``public type Packet = Message;``) count too: ``spicy-dump`` lists
+    each one as a separate parser.
+    """
+    return re.findall(r"^\s*public\s+type\s+(\w+)\s*=", code, re.MULTILINE)
+
+
+def check_single_entry_unit(code: str) -> str | None:
+    """Return an error unless *code* declares exactly one ``public type``.
+
+    Packets are parsed with ``spicy-dump`` without ``--parser``. When a grammar
+    exposes several public units, ``spicy-dump`` silently picks one (observed:
+    the alphabetically last), so validation would test a unit the model never
+    meant as the entry point.
+    """
+    public_types = find_public_types(code)
+    if len(public_types) == 1:
+        return None
+    if not public_types:
+        return (
+            "[error]: found no `public type` declaration. The grammar must declare "
+            "exactly one `public type`: the entry-point unit that parses a whole packet."
+        )
+    names = ", ".join(public_types)
+    return (
+        f"[error]: found {len(public_types)} `public type` declarations ({names}). "
+        "The grammar must declare exactly one `public type`: the entry-point unit "
+        "that parses a whole packet. Declare every other unit with plain `type`."
+    )
+
+
 def clean_spicy_response(text: str) -> str:
     """Strip markdown fences and leading non-grammar lines from Spicy output."""
     cleaned = strip_code_fences(text)
@@ -74,6 +107,8 @@ def preprocess_spicy_code(code: str) -> list[str]:
         bitfield_name = f"'{bitfield_info['name']}' " if bitfield_info.get("name") else ""
         error_message = f"[error]: found bitfield declaration {bitfield_name}without a bit-order attribute at lines {bitfield_info['lines_range'][0]}-{bitfield_info['lines_range'][1]}. Add a &bit-order= attribute with the correct bitfield order to fix this issue."
         errors.append(error_message)
+    if entry_error := check_single_entry_unit(code):
+        errors.append(entry_error)
     return errors
 
 class BitfieldInfo(TypedDict):

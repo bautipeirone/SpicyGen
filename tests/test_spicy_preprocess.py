@@ -9,7 +9,9 @@ import pytest
 from src.tools.spicy import compiler
 from src.tools.spicy.preprocess import (
     find_bitfields_decls,
+    check_single_entry_unit,
     find_bitfields_without_bitorder_attribute,
+    find_public_types,
     preprocess_spicy_code,
     search_reserved_keywords,
 )
@@ -87,7 +89,7 @@ class TestPreprocessCodeIntegration:
     """Full preprocess_spicy_code() producing error message lists."""
 
     def test_clean_code_returns_no_errors(self):
-        code = "module test;\nopcode: uint8;\nlength: uint16;"
+        code = "module test;\npublic type Msg = unit {\nopcode: uint8;\nlength: uint16;\n};"
         errors = preprocess_spicy_code(code)
         assert errors == []
 
@@ -148,7 +150,7 @@ class TestCompilerPreprocessingToggle:
         self, monkeypatch, tmp_path
     ):
         source_file = tmp_path / "grammar.spicy"
-        source_file.write_text("module Test;")
+        source_file.write_text("module Test;\npublic type Msg = unit { x: uint8; };")
 
         monkeypatch.setattr(
             compiler,
@@ -169,4 +171,70 @@ class TestCompilerPreprocessingToggle:
             source_file, preprocessing_enabled=False
         )
 
+        assert result.success is True
+
+
+class TestSingleEntryUnit:
+    """Packet validation runs spicy-dump without --parser, so exactly one
+    public unit must exist or an arbitrary one gets tested."""
+
+    def test_single_public_type_passes(self):
+        code = "module M;\ntype A = unit { x: uint8; };\npublic type B = unit { a: A; };"
+        assert check_single_entry_unit(code) is None
+
+    def test_multiple_public_types_rejected_with_names(self):
+        code = (
+            "module DNS;\n"
+            "public type Message = unit { x: uint8; };\n"
+            "public type Packet = Message;\n"
+            "public type TCP_Message = unit { m: Message; };\n"
+        )
+        error = check_single_entry_unit(code)
+        assert error is not None
+        assert "found 3 `public type` declarations (Message, Packet, TCP_Message)" in error
+
+    def test_alias_counts_as_public_type(self):
+        assert find_public_types("public type P = Message;\npublic type Message = unit {};") == ["P", "Message"]
+
+    def test_commented_out_public_type_ignored(self):
+        code = "module M;\n# public type Old = unit {};\npublic type New = unit { x: uint8; };"
+        assert check_single_entry_unit(code) is None
+
+    def test_no_public_type_rejected(self):
+        error = check_single_entry_unit("module M;\ntype A = unit { x: uint8; };")
+        assert error is not None and "no `public type`" in error
+
+    def test_part_of_preprocessing_and_skips_compiler(self, monkeypatch, tmp_path):
+        source_file = tmp_path / "grammar.spicy"
+        source_file.write_text(
+            "module T;\npublic type A = unit { x: uint8; };\npublic type B = unit { y: uint8; };"
+        )
+
+        def fake_compiler(*args):
+            raise AssertionError("compiler should not run after a preprocessing error")
+
+        monkeypatch.setattr(compiler, "run_spicy_compiler", fake_compiler)
+        result = compiler.compile_spicy_grammar(source_file)
+        assert result.success is False
+        assert "found 2 `public type` declarations (A, B)" in result.errors
+
+    def test_reported_after_other_preprocessing_errors(self):
+        code = "module T;\ntype: uint8;\npublic type A = unit {};\npublic type B = unit {};"
+        errors = preprocess_spicy_code(code)
+        assert "reserved keyword" in errors[0]
+        assert "`public type` declarations" in errors[-1]
+
+    def test_not_enforced_without_preprocessing(self, monkeypatch, tmp_path):
+        source_file = tmp_path / "grammar.spicy"
+        source_file.write_text(
+            "module T;\npublic type A = unit { x: uint8; };\npublic type B = unit { y: uint8; };"
+        )
+        monkeypatch.setattr(
+            compiler,
+            "run_spicy_compiler",
+            lambda *args: type(
+                "CompilerResult", (), {"returncode": 0, "stderr": "", "stdout": ""}
+            )(),
+        )
+        result = compiler.compile_spicy_grammar(source_file, preprocessing_enabled=False)
         assert result.success is True
