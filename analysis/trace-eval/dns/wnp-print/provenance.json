@@ -1,0 +1,20 @@
+{
+  "generated_at_utc": "2026-11-13T00:13:08.891552+00:00",
+  "spicy_version": "spicy-dump v1.17.0",
+  "workers": 12,
+  "oracle": "reused analysis/trace-eval/dns/oracle reports (dns || mdns)",
+  "transform": "analysis/trace-eval/transform_to_prints.py: create_zeek_package.adapt_parser_to_zeek_analyzer, then zeek::weird(\"m\") -> print \"m\" and import zeek removed",
+  "inputs": {
+    "original.spicy": "6d56e6aaa93d0f088134f1205c425285a31a45f280de8b6cd154452ffd578963",
+    "transformed.spicy": "302edac9de7de17f4c6f308f322f50a3f2f3637c0406659773f6b4e24459561f"
+  },
+  "original_source": "outputs/stable/dns-gpt-5.4-wnp.spicy",
+  "checks_rewritten": 8,
+  "requires_attributes": 0,
+  "commands": [
+    "python analysis/trace-eval/transform_to_prints.py analysis/trace-eval/dns/wnp-print/inputs/original.spicy analysis/trace-eval/dns/wnp-print/inputs/transformed.spicy",
+    "python analysis/trace-eval/compare_traces.py ~/imdea/spec-extract/data/pcap/dns ~/imdea/spec-extract/data/packets/dns dns --oracle-filter 'dns || mdns' --oracle-report-dir analysis/trace-eval/dns/oracle --target GPT-5.4-WNP-DNS=.../inputs/original.spicy --target GPT-5.4-WNP-Print-DNS=.../inputs/transformed.spicy --workers 12 --output-dir analysis/trace-eval/dns/wnp-print",
+    "spicyc -j inputs/transformed.spicy -o parser.hlto && python analysis/trace-eval/dns/wnp-print/collect_prints.py parser.hlto packet-list.txt prints.jsonl"
+  ],
+  "validation": "control GPT-5.4-WNP-DNS reproduced the 2026-09-24 per-packet verdicts exactly (0 differences); the 2,544 packets with at least one print are exactly the control's rejected packets; every first print equals the control's first error"
+}

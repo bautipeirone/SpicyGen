@@ -75,3 +75,15 @@ The type and class categories are the **first** failing check. A packet can cont
 `log-stansted.pcap` frame **2547** is accepted by all DNS parsers but soft-rejected by the oracle for `Illegal checksum value (0)` in the enclosing UDP packet. The DNS message is only the extracted payload, so this is a transport-layer difference rather than a DNS parser disagreement.
 
 Both Zeek and the standard GPT-5.4 DNS parser agree with the oracle on all 4,359 oracle-accepted messages, while their acceptance of the one soft reject is explained by the UDP checksum. This dataset does not establish how either behaves on malformed DNS payloads: the oracle has no DNS strict rejects here.
+
+## WNP parser with throws rewritten to prints
+
+Added on **2026-11-12**. The `GPT-5.4-WNP-DNS` grammar was re-evaluated after
+applying the `create_zeek_package.py` transformation that turns every `throw`
+and `&requires` into a logging call (here a Spicy `print` instead of
+`zeek::weird`, so it runs under `spicy-dump`). The transformed parser accepts
+all **4,360** messages, and the 2,544 packets that emit a print are exactly
+the ones the original rejects, with the same first message. Because the
+original stopped at the first failure, it reported 2,544 violations; the
+transformed one reports **10,877** across those packets. Details, per-message
+counts, and provenance are in [wnp-print/analysis.md](wnp-print/analysis.md).
